@@ -1,0 +1,40 @@
+node_modules/
+dist/
+build/
+.env
+.env.local
+.env.*.local
+
+# Prisma
+*.db
+*.db-journal
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# React Native
+.expo/
+android/
+ios/
+*.keystore
+
+# pnpm
+.pnpm-store/
+
+# Archivos de diseño / exportaciones
+*.zip
