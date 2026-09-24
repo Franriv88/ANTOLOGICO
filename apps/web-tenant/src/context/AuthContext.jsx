@@ -1,30 +1,38 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { auth } from '../lib/firebase';
+import { upsertProfesional } from '../dataconnect-generated';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => localStorage.getItem('at_token'));
-  const [user, setUser] = useState(() => {
-    const raw = localStorage.getItem('at_user');
-    return raw ? JSON.parse(raw) : null;
-  });
+  // undefined = loading, null = signed out, FirebaseUser = signed in
+  const [user, setUser] = useState(undefined);
 
-  function login(newToken, newUser) {
-    localStorage.setItem('at_token', newToken);
-    localStorage.setItem('at_user', JSON.stringify(newUser));
-    setToken(newToken);
-    setUser(newUser);
-  }
+  useEffect(() => {
+    return onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          await upsertProfesional({
+            nombre: firebaseUser.displayName || firebaseUser.email,
+            email:  firebaseUser.email,
+          });
+        } catch (e) {
+          console.error('upsertProfesional:', e);
+        }
+        setUser(firebaseUser);
+      } else {
+        setUser(null);
+      }
+    });
+  }, []);
 
-  function logout() {
-    localStorage.removeItem('at_token');
-    localStorage.removeItem('at_user');
-    setToken(null);
-    setUser(null);
+  async function logout() {
+    await signOut(auth);
   }
 
   return (
-    <AuthContext.Provider value={{ token, user, login, logout }}>
+    <AuthContext.Provider value={{ user, loading: user === undefined, logout }}>
       {children}
     </AuthContext.Provider>
   );

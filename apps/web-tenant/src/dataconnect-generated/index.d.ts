@@ -1,0 +1,644 @@
+import { ConnectorConfig, DataConnect, QueryRef, QueryPromise, ExecuteQueryOptions, MutationRef, MutationPromise } from 'firebase/data-connect';
+
+export const connectorConfig: ConnectorConfig;
+
+export type TimestampString = string;
+export type UUIDString = string;
+export type Int64String = string;
+export type DateString = string;
+
+
+export enum EstadoEspacio {
+  ACTIVO = "ACTIVO",
+  SUSPENDIDO = "SUSPENDIDO",
+  INACTIVO = "INACTIVO",
+};
+
+export enum EstadoProfesional {
+  ACTIVO = "ACTIVO",
+  SUSPENDIDO = "SUSPENDIDO",
+  INACTIVO = "INACTIVO",
+};
+
+export enum EstadoWorkshop {
+  BORRADOR = "BORRADOR",
+  PUBLICADO = "PUBLICADO",
+  CANCELADO = "CANCELADO",
+  FINALIZADO = "FINALIZADO",
+};
+
+export enum HeaderType {
+  COLOR = "COLOR",
+  IMAGE = "IMAGE",
+};
+
+export enum TipoWorkshop {
+  WORKSHOP = "WORKSHOP",
+  TALLER = "TALLER",
+  CLASE = "CLASE",
+  CURSO = "CURSO",
+};
+
+
+
+export interface CreateEspacioData {
+  espacio_insert: Espacio_Key;
+}
+
+export interface CreateEspacioVariables {
+  nombre: string;
+  rubroId?: UUIDString | null;
+  rubroPersonalizado?: string | null;
+}
+
+export interface CreateWorkshopData {
+  workshop_insert: Workshop_Key;
+}
+
+export interface CreateWorkshopVariables {
+  espacioId: UUIDString;
+  nombre: string;
+  tipo?: TipoWorkshop | null;
+  descripcion?: string | null;
+  cuposTotales: number;
+  cuposDisponibles: number;
+  precio: number;
+  fecha: TimestampString;
+  duracionHoras?: number | null;
+  duracionMinutos?: number | null;
+  experienciaPrevia?: boolean | null;
+  scheduleData?: unknown | null;
+  headerType?: HeaderType | null;
+  headerValue?: string | null;
+  estado?: EstadoWorkshop | null;
+}
+
+export interface DecrementarCupoData {
+  workshop_update?: Workshop_Key | null;
+}
+
+export interface DecrementarCupoVariables {
+  workshopId: UUIDString;
+}
+
+export interface DeleteWorkshopData {
+  workshop_delete?: Workshop_Key | null;
+}
+
+export interface DeleteWorkshopVariables {
+  id: UUIDString;
+  espacioId: UUIDString;
+}
+
+export interface Dominio_Key {
+  id: UUIDString;
+  __typename?: 'Dominio_Key';
+}
+
+export interface Espacio_Key {
+  id: UUIDString;
+  __typename?: 'Espacio_Key';
+}
+
+export interface GetMyEspacioData {
+  espacios: ({
+    id: UUIDString;
+    nombre: string;
+    estado: EstadoEspacio;
+    cancelacionPendiente: boolean;
+    createdAt: TimestampString;
+    updatedAt: TimestampString;
+    rubro?: {
+      id: UUIDString;
+      nombre: string;
+    } & Rubro_Key;
+    rubroPersonalizado?: string | null;
+    plan?: {
+      id: UUIDString;
+      nombre: string;
+      precioMensual: number;
+      precioAnual: number;
+      features: unknown;
+    } & Plan_Key;
+    dominio_on_espacio?: {
+      urlPersonalizada: string;
+      estado: EstadoDominio;
+      sslActivo: boolean;
+    };
+  } & Espacio_Key)[];
+}
+
+export interface GetMyEspacioVariables {
+  id: UUIDString;
+}
+
+export interface GetMyProfileData {
+  profesionales: ({
+    uid: string;
+    nombre: string;
+    email: string;
+    estado: EstadoProfesional;
+    updatedAt: TimestampString;
+  } & Profesional_Key)[];
+}
+
+export interface GetMyWorkshopData {
+  workshops: ({
+    id: UUIDString;
+    nombre: string;
+    tipo?: TipoWorkshop | null;
+    descripcion?: string | null;
+    cuposTotales: number;
+    cuposDisponibles: number;
+    precio: number;
+    fecha: TimestampString;
+    duracionHoras?: number | null;
+    duracionMinutos?: number | null;
+    experienciaPrevia?: boolean | null;
+    scheduleData?: unknown | null;
+    headerType: HeaderType;
+    headerValue?: string | null;
+    estado: EstadoWorkshop;
+    createdAt: TimestampString;
+    updatedAt: TimestampString;
+    espacio: {
+      id: UUIDString;
+      nombre: string;
+    } & Espacio_Key;
+  } & Workshop_Key)[];
+}
+
+export interface GetMyWorkshopVariables {
+  id: UUIDString;
+}
+
+export interface ListMyEspaciosData {
+  espacios: ({
+    id: UUIDString;
+    nombre: string;
+    estado: EstadoEspacio;
+    cancelacionPendiente: boolean;
+    createdAt: TimestampString;
+    rubro?: {
+      id: UUIDString;
+      nombre: string;
+    } & Rubro_Key;
+    rubroPersonalizado?: string | null;
+    plan?: {
+      id: UUIDString;
+      nombre: string;
+      precioMensual: number;
+      precioAnual: number;
+      features: unknown;
+    } & Plan_Key;
+    dominio_on_espacio?: {
+      urlPersonalizada: string;
+      estado: EstadoDominio;
+      sslActivo: boolean;
+    };
+  } & Espacio_Key)[];
+}
+
+export interface ListMyWorkshopsByEstadoData {
+  workshops: ({
+    id: UUIDString;
+    nombre: string;
+    tipo?: TipoWorkshop | null;
+    descripcion?: string | null;
+    cuposTotales: number;
+    cuposDisponibles: number;
+    precio: number;
+    fecha: TimestampString;
+    duracionHoras?: number | null;
+    duracionMinutos?: number | null;
+    experienciaPrevia?: boolean | null;
+    scheduleData?: unknown | null;
+    headerType: HeaderType;
+    headerValue?: string | null;
+    estado: EstadoWorkshop;
+    createdAt: TimestampString;
+  } & Workshop_Key)[];
+}
+
+export interface ListMyWorkshopsByEstadoVariables {
+  espacioId: UUIDString;
+  estado: EstadoWorkshop;
+}
+
+export interface ListMyWorkshopsData {
+  workshops: ({
+    id: UUIDString;
+    nombre: string;
+    tipo?: TipoWorkshop | null;
+    descripcion?: string | null;
+    cuposTotales: number;
+    cuposDisponibles: number;
+    precio: number;
+    fecha: TimestampString;
+    duracionHoras?: number | null;
+    duracionMinutos?: number | null;
+    experienciaPrevia?: boolean | null;
+    scheduleData?: unknown | null;
+    headerType: HeaderType;
+    headerValue?: string | null;
+    estado: EstadoWorkshop;
+    createdAt: TimestampString;
+  } & Workshop_Key)[];
+}
+
+export interface ListMyWorkshopsVariables {
+  espacioId: UUIDString;
+}
+
+export interface ListPlanesData {
+  planes: ({
+    id: UUIDString;
+    nombre: string;
+    precioMensual: number;
+    precioAnual: number;
+    features: unknown;
+  } & Plan_Key)[];
+}
+
+export interface ListPublicWorkshopsData {
+  workshops: ({
+    id: UUIDString;
+    nombre: string;
+    tipo?: TipoWorkshop | null;
+    descripcion?: string | null;
+    cuposTotales: number;
+    cuposDisponibles: number;
+    precio: number;
+    fecha: TimestampString;
+    duracionHoras?: number | null;
+    duracionMinutos?: number | null;
+    experienciaPrevia?: boolean | null;
+    scheduleData?: unknown | null;
+    headerType: HeaderType;
+    headerValue?: string | null;
+    espacio: {
+      id: UUIDString;
+      nombre: string;
+      profesional: {
+        uid: string;
+        nombre: string;
+      } & Profesional_Key;
+    } & Espacio_Key;
+  } & Workshop_Key)[];
+}
+
+export interface ListRubrosData {
+  rubros: ({
+    id: UUIDString;
+    nombre: string;
+  } & Rubro_Key)[];
+}
+
+export interface Plan_Key {
+  id: UUIDString;
+  __typename?: 'Plan_Key';
+}
+
+export interface Profesional_Key {
+  uid: string;
+  __typename?: 'Profesional_Key';
+}
+
+export interface ReactivarSuscripcionEspacioData {
+  espacio_update?: Espacio_Key | null;
+}
+
+export interface ReactivarSuscripcionEspacioVariables {
+  id: UUIDString;
+}
+
+export interface Reserva_Key {
+  id: UUIDString;
+  __typename?: 'Reserva_Key';
+}
+
+export interface Rubro_Key {
+  id: UUIDString;
+  __typename?: 'Rubro_Key';
+}
+
+export interface SearchMyWorkshopsData {
+  workshops: ({
+    id: UUIDString;
+    nombre: string;
+    tipo?: TipoWorkshop | null;
+    descripcion?: string | null;
+    cuposTotales: number;
+    cuposDisponibles: number;
+    precio: number;
+    fecha: TimestampString;
+    duracionHoras?: number | null;
+    duracionMinutos?: number | null;
+    experienciaPrevia?: boolean | null;
+    scheduleData?: unknown | null;
+    headerType: HeaderType;
+    headerValue?: string | null;
+    estado: EstadoWorkshop;
+    createdAt: TimestampString;
+  } & Workshop_Key)[];
+}
+
+export interface SearchMyWorkshopsVariables {
+  espacioId: UUIDString;
+  q: string;
+}
+
+export interface SolicitarCancelacionEspacioData {
+  espacio_update?: Espacio_Key | null;
+}
+
+export interface SolicitarCancelacionEspacioVariables {
+  id: UUIDString;
+}
+
+export interface SuperAdmin_Key {
+  uid: string;
+  __typename?: 'SuperAdmin_Key';
+}
+
+export interface UpdateEspacioData {
+  espacio_update?: Espacio_Key | null;
+}
+
+export interface UpdateEspacioVariables {
+  id: UUIDString;
+  nombre: string;
+  rubroId?: UUIDString | null;
+  rubroPersonalizado?: string | null;
+}
+
+export interface UpdateWorkshopData {
+  workshop_update?: Workshop_Key | null;
+}
+
+export interface UpdateWorkshopVariables {
+  id: UUIDString;
+  espacioId: UUIDString;
+  nombre: string;
+  tipo?: TipoWorkshop | null;
+  descripcion?: string | null;
+  cuposTotales: number;
+  cuposDisponibles: number;
+  precio: number;
+  fecha: TimestampString;
+  duracionHoras?: number | null;
+  duracionMinutos?: number | null;
+  experienciaPrevia?: boolean | null;
+  scheduleData?: unknown | null;
+  headerType?: HeaderType | null;
+  headerValue?: string | null;
+  estado?: EstadoWorkshop | null;
+}
+
+export interface UpsertProfesionalData {
+  profesional_upsert: Profesional_Key;
+}
+
+export interface UpsertProfesionalVariables {
+  nombre: string;
+  email: string;
+}
+
+export interface Usuario_Key {
+  uid: string;
+  __typename?: 'Usuario_Key';
+}
+
+export interface Workshop_Key {
+  id: UUIDString;
+  __typename?: 'Workshop_Key';
+}
+
+interface UpsertProfesionalRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: UpsertProfesionalVariables): MutationRef<UpsertProfesionalData, UpsertProfesionalVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: UpsertProfesionalVariables): MutationRef<UpsertProfesionalData, UpsertProfesionalVariables>;
+  operationName: string;
+}
+export const upsertProfesionalRef: UpsertProfesionalRef;
+
+export function upsertProfesional(vars: UpsertProfesionalVariables): MutationPromise<UpsertProfesionalData, UpsertProfesionalVariables>;
+export function upsertProfesional(dc: DataConnect, vars: UpsertProfesionalVariables): MutationPromise<UpsertProfesionalData, UpsertProfesionalVariables>;
+
+interface CreateEspacioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CreateEspacioVariables): MutationRef<CreateEspacioData, CreateEspacioVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: CreateEspacioVariables): MutationRef<CreateEspacioData, CreateEspacioVariables>;
+  operationName: string;
+}
+export const createEspacioRef: CreateEspacioRef;
+
+export function createEspacio(vars: CreateEspacioVariables): MutationPromise<CreateEspacioData, CreateEspacioVariables>;
+export function createEspacio(dc: DataConnect, vars: CreateEspacioVariables): MutationPromise<CreateEspacioData, CreateEspacioVariables>;
+
+interface UpdateEspacioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: UpdateEspacioVariables): MutationRef<UpdateEspacioData, UpdateEspacioVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: UpdateEspacioVariables): MutationRef<UpdateEspacioData, UpdateEspacioVariables>;
+  operationName: string;
+}
+export const updateEspacioRef: UpdateEspacioRef;
+
+export function updateEspacio(vars: UpdateEspacioVariables): MutationPromise<UpdateEspacioData, UpdateEspacioVariables>;
+export function updateEspacio(dc: DataConnect, vars: UpdateEspacioVariables): MutationPromise<UpdateEspacioData, UpdateEspacioVariables>;
+
+interface CreateWorkshopRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CreateWorkshopVariables): MutationRef<CreateWorkshopData, CreateWorkshopVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: CreateWorkshopVariables): MutationRef<CreateWorkshopData, CreateWorkshopVariables>;
+  operationName: string;
+}
+export const createWorkshopRef: CreateWorkshopRef;
+
+export function createWorkshop(vars: CreateWorkshopVariables): MutationPromise<CreateWorkshopData, CreateWorkshopVariables>;
+export function createWorkshop(dc: DataConnect, vars: CreateWorkshopVariables): MutationPromise<CreateWorkshopData, CreateWorkshopVariables>;
+
+interface UpdateWorkshopRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: UpdateWorkshopVariables): MutationRef<UpdateWorkshopData, UpdateWorkshopVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: UpdateWorkshopVariables): MutationRef<UpdateWorkshopData, UpdateWorkshopVariables>;
+  operationName: string;
+}
+export const updateWorkshopRef: UpdateWorkshopRef;
+
+export function updateWorkshop(vars: UpdateWorkshopVariables): MutationPromise<UpdateWorkshopData, UpdateWorkshopVariables>;
+export function updateWorkshop(dc: DataConnect, vars: UpdateWorkshopVariables): MutationPromise<UpdateWorkshopData, UpdateWorkshopVariables>;
+
+interface DeleteWorkshopRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: DeleteWorkshopVariables): MutationRef<DeleteWorkshopData, DeleteWorkshopVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: DeleteWorkshopVariables): MutationRef<DeleteWorkshopData, DeleteWorkshopVariables>;
+  operationName: string;
+}
+export const deleteWorkshopRef: DeleteWorkshopRef;
+
+export function deleteWorkshop(vars: DeleteWorkshopVariables): MutationPromise<DeleteWorkshopData, DeleteWorkshopVariables>;
+export function deleteWorkshop(dc: DataConnect, vars: DeleteWorkshopVariables): MutationPromise<DeleteWorkshopData, DeleteWorkshopVariables>;
+
+interface SolicitarCancelacionEspacioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SolicitarCancelacionEspacioVariables): MutationRef<SolicitarCancelacionEspacioData, SolicitarCancelacionEspacioVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SolicitarCancelacionEspacioVariables): MutationRef<SolicitarCancelacionEspacioData, SolicitarCancelacionEspacioVariables>;
+  operationName: string;
+}
+export const solicitarCancelacionEspacioRef: SolicitarCancelacionEspacioRef;
+
+export function solicitarCancelacionEspacio(vars: SolicitarCancelacionEspacioVariables): MutationPromise<SolicitarCancelacionEspacioData, SolicitarCancelacionEspacioVariables>;
+export function solicitarCancelacionEspacio(dc: DataConnect, vars: SolicitarCancelacionEspacioVariables): MutationPromise<SolicitarCancelacionEspacioData, SolicitarCancelacionEspacioVariables>;
+
+interface ReactivarSuscripcionEspacioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ReactivarSuscripcionEspacioVariables): MutationRef<ReactivarSuscripcionEspacioData, ReactivarSuscripcionEspacioVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ReactivarSuscripcionEspacioVariables): MutationRef<ReactivarSuscripcionEspacioData, ReactivarSuscripcionEspacioVariables>;
+  operationName: string;
+}
+export const reactivarSuscripcionEspacioRef: ReactivarSuscripcionEspacioRef;
+
+export function reactivarSuscripcionEspacio(vars: ReactivarSuscripcionEspacioVariables): MutationPromise<ReactivarSuscripcionEspacioData, ReactivarSuscripcionEspacioVariables>;
+export function reactivarSuscripcionEspacio(dc: DataConnect, vars: ReactivarSuscripcionEspacioVariables): MutationPromise<ReactivarSuscripcionEspacioData, ReactivarSuscripcionEspacioVariables>;
+
+interface DecrementarCupoRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: DecrementarCupoVariables): MutationRef<DecrementarCupoData, DecrementarCupoVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: DecrementarCupoVariables): MutationRef<DecrementarCupoData, DecrementarCupoVariables>;
+  operationName: string;
+}
+export const decrementarCupoRef: DecrementarCupoRef;
+
+export function decrementarCupo(vars: DecrementarCupoVariables): MutationPromise<DecrementarCupoData, DecrementarCupoVariables>;
+export function decrementarCupo(dc: DataConnect, vars: DecrementarCupoVariables): MutationPromise<DecrementarCupoData, DecrementarCupoVariables>;
+
+interface GetMyProfileRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<GetMyProfileData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<GetMyProfileData, undefined>;
+  operationName: string;
+}
+export const getMyProfileRef: GetMyProfileRef;
+
+export function getMyProfile(options?: ExecuteQueryOptions): QueryPromise<GetMyProfileData, undefined>;
+export function getMyProfile(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<GetMyProfileData, undefined>;
+
+interface ListPlanesRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListPlanesData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListPlanesData, undefined>;
+  operationName: string;
+}
+export const listPlanesRef: ListPlanesRef;
+
+export function listPlanes(options?: ExecuteQueryOptions): QueryPromise<ListPlanesData, undefined>;
+export function listPlanes(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListPlanesData, undefined>;
+
+interface ListRubrosRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListRubrosData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListRubrosData, undefined>;
+  operationName: string;
+}
+export const listRubrosRef: ListRubrosRef;
+
+export function listRubros(options?: ExecuteQueryOptions): QueryPromise<ListRubrosData, undefined>;
+export function listRubros(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListRubrosData, undefined>;
+
+interface ListMyEspaciosRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListMyEspaciosData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListMyEspaciosData, undefined>;
+  operationName: string;
+}
+export const listMyEspaciosRef: ListMyEspaciosRef;
+
+export function listMyEspacios(options?: ExecuteQueryOptions): QueryPromise<ListMyEspaciosData, undefined>;
+export function listMyEspacios(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListMyEspaciosData, undefined>;
+
+interface GetMyEspacioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetMyEspacioVariables): QueryRef<GetMyEspacioData, GetMyEspacioVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetMyEspacioVariables): QueryRef<GetMyEspacioData, GetMyEspacioVariables>;
+  operationName: string;
+}
+export const getMyEspacioRef: GetMyEspacioRef;
+
+export function getMyEspacio(vars: GetMyEspacioVariables, options?: ExecuteQueryOptions): QueryPromise<GetMyEspacioData, GetMyEspacioVariables>;
+export function getMyEspacio(dc: DataConnect, vars: GetMyEspacioVariables, options?: ExecuteQueryOptions): QueryPromise<GetMyEspacioData, GetMyEspacioVariables>;
+
+interface ListMyWorkshopsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ListMyWorkshopsVariables): QueryRef<ListMyWorkshopsData, ListMyWorkshopsVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ListMyWorkshopsVariables): QueryRef<ListMyWorkshopsData, ListMyWorkshopsVariables>;
+  operationName: string;
+}
+export const listMyWorkshopsRef: ListMyWorkshopsRef;
+
+export function listMyWorkshops(vars: ListMyWorkshopsVariables, options?: ExecuteQueryOptions): QueryPromise<ListMyWorkshopsData, ListMyWorkshopsVariables>;
+export function listMyWorkshops(dc: DataConnect, vars: ListMyWorkshopsVariables, options?: ExecuteQueryOptions): QueryPromise<ListMyWorkshopsData, ListMyWorkshopsVariables>;
+
+interface ListMyWorkshopsByEstadoRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ListMyWorkshopsByEstadoVariables): QueryRef<ListMyWorkshopsByEstadoData, ListMyWorkshopsByEstadoVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ListMyWorkshopsByEstadoVariables): QueryRef<ListMyWorkshopsByEstadoData, ListMyWorkshopsByEstadoVariables>;
+  operationName: string;
+}
+export const listMyWorkshopsByEstadoRef: ListMyWorkshopsByEstadoRef;
+
+export function listMyWorkshopsByEstado(vars: ListMyWorkshopsByEstadoVariables, options?: ExecuteQueryOptions): QueryPromise<ListMyWorkshopsByEstadoData, ListMyWorkshopsByEstadoVariables>;
+export function listMyWorkshopsByEstado(dc: DataConnect, vars: ListMyWorkshopsByEstadoVariables, options?: ExecuteQueryOptions): QueryPromise<ListMyWorkshopsByEstadoData, ListMyWorkshopsByEstadoVariables>;
+
+interface SearchMyWorkshopsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: SearchMyWorkshopsVariables): QueryRef<SearchMyWorkshopsData, SearchMyWorkshopsVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: SearchMyWorkshopsVariables): QueryRef<SearchMyWorkshopsData, SearchMyWorkshopsVariables>;
+  operationName: string;
+}
+export const searchMyWorkshopsRef: SearchMyWorkshopsRef;
+
+export function searchMyWorkshops(vars: SearchMyWorkshopsVariables, options?: ExecuteQueryOptions): QueryPromise<SearchMyWorkshopsData, SearchMyWorkshopsVariables>;
+export function searchMyWorkshops(dc: DataConnect, vars: SearchMyWorkshopsVariables, options?: ExecuteQueryOptions): QueryPromise<SearchMyWorkshopsData, SearchMyWorkshopsVariables>;
+
+interface GetMyWorkshopRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetMyWorkshopVariables): QueryRef<GetMyWorkshopData, GetMyWorkshopVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetMyWorkshopVariables): QueryRef<GetMyWorkshopData, GetMyWorkshopVariables>;
+  operationName: string;
+}
+export const getMyWorkshopRef: GetMyWorkshopRef;
+
+export function getMyWorkshop(vars: GetMyWorkshopVariables, options?: ExecuteQueryOptions): QueryPromise<GetMyWorkshopData, GetMyWorkshopVariables>;
+export function getMyWorkshop(dc: DataConnect, vars: GetMyWorkshopVariables, options?: ExecuteQueryOptions): QueryPromise<GetMyWorkshopData, GetMyWorkshopVariables>;
+
+interface ListPublicWorkshopsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListPublicWorkshopsData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListPublicWorkshopsData, undefined>;
+  operationName: string;
+}
+export const listPublicWorkshopsRef: ListPublicWorkshopsRef;
+
+export function listPublicWorkshops(options?: ExecuteQueryOptions): QueryPromise<ListPublicWorkshopsData, undefined>;
+export function listPublicWorkshops(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListPublicWorkshopsData, undefined>;
+

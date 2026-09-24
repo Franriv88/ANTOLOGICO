@@ -1,0 +1,980 @@
+extend type Mutation {
+  """
+  ✨ Insert a single `Dominio` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  dominio_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: Dominio_Data!
+  ): Dominio_KeyOutput! @fdc_generated(from: "Dominio", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert a single `Espacio` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  espacio_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: Espacio_Data!
+  ): Espacio_KeyOutput! @fdc_generated(from: "Espacio", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert a single `Plan` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  plan_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: Plan_Data!
+  ): Plan_KeyOutput! @fdc_generated(from: "Plan", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert a single `Profesional` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  profesional_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: Profesional_Data!
+  ): Profesional_KeyOutput! @fdc_generated(from: "Profesional", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert a single `Reserva` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  reserva_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: Reserva_Data!
+  ): Reserva_KeyOutput! @fdc_generated(from: "Reserva", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert a single `Rubro` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  rubro_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: Rubro_Data!
+  ): Rubro_KeyOutput! @fdc_generated(from: "Rubro", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert a single `SuperAdmin` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  superAdmin_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: SuperAdmin_Data!
+  ): SuperAdmin_KeyOutput! @fdc_generated(from: "SuperAdmin", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert a single `Usuario` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  usuario_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: Usuario_Data!
+  ): Usuario_KeyOutput! @fdc_generated(from: "Usuario", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert a single `Workshop` into the table and return its key. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  workshop_insert(
+    """
+    Data object to insert into the table.
+    """
+    data: Workshop_Data!
+  ): Workshop_KeyOutput! @fdc_generated(from: "Workshop", purpose: INSERT_SINGLE)
+  """
+  ✨ Insert `Dominio` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  dominio_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [Dominio_Data!]!
+  ): [Dominio_KeyOutput!]! @fdc_generated(from: "Dominio", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert `Espacio` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  espacio_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [Espacio_Data!]!
+  ): [Espacio_KeyOutput!]! @fdc_generated(from: "Espacio", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert `Plan` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  plan_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [Plan_Data!]!
+  ): [Plan_KeyOutput!]! @fdc_generated(from: "Plan", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert `Profesional` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  profesional_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [Profesional_Data!]!
+  ): [Profesional_KeyOutput!]! @fdc_generated(from: "Profesional", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert `Reserva` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  reserva_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [Reserva_Data!]!
+  ): [Reserva_KeyOutput!]! @fdc_generated(from: "Reserva", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert `Rubro` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  rubro_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [Rubro_Data!]!
+  ): [Rubro_KeyOutput!]! @fdc_generated(from: "Rubro", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert `SuperAdmin` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  superAdmin_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [SuperAdmin_Data!]!
+  ): [SuperAdmin_KeyOutput!]! @fdc_generated(from: "SuperAdmin", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert `Usuario` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  usuario_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [Usuario_Data!]!
+  ): [Usuario_KeyOutput!]! @fdc_generated(from: "Usuario", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert `Workshop` objects into the table and return their keys. Columns not specified in `data` will receive defaults (e.g. `null`).
+  """
+  workshop_insertMany(
+    """
+    List of data objects to insert into the table.
+    """
+    data: [Workshop_Data!]!
+  ): [Workshop_KeyOutput!]! @fdc_generated(from: "Workshop", purpose: INSERT_MULTIPLE)
+  """
+  ✨ Insert or update a single `Dominio` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Dominio`.
+  """
+  dominio_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: Dominio_Data!
+  ): Dominio_KeyOutput! @fdc_generated(from: "Dominio", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update a single `Espacio` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Espacio`.
+  """
+  espacio_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: Espacio_Data!
+  ): Espacio_KeyOutput! @fdc_generated(from: "Espacio", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update a single `Plan` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Plan`.
+  """
+  plan_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: Plan_Data!
+  ): Plan_KeyOutput! @fdc_generated(from: "Plan", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update a single `Profesional` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Profesional`.
+  """
+  profesional_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: Profesional_Data!
+  ): Profesional_KeyOutput! @fdc_generated(from: "Profesional", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update a single `Reserva` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Reserva`.
+  """
+  reserva_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: Reserva_Data!
+  ): Reserva_KeyOutput! @fdc_generated(from: "Reserva", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update a single `Rubro` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Rubro`.
+  """
+  rubro_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: Rubro_Data!
+  ): Rubro_KeyOutput! @fdc_generated(from: "Rubro", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update a single `SuperAdmin` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `SuperAdmin`.
+  """
+  superAdmin_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: SuperAdmin_Data!
+  ): SuperAdmin_KeyOutput! @fdc_generated(from: "SuperAdmin", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update a single `Usuario` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Usuario`.
+  """
+  usuario_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: Usuario_Data!
+  ): Usuario_KeyOutput! @fdc_generated(from: "Usuario", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update a single `Workshop` into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Workshop`.
+  """
+  workshop_upsert(
+    """
+    Data object to insert or update if it already exists.
+    """
+    data: Workshop_Data!
+  ): Workshop_KeyOutput! @fdc_generated(from: "Workshop", purpose: UPSERT_SINGLE)
+  """
+  ✨ Insert or update `Dominio` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Dominio`.
+  """
+  dominio_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [Dominio_Data!]!
+  ): [Dominio_KeyOutput!]! @fdc_generated(from: "Dominio", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Insert or update `Espacio` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Espacio`.
+  """
+  espacio_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [Espacio_Data!]!
+  ): [Espacio_KeyOutput!]! @fdc_generated(from: "Espacio", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Insert or update `Plan` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Plan`.
+  """
+  plan_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [Plan_Data!]!
+  ): [Plan_KeyOutput!]! @fdc_generated(from: "Plan", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Insert or update `Profesional` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Profesional`.
+  """
+  profesional_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [Profesional_Data!]!
+  ): [Profesional_KeyOutput!]! @fdc_generated(from: "Profesional", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Insert or update `Reserva` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Reserva`.
+  """
+  reserva_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [Reserva_Data!]!
+  ): [Reserva_KeyOutput!]! @fdc_generated(from: "Reserva", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Insert or update `Rubro` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Rubro`.
+  """
+  rubro_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [Rubro_Data!]!
+  ): [Rubro_KeyOutput!]! @fdc_generated(from: "Rubro", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Insert or update `SuperAdmin` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `SuperAdmin`.
+  """
+  superAdmin_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [SuperAdmin_Data!]!
+  ): [SuperAdmin_KeyOutput!]! @fdc_generated(from: "SuperAdmin", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Insert or update `Usuario` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Usuario`.
+  """
+  usuario_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [Usuario_Data!]!
+  ): [Usuario_KeyOutput!]! @fdc_generated(from: "Usuario", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Insert or update `Workshop` objects into the table, based on the primary key. Returns the key of the newly inserted or existing updated `Workshop`.
+  """
+  workshop_upsertMany(
+    """
+    List of data objects to insert or update if it already exists.
+    """
+    data: [Workshop_Data!]!
+  ): [Workshop_KeyOutput!]! @fdc_generated(from: "Workshop", purpose: UPSERT_MULTIPLE)
+  """
+  ✨ Update a single `Dominio` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `Dominio` or `null` if not found.
+  """
+  dominio_update(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Dominio_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Dominio_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: Dominio_Data!
+  ): Dominio_KeyOutput @fdc_generated(from: "Dominio", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update a single `Espacio` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `Espacio` or `null` if not found.
+  """
+  espacio_update(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Espacio_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Espacio_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: Espacio_Data!
+  ): Espacio_KeyOutput @fdc_generated(from: "Espacio", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update a single `Plan` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `Plan` or `null` if not found.
+  """
+  plan_update(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Plan_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Plan_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: Plan_Data!
+  ): Plan_KeyOutput @fdc_generated(from: "Plan", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update a single `Profesional` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `Profesional` or `null` if not found.
+  """
+  profesional_update(
+    """
+    The key used to identify the object.
+    """
+    key: Profesional_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Profesional_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: Profesional_Data!
+  ): Profesional_KeyOutput @fdc_generated(from: "Profesional", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update a single `Reserva` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `Reserva` or `null` if not found.
+  """
+  reserva_update(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Reserva_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Reserva_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: Reserva_Data!
+  ): Reserva_KeyOutput @fdc_generated(from: "Reserva", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update a single `Rubro` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `Rubro` or `null` if not found.
+  """
+  rubro_update(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Rubro_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Rubro_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: Rubro_Data!
+  ): Rubro_KeyOutput @fdc_generated(from: "Rubro", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update a single `SuperAdmin` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `SuperAdmin` or `null` if not found.
+  """
+  superAdmin_update(
+    """
+    The key used to identify the object.
+    """
+    key: SuperAdmin_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: SuperAdmin_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: SuperAdmin_Data!
+  ): SuperAdmin_KeyOutput @fdc_generated(from: "SuperAdmin", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update a single `Usuario` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `Usuario` or `null` if not found.
+  """
+  usuario_update(
+    """
+    The key used to identify the object.
+    """
+    key: Usuario_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Usuario_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: Usuario_Data!
+  ): Usuario_KeyOutput @fdc_generated(from: "Usuario", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update a single `Workshop` based on `id`, `key` or `first`, setting columns specified in `data`. Returns the key of the updated `Workshop` or `null` if not found.
+  """
+  workshop_update(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Workshop_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Workshop_FirstRow
+
+    """
+    Data object containing fields to be updated.
+    """
+    data: Workshop_Data!
+  ): Workshop_KeyOutput @fdc_generated(from: "Workshop", purpose: UPDATE_SINGLE)
+  """
+  ✨ Update `Dominio` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  dominio_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: Dominio_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: Dominio_Data!
+  ): Int! @fdc_generated(from: "Dominio", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Update `Espacio` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  espacio_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: Espacio_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: Espacio_Data!
+  ): Int! @fdc_generated(from: "Espacio", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Update `Plan` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  plan_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: Plan_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: Plan_Data!
+  ): Int! @fdc_generated(from: "Plan", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Update `Profesional` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  profesional_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: Profesional_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: Profesional_Data!
+  ): Int! @fdc_generated(from: "Profesional", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Update `Reserva` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  reserva_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: Reserva_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: Reserva_Data!
+  ): Int! @fdc_generated(from: "Reserva", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Update `Rubro` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  rubro_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: Rubro_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: Rubro_Data!
+  ): Int! @fdc_generated(from: "Rubro", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Update `SuperAdmin` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  superAdmin_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: SuperAdmin_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: SuperAdmin_Data!
+  ): Int! @fdc_generated(from: "SuperAdmin", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Update `Usuario` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  usuario_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: Usuario_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: Usuario_Data!
+  ): Int! @fdc_generated(from: "Usuario", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Update `Workshop` objects matching `where` conditions (or `all`, if true) according to `data`. Returns the number of rows updated.
+  """
+  workshop_updateMany(
+    """
+    Filter condition to specify which rows to update.
+    """
+    where: Workshop_Filter
+
+    """
+    Set to true to update all rows.
+    """
+    all: Boolean = false
+
+    """
+    Data object containing fields to update.
+    """
+    data: Workshop_Data!
+  ): Int! @fdc_generated(from: "Workshop", purpose: UPDATE_MULTIPLE)
+  """
+  ✨ Delete a single `Dominio` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  dominio_delete(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Dominio_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Dominio_FirstRow
+  ): Dominio_KeyOutput @fdc_generated(from: "Dominio", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete a single `Espacio` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  espacio_delete(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Espacio_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Espacio_FirstRow
+  ): Espacio_KeyOutput @fdc_generated(from: "Espacio", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete a single `Plan` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  plan_delete(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Plan_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Plan_FirstRow
+  ): Plan_KeyOutput @fdc_generated(from: "Plan", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete a single `Profesional` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  profesional_delete(
+    """
+    The key used to identify the object.
+    """
+    key: Profesional_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Profesional_FirstRow
+  ): Profesional_KeyOutput @fdc_generated(from: "Profesional", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete a single `Reserva` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  reserva_delete(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Reserva_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Reserva_FirstRow
+  ): Reserva_KeyOutput @fdc_generated(from: "Reserva", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete a single `Rubro` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  rubro_delete(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Rubro_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Rubro_FirstRow
+  ): Rubro_KeyOutput @fdc_generated(from: "Rubro", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete a single `SuperAdmin` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  superAdmin_delete(
+    """
+    The key used to identify the object.
+    """
+    key: SuperAdmin_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: SuperAdmin_FirstRow
+  ): SuperAdmin_KeyOutput @fdc_generated(from: "SuperAdmin", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete a single `Usuario` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  usuario_delete(
+    """
+    The key used to identify the object.
+    """
+    key: Usuario_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Usuario_FirstRow
+  ): Usuario_KeyOutput @fdc_generated(from: "Usuario", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete a single `Workshop` based on `id`, `key` or `first` and return its key (or `null` if not found).
+  """
+  workshop_delete(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Workshop_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Workshop_FirstRow
+  ): Workshop_KeyOutput @fdc_generated(from: "Workshop", purpose: DELETE_SINGLE)
+  """
+  ✨ Delete `Dominio` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  dominio_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: Dominio_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "Dominio", purpose: DELETE_MULTIPLE)
+  """
+  ✨ Delete `Espacio` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  espacio_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: Espacio_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "Espacio", purpose: DELETE_MULTIPLE)
+  """
+  ✨ Delete `Plan` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  plan_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: Plan_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "Plan", purpose: DELETE_MULTIPLE)
+  """
+  ✨ Delete `Profesional` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  profesional_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: Profesional_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "Profesional", purpose: DELETE_MULTIPLE)
+  """
+  ✨ Delete `Reserva` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  reserva_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: Reserva_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "Reserva", purpose: DELETE_MULTIPLE)
+  """
+  ✨ Delete `Rubro` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  rubro_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: Rubro_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "Rubro", purpose: DELETE_MULTIPLE)
+  """
+  ✨ Delete `SuperAdmin` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  superAdmin_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: SuperAdmin_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "SuperAdmin", purpose: DELETE_MULTIPLE)
+  """
+  ✨ Delete `Usuario` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  usuario_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: Usuario_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "Usuario", purpose: DELETE_MULTIPLE)
+  """
+  ✨ Delete `Workshop` objects matching `where` conditions (or `all`, if true). Returns the number of rows deleted.
+  """
+  workshop_deleteMany(
+    """
+    Filter condition to specify which rows to delete.
+    """
+    where: Workshop_Filter
+
+    """
+    Set to true to delete all rows.
+    """
+    all: Boolean = false
+  ): Int! @fdc_generated(from: "Workshop", purpose: DELETE_MULTIPLE)
+}

@@ -1,0 +1,142 @@
+# ─── Profesional ─────────────────────────────────────────────────────────────
+
+query GetMyProfile @auth(level: USER) {
+  profesionales(
+    where: { uid: { eq_expr: "auth.uid" } }
+    limit: 1
+  ) {
+    uid nombre email estado updatedAt
+  }
+}
+
+# ─── Planes ───────────────────────────────────────────────────────────────────
+
+query ListPlanes @auth(level: PUBLIC, insecureReason: "Los planes son información pública necesaria para el formulario de registro.") {
+  planes(
+    where: { activo: { eq: true } }
+    orderBy: [{ precioMensual: ASC }]
+  ) {
+    id nombre precioMensual precioAnual features
+  }
+}
+
+# ─── Rubros ───────────────────────────────────────────────────────────────────
+
+query ListRubros @auth(level: PUBLIC, insecureReason: "Catálogo público de rubros necesario para el formulario de registro.") {
+  rubros(
+    where: { activo: { eq: true } }
+    orderBy: [{ orden: ASC }, { nombre: ASC }]
+  ) {
+    id nombre
+  }
+}
+
+# ─── Espacios ─────────────────────────────────────────────────────────────────
+
+query ListMyEspacios @auth(level: USER) {
+  espacios(
+    where: { profesionalUid: { eq_expr: "auth.uid" } }
+    orderBy: [{ createdAt: ASC }]
+  ) {
+    id nombre estado cancelacionPendiente createdAt
+    rubro { id nombre }
+    rubroPersonalizado
+    plan { id nombre precioMensual precioAnual features }
+    dominio_on_espacio { urlPersonalizada estado sslActivo }
+  }
+}
+
+query GetMyEspacio($id: UUID!) @auth(level: USER) {
+  espacios(
+    where: {
+      id: { eq: $id }
+      profesionalUid: { eq_expr: "auth.uid" }
+    }
+    limit: 1
+  ) {
+    id nombre estado cancelacionPendiente createdAt updatedAt
+    rubro { id nombre }
+    rubroPersonalizado
+    plan { id nombre precioMensual precioAnual features }
+    dominio_on_espacio { urlPersonalizada estado sslActivo }
+  }
+}
+
+# ─── Workshops ────────────────────────────────────────────────────────────────
+
+query ListMyWorkshops($espacioId: UUID!) @auth(level: USER, insecureReason: "El espacioId proviene de ListMyEspacios que ya filtra por auth.uid, garantizando que el cliente solo puede pasar IDs propios.") {
+  workshops(
+    where: {
+      espacioId: { eq: $espacioId }
+      estado: { ne: CANCELADO }
+    }
+    orderBy: [{ fecha: ASC }]
+  ) {
+    id nombre tipo descripcion
+    cuposTotales cuposDisponibles precio fecha
+    duracionHoras duracionMinutos experienciaPrevia scheduleData
+    headerType headerValue estado createdAt
+  }
+}
+
+query ListMyWorkshopsByEstado($espacioId: UUID!, $estado: EstadoWorkshop!) @auth(level: USER, insecureReason: "El espacioId proviene de ListMyEspacios que ya filtra por auth.uid, garantizando que el cliente solo puede pasar IDs propios.") {
+  workshops(
+    where: {
+      espacioId: { eq: $espacioId }
+      estado: { eq: $estado }
+    }
+    orderBy: [{ fecha: ASC }]
+  ) {
+    id nombre tipo descripcion
+    cuposTotales cuposDisponibles precio fecha
+    duracionHoras duracionMinutos experienciaPrevia scheduleData
+    headerType headerValue estado createdAt
+  }
+}
+
+query SearchMyWorkshops($espacioId: UUID!, $q: String!) @auth(level: USER, insecureReason: "El espacioId proviene de ListMyEspacios que ya filtra por auth.uid, garantizando que el cliente solo puede pasar IDs propios.") {
+  workshops(
+    where: {
+      espacioId: { eq: $espacioId }
+      nombre: { contains: $q }
+      estado: { ne: CANCELADO }
+    }
+    orderBy: [{ fecha: ASC }]
+  ) {
+    id nombre tipo descripcion
+    cuposTotales cuposDisponibles precio fecha
+    duracionHoras duracionMinutos experienciaPrevia scheduleData
+    headerType headerValue estado createdAt
+  }
+}
+
+query GetMyWorkshop($id: UUID!) @auth(level: USER) {
+  workshops(
+    where: {
+      id: { eq: $id }
+      espacio: { profesionalUid: { eq_expr: "auth.uid" } }
+    }
+    limit: 1
+  ) {
+    id nombre tipo descripcion
+    cuposTotales cuposDisponibles precio fecha
+    duracionHoras duracionMinutos experienciaPrevia scheduleData
+    headerType headerValue estado createdAt updatedAt
+    espacio { id nombre }
+  }
+}
+
+# ─── Público ──────────────────────────────────────────────────────────────────
+
+query ListPublicWorkshops @auth(level: PUBLIC, insecureReason: "Talleres publicados son el discovery público del marketplace — deben ser visibles sin login.") {
+  workshops(
+    where: { estado: { eq: PUBLICADO } }
+    orderBy: [{ fecha: ASC }]
+  ) {
+    id nombre tipo descripcion
+    cuposTotales cuposDisponibles precio fecha
+    duracionHoras duracionMinutos experienciaPrevia scheduleData
+    headerType headerValue
+    espacio { id nombre profesional { uid nombre } }
+  }
+}

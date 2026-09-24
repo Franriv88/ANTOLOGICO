@@ -1,0 +1,63 @@
+import { UpsertProfesionalData, UpsertProfesionalVariables, CreateEspacioData, CreateEspacioVariables, UpdateEspacioData, UpdateEspacioVariables, CreateWorkshopData, CreateWorkshopVariables, UpdateWorkshopData, UpdateWorkshopVariables, DeleteWorkshopData, DeleteWorkshopVariables, SolicitarCancelacionEspacioData, SolicitarCancelacionEspacioVariables, ReactivarSuscripcionEspacioData, ReactivarSuscripcionEspacioVariables, DecrementarCupoData, DecrementarCupoVariables, GetMyProfileData, ListPlanesData, ListRubrosData, ListMyEspaciosData, GetMyEspacioData, GetMyEspacioVariables, ListMyWorkshopsData, ListMyWorkshopsVariables, ListMyWorkshopsByEstadoData, ListMyWorkshopsByEstadoVariables, SearchMyWorkshopsData, SearchMyWorkshopsVariables, GetMyWorkshopData, GetMyWorkshopVariables, ListPublicWorkshopsData } from '../';
+import { UseDataConnectQueryResult, useDataConnectQueryOptions, UseDataConnectMutationResult, useDataConnectMutationOptions} from '@tanstack-query-firebase/react/data-connect';
+import { UseQueryResult, UseMutationResult} from '@tanstack/react-query';
+import { DataConnect } from 'firebase/data-connect';
+import { FirebaseError } from 'firebase/app';
+
+
+export function useUpsertProfesional(options?: useDataConnectMutationOptions<UpsertProfesionalData, FirebaseError, UpsertProfesionalVariables>): UseDataConnectMutationResult<UpsertProfesionalData, UpsertProfesionalVariables>;
+export function useUpsertProfesional(dc: DataConnect, options?: useDataConnectMutationOptions<UpsertProfesionalData, FirebaseError, UpsertProfesionalVariables>): UseDataConnectMutationResult<UpsertProfesionalData, UpsertProfesionalVariables>;
+
+export function useCreateEspacio(options?: useDataConnectMutationOptions<CreateEspacioData, FirebaseError, CreateEspacioVariables>): UseDataConnectMutationResult<CreateEspacioData, CreateEspacioVariables>;
+export function useCreateEspacio(dc: DataConnect, options?: useDataConnectMutationOptions<CreateEspacioData, FirebaseError, CreateEspacioVariables>): UseDataConnectMutationResult<CreateEspacioData, CreateEspacioVariables>;
+
+export function useUpdateEspacio(options?: useDataConnectMutationOptions<UpdateEspacioData, FirebaseError, UpdateEspacioVariables>): UseDataConnectMutationResult<UpdateEspacioData, UpdateEspacioVariables>;
+export function useUpdateEspacio(dc: DataConnect, options?: useDataConnectMutationOptions<UpdateEspacioData, FirebaseError, UpdateEspacioVariables>): UseDataConnectMutationResult<UpdateEspacioData, UpdateEspacioVariables>;
+
+export function useCreateWorkshop(options?: useDataConnectMutationOptions<CreateWorkshopData, FirebaseError, CreateWorkshopVariables>): UseDataConnectMutationResult<CreateWorkshopData, CreateWorkshopVariables>;
+export function useCreateWorkshop(dc: DataConnect, options?: useDataConnectMutationOptions<CreateWorkshopData, FirebaseError, CreateWorkshopVariables>): UseDataConnectMutationResult<CreateWorkshopData, CreateWorkshopVariables>;
+
+export function useUpdateWorkshop(options?: useDataConnectMutationOptions<UpdateWorkshopData, FirebaseError, UpdateWorkshopVariables>): UseDataConnectMutationResult<UpdateWorkshopData, UpdateWorkshopVariables>;
+export function useUpdateWorkshop(dc: DataConnect, options?: useDataConnectMutationOptions<UpdateWorkshopData, FirebaseError, UpdateWorkshopVariables>): UseDataConnectMutationResult<UpdateWorkshopData, UpdateWorkshopVariables>;
+
+export function useDeleteWorkshop(options?: useDataConnectMutationOptions<DeleteWorkshopData, FirebaseError, DeleteWorkshopVariables>): UseDataConnectMutationResult<DeleteWorkshopData, DeleteWorkshopVariables>;
+export function useDeleteWorkshop(dc: DataConnect, options?: useDataConnectMutationOptions<DeleteWorkshopData, FirebaseError, DeleteWorkshopVariables>): UseDataConnectMutationResult<DeleteWorkshopData, DeleteWorkshopVariables>;
+
+export function useSolicitarCancelacionEspacio(options?: useDataConnectMutationOptions<SolicitarCancelacionEspacioData, FirebaseError, SolicitarCancelacionEspacioVariables>): UseDataConnectMutationResult<SolicitarCancelacionEspacioData, SolicitarCancelacionEspacioVariables>;
+export function useSolicitarCancelacionEspacio(dc: DataConnect, options?: useDataConnectMutationOptions<SolicitarCancelacionEspacioData, FirebaseError, SolicitarCancelacionEspacioVariables>): UseDataConnectMutationResult<SolicitarCancelacionEspacioData, SolicitarCancelacionEspacioVariables>;
+
+export function useReactivarSuscripcionEspacio(options?: useDataConnectMutationOptions<ReactivarSuscripcionEspacioData, FirebaseError, ReactivarSuscripcionEspacioVariables>): UseDataConnectMutationResult<ReactivarSuscripcionEspacioData, ReactivarSuscripcionEspacioVariables>;
+export function useReactivarSuscripcionEspacio(dc: DataConnect, options?: useDataConnectMutationOptions<ReactivarSuscripcionEspacioData, FirebaseError, ReactivarSuscripcionEspacioVariables>): UseDataConnectMutationResult<ReactivarSuscripcionEspacioData, ReactivarSuscripcionEspacioVariables>;
+
+export function useDecrementarCupo(options?: useDataConnectMutationOptions<DecrementarCupoData, FirebaseError, DecrementarCupoVariables>): UseDataConnectMutationResult<DecrementarCupoData, DecrementarCupoVariables>;
+export function useDecrementarCupo(dc: DataConnect, options?: useDataConnectMutationOptions<DecrementarCupoData, FirebaseError, DecrementarCupoVariables>): UseDataConnectMutationResult<DecrementarCupoData, DecrementarCupoVariables>;
+
+export function useGetMyProfile(options?: useDataConnectQueryOptions<GetMyProfileData>): UseDataConnectQueryResult<GetMyProfileData, undefined>;
+export function useGetMyProfile(dc: DataConnect, options?: useDataConnectQueryOptions<GetMyProfileData>): UseDataConnectQueryResult<GetMyProfileData, undefined>;
+
+export function useListPlanes(options?: useDataConnectQueryOptions<ListPlanesData>): UseDataConnectQueryResult<ListPlanesData, undefined>;
+export function useListPlanes(dc: DataConnect, options?: useDataConnectQueryOptions<ListPlanesData>): UseDataConnectQueryResult<ListPlanesData, undefined>;
+
+export function useListRubros(options?: useDataConnectQueryOptions<ListRubrosData>): UseDataConnectQueryResult<ListRubrosData, undefined>;
+export function useListRubros(dc: DataConnect, options?: useDataConnectQueryOptions<ListRubrosData>): UseDataConnectQueryResult<ListRubrosData, undefined>;
+
+export function useListMyEspacios(options?: useDataConnectQueryOptions<ListMyEspaciosData>): UseDataConnectQueryResult<ListMyEspaciosData, undefined>;
+export function useListMyEspacios(dc: DataConnect, options?: useDataConnectQueryOptions<ListMyEspaciosData>): UseDataConnectQueryResult<ListMyEspaciosData, undefined>;
+
+export function useGetMyEspacio(vars: GetMyEspacioVariables, options?: useDataConnectQueryOptions<GetMyEspacioData>): UseDataConnectQueryResult<GetMyEspacioData, GetMyEspacioVariables>;
+export function useGetMyEspacio(dc: DataConnect, vars: GetMyEspacioVariables, options?: useDataConnectQueryOptions<GetMyEspacioData>): UseDataConnectQueryResult<GetMyEspacioData, GetMyEspacioVariables>;
+
+export function useListMyWorkshops(vars: ListMyWorkshopsVariables, options?: useDataConnectQueryOptions<ListMyWorkshopsData>): UseDataConnectQueryResult<ListMyWorkshopsData, ListMyWorkshopsVariables>;
+export function useListMyWorkshops(dc: DataConnect, vars: ListMyWorkshopsVariables, options?: useDataConnectQueryOptions<ListMyWorkshopsData>): UseDataConnectQueryResult<ListMyWorkshopsData, ListMyWorkshopsVariables>;
+
+export function useListMyWorkshopsByEstado(vars: ListMyWorkshopsByEstadoVariables, options?: useDataConnectQueryOptions<ListMyWorkshopsByEstadoData>): UseDataConnectQueryResult<ListMyWorkshopsByEstadoData, ListMyWorkshopsByEstadoVariables>;
+export function useListMyWorkshopsByEstado(dc: DataConnect, vars: ListMyWorkshopsByEstadoVariables, options?: useDataConnectQueryOptions<ListMyWorkshopsByEstadoData>): UseDataConnectQueryResult<ListMyWorkshopsByEstadoData, ListMyWorkshopsByEstadoVariables>;
+
+export function useSearchMyWorkshops(vars: SearchMyWorkshopsVariables, options?: useDataConnectQueryOptions<SearchMyWorkshopsData>): UseDataConnectQueryResult<SearchMyWorkshopsData, SearchMyWorkshopsVariables>;
+export function useSearchMyWorkshops(dc: DataConnect, vars: SearchMyWorkshopsVariables, options?: useDataConnectQueryOptions<SearchMyWorkshopsData>): UseDataConnectQueryResult<SearchMyWorkshopsData, SearchMyWorkshopsVariables>;
+
+export function useGetMyWorkshop(vars: GetMyWorkshopVariables, options?: useDataConnectQueryOptions<GetMyWorkshopData>): UseDataConnectQueryResult<GetMyWorkshopData, GetMyWorkshopVariables>;
+export function useGetMyWorkshop(dc: DataConnect, vars: GetMyWorkshopVariables, options?: useDataConnectQueryOptions<GetMyWorkshopData>): UseDataConnectQueryResult<GetMyWorkshopData, GetMyWorkshopVariables>;
+
+export function useListPublicWorkshops(options?: useDataConnectQueryOptions<ListPublicWorkshopsData>): UseDataConnectQueryResult<ListPublicWorkshopsData, undefined>;
+export function useListPublicWorkshops(dc: DataConnect, options?: useDataConnectQueryOptions<ListPublicWorkshopsData>): UseDataConnectQueryResult<ListPublicWorkshopsData, undefined>;

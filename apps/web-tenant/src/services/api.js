@@ -1,28 +1,81 @@
-async function request(method, path, body) {
-  const token = localStorage.getItem('at_token');
-  const res = await fetch(`/api${path}`, {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
-  });
+import {
+  listMyEspacios,
+  getMyEspacio,
+  createEspacio,
+  updateEspacio,
+  solicitarCancelacionEspacio,
+  reactivarSuscripcionEspacio,
+  listRubros,
+  listMyWorkshops,
+  listMyWorkshopsByEstado,
+  searchMyWorkshops,
+  getMyWorkshop,
+  createWorkshop,
+  updateWorkshop,
+  deleteWorkshop,
+} from '../dataconnect-generated';
 
-  if (res.status === 204) return null;
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || `Error ${res.status}`);
-  return data;
-}
+export const espacios = {
+  list: async () => {
+    const { data } = await listMyEspacios();
+    return data.espacios;
+  },
+  get: async (id) => {
+    const { data } = await getMyEspacio({ id });
+    return data.espacios[0] ?? null;
+  },
+  create: async (payload) => {
+    const { data } = await createEspacio(payload);
+    return data.espacio_insert;
+  },
+  update: async (id, payload) => {
+    const { data } = await updateEspacio({ id, ...payload });
+    return data.espacio_update;
+  },
+  solicitarCancelacion: async (id) => {
+    const { data } = await solicitarCancelacionEspacio({ id });
+    return data.espacio_update;
+  },
+  reactivarSuscripcion: async (id) => {
+    const { data } = await reactivarSuscripcionEspacio({ id });
+    return data.espacio_update;
+  },
+};
 
-export const auth = {
-  devLogin: (email) => request('POST', '/auth/dev/tenant', { email }),
+export const rubros = {
+  list: async () => {
+    const { data } = await listRubros();
+    return data.rubros;
+  },
 };
 
 export const workshops = {
-  list:   (params = {}) => request('GET', `/workshops?${new URLSearchParams(params)}`),
-  get:    (id)          => request('GET', `/workshops/${id}`),
-  create: (data)        => request('POST', '/workshops', data),
-  update: (id, data)    => request('PUT', `/workshops/${id}`, data),
-  remove: (id)          => request('DELETE', `/workshops/${id}`),
+  list: async (espacioId, params = {}) => {
+    if (params.q) {
+      const { data } = await searchMyWorkshops({ espacioId, q: params.q });
+      return data.workshops;
+    }
+    if (params.estado) {
+      const { data } = await listMyWorkshopsByEstado({ espacioId, estado: params.estado });
+      return data.workshops;
+    }
+    const { data } = await listMyWorkshops({ espacioId });
+    return data.workshops;
+  },
+  get: async (id) => {
+    const { data } = await getMyWorkshop({ id });
+    return data.workshops[0] ?? null;
+  },
+  create: async (espacioId, payload) => {
+    const { data } = await createWorkshop({ espacioId, ...payload });
+    return data.workshop_insert;
+  },
+  update: async (id, espacioId, payload) => {
+    const { data } = await updateWorkshop({ id, espacioId, ...payload });
+    return data.workshop_update;
+  },
+  remove: async (id, espacioId) => {
+    const { data } = await deleteWorkshop({ id, espacioId });
+    return data.workshop_delete;
+  },
 };

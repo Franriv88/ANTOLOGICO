@@ -1,24 +1,55 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useEspacio } from '../context/EspacioContext';
 
 const NAV = [
   { to: '/workshops', label: 'Talleres' },
-  { to: '/reservas',  label: 'Reservas',    disabled: true },
-  { to: '/reportes',  label: 'Reportes',    disabled: true },
-  { to: '/identidad', label: 'Identidad',   disabled: true },
-  { to: '/config',    label: 'Configuración', disabled: true },
+  { to: '/reservas',  label: 'Reservas',     disabled: true },
+  { to: '/reportes',  label: 'Reportes',     disabled: true },
+  { to: '/identidad', label: 'Identidad',    disabled: true },
+  { to: '/config',    label: 'Configuración' },
 ];
 
 export default function Layout({ children }) {
   const { user, logout } = useAuth();
+  const { espacios, activeEspacio, setActive } = useEspacio();
 
   return (
     <div className="flex min-h-screen">
       <aside className="w-56 shrink-0 bg-surface-100 border-r border-border flex flex-col">
+        {/* Logo */}
         <div className="px-5 py-6 border-b border-border">
           <span className="font-display text-xl text-ink">Antológico</span>
         </div>
 
+        {/* Selector de espacio */}
+        {espacios.length > 1 ? (
+          <div className="px-3 py-3 border-b border-border">
+            <select
+              value={activeEspacio?.id ?? ''}
+              onChange={(e) => {
+                const found = espacios.find((esp) => esp.id === e.target.value);
+                if (found) setActive(found);
+              }}
+              className="w-full px-2 py-1.5 bg-white border border-border rounded-md text-xs text-ink focus:outline-none focus:border-primary"
+            >
+              {espacios.map((esp) => (
+                <option key={esp.id} value={esp.id}>{esp.nombre}</option>
+              ))}
+            </select>
+          </div>
+        ) : activeEspacio ? (
+          <div className="px-5 py-3 border-b border-border">
+            <p className="text-xs font-medium text-ink truncate">{activeEspacio.nombre}</p>
+            {(activeEspacio.rubro?.nombre || activeEspacio.rubroPersonalizado) && (
+              <p className="text-xs text-ink-muted truncate">
+                {activeEspacio.rubro?.nombre ?? activeEspacio.rubroPersonalizado}
+              </p>
+            )}
+          </div>
+        ) : null}
+
+        {/* Navegación */}
         <nav className="flex-1 py-4 flex flex-col gap-0.5 px-3">
           {NAV.map(({ to, label, disabled }) =>
             disabled ? (
@@ -46,8 +77,9 @@ export default function Layout({ children }) {
           )}
         </nav>
 
+        {/* Usuario */}
         <div className="px-5 py-4 border-t border-border">
-          <p className="text-xs text-ink-muted truncate">{user?.nombre}</p>
+          <p className="text-xs text-ink-muted truncate">{user?.displayName || user?.email}</p>
           <button
             onClick={logout}
             className="mt-1 text-xs text-ink-muted hover:text-danger transition-colors"

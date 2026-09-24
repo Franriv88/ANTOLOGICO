@@ -1,0 +1,75 @@
+# Datos de prueba para desarrollo local con el emulador.
+# NO se deploya a producción. Solo funciona con: firebase emulators:start --only dataconnect
+#
+# Para cargar: panel del emulador en http://localhost:4000 → Data Connect → Run mutations
+
+# ─── Rubros ───────────────────────────────────────────────────────────────────
+
+mutation SeedRubroArte {
+  rubro_insert(data: { nombre: "Arte y manualidades", orden: 1 })
+}
+mutation SeedRubroMusica {
+  rubro_insert(data: { nombre: "Música y danza", orden: 2 })
+}
+mutation SeedRubroCocina {
+  rubro_insert(data: { nombre: "Cocina y gastronomía", orden: 3 })
+}
+mutation SeedRubroBienestar {
+  rubro_insert(data: { nombre: "Bienestar y fitness", orden: 4 })
+}
+mutation SeedRubroFotografia {
+  rubro_insert(data: { nombre: "Fotografía y video", orden: 5 })
+}
+mutation SeedRubroIdiomas {
+  rubro_insert(data: { nombre: "Idiomas", orden: 6 })
+}
+mutation SeedRubroTecnologia {
+  rubro_insert(data: { nombre: "Tecnología", orden: 7 })
+}
+mutation SeedRubroEducacion {
+  rubro_insert(data: { nombre: "Educación y tutorías", orden: 8 })
+}
+
+# ─── Planes ───────────────────────────────────────────────────────────────────
+
+mutation SeedPlanEsencial {
+  plan_insert(data: {
+    nombre: "Esencial"
+    precioMensual: 4999
+    precioAnual: 49990
+    features: ["Hasta 5 talleres activos", "Dominio personalizado", "Encabezado de color"]
+    activo: true
+  })
+}
+
+mutation SeedPlanProfesional {
+  plan_insert(data: {
+    nombre: "Profesional"
+    precioMensual: 9999
+    precioAnual: 99990
+    features: ["Talleres ilimitados", "Dominio personalizado", "Encabezado con imagen", "Reportes exportables"]
+    activo: true
+  })
+}
+
+mutation SeedPlanEstudio {
+  plan_insert(data: {
+    nombre: "Estudio"
+    precioMensual: 19999
+    precioAnual: 199990
+    features: ["Talleres ilimitados", "Múltiples espacios", "Encabezado con imagen", "Reportes exportables", "Auditoría completa"]
+    activo: true
+  })
+}
+
+# ─── Profesional de prueba ────────────────────────────────────────────────────
+# Reemplazá el UID con el tuyo del emulador de Auth antes de correr este seed.
+
+# mutation SeedProfesionalTest {
+#   profesional_upsert(data: {
+#     uid: "test-uid-replace-me"
+#     nombre: "Ana García"
+#     email: "profesional@test.com"
+#     estado: ACTIVO
+#   })
+# }

@@ -1,0 +1,464 @@
+extend type Query {
+  """
+  ✨ Look up a single `Dominio` based on `id`, `key` or `first` and return selected fields (or `null` if not found).
+  """
+  dominio(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Dominio_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Dominio_FirstRow
+  ): Dominio @fdc_generated(from: "Dominio", purpose: QUERY_SINGLE)
+  """
+  ✨ Look up a single `Espacio` based on `id`, `key` or `first` and return selected fields (or `null` if not found).
+  """
+  espacio(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Espacio_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Espacio_FirstRow
+  ): Espacio @fdc_generated(from: "Espacio", purpose: QUERY_SINGLE)
+  """
+  ✨ Look up a single `Plan` based on `id`, `key` or `first` and return selected fields (or `null` if not found).
+  """
+  plan(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Plan_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Plan_FirstRow
+  ): Plan @fdc_generated(from: "Plan", purpose: QUERY_SINGLE)
+  """
+  ✨ Look up a single `Profesional` based on `id`, `key` or `first` and return selected fields (or `null` if not found).
+  """
+  profesional(
+    """
+    The key used to identify the object.
+    """
+    key: Profesional_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Profesional_FirstRow
+  ): Profesional @fdc_generated(from: "Profesional", purpose: QUERY_SINGLE)
+  """
+  ✨ Look up a single `Reserva` based on `id`, `key` or `first` and return selected fields (or `null` if not found).
+  """
+  reserva(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Reserva_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Reserva_FirstRow
+  ): Reserva @fdc_generated(from: "Reserva", purpose: QUERY_SINGLE)
+  """
+  ✨ Look up a single `Rubro` based on `id`, `key` or `first` and return selected fields (or `null` if not found).
+  """
+  rubro(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Rubro_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Rubro_FirstRow
+  ): Rubro @fdc_generated(from: "Rubro", purpose: QUERY_SINGLE)
+  """
+  ✨ Look up a single `SuperAdmin` based on `id`, `key` or `first` and return selected fields (or `null` if not found).
+  """
+  superAdmin(
+    """
+    The key used to identify the object.
+    """
+    key: SuperAdmin_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: SuperAdmin_FirstRow
+  ): SuperAdmin @fdc_generated(from: "SuperAdmin", purpose: QUERY_SINGLE)
+  """
+  ✨ Look up a single `Usuario` based on `id`, `key` or `first` and return selected fields (or `null` if not found).
+  """
+  usuario(
+    """
+    The key used to identify the object.
+    """
+    key: Usuario_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Usuario_FirstRow
+  ): Usuario @fdc_generated(from: "Usuario", purpose: QUERY_SINGLE)
+  """
+  ✨ Look up a single `Workshop` based on `id`, `key` or `first` and return selected fields (or `null` if not found).
+  """
+  workshop(
+    """
+    The unique ID of the object.
+    """
+    id: UUID
+
+    """
+    The key used to identify the object.
+    """
+    key: Workshop_Key
+
+    """
+    Fetch the first row based on the filters and ordering.
+    """
+    first: Workshop_FirstRow
+  ): Workshop @fdc_generated(from: "Workshop", purpose: QUERY_SINGLE)
+  """
+  ✨ List `Dominio` objects in the table and return selected fields, optionally filtered by `where` conditions
+  """
+  dominios(
+    """
+    Filter condition to narrow down the query results.
+    """
+    where: Dominio_Filter
+
+    """
+    Order the query results by specific fields.
+    """
+    orderBy: [Dominio_Order!]
+
+    """
+    Number of rows to skip before starting to return the results.
+    """
+    offset: Int
+
+    """
+    Maximum number of rows to return (defaults to 100 rows).
+    """
+    limit: Int = 100
+
+    """
+    Set to true to return distinct results.
+    """
+    distinct: Boolean = false
+
+    """
+    Filter condition to apply to the groups of aggregate queries.
+    """
+    having: Dominio_Having
+  ): [Dominio!]! @fdc_generated(from: "Dominio", purpose: QUERY_MULTIPLE)
+  """
+  ✨ List `Espacio` objects in the table and return selected fields, optionally filtered by `where` conditions
+  """
+  espacios(
+    """
+    Filter condition to narrow down the query results.
+    """
+    where: Espacio_Filter
+
+    """
+    Order the query results by specific fields.
+    """
+    orderBy: [Espacio_Order!]
+
+    """
+    Number of rows to skip before starting to return the results.
+    """
+    offset: Int
+
+    """
+    Maximum number of rows to return (defaults to 100 rows).
+    """
+    limit: Int = 100
+
+    """
+    Set to true to return distinct results.
+    """
+    distinct: Boolean = false
+
+    """
+    Filter condition to apply to the groups of aggregate queries.
+    """
+    having: Espacio_Having
+  ): [Espacio!]! @fdc_generated(from: "Espacio", purpose: QUERY_MULTIPLE)
+  """
+  ✨ List `Plan` objects in the table and return selected fields, optionally filtered by `where` conditions
+  """
+  planes(
+    """
+    Filter condition to narrow down the query results.
+    """
+    where: Plan_Filter
+
+    """
+    Order the query results by specific fields.
+    """
+    orderBy: [Plan_Order!]
+
+    """
+    Number of rows to skip before starting to return the results.
+    """
+    offset: Int
+
+    """
+    Maximum number of rows to return (defaults to 100 rows).
+    """
+    limit: Int = 100
+
+    """
+    Set to true to return distinct results.
+    """
+    distinct: Boolean = false
+
+    """
+    Filter condition to apply to the groups of aggregate queries.
+    """
+    having: Plan_Having
+  ): [Plan!]! @fdc_generated(from: "Plan", purpose: QUERY_MULTIPLE)
+  """
+  ✨ List `Profesional` objects in the table and return selected fields, optionally filtered by `where` conditions
+  """
+  profesionales(
+    """
+    Filter condition to narrow down the query results.
+    """
+    where: Profesional_Filter
+
+    """
+    Order the query results by specific fields.
+    """
+    orderBy: [Profesional_Order!]
+
+    """
+    Number of rows to skip before starting to return the results.
+    """
+    offset: Int
+
+    """
+    Maximum number of rows to return (defaults to 100 rows).
+    """
+    limit: Int = 100
+
+    """
+    Set to true to return distinct results.
+    """
+    distinct: Boolean = false
+
+    """
+    Filter condition to apply to the groups of aggregate queries.
+    """
+    having: Profesional_Having
+  ): [Profesional!]! @fdc_generated(from: "Profesional", purpose: QUERY_MULTIPLE)
+  """
+  ✨ List `Reserva` objects in the table and return selected fields, optionally filtered by `where` conditions
+  """
+  reservas(
+    """
+    Filter condition to narrow down the query results.
+    """
+    where: Reserva_Filter
+
+    """
+    Order the query results by specific fields.
+    """
+    orderBy: [Reserva_Order!]
+
+    """
+    Number of rows to skip before starting to return the results.
+    """
+    offset: Int
+
+    """
+    Maximum number of rows to return (defaults to 100 rows).
+    """
+    limit: Int = 100
+
+    """
+    Set to true to return distinct results.
+    """
+    distinct: Boolean = false
+
+    """
+    Filter condition to apply to the groups of aggregate queries.
+    """
+    having: Reserva_Having
+  ): [Reserva!]! @fdc_generated(from: "Reserva", purpose: QUERY_MULTIPLE)
+  """
+  ✨ List `Rubro` objects in the table and return selected fields, optionally filtered by `where` conditions
+  """
+  rubros(
+    """
+    Filter condition to narrow down the query results.
+    """
+    where: Rubro_Filter
+
+    """
+    Order the query results by specific fields.
+    """
+    orderBy: [Rubro_Order!]
+
+    """
+    Number of rows to skip before starting to return the results.
+    """
+    offset: Int
+
+    """
+    Maximum number of rows to return (defaults to 100 rows).
+    """
+    limit: Int = 100
+
+    """
+    Set to true to return distinct results.
+    """
+    distinct: Boolean = false
+
+    """
+    Filter condition to apply to the groups of aggregate queries.
+    """
+    having: Rubro_Having
+  ): [Rubro!]! @fdc_generated(from: "Rubro", purpose: QUERY_MULTIPLE)
+  """
+  ✨ List `SuperAdmin` objects in the table and return selected fields, optionally filtered by `where` conditions
+  """
+  superAdmins(
+    """
+    Filter condition to narrow down the query results.
+    """
+    where: SuperAdmin_Filter
+
+    """
+    Order the query results by specific fields.
+    """
+    orderBy: [SuperAdmin_Order!]
+
+    """
+    Number of rows to skip before starting to return the results.
+    """
+    offset: Int
+
+    """
+    Maximum number of rows to return (defaults to 100 rows).
+    """
+    limit: Int = 100
+
+    """
+    Set to true to return distinct results.
+    """
+    distinct: Boolean = false
+
+    """
+    Filter condition to apply to the groups of aggregate queries.
+    """
+    having: SuperAdmin_Having
+  ): [SuperAdmin!]! @fdc_generated(from: "SuperAdmin", purpose: QUERY_MULTIPLE)
+  """
+  ✨ List `Usuario` objects in the table and return selected fields, optionally filtered by `where` conditions
+  """
+  usuarios(
+    """
+    Filter condition to narrow down the query results.
+    """
+    where: Usuario_Filter
+
+    """
+    Order the query results by specific fields.
+    """
+    orderBy: [Usuario_Order!]
+
+    """
+    Number of rows to skip before starting to return the results.
+    """
+    offset: Int
+
+    """
+    Maximum number of rows to return (defaults to 100 rows).
+    """
+    limit: Int = 100
+
+    """
+    Set to true to return distinct results.
+    """
+    distinct: Boolean = false
+
+    """
+    Filter condition to apply to the groups of aggregate queries.
+    """
+    having: Usuario_Having
+  ): [Usuario!]! @fdc_generated(from: "Usuario", purpose: QUERY_MULTIPLE)
+  """
+  ✨ List `Workshop` objects in the table and return selected fields, optionally filtered by `where` conditions
+  """
+  workshops(
+    """
+    Filter condition to narrow down the query results.
+    """
+    where: Workshop_Filter
+
+    """
+    Order the query results by specific fields.
+    """
+    orderBy: [Workshop_Order!]
+
+    """
+    Number of rows to skip before starting to return the results.
+    """
+    offset: Int
+
+    """
+    Maximum number of rows to return (defaults to 100 rows).
+    """
+    limit: Int = 100
+
+    """
+    Set to true to return distinct results.
+    """
+    distinct: Boolean = false
+
+    """
+    Filter condition to apply to the groups of aggregate queries.
+    """
+    having: Workshop_Having
+  ): [Workshop!]! @fdc_generated(from: "Workshop", purpose: QUERY_MULTIPLE)
+}

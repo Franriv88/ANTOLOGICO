@@ -1,0 +1,215 @@
+# ─── Profesional ─────────────────────────────────────────────────────────────
+
+mutation UpsertProfesional($nombre: String!, $email: String!) @auth(level: USER) {
+  profesional_upsert(data: {
+    uid_expr: "auth.uid"
+    nombre: $nombre
+    email: $email
+    updatedAt_expr: "request.time"
+  })
+}
+
+# ─── Espacios ─────────────────────────────────────────────────────────────────
+
+mutation CreateEspacio(
+  $nombre:             String!
+  $rubroId:            UUID
+  $rubroPersonalizado: String
+) @auth(level: USER) {
+  espacio_insert(data: {
+    profesionalUid_expr: "auth.uid"
+    nombre:              $nombre
+    rubroId:             $rubroId
+    rubroPersonalizado:  $rubroPersonalizado
+    createdAt_expr:      "request.time"
+    updatedAt_expr:      "request.time"
+  })
+}
+
+mutation UpdateEspacio(
+  $id:                 UUID!
+  $nombre:             String!
+  $rubroId:            UUID
+  $rubroPersonalizado: String
+) @auth(level: USER) {
+  espacio_update(
+    first: {
+      where: {
+        id: { eq: $id }
+        profesionalUid: { eq_expr: "auth.uid" }
+      }
+    }
+    data: {
+      nombre:             $nombre
+      rubroId:            $rubroId
+      rubroPersonalizado: $rubroPersonalizado
+      updatedAt_expr:     "request.time"
+    }
+  )
+}
+
+# ─── Workshops ────────────────────────────────────────────────────────────────
+
+# @transaction verifica que el espacio pertenezca al profesional autenticado
+mutation CreateWorkshop(
+  $espacioId:         UUID!
+  $nombre:            String!
+  $tipo:              TipoWorkshop
+  $descripcion:       String
+  $cuposTotales:      Int!
+  $cuposDisponibles:  Int!
+  $precio:            Float!
+  $fecha:             Timestamp!
+  $duracionHoras:     Int
+  $duracionMinutos:   Int
+  $experienciaPrevia: Boolean
+  $scheduleData:      Any
+  $headerType:        HeaderType
+  $headerValue:       String
+  $estado:            EstadoWorkshop
+) @auth(level: USER) @transaction {
+  query @redact {
+    espacio(id: $espacioId) @check(expr: "this != null", message: "Espacio no encontrado") {
+      profesional @check(expr: "this.uid == auth.uid", message: "Sin permiso") {
+        uid
+      }
+    }
+  }
+  workshop_insert(data: {
+    espacioId:         $espacioId
+    nombre:            $nombre
+    tipo:              $tipo
+    descripcion:       $descripcion
+    cuposTotales:      $cuposTotales
+    cuposDisponibles:  $cuposDisponibles
+    precio:            $precio
+    fecha:             $fecha
+    duracionHoras:     $duracionHoras
+    duracionMinutos:   $duracionMinutos
+    experienciaPrevia: $experienciaPrevia
+    scheduleData:      $scheduleData
+    headerType:        $headerType
+    headerValue:       $headerValue
+    estado:            $estado
+    createdAt_expr:    "request.time"
+    updatedAt_expr:    "request.time"
+  })
+}
+
+# @transaction verifica ownership del espacio antes de actualizar
+mutation UpdateWorkshop(
+  $id:               UUID!
+  $espacioId:        UUID!
+  $nombre:           String!
+  $tipo:             TipoWorkshop
+  $descripcion:      String
+  $cuposTotales:     Int!
+  $cuposDisponibles: Int!
+  $precio:           Float!
+  $fecha:            Timestamp!
+  $duracionHoras:    Int
+  $duracionMinutos:  Int
+  $experienciaPrevia: Boolean
+  $scheduleData:     Any
+  $headerType:       HeaderType
+  $headerValue:      String
+  $estado:           EstadoWorkshop
+) @auth(level: USER) @transaction {
+  query @redact {
+    espacio(id: $espacioId) @check(expr: "this != null", message: "Espacio no encontrado") {
+      profesional @check(expr: "this.uid == auth.uid", message: "Sin permiso") {
+        uid
+      }
+    }
+  }
+  workshop_update(
+    first: {
+      where: {
+        id: { eq: $id }
+        espacioId: { eq: $espacioId }
+      }
+    }
+    data: {
+      nombre:            $nombre
+      tipo:              $tipo
+      descripcion:       $descripcion
+      cuposTotales:      $cuposTotales
+      cuposDisponibles:  $cuposDisponibles
+      precio:            $precio
+      fecha:             $fecha
+      duracionHoras:     $duracionHoras
+      duracionMinutos:   $duracionMinutos
+      experienciaPrevia: $experienciaPrevia
+      scheduleData:      $scheduleData
+      headerType:        $headerType
+      headerValue:       $headerValue
+      estado:            $estado
+      updatedAt_expr:    "request.time"
+    }
+  )
+}
+
+# @transaction verifica ownership antes de eliminar
+mutation DeleteWorkshop($id: UUID!, $espacioId: UUID!) @auth(level: USER) @transaction {
+  query @redact {
+    espacio(id: $espacioId) @check(expr: "this != null", message: "Espacio no encontrado") {
+      profesional @check(expr: "this.uid == auth.uid", message: "Sin permiso") {
+        uid
+      }
+    }
+  }
+  workshop_delete(
+    first: {
+      where: {
+        id: { eq: $id }
+        espacioId: { eq: $espacioId }
+      }
+    }
+  )
+}
+
+# ─── Suscripciones de Espacio ────────────────────────────────────────────────
+
+mutation SolicitarCancelacionEspacio($id: UUID!) @auth(level: USER) {
+  espacio_update(
+    first: {
+      where: {
+        id: { eq: $id }
+        profesionalUid: { eq_expr: "auth.uid" }
+      }
+    }
+    data: {
+      cancelacionPendiente: true
+      updatedAt_expr: "request.time"
+    }
+  )
+}
+
+mutation ReactivarSuscripcionEspacio($id: UUID!) @auth(level: USER) {
+  espacio_update(
+    first: {
+      where: {
+        id: { eq: $id }
+        profesionalUid: { eq_expr: "auth.uid" }
+      }
+    }
+    data: {
+      cancelacionPendiente: false
+      updatedAt_expr: "request.time"
+    }
+  )
+}
+
+# ─── Reservas (se completa en el paso 4) ─────────────────────────────────────
+
+mutation DecrementarCupo($workshopId: UUID!) @auth(level: USER, insecureReason: "Cualquier usuario autenticado puede reservar un cupo. La transacción valida disponibilidad antes de decrementar.") @transaction {
+  query @redact {
+    workshop(id: $workshopId) @check(expr: "this != null", message: "Taller no encontrado") {
+      cuposDisponibles @check(expr: "this > 0", message: "No hay cupos disponibles")
+    }
+  }
+  workshop_update(
+    id: $workshopId
+    data: { cuposDisponibles_update: { dec: 1 } }
+  )
+}

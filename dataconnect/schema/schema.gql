@@ -1,0 +1,137 @@
+# Antológico — Firebase SQL Connect Schema
+
+# ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum EstadoProfesional { ACTIVO SUSPENDIDO INACTIVO }
+enum EstadoEspacio     { ACTIVO SUSPENDIDO INACTIVO }
+enum EstadoDominio     { PENDIENTE ACTIVO ERROR }
+enum EstadoWorkshop    { BORRADOR PUBLICADO CANCELADO FINALIZADO }
+enum TipoWorkshop      { WORKSHOP TALLER CLASE CURSO }
+enum HeaderType        { COLOR IMAGE }
+enum EstadoUsuario     { ACTIVO SUSPENDIDO }
+enum EstadoReserva     { PENDIENTE CONFIRMADA CANCELADA }
+
+# ─── Rubros (catálogo de categorías de negocio) ───────────────────────────────
+# Gestionado por Super Admin. Los tenants eligen uno al crear su Espacio.
+# Si eligen "Otro", el texto queda en Espacio.rubroPersonalizado para revisión.
+
+type Rubro @table(name: "rubros", singular: "rubro", plural: "rubros") {
+  nombre:    String!    @col(dataType: "varchar(100)")
+  activo:    Boolean!   @default(value: true)
+  orden:     Int!       @default(value: 0)
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+# ─── Planes de suscripción (gestionados por Super Admin) ─────────────────────
+
+type Plan @table(name: "planes", singular: "plan", plural: "planes") {
+  nombre:        String!    @col(dataType: "varchar(100)")
+  precioMensual: Float!
+  precioAnual:   Float!
+  features:      Any!
+  activo:        Boolean!   @default(value: true)
+  createdAt:     Timestamp! @default(expr: "request.time")
+}
+
+# ─── Profesionales (Tenants) ──────────────────────────────────────────────────
+# Keyed by Firebase Auth UID. Solo guarda datos de la cuenta; el negocio vive en Espacio.
+
+type Profesional @table(name: "profesionales", key: "uid", singular: "profesional", plural: "profesionales") {
+  uid:       String!    @default(expr: "auth.uid")
+  nombre:    String!    @col(dataType: "varchar(200)")
+  email:     String!    @unique @col(dataType: "varchar(255)")
+  estado:    EstadoProfesional! @default(value: ACTIVO)
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+# ─── Espacios (negocios/tiendas del profesional) ──────────────────────────────
+# Un profesional puede tener múltiples espacios. Cada espacio tiene su propio
+# plan, dominio, marca y talleres.
+
+type Espacio @table(name: "espacios", singular: "espacio", plural: "espacios")
+  @index(fields: ["profesionalUid"]) {
+  profesional:        Profesional!
+  nombre:             String!    @col(dataType: "varchar(200)")
+  rubro:              Rubro                              # null si eligió "Otro"
+  rubroPersonalizado: String     @col(dataType: "varchar(200)")  # texto libre cuando rubro == null
+  plan:                   Plan
+  metodoPagoToken:        String     @col(dataType: "varchar(255)")
+  template:               String     @col(dataType: "varchar(100)")
+  estado:                 EstadoEspacio! @default(value: ACTIVO)
+  cancelacionPendiente:   Boolean!   @default(value: false)
+  createdAt:          Timestamp! @default(expr: "request.time")
+  updatedAt:          Timestamp! @default(expr: "request.time")
+}
+
+# ─── Dominios personalizados ──────────────────────────────────────────────────
+# Relación 1:1 con Espacio (no con Profesional — cada negocio tiene su dominio).
+
+type Dominio @table(name: "dominios", singular: "dominio", plural: "dominios") {
+  espacio:          Espacio!  @unique
+  urlPersonalizada: String!   @unique @col(dataType: "varchar(255)")
+  estado:           EstadoDominio! @default(value: PENDIENTE)
+  sslActivo:        Boolean!  @default(value: false)
+  nameservers:      Any
+  createdAt:        Timestamp! @default(expr: "request.time")
+  updatedAt:        Timestamp! @default(expr: "request.time")
+}
+
+# ─── Talleres ─────────────────────────────────────────────────────────────────
+
+type Workshop @table(name: "workshops")
+  @index(fields: ["espacioId", "estado"])
+  @index(fields: ["fecha"]) {
+  espacio:          Espacio!
+  nombre:           String!        @col(dataType: "varchar(200)")
+  tipo:             TipoWorkshop
+  descripcion:      String
+  cuposTotales:     Int!
+  cuposDisponibles: Int!
+  precio:           Float!
+  fecha:            Timestamp!
+  duracionHoras:     Int
+  duracionMinutos:   Int
+  experienciaPrevia: Boolean
+  scheduleData:      Any
+  headerType:        HeaderType!    @default(value: COLOR)
+  headerValue:       String         @col(dataType: "varchar(500)")
+  estado:            EstadoWorkshop! @default(value: BORRADOR)
+  createdAt:        Timestamp! @default(expr: "request.time")
+  updatedAt:        Timestamp! @default(expr: "request.time")
+}
+
+# ─── Usuarios finales (Mobile) ────────────────────────────────────────────────
+
+type Usuario @table(name: "usuarios", key: "uid", singular: "usuario", plural: "usuarios") {
+  uid:                String!   @default(expr: "auth.uid")
+  nombre:             String!   @col(dataType: "varchar(200)")
+  email:              String!   @unique @col(dataType: "varchar(255)")
+  estado:             EstadoUsuario! @default(value: ACTIVO)
+  notifReservas:      Boolean!  @default(value: true)
+  notifRecordatorios: Boolean!  @default(value: true)
+  createdAt:          Timestamp! @default(expr: "request.time")
+  updatedAt:          Timestamp! @default(expr: "request.time")
+}
+
+# ─── Reservas ─────────────────────────────────────────────────────────────────
+
+type Reserva @table(name: "reservas", singular: "reserva", plural: "reservas") {
+  usuario:        Usuario!
+  workshop:       Workshop!
+  fechaReserva:   Timestamp! @default(expr: "request.time")
+  estado:         EstadoReserva! @default(value: PENDIENTE)
+  comprobanteUrl: String     @col(dataType: "varchar(500)")
+  pagoExternoId:  String     @col(dataType: "varchar(255)")
+  createdAt:      Timestamp! @default(expr: "request.time")
+  updatedAt:      Timestamp! @default(expr: "request.time")
+}
+
+# ─── Super Admins ─────────────────────────────────────────────────────────────
+
+type SuperAdmin @table(name: "super_admins", key: "uid", singular: "superAdmin", plural: "superAdmins") {
+  uid:       String!    @default(expr: "auth.uid")
+  nombre:    String!    @col(dataType: "varchar(200)")
+  email:     String!    @unique @col(dataType: "varchar(255)")
+  createdAt: Timestamp! @default(expr: "request.time")
+}

@@ -1,5 +1,9 @@
 {
   "name": "@antologico/web-superadmin",
   "version": "0.0.1",
-  "private": true
+  "private": true,
+  "dependencies": {
+    "@antologico/dataconnect": "file:src/dataconnect-generated",
+    "@dataconnect/generated": "file:src/dataconnect-generated"
+  }
 }

@@ -1,0 +1,64 @@
+extend type Dominio {
+  """
+  ✨ Implicit primary key field. It's a UUID column default to a generated new value. See `@table` for how to customize it.
+  """
+  id: UUID! @default(expr: "uuidV4()") @fdc_generated(from: "Dominio", purpose: IMPLICIT_KEY_FIELD)
+  """
+  ✨ Implicit foreign key field based on `Dominio`.`espacio`. It must match the value of `Espacio`.`id`. See `@ref` for how to customize it.
+  """
+  espacioId: UUID! @fdc_generated(from: "Dominio.espacio", purpose: IMPLICIT_REF_FIELD)
+}
+extend type Espacio {
+  """
+  ✨ Implicit primary key field. It's a UUID column default to a generated new value. See `@table` for how to customize it.
+  """
+  id: UUID! @default(expr: "uuidV4()") @fdc_generated(from: "Espacio", purpose: IMPLICIT_KEY_FIELD)
+  """
+  ✨ Implicit foreign key field based on `Espacio`.`plan`. It must match the value of `Plan`.`id`. See `@ref` for how to customize it.
+  """
+  planId: UUID @fdc_generated(from: "Espacio.plan", purpose: IMPLICIT_REF_FIELD)
+  """
+  ✨ Implicit foreign key field based on `Espacio`.`profesional`. It must match the value of `Profesional`.`uid`. See `@ref` for how to customize it.
+  """
+  profesionalUid: String! @fdc_generated(from: "Espacio.profesional", purpose: IMPLICIT_REF_FIELD)
+  """
+  ✨ Implicit foreign key field based on `Espacio`.`rubro`. It must match the value of `Rubro`.`id`. See `@ref` for how to customize it.
+  """
+  rubroId: UUID @fdc_generated(from: "Espacio.rubro", purpose: IMPLICIT_REF_FIELD)
+}
+extend type Plan {
+  """
+  ✨ Implicit primary key field. It's a UUID column default to a generated new value. See `@table` for how to customize it.
+  """
+  id: UUID! @default(expr: "uuidV4()") @fdc_generated(from: "Plan", purpose: IMPLICIT_KEY_FIELD)
+}
+extend type Reserva {
+  """
+  ✨ Implicit primary key field. It's a UUID column default to a generated new value. See `@table` for how to customize it.
+  """
+  id: UUID! @default(expr: "uuidV4()") @fdc_generated(from: "Reserva", purpose: IMPLICIT_KEY_FIELD)
+  """
+  ✨ Implicit foreign key field based on `Reserva`.`usuario`. It must match the value of `Usuario`.`uid`. See `@ref` for how to customize it.
+  """
+  usuarioUid: String! @fdc_generated(from: "Reserva.usuario", purpose: IMPLICIT_REF_FIELD)
+  """
+  ✨ Implicit foreign key field based on `Reserva`.`workshop`. It must match the value of `Workshop`.`id`. See `@ref` for how to customize it.
+  """
+  workshopId: UUID! @fdc_generated(from: "Reserva.workshop", purpose: IMPLICIT_REF_FIELD)
+}
+extend type Rubro {
+  """
+  ✨ Implicit primary key field. It's a UUID column default to a generated new value. See `@table` for how to customize it.
+  """
+  id: UUID! @default(expr: "uuidV4()") @fdc_generated(from: "Rubro", purpose: IMPLICIT_KEY_FIELD)
+}
+extend type Workshop {
+  """
+  ✨ Implicit primary key field. It's a UUID column default to a generated new value. See `@table` for how to customize it.
+  """
+  id: UUID! @default(expr: "uuidV4()") @fdc_generated(from: "Workshop", purpose: IMPLICIT_KEY_FIELD)
+  """
+  ✨ Implicit foreign key field based on `Workshop`.`espacio`. It must match the value of `Espacio`.`id`. See `@ref` for how to customize it.
+  """
+  espacioId: UUID! @fdc_generated(from: "Workshop.espacio", purpose: IMPLICIT_REF_FIELD)
+}

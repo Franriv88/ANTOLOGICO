@@ -1,25 +1,25 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { auth } from '../services/api';
+import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { auth } from '../lib/firebase';
 
-export default function DevLogin() {
-  const [email, setEmail] = useState('profesional@test.com');
+const provider = new GoogleAuthProvider();
+
+export default function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
   const navigate = useNavigate();
 
-  async function handleSubmit(e) {
-    e.preventDefault();
+  async function handleGoogle() {
     setError('');
     setLoading(true);
     try {
-      const data = await auth.devLogin(email);
-      login(data.token, data.profesional);
+      await signInWithPopup(auth, provider);
       navigate('/workshops');
     } catch (err) {
-      setError(err.message);
+      if (err.code !== 'auth/popup-closed-by-user') {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -29,38 +29,29 @@ export default function DevLogin() {
     <div className="min-h-screen bg-surface-0 flex items-center justify-center">
       <div className="bg-surface-100 border border-border rounded-lg p-8 w-full max-w-sm">
         <h1 className="font-display text-2xl text-ink mb-1">Antológico</h1>
-        <p className="text-sm text-ink-muted mb-6">
-          Acceso de desarrollo — solo disponible en entorno local
+        <p className="text-sm text-ink-muted mb-8">
+          Accedé con tu cuenta de Google para gestionar tus talleres
         </p>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <div>
-            <label className="block text-xs font-medium text-ink-muted mb-1">
-              Email del profesional
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-3 py-2 bg-white border border-border rounded-md text-sm text-ink focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-            />
-          </div>
+        {error && (
+          <p className="text-xs text-danger bg-danger/5 border border-danger/20 rounded px-3 py-2 mb-4">
+            {error}
+          </p>
+        )}
 
-          {error && (
-            <p className="text-xs text-danger bg-danger/5 border border-danger/20 rounded px-3 py-2">
-              {error}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary-strong transition-colors disabled:opacity-50"
-          >
-            {loading ? 'Entrando…' : 'Entrar'}
-          </button>
-        </form>
+        <button
+          onClick={handleGoogle}
+          disabled={loading}
+          className="w-full flex items-center justify-center gap-3 py-2.5 border border-border rounded-md text-sm font-medium text-ink hover:bg-surface-200 transition-colors disabled:opacity-50"
+        >
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
+            <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
+            <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+            <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+          </svg>
+          {loading ? 'Redirigiendo…' : 'Continuar con Google'}
+        </button>
       </div>
     </div>
   );

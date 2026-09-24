@@ -1,0 +1,13 @@
+connectorId: antologico
+generate:
+  javascriptSdk:
+    - outputDir: "../../apps/web-tenant/src/dataconnect-generated"
+      package: "@antologico/dataconnect"
+      packageJsonDir: "../../apps/web-tenant"
+      react: true
+      angular: false
+    - outputDir: "../../apps/web-superadmin/src/dataconnect-generated"
+      package: "@antologico/dataconnect"
+      packageJsonDir: "../../apps/web-superadmin"
+      react: false
+      angular: false

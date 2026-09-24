@@ -3,6 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import SlotBadge from '../components/SlotBadge';
 import { workshops as api } from '../services/api';
+import { getSlotStatus } from '../lib/slotStatus';
+import { useEspacio } from '../context/EspacioContext';
+import { TIPO_CONFIG, formatDuracion } from '../lib/tipoWorkshop';
 
 const ESTADOS = ['', 'BORRADOR', 'PUBLICADO', 'CANCELADO', 'FINALIZADO'];
 const ESTADO_LABEL = {
@@ -30,6 +33,7 @@ function formatPrecio(n) {
 }
 
 export default function Workshops() {
+  const { activeEspacio } = useEspacio();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -38,10 +42,11 @@ export default function Workshops() {
   const navigate = useNavigate();
 
   async function load() {
+    if (!activeEspacio) return;
     try {
       setLoading(true);
       setError('');
-      const data = await api.list({ ...(estado && { estado }), ...(q && { q }) });
+      const data = await api.list(activeEspacio.id, { ...(estado && { estado }), ...(q && { q }) });
       setItems(data);
     } catch (e) {
       setError(e.message);
@@ -50,12 +55,12 @@ export default function Workshops() {
     }
   }
 
-  useEffect(() => { load(); }, [estado]);
+  useEffect(() => { load(); }, [estado, activeEspacio?.id]);
 
   async function handleDelete(id, nombre) {
     if (!window.confirm(`¿Eliminar "${nombre}"? Esta acción no se puede deshacer.`)) return;
     try {
-      await api.remove(id);
+      await api.remove(id, activeEspacio.id);
       setItems((prev) => prev.filter((w) => w.id !== id));
     } catch (e) {
       alert(e.message);
@@ -131,14 +136,19 @@ export default function Workshops() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
                   <h2 className="font-semibold text-sm text-ink truncate">{w.nombre}</h2>
-                  {w.categoria && (
-                    <span className="px-1.5 py-0.5 bg-accent/10 text-accent text-xs rounded font-medium shrink-0">
-                      {w.categoria}
+                  {w.tipo && TIPO_CONFIG[w.tipo] && (
+                    <span className={`px-1.5 py-0.5 text-xs rounded font-medium shrink-0 ${TIPO_CONFIG[w.tipo].color}`}>
+                      {TIPO_CONFIG[w.tipo].label}
                     </span>
                   )}
                 </div>
                 <p className="text-xs text-ink-muted font-mono">
                   {formatFecha(w.fecha)} · {formatHora(w.fecha)}
+                  {formatDuracion(w.duracionHoras, w.duracionMinutos) && (
+                    <span className="ml-1.5 text-ink-muted/70">
+                      · {formatDuracion(w.duracionHoras, w.duracionMinutos)}
+                    </span>
+                  )}
                 </p>
               </div>
 
@@ -150,7 +160,7 @@ export default function Workshops() {
                   </p>
                 </div>
 
-                <SlotBadge status={w.slotStatus} />
+                <SlotBadge status={getSlotStatus(w.cuposDisponibles, w.cuposTotales)} />
 
                 <div className="flex items-center gap-1">
                   <button
