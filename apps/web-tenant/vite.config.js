@@ -3,8 +3,7 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '');
-  const isDemo = env.VITE_DEMO_MODE === 'true' || process.env.VITE_DEMO_MODE === 'true';
+  const isDemo = mode === 'demo';
 
   return {
     plugins: [react()],
@@ -12,7 +11,8 @@ export default defineConfig(({ mode }) => {
       alias: isDemo
         ? {
             // En demo mode, redirige api.js → api.demo.js (localStorage, sin DataConnect)
-            [path.resolve(__dirname, 'src/services/api.js')]:
+            // Nota: sin .js al final — Vite resuelve sin extensión antes de comparar aliases
+            [path.resolve(__dirname, 'src/services/api')]:
               path.resolve(__dirname, 'src/services/api.demo.js'),
           }
         : {},
