@@ -156,6 +156,24 @@ extend type Espacio {
   """
   _count: Int! @fdc_generated(from: "Espacio.", purpose: QUERY_COUNT)
   """
+  ✨ Count the number of rows in the `Espacio` table where the `brandColors` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  brandColors_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Espacio.brandColors", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Espacio` table where the `brandFont` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  brandFont_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Espacio.brandFont", purpose: QUERY_COUNT)
+  """
   ✨ Count the number of rows in the `Espacio` table where the `cancelacionPendiente` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
   """
   cancelacionPendiente_count(
@@ -191,6 +209,24 @@ extend type Espacio {
     """
     distinct: Boolean = false
   ): Int! @fdc_generated(from: "Espacio.id", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Espacio` table where the `logoShape` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  logoShape_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Espacio.logoShape", purpose: QUERY_COUNT)
+  """
+  ✨ Count the number of rows in the `Espacio` table where the `logoUrl` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
+  """
+  logoUrl_count(
+    """
+    Set to true to count the number of distinct values.
+    """
+    distinct: Boolean = false
+  ): Int! @fdc_generated(from: "Espacio.logoUrl", purpose: QUERY_COUNT)
   """
   ✨ Count the number of rows in the `Espacio` table where the `metodoPagoToken` field is non-null. Pass the `distinct` argument to instead count the number of distinct values.
   """
@@ -264,6 +300,10 @@ extend type Espacio {
     distinct: Boolean = false
   ): Int! @fdc_generated(from: "Espacio.updatedAt", purpose: QUERY_COUNT)
   """
+  ✨ Minimum of the `brandColors` field in the `Espacio` table.
+  """
+  brandColors_min: Any @fdc_generated(from: "Espacio.brandColors", purpose: QUERY_MIN)
+  """
   ✨ Minimum of the `createdAt` field in the `Espacio` table.
   """
   createdAt_min: Timestamp @fdc_generated(from: "Espacio.createdAt", purpose: QUERY_MIN)
@@ -271,6 +311,10 @@ extend type Espacio {
   ✨ Minimum of the `updatedAt` field in the `Espacio` table.
   """
   updatedAt_min: Timestamp @fdc_generated(from: "Espacio.updatedAt", purpose: QUERY_MIN)
+  """
+  ✨ Maximum of the `brandColors` field in the `Espacio` table.
+  """
+  brandColors_max: Any @fdc_generated(from: "Espacio.brandColors", purpose: QUERY_MAX)
   """
   ✨ Maximum of the `createdAt` field in the `Espacio` table.
   """

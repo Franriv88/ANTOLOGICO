@@ -108,6 +108,10 @@ export interface GetMyEspacioData {
     cancelacionPendiente: boolean;
     createdAt: TimestampString;
     updatedAt: TimestampString;
+    logoUrl?: string | null;
+    logoShape?: string | null;
+    brandColors?: unknown | null;
+    brandFont?: string | null;
     rubro?: {
       id: UUIDString;
       nombre: string;
@@ -179,6 +183,10 @@ export interface ListMyEspaciosData {
     estado: EstadoEspacio;
     cancelacionPendiente: boolean;
     createdAt: TimestampString;
+    logoUrl?: string | null;
+    logoShape?: string | null;
+    brandColors?: unknown | null;
+    brandFont?: string | null;
     rubro?: {
       id: UUIDString;
       nombre: string;
@@ -365,6 +373,27 @@ export interface UpdateEspacioData {
   espacio_update?: Espacio_Key | null;
 }
 
+export interface UpdateEspacioIdentidadData {
+  espacio_update?: Espacio_Key | null;
+}
+
+export interface UpdateEspacioIdentidadVariables {
+  id: UUIDString;
+  logoUrl?: string | null;
+  logoShape?: string | null;
+  brandColors?: unknown | null;
+  brandFont?: string | null;
+}
+
+export interface UpdateEspacioPlanIdData {
+  espacio_update?: Espacio_Key | null;
+}
+
+export interface UpdateEspacioPlanIdVariables {
+  id: UUIDString;
+  planId: UUIDString;
+}
+
 export interface UpdateEspacioVariables {
   id: UUIDString;
   nombre: string;
@@ -374,6 +403,17 @@ export interface UpdateEspacioVariables {
 
 export interface UpdateWorkshopData {
   workshop_update?: Workshop_Key | null;
+}
+
+export interface UpdateWorkshopEstadoData {
+  workshop_update?: Workshop_Key | null;
+}
+
+export interface UpdateWorkshopEstadoVariables {
+  id: UUIDString;
+  espacioId: UUIDString;
+  estado: EstadoWorkshop;
+  cuposDisponibles: number;
 }
 
 export interface UpdateWorkshopVariables {
@@ -426,6 +466,18 @@ export const upsertProfesionalRef: UpsertProfesionalRef;
 export function upsertProfesional(vars: UpsertProfesionalVariables): MutationPromise<UpsertProfesionalData, UpsertProfesionalVariables>;
 export function upsertProfesional(dc: DataConnect, vars: UpsertProfesionalVariables): MutationPromise<UpsertProfesionalData, UpsertProfesionalVariables>;
 
+interface UpdateEspacioPlanIdRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: UpdateEspacioPlanIdVariables): MutationRef<UpdateEspacioPlanIdData, UpdateEspacioPlanIdVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: UpdateEspacioPlanIdVariables): MutationRef<UpdateEspacioPlanIdData, UpdateEspacioPlanIdVariables>;
+  operationName: string;
+}
+export const updateEspacioPlanIdRef: UpdateEspacioPlanIdRef;
+
+export function updateEspacioPlanId(vars: UpdateEspacioPlanIdVariables): MutationPromise<UpdateEspacioPlanIdData, UpdateEspacioPlanIdVariables>;
+export function updateEspacioPlanId(dc: DataConnect, vars: UpdateEspacioPlanIdVariables): MutationPromise<UpdateEspacioPlanIdData, UpdateEspacioPlanIdVariables>;
+
 interface CreateEspacioRef {
   /* Allow users to create refs without passing in DataConnect */
   (vars: CreateEspacioVariables): MutationRef<CreateEspacioData, CreateEspacioVariables>;
@@ -437,6 +489,18 @@ export const createEspacioRef: CreateEspacioRef;
 
 export function createEspacio(vars: CreateEspacioVariables): MutationPromise<CreateEspacioData, CreateEspacioVariables>;
 export function createEspacio(dc: DataConnect, vars: CreateEspacioVariables): MutationPromise<CreateEspacioData, CreateEspacioVariables>;
+
+interface UpdateEspacioIdentidadRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: UpdateEspacioIdentidadVariables): MutationRef<UpdateEspacioIdentidadData, UpdateEspacioIdentidadVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: UpdateEspacioIdentidadVariables): MutationRef<UpdateEspacioIdentidadData, UpdateEspacioIdentidadVariables>;
+  operationName: string;
+}
+export const updateEspacioIdentidadRef: UpdateEspacioIdentidadRef;
+
+export function updateEspacioIdentidad(vars: UpdateEspacioIdentidadVariables): MutationPromise<UpdateEspacioIdentidadData, UpdateEspacioIdentidadVariables>;
+export function updateEspacioIdentidad(dc: DataConnect, vars: UpdateEspacioIdentidadVariables): MutationPromise<UpdateEspacioIdentidadData, UpdateEspacioIdentidadVariables>;
 
 interface UpdateEspacioRef {
   /* Allow users to create refs without passing in DataConnect */
@@ -473,6 +537,18 @@ export const updateWorkshopRef: UpdateWorkshopRef;
 
 export function updateWorkshop(vars: UpdateWorkshopVariables): MutationPromise<UpdateWorkshopData, UpdateWorkshopVariables>;
 export function updateWorkshop(dc: DataConnect, vars: UpdateWorkshopVariables): MutationPromise<UpdateWorkshopData, UpdateWorkshopVariables>;
+
+interface UpdateWorkshopEstadoRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: UpdateWorkshopEstadoVariables): MutationRef<UpdateWorkshopEstadoData, UpdateWorkshopEstadoVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: UpdateWorkshopEstadoVariables): MutationRef<UpdateWorkshopEstadoData, UpdateWorkshopEstadoVariables>;
+  operationName: string;
+}
+export const updateWorkshopEstadoRef: UpdateWorkshopEstadoRef;
+
+export function updateWorkshopEstado(vars: UpdateWorkshopEstadoVariables): MutationPromise<UpdateWorkshopEstadoData, UpdateWorkshopEstadoVariables>;
+export function updateWorkshopEstado(dc: DataConnect, vars: UpdateWorkshopEstadoVariables): MutationPromise<UpdateWorkshopEstadoData, UpdateWorkshopEstadoVariables>;
 
 interface DeleteWorkshopRef {
   /* Allow users to create refs without passing in DataConnect */

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import Layout from '../components/Layout';
 import TimeSelect from '../components/TimeSelect';
@@ -7,6 +7,13 @@ import { useEspacio } from '../context/EspacioContext';
 import { TIPO_CONFIG, TIPOS } from '../lib/tipoWorkshop';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
+const HEADER_PALETTE = [
+  '#E85D4A', '#8C2E1F', '#B98527', '#E8A23A',
+  '#D4563E', '#C2445A', '#E84488', '#9D174D',
+  '#3B82F6', '#6366F1', '#8B5CF6', '#14B8A6',
+  '#10B981', '#059669', '#4B5563', '#1A1611',
+];
+
 const DIAS_ABR  = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
 const DIAS_FULL = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
 const MESES     = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
@@ -24,10 +31,17 @@ const TIPO_DESC = {
   CURSO:    'Formación estructurada en varios encuentros con programa, objetivos y evaluación.',
 };
 
-const INPUT_CLS = 'w-full px-3 py-2 bg-white border border-border rounded-md text-sm text-ink focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary';
+const INPUT_CLS = 'w-full px-3 py-2 bg-white border border-border rounded-md text-sm text-[#2B241A] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary';
 const LABEL_CLS = 'block text-xs font-medium text-ink-muted mb-1';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+function isValidColor(str) {
+  if (!str) return false;
+  const s = new Option().style;
+  s.color = str;
+  return s.color !== '';
+}
+
 function localDateStr(d) {
   const date = new Date(d);
   return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
@@ -56,7 +70,8 @@ function weekdayIdxOf(dateStr) {
 }
 
 // All dates matching a weekday between startDate and endDate (inclusive)
-function computeWeeklyDates(startStr, endStr, myIdx) {
+// step: 7 = semanal, 14 = quincenal
+function computeWeeklyDates(startStr, endStr, myIdx, step = 7) {
   if (!startStr || !endStr || myIdx === null) return [];
   const jsDay = (myIdx + 1) % 7;
   const dates = [];
@@ -69,7 +84,7 @@ function computeWeeklyDates(startStr, endStr, myIdx) {
   }
   while (cur <= end) {
     dates.push(localDateStr(cur));
-    cur = new Date(cur.getTime() + 7 * 86400000);
+    cur = new Date(cur.getTime() + step * 86400000);
   }
   return dates;
 }
@@ -78,7 +93,12 @@ function buildScheduleData(form) {
   if (!form.scheduleMode) return null;
   const myIdx = weekdayIdxOf(form.fecha);
   if (form.scheduleMode === 'SPECIFIC_DATES') return { mode: 'SPECIFIC_DATES', dates: form.specificDates };
-  if (form.scheduleMode === 'WEEKLY') return { mode: 'WEEKLY', day: myIdx, endDate: form.weeklyEndDate || null };
+  if (form.scheduleMode === 'WEEKLY') return {
+    mode: 'WEEKLY',
+    day: myIdx,
+    frequency: form.weeklyFrequency || 'SEMANAL',
+    endDate: form.weeklyEndDate || null,
+  };
   return null;
 }
 
@@ -88,7 +108,6 @@ const EMPTY = {
   tipo: null,
   descripcion: '',
   cuposTotales: '',
-  cuposDisponibles: '',
   precio: '',
   fecha: '',
   hora: '09:00',
@@ -99,6 +118,10 @@ const EMPTY = {
   scheduleMode: null,          // 'SPECIFIC_DATES' | 'WEEKLY'
   specificDates: [],
   weeklyEndDate: '',
+  weeklyNumSessions: '',       // synced with weeklyEndDate (bidireccional)
+  weeklyFrequency: 'SEMANAL',  // 'SEMANAL' | 'QUINCENAL'
+  headerType: 'COLOR',         // 'COLOR' | 'IMAGE'
+  headerValue: '#E85D4A',      // hex para COLOR, URL para IMAGE
 };
 
 function deriveEstadoAction(w) {
@@ -178,8 +201,9 @@ function MultiDateCalendar({ selected, onChange, startDate }) {
 }
 
 // ── WeekdayCalendarPicker ─────────────────────────────────────────────────────
-// Calendar where only dates matching `weekdayMyIdx` AND after `startDate` are selectable
-function WeekdayCalendarPicker({ startDate, weekdayMyIdx, value, onChange }) {
+// Calendar where only dates matching `weekdayMyIdx` AND after `startDate` are selectable.
+// `computedDates` (optional) highlights the full range; `startDate` is shown as anchor.
+function WeekdayCalendarPicker({ startDate, weekdayMyIdx, value, onChange, computedDates = [], step = 7 }) {
   const initView = () => {
     const ref = value || startDate;
     if (ref) { const d = new Date(ref + 'T12:00:00'); return { year: d.getFullYear(), month: d.getMonth() }; }
@@ -219,21 +243,25 @@ function WeekdayCalendarPicker({ startDate, weekdayMyIdx, value, onChange }) {
       <div className="grid grid-cols-7 gap-y-1">
         {cells.map((day, i) => {
           if (!day) return <div key={`e-${i}`} />;
-          const s = ds(day);
-          const sel = isSelectable(day);
-          const isChosen = value === s;
+          const s        = ds(day);
+          const isStart  = s === startDate;
+          const isSel    = computedDates.includes(s); // includes start + all range + end
+          const canClick = isSelectable(day);
           return (
             <button
               key={s}
               type="button"
-              disabled={!sel}
-              onClick={() => sel && onChange(s)}
+              disabled={!canClick && !isStart}
+              onClick={() => canClick && onChange(s)}
+              title={isStart ? 'Fecha de inicio' : undefined}
               className={`h-8 w-full text-xs rounded-full flex items-center justify-center transition-colors ${
-                isChosen
-                  ? 'bg-primary text-white font-semibold'
-                  : sel
-                    ? 'text-ink font-medium hover:bg-surface-200'
-                    : 'text-ink-muted/25 cursor-not-allowed'
+                isStart
+                  ? 'bg-primary text-white font-semibold cursor-default'
+                  : isSel
+                    ? 'bg-primary text-white font-semibold'
+                    : canClick
+                      ? 'text-ink font-medium hover:bg-surface-200'
+                      : 'text-ink-muted/25 cursor-not-allowed'
               }`}
             >
               {day}
@@ -241,21 +269,23 @@ function WeekdayCalendarPicker({ startDate, weekdayMyIdx, value, onChange }) {
           );
         })}
       </div>
+      {startDate && !value && (
+        <p className="mt-2 text-xs text-ink-muted/60 text-center">
+          Elegí la última fecha del ciclo
+        </p>
+      )}
     </div>
   );
 }
 
 // ── WeeklyPicker ──────────────────────────────────────────────────────────────
-function WeeklyPicker({ startDate, endDate, onEndDateChange }) {
+function WeeklyPicker({ startDate, endDate, numSessions, frequency, onEndDateChange, onNumSessionsChange, onFrequencyChange }) {
   const myIdx   = weekdayIdxOf(startDate);
   const dayName = myIdx !== null ? DIAS_FULL[myIdx] : null;
-  const dates   = computeWeeklyDates(startDate, endDate, myIdx);
+  const step    = frequency === 'QUINCENAL' ? 14 : 7;
+  const dates   = computeWeeklyDates(startDate, endDate, myIdx, step);
 
-  let preview = '';
-  if (dayName && endDate) {
-    const endDayName = DIAS_FULL[weekdayIdxOf(endDate)];
-    preview = `Todos los ${dayName.toLowerCase()} hasta el ${endDayName.toLowerCase()} - ${formatShortDate(endDate)}`;
-  }
+  const freqLabel = frequency === 'QUINCENAL' ? 'cada dos semanas' : 'cada semana';
 
   if (!startDate) {
     return (
@@ -265,18 +295,56 @@ function WeeklyPicker({ startDate, endDate, onEndDateChange }) {
 
   return (
     <div className="flex flex-col gap-3">
+      {/* Selector de frecuencia */}
+      <div>
+        <span className="block text-xs font-medium text-ink-muted mb-1.5">Frecuencia</span>
+        <div className="flex gap-2">
+          {[
+            { val: 'SEMANAL',   label: 'Semanal',   desc: 'Cada semana' },
+            { val: 'QUINCENAL', label: 'Quincenal', desc: 'Cada 2 semanas' },
+          ].map(({ val, label, desc }) => (
+            <button
+              key={val}
+              type="button"
+              onClick={() => onFrequencyChange(val)}
+              className={`px-3 py-1.5 rounded-md border text-xs font-medium transition-colors ${
+                frequency === val
+                  ? 'border-primary bg-primary/5 text-primary'
+                  : 'border-border text-ink hover:border-primary/40 bg-white'
+              }`}
+            >
+              {label}
+              <span className="block text-ink-muted/60 text-xs font-normal">{desc}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       <p className="text-xs text-ink-muted">
-        Se repite todos los <strong>{dayName?.toLowerCase()}</strong>. Elegí la última fecha del ciclo:
+        Se repite todos los <strong>{dayName?.toLowerCase()}</strong> <span className="text-ink-muted/70">({freqLabel})</span>. Elegí la última fecha:
       </p>
       <WeekdayCalendarPicker
         startDate={startDate}
         weekdayMyIdx={myIdx}
         value={endDate}
         onChange={onEndDateChange}
+        computedDates={dates}
+        step={step}
       />
-      {preview && (
+      <div className="flex items-center gap-3">
+        <span className="text-xs text-ink-muted shrink-0">o indicá la cantidad de encuentros:</span>
+        <input
+          type="number"
+          min="2"
+          value={numSessions}
+          onChange={e => onNumSessionsChange(e.target.value)}
+          placeholder="Ej: 8"
+          className="w-20 px-2 py-1.5 bg-white border border-border rounded-md text-sm text-[#2B241A] font-mono focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+        />
+      </div>
+      {endDate && (
         <p className="text-xs text-ink-muted italic bg-surface-100 rounded-md px-3 py-2 border border-border">
-          {preview}
+          Todos los {dayName?.toLowerCase()} ({freqLabel}) hasta el {formatShortDate(endDate)}
         </p>
       )}
       {dates.length > 0 && (
@@ -304,6 +372,16 @@ export default function WorkshopForm() {
   const isEdit = Boolean(id);
   const navigate = useNavigate();
   const { activeEspacio } = useEspacio();
+  const planNombre = activeEspacio?.plan?.nombre ?? null;
+  const canUploadImage = planNombre === 'Profesional' || planNombre === 'Estudio';
+  const imgInputRef = useRef(null);
+
+  // Paleta: colores de marca del espacio primero, luego el default
+  const rawBC = activeEspacio?.brandColors;
+  const brandColors = Array.isArray(rawBC) ? rawBC : (rawBC?.palette ?? []);
+  const activePalette = brandColors.length
+    ? [...new Set([...brandColors, ...HEADER_PALETTE])].slice(0, 16)
+    : HEADER_PALETTE;
 
   const [form, setForm] = useState(EMPTY);
   const [errors, setErrors] = useState({});
@@ -314,22 +392,33 @@ export default function WorkshopForm() {
     if (!isEdit) return;
     api.get(id)
       .then((w) => {
+        const existingFecha     = localDateStr(w.fecha);
+        const existingEndDate   = w.scheduleData?.endDate ?? '';
+        const existingIdx       = weekdayIdxOf(existingFecha);
+        const existingFrequency = w.scheduleData?.frequency ?? 'SEMANAL';
+        const existingStep      = existingFrequency === 'QUINCENAL' ? 14 : 7;
+        const existingDates     = existingFecha && existingEndDate
+          ? computeWeeklyDates(existingFecha, existingEndDate, existingIdx, existingStep)
+          : [];
         setForm({
-          nombre:            w.nombre,
-          tipo:              w.tipo ?? null,
-          descripcion:       w.descripcion ?? '',
-          cuposTotales:      String(w.cuposTotales),
-          cuposDisponibles:  String(w.cuposDisponibles),
-          precio:            String(w.precio),
-          fecha:             localDateStr(w.fecha),
-          hora:              localTimeStr(w.fecha),
-          duracionHoras:     w.duracionHoras    != null ? String(w.duracionHoras)    : '',
-          duracionMinutos:   w.duracionMinutos  != null ? String(w.duracionMinutos)  : '0',
-          _estadoAction:     deriveEstadoAction(w),
-          experienciaPrevia: w.experienciaPrevia ?? null,
-          scheduleMode:      w.scheduleData?.mode    ?? null,
-          specificDates:     w.scheduleData?.dates   ?? [],
-          weeklyEndDate:     w.scheduleData?.endDate ?? '',
+          nombre:              w.nombre,
+          tipo:                w.tipo ?? null,
+          descripcion:         w.descripcion ?? '',
+          cuposTotales:        String(w.cuposTotales),
+          precio:              String(w.precio),
+          fecha:               existingFecha,
+          hora:                localTimeStr(w.fecha),
+          duracionHoras:       w.duracionHoras    != null ? String(w.duracionHoras)    : '',
+          duracionMinutos:     w.duracionMinutos  != null ? String(w.duracionMinutos)  : '0',
+          _estadoAction:       deriveEstadoAction(w),
+          experienciaPrevia:   w.experienciaPrevia ?? null,
+          scheduleMode:        w.scheduleData?.mode      ?? null,
+          specificDates:       w.scheduleData?.dates     ?? [],
+          weeklyEndDate:       existingEndDate,
+          weeklyNumSessions:   existingDates.length ? String(existingDates.length) : '',
+          weeklyFrequency:     w.scheduleData?.frequency ?? 'SEMANAL',
+          headerType:          w.headerType  ?? 'COLOR',
+          headerValue:         w.headerValue ?? '#E85D4A',
         });
       })
       .catch((e) => alert(e.message))
@@ -350,10 +439,36 @@ export default function WorkshopForm() {
       }
       if (prev.scheduleMode === 'WEEKLY' && prev.weeklyEndDate && newFecha >= prev.weeklyEndDate) {
         updates.weeklyEndDate = '';
+        updates.weeklyNumSessions = '';
       }
       return { ...prev, ...updates };
     });
     setErrors(prev => ({ ...prev, fecha: '' }));
+  }
+
+  function handleWeeklyEndDate(newEndDate) {
+    setForm(prev => {
+      const myIdx = weekdayIdxOf(prev.fecha);
+      const step  = prev.weeklyFrequency === 'QUINCENAL' ? 14 : 7;
+      const computed = computeWeeklyDates(prev.fecha, newEndDate, myIdx, step);
+      return { ...prev, weeklyEndDate: newEndDate, weeklyNumSessions: computed.length ? String(computed.length) : '' };
+    });
+  }
+
+  function handleWeeklyNumSessions(n) {
+    setForm(prev => {
+      if (!prev.fecha || !n || Number(n) < 2) {
+        return { ...prev, weeklyNumSessions: n, weeklyEndDate: '' };
+      }
+      const step = prev.weeklyFrequency === 'QUINCENAL' ? 14 : 7;
+      const start = new Date(prev.fecha + 'T12:00:00');
+      const endDate = localDateStr(new Date(start.getTime() + (Number(n) - 1) * step * 86400000));
+      return { ...prev, weeklyNumSessions: n, weeklyEndDate: endDate };
+    });
+  }
+
+  function handleWeeklyFrequency(freq) {
+    setForm(prev => ({ ...prev, weeklyFrequency: freq, weeklyEndDate: '', weeklyNumSessions: '' }));
   }
 
   function handleTipoChange(t) {
@@ -362,7 +477,7 @@ export default function WorkshopForm() {
       ...prev,
       tipo: active ? null : t,
       ...(!active && !IS_MULTI(t)) || (active && IS_MULTI(prev.tipo))
-        ? { scheduleMode: null, specificDates: [], weeklyEndDate: '' }
+        ? { scheduleMode: null, specificDates: [], weeklyEndDate: '', weeklyNumSessions: '' }
         : {},
     }));
   }
@@ -383,14 +498,7 @@ export default function WorkshopForm() {
   }
 
   function handleEstadoAction(action) {
-    setForm(prev => ({
-      ...prev,
-      _estadoAction: action,
-      // Restore cuposDisponibles when switching away from AGOTAR in edit
-      ...(action !== 'AGOTAR' && prev._estadoAction === 'AGOTAR' && isEdit
-        ? { cuposDisponibles: prev.cuposTotales }
-        : {}),
-    }));
+    setForm(prev => ({ ...prev, _estadoAction: action }));
   }
 
   function validate() {
@@ -413,9 +521,7 @@ export default function WorkshopForm() {
     try {
       const cuposTotales     = Number(form.cuposTotales);
       const estadoFinal      = form._estadoAction === 'OCULTAR' ? 'BORRADOR' : 'PUBLICADO';
-      const cuposDisponibles = form._estadoAction === 'AGOTAR'
-        ? 0
-        : isEdit ? Number(form.cuposDisponibles) : cuposTotales;
+      const cuposDisponibles = form._estadoAction === 'AGOTAR' ? 0 : cuposTotales;
 
       const payload = {
         nombre:            form.nombre,
@@ -430,16 +536,23 @@ export default function WorkshopForm() {
         estado:            estadoFinal,
         experienciaPrevia: form.experienciaPrevia,
         scheduleData:      buildScheduleData(form),
+        headerType:  form.headerType || 'COLOR',
+        // Base64 data URLs no caben en varchar(500); se guardará null hasta implementar Storage
+        headerValue: (form.headerValue && !form.headerValue.startsWith('data:'))
+          ? form.headerValue
+          : (form.headerType === 'COLOR' ? (form.headerValue || null) : null),
       };
 
       if (isEdit) {
-        await api.update(id, activeEspacio.id, payload);
+        const updated = await api.update(id, activeEspacio.id, payload);
+        if (!updated) throw new Error('El taller no pudo actualizarse. Verificá que el emulador de Firebase esté activo.');
       } else {
-        await api.create(activeEspacio.id, payload);
+        const created = await api.create(activeEspacio.id, payload);
+        if (!created) throw new Error('El taller no pudo guardarse. Verificá que el emulador de Firebase esté activo.');
       }
-      navigate('/workshops');
+      navigate('/workshops', { state: { refresh: Date.now() } });
     } catch (err) {
-      if (err.message) setErrors({ _server: err.message });
+      setErrors({ _server: err?.message || 'Error desconocido al guardar' });
     } finally {
       setLoading(false);
     }
@@ -449,8 +562,17 @@ export default function WorkshopForm() {
     return <Layout><p className="text-sm text-ink-muted">Cargando taller…</p></Layout>;
   }
 
+  const fechaGlow = IS_MULTI(form.tipo) && form.scheduleMode === 'WEEKLY' && !form.fecha;
+
   return (
     <Layout>
+      <style>{`
+        @keyframes glow-pulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(232, 93, 74, 0); border-color: var(--color-border, #e5e3df); }
+          50%       { box-shadow: 0 0 0 4px rgba(232, 93, 74, 0.28); border-color: #E85D4A; }
+        }
+        .fecha-glow { animation: glow-pulse 1.4s ease-in-out infinite; }
+      `}</style>
       <div className="w-full max-w-5xl">
         <Link to="/workshops" className="text-xs text-ink-muted hover:text-ink mb-4 inline-block">
           ← Volver a talleres
@@ -543,7 +665,11 @@ export default function WorkshopForm() {
                     <WeeklyPicker
                       startDate={form.fecha}
                       endDate={form.weeklyEndDate}
-                      onEndDateChange={d => set('weeklyEndDate', d)}
+                      numSessions={form.weeklyNumSessions}
+                      frequency={form.weeklyFrequency}
+                      onEndDateChange={handleWeeklyEndDate}
+                      onNumSessionsChange={handleWeeklyNumSessions}
+                      onFrequencyChange={handleWeeklyFrequency}
                     />
                   )}
                 </div>
@@ -598,7 +724,7 @@ export default function WorkshopForm() {
                     type="date"
                     value={form.fecha}
                     onChange={e => handleFechaChange(e.target.value)}
-                    className={INPUT_CLS + ' font-mono'}
+                    className={INPUT_CLS + ' font-mono' + (fechaGlow ? ' fecha-glow' : '')}
                   />
                   {errors.fecha && <p className="mt-1 text-xs text-danger">{errors.fecha}</p>}
                 </div>
@@ -635,19 +761,6 @@ export default function WorkshopForm() {
                 </div>
               </div>
 
-              {/* Cupos disponibles — solo edición y no "Agotar" */}
-              {isEdit && form._estadoAction !== 'AGOTAR' && (
-                <div>
-                  <label className={LABEL_CLS}>Cupos disponibles</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={form.cuposDisponibles}
-                    onChange={e => set('cuposDisponibles', e.target.value)}
-                    className={INPUT_CLS + ' font-mono'}
-                  />
-                </div>
-              )}
 
               {/* c) Duración */}
               <div>
@@ -661,14 +774,14 @@ export default function WorkshopForm() {
                       value={form.duracionHoras}
                       onChange={e => set('duracionHoras', e.target.value)}
                       placeholder="0"
-                      className="w-20 px-3 py-2 bg-white border border-border rounded-md text-sm text-ink font-mono focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                      className="w-20 px-3 py-2 bg-white border border-border rounded-md text-sm text-[#2B241A] font-mono focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                     />
                     <span className="text-sm text-ink-muted shrink-0">hs</span>
                   </div>
                   <select
                     value={form.duracionMinutos}
                     onChange={e => set('duracionMinutos', e.target.value)}
-                    className="w-28 px-3 py-2 bg-white border border-border rounded-md text-sm text-ink font-mono focus:outline-none focus:border-primary"
+                    className="w-28 px-3 py-2 bg-white border border-border rounded-md text-sm text-[#2B241A] font-mono focus:outline-none focus:border-primary"
                   >
                     <option value="0">0 min</option>
                     <option value="15">15 min</option>
@@ -676,6 +789,131 @@ export default function WorkshopForm() {
                     <option value="45">45 min</option>
                   </select>
                 </div>
+              </div>
+
+              {/* Encabezado de tarjeta */}
+              <div>
+                <label className={LABEL_CLS}>Encabezado de tarjeta</label>
+                {/* Selector COLOR / IMAGEN — solo mostrar IMAGE si el plan lo permite */}
+                {canUploadImage && (
+                  <div className="flex gap-2 mb-3">
+                    {[
+                      { val: 'COLOR', label: 'Color' },
+                      { val: 'IMAGE', label: 'Imagen' },
+                    ].map(({ val, label }) => (
+                      <button
+                        key={val}
+                        type="button"
+                        onClick={() => setForm(prev => ({ ...prev, headerType: val }))}
+                        className={`px-3 py-1.5 rounded-md border text-xs font-medium transition-colors ${
+                          form.headerType === val
+                            ? 'border-primary bg-primary/5 text-primary'
+                            : 'border-border text-ink hover:border-primary/40 bg-white'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {form.headerType === 'COLOR' && (
+                  <div className="flex flex-col gap-2.5">
+                    {/* Preview del encabezado */}
+                    <div
+                      className="w-full h-12 rounded-md border border-border transition-colors"
+                      style={{ backgroundColor: isValidColor(form.headerValue) ? form.headerValue : '#E85D4A' }}
+                    />
+                    {/* Paleta (brand colors del espacio + defaults) */}
+                    {brandColors.length > 0 && (
+                      <p className="text-xs text-ink-muted/70 -mb-1">Tu paleta de marca aparece primero</p>
+                    )}
+                    <div className="grid grid-cols-8 gap-1.5">
+                      {activePalette.map(color => (
+                        <button
+                          key={color}
+                          type="button"
+                          onClick={() => setForm(prev => ({ ...prev, headerValue: color }))}
+                          title={color}
+                          className={`w-full aspect-square rounded-full border-2 transition-transform hover:scale-110 ${
+                            form.headerValue === color
+                              ? 'border-ink/60 scale-110'
+                              : 'border-transparent hover:border-ink/20'
+                          }`}
+                          style={{ backgroundColor: color }}
+                        />
+                      ))}
+                    </div>
+                    {/* Input manual hex / rgb */}
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-5 h-5 rounded-full shrink-0 border border-border"
+                        style={{ backgroundColor: isValidColor(form.headerValue) ? form.headerValue : '#E85D4A' }}
+                      />
+                      <input
+                        type="text"
+                        value={form.headerValue}
+                        onChange={e => setForm(prev => ({ ...prev, headerValue: e.target.value }))}
+                        placeholder="#E85D4A o rgb(232, 93, 74)"
+                        className="flex-1 px-2 py-1.5 bg-white border border-border rounded-md text-xs font-mono text-[#2B241A] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {form.headerType === 'IMAGE' && (
+                  <div>
+                    <input
+                      ref={imgInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={e => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = ev => setForm(prev => ({ ...prev, headerType: 'IMAGE', headerValue: ev.target.result }));
+                        reader.readAsDataURL(file);
+                      }}
+                    />
+                    <div
+                      onClick={() => imgInputRef.current?.click()}
+                      onDragOver={e => e.preventDefault()}
+                      onDrop={e => {
+                        e.preventDefault();
+                        const file = e.dataTransfer.files?.[0];
+                        if (!file || !file.type.startsWith('image/')) return;
+                        const reader = new FileReader();
+                        reader.onload = ev => setForm(prev => ({ ...prev, headerType: 'IMAGE', headerValue: ev.target.result }));
+                        reader.readAsDataURL(file);
+                      }}
+                      className="relative border-2 border-dashed border-border rounded-lg overflow-hidden cursor-pointer hover:border-primary/40 transition-colors"
+                      style={{ height: 80 }}
+                    >
+                      {form.headerValue && form.headerValue.startsWith('data:') ? (
+                        <img
+                          src={form.headerValue}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center h-full gap-1">
+                          <p className="text-xs font-medium text-ink-muted">Arrastrá o hacé click</p>
+                          <p className="text-xs text-ink-muted/60">JPG, PNG, WebP</p>
+                        </div>
+                      )}
+                    </div>
+                    {form.headerValue && form.headerValue.startsWith('data:') && (
+                      <button
+                        type="button"
+                        onClick={() => setForm(prev => ({ ...prev, headerValue: '' }))}
+                        className="mt-1 text-xs text-danger hover:underline"
+                      >
+                        Quitar imagen
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* d) Estado — botones */}

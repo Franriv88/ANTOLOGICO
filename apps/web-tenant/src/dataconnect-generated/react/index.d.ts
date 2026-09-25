@@ -1,4 +1,4 @@
-import { UpsertProfesionalData, UpsertProfesionalVariables, CreateEspacioData, CreateEspacioVariables, UpdateEspacioData, UpdateEspacioVariables, CreateWorkshopData, CreateWorkshopVariables, UpdateWorkshopData, UpdateWorkshopVariables, DeleteWorkshopData, DeleteWorkshopVariables, SolicitarCancelacionEspacioData, SolicitarCancelacionEspacioVariables, ReactivarSuscripcionEspacioData, ReactivarSuscripcionEspacioVariables, DecrementarCupoData, DecrementarCupoVariables, GetMyProfileData, ListPlanesData, ListRubrosData, ListMyEspaciosData, GetMyEspacioData, GetMyEspacioVariables, ListMyWorkshopsData, ListMyWorkshopsVariables, ListMyWorkshopsByEstadoData, ListMyWorkshopsByEstadoVariables, SearchMyWorkshopsData, SearchMyWorkshopsVariables, GetMyWorkshopData, GetMyWorkshopVariables, ListPublicWorkshopsData } from '../';
+import { UpsertProfesionalData, UpsertProfesionalVariables, UpdateEspacioPlanIdData, UpdateEspacioPlanIdVariables, CreateEspacioData, CreateEspacioVariables, UpdateEspacioIdentidadData, UpdateEspacioIdentidadVariables, UpdateEspacioData, UpdateEspacioVariables, CreateWorkshopData, CreateWorkshopVariables, UpdateWorkshopData, UpdateWorkshopVariables, UpdateWorkshopEstadoData, UpdateWorkshopEstadoVariables, DeleteWorkshopData, DeleteWorkshopVariables, SolicitarCancelacionEspacioData, SolicitarCancelacionEspacioVariables, ReactivarSuscripcionEspacioData, ReactivarSuscripcionEspacioVariables, DecrementarCupoData, DecrementarCupoVariables, GetMyProfileData, ListPlanesData, ListRubrosData, ListMyEspaciosData, GetMyEspacioData, GetMyEspacioVariables, ListMyWorkshopsData, ListMyWorkshopsVariables, ListMyWorkshopsByEstadoData, ListMyWorkshopsByEstadoVariables, SearchMyWorkshopsData, SearchMyWorkshopsVariables, GetMyWorkshopData, GetMyWorkshopVariables, ListPublicWorkshopsData } from '../';
 import { UseDataConnectQueryResult, useDataConnectQueryOptions, UseDataConnectMutationResult, useDataConnectMutationOptions} from '@tanstack-query-firebase/react/data-connect';
 import { UseQueryResult, UseMutationResult} from '@tanstack/react-query';
 import { DataConnect } from 'firebase/data-connect';
@@ -8,8 +8,14 @@ import { FirebaseError } from 'firebase/app';
 export function useUpsertProfesional(options?: useDataConnectMutationOptions<UpsertProfesionalData, FirebaseError, UpsertProfesionalVariables>): UseDataConnectMutationResult<UpsertProfesionalData, UpsertProfesionalVariables>;
 export function useUpsertProfesional(dc: DataConnect, options?: useDataConnectMutationOptions<UpsertProfesionalData, FirebaseError, UpsertProfesionalVariables>): UseDataConnectMutationResult<UpsertProfesionalData, UpsertProfesionalVariables>;
 
+export function useUpdateEspacioPlanId(options?: useDataConnectMutationOptions<UpdateEspacioPlanIdData, FirebaseError, UpdateEspacioPlanIdVariables>): UseDataConnectMutationResult<UpdateEspacioPlanIdData, UpdateEspacioPlanIdVariables>;
+export function useUpdateEspacioPlanId(dc: DataConnect, options?: useDataConnectMutationOptions<UpdateEspacioPlanIdData, FirebaseError, UpdateEspacioPlanIdVariables>): UseDataConnectMutationResult<UpdateEspacioPlanIdData, UpdateEspacioPlanIdVariables>;
+
 export function useCreateEspacio(options?: useDataConnectMutationOptions<CreateEspacioData, FirebaseError, CreateEspacioVariables>): UseDataConnectMutationResult<CreateEspacioData, CreateEspacioVariables>;
 export function useCreateEspacio(dc: DataConnect, options?: useDataConnectMutationOptions<CreateEspacioData, FirebaseError, CreateEspacioVariables>): UseDataConnectMutationResult<CreateEspacioData, CreateEspacioVariables>;
+
+export function useUpdateEspacioIdentidad(options?: useDataConnectMutationOptions<UpdateEspacioIdentidadData, FirebaseError, UpdateEspacioIdentidadVariables>): UseDataConnectMutationResult<UpdateEspacioIdentidadData, UpdateEspacioIdentidadVariables>;
+export function useUpdateEspacioIdentidad(dc: DataConnect, options?: useDataConnectMutationOptions<UpdateEspacioIdentidadData, FirebaseError, UpdateEspacioIdentidadVariables>): UseDataConnectMutationResult<UpdateEspacioIdentidadData, UpdateEspacioIdentidadVariables>;
 
 export function useUpdateEspacio(options?: useDataConnectMutationOptions<UpdateEspacioData, FirebaseError, UpdateEspacioVariables>): UseDataConnectMutationResult<UpdateEspacioData, UpdateEspacioVariables>;
 export function useUpdateEspacio(dc: DataConnect, options?: useDataConnectMutationOptions<UpdateEspacioData, FirebaseError, UpdateEspacioVariables>): UseDataConnectMutationResult<UpdateEspacioData, UpdateEspacioVariables>;
@@ -19,6 +25,9 @@ export function useCreateWorkshop(dc: DataConnect, options?: useDataConnectMutat
 
 export function useUpdateWorkshop(options?: useDataConnectMutationOptions<UpdateWorkshopData, FirebaseError, UpdateWorkshopVariables>): UseDataConnectMutationResult<UpdateWorkshopData, UpdateWorkshopVariables>;
 export function useUpdateWorkshop(dc: DataConnect, options?: useDataConnectMutationOptions<UpdateWorkshopData, FirebaseError, UpdateWorkshopVariables>): UseDataConnectMutationResult<UpdateWorkshopData, UpdateWorkshopVariables>;
+
+export function useUpdateWorkshopEstado(options?: useDataConnectMutationOptions<UpdateWorkshopEstadoData, FirebaseError, UpdateWorkshopEstadoVariables>): UseDataConnectMutationResult<UpdateWorkshopEstadoData, UpdateWorkshopEstadoVariables>;
+export function useUpdateWorkshopEstado(dc: DataConnect, options?: useDataConnectMutationOptions<UpdateWorkshopEstadoData, FirebaseError, UpdateWorkshopEstadoVariables>): UseDataConnectMutationResult<UpdateWorkshopEstadoData, UpdateWorkshopEstadoVariables>;
 
 export function useDeleteWorkshop(options?: useDataConnectMutationOptions<DeleteWorkshopData, FirebaseError, DeleteWorkshopVariables>): UseDataConnectMutationResult<DeleteWorkshopData, DeleteWorkshopVariables>;
 export function useDeleteWorkshop(dc: DataConnect, options?: useDataConnectMutationOptions<DeleteWorkshopData, FirebaseError, DeleteWorkshopVariables>): UseDataConnectMutationResult<DeleteWorkshopData, DeleteWorkshopVariables>;

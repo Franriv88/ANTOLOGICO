@@ -58,6 +58,10 @@ type Espacio @table(name: "espacios", singular: "espacio", plural: "espacios")
   plan:                   Plan
   metodoPagoToken:        String     @col(dataType: "varchar(255)")
   template:               String     @col(dataType: "varchar(100)")
+  logoUrl:                String     # TEXT — permite base64 de logo comprimido
+  logoShape:              String     @col(dataType: "varchar(20)")   # 'round' | 'rounded' | 'square'
+  brandColors:            Any        # JSON: array de hex strings, ej. ["#E85D4A","#3B82F6"]
+  brandFont:              String     @col(dataType: "varchar(100)")  # Google Font name
   estado:                 EstadoEspacio! @default(value: ACTIVO)
   cancelacionPendiente:   Boolean!   @default(value: false)
   createdAt:          Timestamp! @default(expr: "request.time")

@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { useAuth } from './AuthContext';
-import { listMyEspacios } from '../dataconnect-generated';
+import { espacios as espacioApi } from '../services/api';
 
 const EspacioContext = createContext(null);
 
@@ -18,12 +19,10 @@ export function EspacioProvider({ children }) {
       return;
     }
     setLoading(true);
-    listMyEspacios()
-      .then(({ data }) => {
-        const list = data.espacios ?? [];
+    espacioApi.list()
+      .then((list) => {
         setEspacios(list);
         setActive((prev) => {
-          // Mantener el espacio activo si sigue en la lista; si no, usar el primero
           if (prev && list.some((e) => e.id === prev.id)) return prev;
           return list[0] ?? null;
         });
@@ -32,15 +31,27 @@ export function EspacioProvider({ children }) {
       .finally(() => setLoading(false));
   }, [user]);
 
-  function refresh() {
-    if (!user) return;
-    listMyEspacios()
-      .then(({ data }) => {
-        const list = data.espacios ?? [];
+  async function refresh(fallback = null) {
+    if (!user) return [];
+    setLoading(true);
+    try {
+      let list = await espacioApi.list();
+      // Si la query devuelve vacío pero tenemos un espacio recién creado, lo usamos
+      // como fallback para evitar la redirección al onboarding (posible cache o timing)
+      if (list.length === 0 && fallback) {
+        list = [fallback];
+      }
+      flushSync(() => {
         setEspacios(list);
         setActive((prev) => (prev && list.some((e) => e.id === prev.id) ? prev : list[0] ?? null));
-      })
-      .catch(console.error);
+        setLoading(false);
+      });
+      return list;
+    } catch (e) {
+      console.error(e);
+      setLoading(false);
+      return [];
+    }
   }
 
   return (

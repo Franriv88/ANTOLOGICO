@@ -48,6 +48,18 @@ export function upsertProfesional(dcOrVars, vars) {
   return executeMutation(upsertProfesionalRef(dcInstance, inputVars));
 }
 
+export const updateEspacioPlanIdRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'UpdateEspacioPlanId', inputVars);
+}
+updateEspacioPlanIdRef.operationName = 'UpdateEspacioPlanId';
+
+export function updateEspacioPlanId(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(updateEspacioPlanIdRef(dcInstance, inputVars));
+}
+
 export const createEspacioRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
@@ -58,6 +70,18 @@ createEspacioRef.operationName = 'CreateEspacio';
 export function createEspacio(dcOrVars, vars) {
   const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
   return executeMutation(createEspacioRef(dcInstance, inputVars));
+}
+
+export const updateEspacioIdentidadRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'UpdateEspacioIdentidad', inputVars);
+}
+updateEspacioIdentidadRef.operationName = 'UpdateEspacioIdentidad';
+
+export function updateEspacioIdentidad(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(updateEspacioIdentidadRef(dcInstance, inputVars));
 }
 
 export const updateEspacioRef = (dcOrVars, vars) => {
@@ -94,6 +118,18 @@ updateWorkshopRef.operationName = 'UpdateWorkshop';
 export function updateWorkshop(dcOrVars, vars) {
   const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
   return executeMutation(updateWorkshopRef(dcInstance, inputVars));
+}
+
+export const updateWorkshopEstadoRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'UpdateWorkshopEstado', inputVars);
+}
+updateWorkshopEstadoRef.operationName = 'UpdateWorkshopEstado';
+
+export function updateWorkshopEstado(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(updateWorkshopEstadoRef(dcInstance, inputVars));
 }
 
 export const deleteWorkshopRef = (dcOrVars, vars) => {

@@ -512,6 +512,22 @@ input Espacio_Data {
   """
   rubro: Rubro_Key @fdc_forbiddenInVariables
   """
+  ✨ Generated from Field `Espacio`.`brandColors` of type `Any`
+  """
+  brandColors: Any
+  """
+  ✨ `_expr` server value variant of `brandColors` (✨ Generated from Field `Espacio`.`brandColors` of type `Any`)
+  """
+  brandColors_expr: Any_Expr @fdc_forbiddenInVariables
+  """
+  ✨ Generated from Field `Espacio`.`brandFont` of type `String`
+  """
+  brandFont: String
+  """
+  ✨ `_expr` server value variant of `brandFont` (✨ Generated from Field `Espacio`.`brandFont` of type `String`)
+  """
+  brandFont_expr: String_Expr @fdc_forbiddenInVariables
+  """
   ✨ Generated from Field `Espacio`.`cancelacionPendiente` of type `Boolean!`
   """
   cancelacionPendiente: Boolean
@@ -543,6 +559,22 @@ input Espacio_Data {
   ✨ `_expr` server value variant of `estado` (✨ Generated from Field `Espacio`.`estado` of type `EstadoEspacio!`)
   """
   estado_expr: EstadoEspacio_Expr @fdc_forbiddenInVariables
+  """
+  ✨ Generated from Field `Espacio`.`logoShape` of type `String`
+  """
+  logoShape: String
+  """
+  ✨ `_expr` server value variant of `logoShape` (✨ Generated from Field `Espacio`.`logoShape` of type `String`)
+  """
+  logoShape_expr: String_Expr @fdc_forbiddenInVariables
+  """
+  ✨ Generated from Field `Espacio`.`logoUrl` of type `String`
+  """
+  logoUrl: String
+  """
+  ✨ `_expr` server value variant of `logoUrl` (✨ Generated from Field `Espacio`.`logoUrl` of type `String`)
+  """
+  logoUrl_expr: String_Expr @fdc_forbiddenInVariables
   """
   ✨ Generated from Field `Espacio`.`metodoPagoToken` of type `String`
   """
@@ -645,6 +677,14 @@ input Espacio_Filter {
   """
   rubro: Rubro_Filter
   """
+  ✨ Generated from Field `Espacio`.`brandColors` of type `Any`
+  """
+  brandColors: Any_Filter
+  """
+  ✨ Generated from Field `Espacio`.`brandFont` of type `String`
+  """
+  brandFont: String_Filter
+  """
   ✨ Generated from Field `Espacio`.`cancelacionPendiente` of type `Boolean!`
   """
   cancelacionPendiente: Boolean_Filter
@@ -656,6 +696,14 @@ input Espacio_Filter {
   ✨ Generated from Field `Espacio`.`estado` of type `EstadoEspacio!`
   """
   estado: EstadoEspacio_Filter
+  """
+  ✨ Generated from Field `Espacio`.`logoShape` of type `String`
+  """
+  logoShape: String_Filter
+  """
+  ✨ Generated from Field `Espacio`.`logoUrl` of type `String`
+  """
+  logoUrl: String_Filter
   """
   ✨ Generated from Field `Espacio`.`metodoPagoToken` of type `String`
   """
@@ -723,6 +771,14 @@ input Espacio_Having {
   """
   _count: Int_Filter
   """
+  ✨ Generated from Field `Espacio`.`brandColors_count` of type `Int!`
+  """
+  brandColors_count: Int_Filter
+  """
+  ✨ Generated from Field `Espacio`.`brandFont_count` of type `Int!`
+  """
+  brandFont_count: Int_Filter
+  """
   ✨ Generated from Field `Espacio`.`cancelacionPendiente_count` of type `Int!`
   """
   cancelacionPendiente_count: Int_Filter
@@ -738,6 +794,14 @@ input Espacio_Having {
   ✨ Generated from Field `Espacio`.`id_count` of type `Int!`
   """
   id_count: Int_Filter
+  """
+  ✨ Generated from Field `Espacio`.`logoShape_count` of type `Int!`
+  """
+  logoShape_count: Int_Filter
+  """
+  ✨ Generated from Field `Espacio`.`logoUrl_count` of type `Int!`
+  """
+  logoUrl_count: Int_Filter
   """
   ✨ Generated from Field `Espacio`.`metodoPagoToken_count` of type `Int!`
   """
@@ -771,6 +835,10 @@ input Espacio_Having {
   """
   updatedAt_count: Int_Filter
   """
+  ✨ Generated from Field `Espacio`.`brandColors_min` of type `Any`
+  """
+  brandColors_min: Any_Filter
+  """
   ✨ Generated from Field `Espacio`.`createdAt_min` of type `Timestamp`
   """
   createdAt_min: Timestamp_Filter
@@ -778,6 +846,10 @@ input Espacio_Having {
   ✨ Generated from Field `Espacio`.`updatedAt_min` of type `Timestamp`
   """
   updatedAt_min: Timestamp_Filter
+  """
+  ✨ Generated from Field `Espacio`.`brandColors_max` of type `Any`
+  """
+  brandColors_max: Any_Filter
   """
   ✨ Generated from Field `Espacio`.`createdAt_max` of type `Timestamp`
   """
@@ -846,6 +918,14 @@ input Espacio_Order {
   """
   rubro: Rubro_Order
   """
+  ✨ Generated from Field `Espacio`.`brandColors` of type `Any`
+  """
+  brandColors: OrderDirection
+  """
+  ✨ Generated from Field `Espacio`.`brandFont` of type `String`
+  """
+  brandFont: OrderDirection
+  """
   ✨ Generated from Field `Espacio`.`cancelacionPendiente` of type `Boolean!`
   """
   cancelacionPendiente: OrderDirection
@@ -857,6 +937,14 @@ input Espacio_Order {
   ✨ Generated from Field `Espacio`.`estado` of type `EstadoEspacio!`
   """
   estado: OrderDirection
+  """
+  ✨ Generated from Field `Espacio`.`logoShape` of type `String`
+  """
+  logoShape: OrderDirection
+  """
+  ✨ Generated from Field `Espacio`.`logoUrl` of type `String`
+  """
+  logoUrl: OrderDirection
   """
   ✨ Generated from Field `Espacio`.`metodoPagoToken` of type `String`
   """
@@ -882,6 +970,14 @@ input Espacio_Order {
   """
   _count: OrderDirection
   """
+  ✨ Generated from Field `Espacio`.`brandColors_count` of type `Int!`
+  """
+  brandColors_count: OrderDirection
+  """
+  ✨ Generated from Field `Espacio`.`brandFont_count` of type `Int!`
+  """
+  brandFont_count: OrderDirection
+  """
   ✨ Generated from Field `Espacio`.`cancelacionPendiente_count` of type `Int!`
   """
   cancelacionPendiente_count: OrderDirection
@@ -897,6 +993,14 @@ input Espacio_Order {
   ✨ Generated from Field `Espacio`.`id_count` of type `Int!`
   """
   id_count: OrderDirection
+  """
+  ✨ Generated from Field `Espacio`.`logoShape_count` of type `Int!`
+  """
+  logoShape_count: OrderDirection
+  """
+  ✨ Generated from Field `Espacio`.`logoUrl_count` of type `Int!`
+  """
+  logoUrl_count: OrderDirection
   """
   ✨ Generated from Field `Espacio`.`metodoPagoToken_count` of type `Int!`
   """
@@ -930,6 +1034,10 @@ input Espacio_Order {
   """
   updatedAt_count: OrderDirection
   """
+  ✨ Generated from Field `Espacio`.`brandColors_min` of type `Any`
+  """
+  brandColors_min: OrderDirection
+  """
   ✨ Generated from Field `Espacio`.`createdAt_min` of type `Timestamp`
   """
   createdAt_min: OrderDirection
@@ -937,6 +1045,10 @@ input Espacio_Order {
   ✨ Generated from Field `Espacio`.`updatedAt_min` of type `Timestamp`
   """
   updatedAt_min: OrderDirection
+  """
+  ✨ Generated from Field `Espacio`.`brandColors_max` of type `Any`
+  """
+  brandColors_max: OrderDirection
   """
   ✨ Generated from Field `Espacio`.`createdAt_max` of type `Timestamp`
   """

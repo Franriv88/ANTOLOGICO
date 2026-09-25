@@ -1,40 +1,53 @@
-import { useEffect, useState } from 'react';
-import { rubros as rubroApi, espacios as espacioApi } from '../../services/api';
+import { useState } from 'react';
+import { espacios as espacioApi } from '../../services/api';
 
 const INPUT_CLS =
   'w-full px-3 py-2 bg-white border border-border rounded-md text-sm text-ink ' +
   'focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary';
 const LABEL_CLS = 'block text-xs font-medium text-ink-muted mb-1';
 
+const RUBROS = [
+  'Arte y pintura',
+  'Baile y danza',
+  'Cocina y gastronomía',
+  'Diseño y creatividad',
+  'Fitness y deporte',
+  'Fotografía',
+  'Idiomas',
+  'Manualidades y DIY',
+  'Marketing y negocios',
+  'Meditación y mindfulness',
+  'Música',
+  'Teatro y actuación',
+  'Tecnología y programación',
+  'Yoga y bienestar',
+];
+
 export default function StepEspacio({ onNext, onBack }) {
-  const [rubroList, setRubroList]         = useState([]);
-  const [nombre, setNombre]               = useState('');
-  const [selectedRubroId, setRubroId]     = useState('');
-  const [rubroPersonalizado, setCustom]   = useState('');
-  const [loading, setLoading]             = useState(false);
-  const [error, setError]                 = useState('');
+  const [nombre, setNombre]             = useState('');
+  const [selectedRubro, setRubro]       = useState('');
+  const [rubroPersonalizado, setCustom] = useState('');
+  const [loading, setLoading]           = useState(false);
+  const [error, setError]               = useState('');
 
-  const isOtro = selectedRubroId === 'OTRO';
-
-  useEffect(() => {
-    rubroApi.list().then(setRubroList).catch(console.error);
-  }, []);
+  const isOtro = selectedRubro === 'OTRO';
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!nombre.trim()) { setError('El nombre del espacio es requerido'); return; }
-    if (!selectedRubroId) { setError('Seleccioná un rubro'); return; }
+    if (!nombre.trim())    { setError('El nombre del espacio es requerido'); return; }
+    if (!selectedRubro)    { setError('Seleccioná un rubro'); return; }
     if (isOtro && !rubroPersonalizado.trim()) { setError('Especificá tu rubro'); return; }
 
     setLoading(true);
     setError('');
     try {
+      const rubroFinal = isOtro ? rubroPersonalizado.trim() : selectedRubro;
       const key = await espacioApi.create({
-        nombre: nombre.trim(),
-        rubroId:            isOtro ? null : selectedRubroId,
-        rubroPersonalizado: isOtro ? rubroPersonalizado.trim() : null,
+        nombre:            nombre.trim(),
+        rubroId:           null,
+        rubroPersonalizado: rubroFinal,
       });
-      onNext({ espacioId: key.id });
+      onNext({ espacioId: key.id, espacioNombre: nombre.trim() });
     } catch (err) {
       setError(err.message);
     } finally {
@@ -68,13 +81,13 @@ export default function StepEspacio({ onNext, onBack }) {
       <div>
         <label className={LABEL_CLS}>Rubro *</label>
         <select
-          value={selectedRubroId}
-          onChange={(e) => { setRubroId(e.target.value); setError(''); }}
+          value={selectedRubro}
+          onChange={(e) => { setRubro(e.target.value); setError(''); }}
           className={INPUT_CLS}
         >
           <option value="">Seleccioná un rubro…</option>
-          {rubroList.map((r) => (
-            <option key={r.id} value={r.id}>{r.nombre}</option>
+          {RUBROS.map((r) => (
+            <option key={r} value={r}>{r}</option>
           ))}
           <option value="OTRO">Otro…</option>
         </select>

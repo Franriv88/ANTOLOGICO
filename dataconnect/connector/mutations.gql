@@ -11,6 +11,16 @@ mutation UpsertProfesional($nombre: String!, $email: String!) @auth(level: USER)
 
 # ─── Espacios ─────────────────────────────────────────────────────────────────
 
+mutation UpdateEspacioPlanId($id: UUID!, $planId: UUID!) @auth(level: USER) {
+  espacio_update(
+    id: $id
+    data: {
+      planId: $planId
+      updatedAt_expr: "request.time"
+    }
+  )
+}
+
 mutation CreateEspacio(
   $nombre:             String!
   $rubroId:            UUID
@@ -24,6 +34,30 @@ mutation CreateEspacio(
     createdAt_expr:      "request.time"
     updatedAt_expr:      "request.time"
   })
+}
+
+mutation UpdateEspacioIdentidad(
+  $id:          UUID!
+  $logoUrl:     String
+  $logoShape:   String
+  $brandColors: Any
+  $brandFont:   String
+) @auth(level: USER) {
+  espacio_update(
+    first: {
+      where: {
+        id: { eq: $id }
+        profesionalUid: { eq_expr: "auth.uid" }
+      }
+    }
+    data: {
+      logoUrl:        $logoUrl
+      logoShape:      $logoShape
+      brandColors:    $brandColors
+      brandFont:      $brandFont
+      updatedAt_expr: "request.time"
+    }
+  )
 }
 
 mutation UpdateEspacio(
@@ -123,12 +157,7 @@ mutation UpdateWorkshop(
     }
   }
   workshop_update(
-    first: {
-      where: {
-        id: { eq: $id }
-        espacioId: { eq: $espacioId }
-      }
-    }
+    id: $id
     data: {
       nombre:            $nombre
       tipo:              $tipo
@@ -144,6 +173,28 @@ mutation UpdateWorkshop(
       headerType:        $headerType
       headerValue:       $headerValue
       estado:            $estado
+      updatedAt_expr:    "request.time"
+    }
+  )
+}
+
+mutation UpdateWorkshopEstado(
+  $id:               UUID!
+  $espacioId:        UUID!
+  $estado:           EstadoWorkshop!
+  $cuposDisponibles: Int!
+) @auth(level: USER) {
+  workshop_update(
+    first: {
+      where: {
+        id: { eq: $id }
+        espacioId: { eq: $espacioId }
+        espacio: { profesionalUid: { eq_expr: "auth.uid" } }
+      }
+    }
+    data: {
+      estado:            $estado
+      cuposDisponibles:  $cuposDisponibles
       updatedAt_expr:    "request.time"
     }
   )

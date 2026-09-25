@@ -3,6 +3,8 @@ import {
   getMyEspacio,
   createEspacio,
   updateEspacio,
+  updateEspacioPlanId,
+  updateEspacioIdentidad,
   solicitarCancelacionEspacio,
   reactivarSuscripcionEspacio,
   listRubros,
@@ -12,8 +14,10 @@ import {
   getMyWorkshop,
   createWorkshop,
   updateWorkshop,
+  updateWorkshopEstado,
   deleteWorkshop,
 } from '../dataconnect-generated';
+
 
 export const espacios = {
   list: async () => {
@@ -25,11 +29,20 @@ export const espacios = {
     return data.espacios[0] ?? null;
   },
   create: async (payload) => {
-    const { data } = await createEspacio(payload);
-    return data.espacio_insert;
+    const result = await createEspacio(payload);
+    if (result.errors?.length) throw new Error(result.errors.map(e => e.message).join(' | '));
+    return result.data?.espacio_insert;
   },
   update: async (id, payload) => {
     const { data } = await updateEspacio({ id, ...payload });
+    return data.espacio_update;
+  },
+  updateIdentidad: async (id, { logoUrl, logoShape, brandColors, brandFont }) => {
+    const { data } = await updateEspacioIdentidad({ id, logoUrl, logoShape, brandColors, brandFont });
+    return data.espacio_update;
+  },
+  updatePlan: async (id, planId) => {
+    const { data } = await updateEspacioPlanId({ id, planId });
     return data.espacio_update;
   },
   solicitarCancelacion: async (id) => {
@@ -53,25 +66,31 @@ export const workshops = {
   list: async (espacioId, params = {}) => {
     if (params.q) {
       const { data } = await searchMyWorkshops({ espacioId, q: params.q });
-      return data.workshops;
+      return data.workshops ?? [];
     }
     if (params.estado) {
       const { data } = await listMyWorkshopsByEstado({ espacioId, estado: params.estado });
-      return data.workshops;
+      return data.workshops ?? [];
     }
     const { data } = await listMyWorkshops({ espacioId });
-    return data.workshops;
+    return data.workshops ?? [];
   },
   get: async (id) => {
     const { data } = await getMyWorkshop({ id });
     return data.workshops[0] ?? null;
   },
   create: async (espacioId, payload) => {
-    const { data } = await createWorkshop({ espacioId, ...payload });
-    return data.workshop_insert;
+    const result = await createWorkshop({ espacioId, ...payload });
+    if (result.errors?.length) throw new Error(result.errors.map(e => e.message).join(' | '));
+    return result.data?.workshop_insert;
   },
   update: async (id, espacioId, payload) => {
-    const { data } = await updateWorkshop({ id, espacioId, ...payload });
+    const result = await updateWorkshop({ id, espacioId, ...payload });
+    if (result.errors?.length) throw new Error(result.errors.map(e => e.message).join(' | '));
+    return result.data?.workshop_update;
+  },
+  quickStatus: async (id, espacioId, estado, cuposDisponibles) => {
+    const { data } = await updateWorkshopEstado({ id, espacioId, estado, cuposDisponibles });
     return data.workshop_update;
   },
   remove: async (id, espacioId) => {

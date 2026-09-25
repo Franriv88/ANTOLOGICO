@@ -5,11 +5,14 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "build:demo": "vite build --mode demo",
+    "preview": "vite preview",
+    "preview:demo": "vite preview --mode demo"
   },
   "dependencies": {
     "@antologico/dataconnect": "file:src/dataconnect-generated",
     "@antologico/design-tokens": "workspace:*",
+    "@imgly/background-removal": "^1.7.0",
     "firebase": "^12.11.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

@@ -1,14 +1,127 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import {
+  signInWithPopup,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  updateProfile,
+  GoogleAuthProvider,
+} from 'firebase/auth';
 import { auth } from '../lib/firebase';
+import { DEMO_MODE, DEMO_EMAIL, DEMO_PASSWORD } from '../lib/demo';
+import { useAuth } from '../context/AuthContext';
 
 const provider = new GoogleAuthProvider();
+const isDev = import.meta.env.DEV;
+
+const DEV_EMAIL    = 'dev@antologico.app';
+const DEV_PASSWORD = 'dev123456';
+const DEV_NAME     = 'Dev User';
 
 export default function Login() {
-  const [error, setError] = useState('');
+  const [error, setError]     = useState('');
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const navigate  = useNavigate();
+  const { loginDemo } = useAuth();
+
+  // ─── Modo Demo ───────────────────────────────────────────────────────────────
+  const [demoEmail, setDemoEmail]       = useState(DEMO_EMAIL);
+  const [demoPassword, setDemoPassword] = useState(DEMO_PASSWORD);
+
+  // Hook siempre declarado antes de cualquier return condicional
+  useEffect(() => {
+    if (!DEMO_MODE && isDev) handleDevLogin();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (DEMO_MODE) {
+    async function handleDemoLogin(e) {
+      e.preventDefault();
+      setError('');
+      setLoading(true);
+      try {
+        await loginDemo(demoEmail, demoPassword);
+        navigate('/workshops');
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    return (
+      <div className="min-h-screen bg-surface-0 flex items-center justify-center px-4">
+        <div className="bg-surface-100 border border-border rounded-xl p-8 w-full max-w-sm">
+          <div className="mb-6">
+            <h1 className="font-display text-2xl text-ink mb-1">Antológico</h1>
+            <span className="inline-block text-xs font-medium bg-amber-100 text-amber-700 border border-amber-300 rounded px-2 py-0.5">
+              Demo
+            </span>
+          </div>
+
+          <div className="bg-surface-200 border border-border rounded-lg px-3 py-2.5 mb-5 text-xs text-ink-muted space-y-0.5">
+            <p className="font-medium text-ink">Credenciales de acceso:</p>
+            <p>Email: <span className="font-mono text-ink">{DEMO_EMAIL}</span></p>
+            <p>Contraseña: <span className="font-mono text-ink">{DEMO_PASSWORD}</span></p>
+          </div>
+
+          <form onSubmit={handleDemoLogin} className="flex flex-col gap-3">
+            <input
+              type="email"
+              value={demoEmail}
+              onChange={(e) => setDemoEmail(e.target.value)}
+              placeholder="Email"
+              className="w-full px-3 py-2 bg-white border border-border rounded-md text-sm text-[#2B241A] focus:outline-none focus:border-primary"
+            />
+            <input
+              type="password"
+              value={demoPassword}
+              onChange={(e) => setDemoPassword(e.target.value)}
+              placeholder="Contraseña"
+              className="w-full px-3 py-2 bg-white border border-border rounded-md text-sm text-[#2B241A] focus:outline-none focus:border-primary"
+            />
+            {error && (
+              <p className="text-xs text-danger bg-danger/5 border border-danger/20 rounded px-3 py-2">
+                {error}
+              </p>
+            )}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-2.5 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary-strong transition-colors disabled:opacity-50"
+            >
+              {loading ? 'Ingresando…' : 'Ingresar'}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  async function handleDevLogin() {
+    setError('');
+    setLoading(true);
+    try {
+      try {
+        await signInWithEmailAndPassword(auth, DEV_EMAIL, DEV_PASSWORD);
+      } catch (signInErr) {
+        if (signInErr.code === 'auth/email-already-in-use') throw signInErr;
+        try {
+          const cred = await createUserWithEmailAndPassword(auth, DEV_EMAIL, DEV_PASSWORD);
+          await updateProfile(cred.user, { displayName: DEV_NAME });
+        } catch (createErr) {
+          if (createErr.code === 'auth/email-already-in-use') throw signInErr;
+          throw createErr;
+        }
+      }
+      navigate('/workshops');
+    } catch (err) {
+      setError(`${err.message}${err.code ? ` [${err.code}]` : ''}`);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleGoogle() {
     setError('');
@@ -17,12 +130,36 @@ export default function Login() {
       await signInWithPopup(auth, provider);
       navigate('/workshops');
     } catch (err) {
-      if (err.code !== 'auth/popup-closed-by-user') {
-        setError(err.message);
-      }
+      if (err.code !== 'auth/popup-closed-by-user') setError(err.message);
     } finally {
       setLoading(false);
     }
+  }
+
+  if (isDev) {
+    return (
+      <div className="min-h-screen bg-surface-0 flex items-center justify-center">
+        <div className="bg-surface-100 border border-border rounded-lg p-8 w-full max-w-sm text-center">
+          <h1 className="font-display text-2xl text-ink mb-4">Antológico</h1>
+          {error ? (
+            <>
+              <p className="text-xs text-danger bg-danger/5 border border-danger/20 rounded px-3 py-2 mb-4 font-mono break-all text-left">
+                {error}
+              </p>
+              <button
+                onClick={handleDevLogin}
+                disabled={loading}
+                className="w-full py-2.5 bg-amber-500/10 border border-amber-400/40 rounded-md text-sm font-medium text-amber-700 hover:bg-amber-500/20 transition-colors disabled:opacity-50"
+              >
+                {loading ? 'Ingresando…' : 'Reintentar'}
+              </button>
+            </>
+          ) : (
+            <p className="text-sm text-ink-muted">Conectando al emulador…</p>
+          )}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -32,13 +169,11 @@ export default function Login() {
         <p className="text-sm text-ink-muted mb-8">
           Accedé con tu cuenta de Google para gestionar tus talleres
         </p>
-
         {error && (
-          <p className="text-xs text-danger bg-danger/5 border border-danger/20 rounded px-3 py-2 mb-4">
+          <p className="text-xs text-danger bg-danger/5 border border-danger/20 rounded px-3 py-2 mb-4 font-mono break-all">
             {error}
           </p>
         )}
-
         <button
           onClick={handleGoogle}
           disabled={loading}

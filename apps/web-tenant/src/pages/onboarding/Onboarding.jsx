@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useEspacio } from '../../context/EspacioContext';
+import { espacios as espacioApi } from '../../services/api';
 import StepPerfil   from './StepPerfil';
 import StepEspacio  from './StepEspacio';
 import StepPlan     from './StepPlan';
@@ -27,8 +28,17 @@ export default function Onboarding() {
   }
 
   async function finish(planId) {
-    // El espacio ya fue creado en StepEspacio; aquí solo refrescamos el contexto y redirigimos
-    await refresh();
+    // Solo intentar asignar plan si planId es un UUID válido (no un nombre de fallback)
+    const isUUID = planId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(planId);
+    if (isUUID && data.espacioId) {
+      try {
+        await espacioApi.updatePlan(data.espacioId, planId);
+      } catch (e) {
+        console.error('Error al guardar el plan:', e);
+      }
+    }
+    // Pasar el espacio recién creado como fallback por si listMyEspacios devuelve vacío
+    await refresh(data.espacioId ? { id: data.espacioId, nombre: data.espacioNombre || 'Mi espacio', estado: 'ACTIVO' } : null);
     navigate('/workshops', { replace: true });
   }
 

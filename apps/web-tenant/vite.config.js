@@ -1,15 +1,34 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
+import path from 'path';
 
-export default defineConfig({
-  plugins: [react()],
-  server: {
-    port: 5173,
-    proxy: {
-      '/api': {
-        target: 'http://localhost:3001',
-        changeOrigin: true,
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+  const isDemo = env.VITE_DEMO_MODE === 'true';
+
+  return {
+    plugins: [react()],
+    resolve: {
+      alias: isDemo
+        ? {
+            // En demo mode, redirige api.js → api.demo.js (localStorage, sin DataConnect)
+            [path.resolve(__dirname, 'src/services/api.js')]:
+              path.resolve(__dirname, 'src/services/api.demo.js'),
+          }
+        : {},
+    },
+    server: {
+      port: 5173,
+      headers: {
+        'Cross-Origin-Opener-Policy': 'same-origin',
+        'Cross-Origin-Embedder-Policy': 'credentialless',
+      },
+      proxy: {
+        '/api': { target: 'http://localhost:3001', changeOrigin: true },
       },
     },
-  },
+    optimizeDeps: {
+      exclude: ['@imgly/background-removal'],
+    },
+  };
 });
