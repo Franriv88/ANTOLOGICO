@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => {
     resolve: {
       // Regex alias: cualquier import que termine en /services/api → api.demo.js
       alias: isDemo
-        ? [{ find: /\/services\/api$/, replacement: path.resolve(__dirname, 'src/services/api.demo.js') }]
+        ? [{ find: /^.*\/services\/api$/, replacement: path.resolve(__dirname, 'src/services/api.demo.js') }]
         : [],
     },
     server: {
