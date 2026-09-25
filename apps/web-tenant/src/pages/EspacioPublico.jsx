@@ -2,7 +2,22 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { espacios as espaciosApi, workshops as workshopsApi, reservas as reservasApi } from '../services/api';
 import { getSlotStatus } from '../lib/slotStatus';
-import SlotBadge from '../components/SlotBadge';
+// SlotBadge no se usa aquí — reemplazado por PublicSlotBadge con fondo sólido
+
+// Badge con fondo sólido para legibilidad sobre cualquier imagen o color
+const SLOT_SOLID = {
+  DISPONIBLE:    { label: 'Disponible',    bg: '#10B981', text: '#fff' },
+  ULTIMOS_CUPOS: { label: 'Últimos cupos', bg: '#B98527', text: '#fff' },
+  AGOTADO:       { label: 'Agotado',       bg: '#DC2626', text: '#fff' },
+};
+function PublicSlotBadge({ status }) {
+  const cfg = SLOT_SOLID[status] ?? SLOT_SOLID.DISPONIBLE;
+  return (
+    <span className="inline-block px-2 py-0.5 rounded text-xs font-semibold shadow-sm" style={{ backgroundColor: cfg.bg, color: cfg.text }}>
+      {cfg.label}
+    </span>
+  );
+}
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -201,7 +216,7 @@ function WorkshopCard({ w, brand, onReservar }) {
           {formatPrecio(w.precio)}
         </div>
         <div className="absolute top-3 right-3">
-          <SlotBadge status={slotStatus} />
+          <PublicSlotBadge status={slotStatus} />
         </div>
       </div>
 
@@ -212,7 +227,19 @@ function WorkshopCard({ w, brand, onReservar }) {
           {formatFecha(w.fecha)} · {formatHora(w.fecha)}
         </p>
         {w.descripcion && (
-          <p className="text-xs text-[#6B5F4C] leading-relaxed line-clamp-2 mt-0.5">{w.descripcion}</p>
+          <p className="text-xs text-[#6B5F4C] leading-relaxed mt-0.5">
+            {w.descripcion.length > 90 ? w.descripcion.slice(0, 90).trimEnd() + '…' : w.descripcion}
+          </p>
+        )}
+        {w.experienciaPrevia === true && (
+          <span className="inline-flex items-center text-xs text-[#6B5F4C] bg-[#F2EDE3] border border-[#D2C4A8] rounded px-2 py-0.5 self-start">
+            Se requiere experiencia previa
+          </span>
+        )}
+        {w.experienciaPrevia === false && (
+          <span className="inline-flex items-center text-xs text-[#059669] bg-emerald-50 border border-emerald-200 rounded px-2 py-0.5 self-start">
+            Para todos los niveles
+          </span>
         )}
 
         <div className="mt-auto pt-3 border-t border-[#EDE8DE] flex items-center justify-between gap-3">
