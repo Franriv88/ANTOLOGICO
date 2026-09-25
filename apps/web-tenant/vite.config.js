@@ -4,7 +4,7 @@ import path from 'path';
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
-  const isDemo = env.VITE_DEMO_MODE === 'true';
+  const isDemo = env.VITE_DEMO_MODE === 'true' || process.env.VITE_DEMO_MODE === 'true';
 
   return {
     plugins: [react()],
