@@ -100,16 +100,56 @@ const BASE_WORKSHOPS = [
   },
 ];
 
+const BASE_RESERVAS = [
+  {
+    id: 'demo-res-001', workshopId: 'demo-ws-001',
+    nombre: 'María González', email: 'maria.gonzalez@gmail.com',
+    fecha_reserva: new Date(Date.now() - 2 * 86_400_000).toISOString(),
+    estado: 'CONFIRMADA',
+  },
+  {
+    id: 'demo-res-002', workshopId: 'demo-ws-001',
+    nombre: 'Carlos Rodríguez', email: 'carlos.r@hotmail.com',
+    fecha_reserva: new Date(Date.now() - 1 * 86_400_000).toISOString(),
+    estado: 'CONFIRMADA',
+  },
+  {
+    id: 'demo-res-003', workshopId: 'demo-ws-002',
+    nombre: 'Laura Martínez', email: 'lauramartinez@gmail.com',
+    fecha_reserva: new Date(Date.now() - 3 * 86_400_000).toISOString(),
+    estado: 'CONFIRMADA',
+  },
+  {
+    id: 'demo-res-004', workshopId: 'demo-ws-002',
+    nombre: 'Andrés Pérez', email: 'andres.perez@yahoo.com',
+    fecha_reserva: new Date(Date.now() - 5 * 86_400_000).toISOString(),
+    estado: 'CANCELADA',
+  },
+  {
+    id: 'demo-res-005', workshopId: 'demo-ws-003',
+    nombre: 'Valeria Torres', email: 'val.torres@gmail.com',
+    fecha_reserva: new Date(Date.now() - 7 * 86_400_000).toISOString(),
+    estado: 'CONFIRMADA',
+  },
+  {
+    id: 'demo-res-006', workshopId: 'demo-ws-003',
+    nombre: 'Sofía Ramírez', email: 'sofiram@gmail.com',
+    fecha_reserva: new Date(Date.now() - 6 * 86_400_000).toISOString(),
+    estado: 'CONFIRMADA',
+  },
+];
+
 export function getOrInitDemoData() {
   try {
     const raw = localStorage.getItem(DATA_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (!parsed.reservas) parsed.reservas = [];
+      if (!parsed.reservas) parsed.reservas = BASE_RESERVAS;
+      else if (parsed.reservas.length === 0) parsed.reservas = BASE_RESERVAS;
       return parsed;
     }
   } catch {}
-  const initial = { espacios: [BASE_ESPACIO], workshops: BASE_WORKSHOPS, reservas: [] };
+  const initial = { espacios: [BASE_ESPACIO], workshops: BASE_WORKSHOPS, reservas: BASE_RESERVAS };
   localStorage.setItem(DATA_KEY, JSON.stringify(initial));
   return initial;
 }

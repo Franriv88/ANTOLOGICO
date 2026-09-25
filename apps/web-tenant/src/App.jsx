@@ -7,6 +7,7 @@ import Onboarding from './pages/onboarding/Onboarding';
 import Workshops    from './pages/Workshops';
 import WorkshopForm from './pages/WorkshopForm';
 import Configuracion from './pages/Configuracion';
+import Reservas from './pages/Reservas';
 import EspacioPublico from './pages/EspacioPublico';
 
 function RequireAuth({ children }) {
@@ -51,6 +52,11 @@ export default function App() {
             <Route
               path="/workshops/:id/editar"
               element={<RequireAuth><RequireEspacio><WorkshopForm /></RequireEspacio></RequireAuth>}
+            />
+
+            <Route
+              path="/reservas"
+              element={<RequireAuth><RequireEspacio><Reservas /></RequireEspacio></RequireAuth>}
             />
 
             <Route

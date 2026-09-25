@@ -14,7 +14,14 @@ export const profesionales = {
 };
 
 export const reservas = {
-  list: async (workshopId) => (db().reservas ?? []).filter(r => r.workshopId === workshopId),
+  list: async (workshopId) =>
+    (db().reservas ?? []).filter(r => r.workshopId === workshopId),
+
+  listByEspacio: async (espacioId) => {
+    const d = db();
+    const wsIds = new Set(d.workshops.filter(w => w.espacioId === espacioId).map(w => w.id));
+    return (d.reservas ?? []).filter(r => wsIds.has(r.workshopId));
+  },
 
   create: async (workshopId, { nombre, email }) => {
     const d = db();
@@ -29,6 +36,19 @@ export const reservas = {
     if (wi >= 0 && d.workshops[wi].cuposDisponibles > 0) d.workshops[wi].cuposDisponibles--;
     save(d);
     return reserva;
+  },
+
+  cancel: async (id) => {
+    const d = db();
+    const i = d.reservas.findIndex(r => r.id === id);
+    if (i >= 0 && d.reservas[i].estado !== 'CANCELADA') {
+      const workshopId = d.reservas[i].workshopId;
+      d.reservas[i] = { ...d.reservas[i], estado: 'CANCELADA' };
+      const wi = d.workshops.findIndex(w => w.id === workshopId);
+      if (wi >= 0) d.workshops[wi].cuposDisponibles++;
+      save(d);
+    }
+    return d.reservas[i] ?? null;
   },
 };
 
