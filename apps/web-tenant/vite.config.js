@@ -8,14 +8,10 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     resolve: {
+      // Regex alias: cualquier import que termine en /services/api → api.demo.js
       alias: isDemo
-        ? {
-            // En demo mode, redirige api.js → api.demo.js (localStorage, sin DataConnect)
-            // Nota: sin .js al final — Vite resuelve sin extensión antes de comparar aliases
-            [path.resolve(__dirname, 'src/services/api')]:
-              path.resolve(__dirname, 'src/services/api.demo.js'),
-          }
-        : {},
+        ? [{ find: /\/services\/api$/, replacement: path.resolve(__dirname, 'src/services/api.demo.js') }]
+        : [],
     },
     server: {
       port: 5173,
