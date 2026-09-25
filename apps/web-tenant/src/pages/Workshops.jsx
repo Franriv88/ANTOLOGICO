@@ -86,10 +86,10 @@ function ConfirmModal({ title, message, confirmLabel = 'Confirmar', confirmClass
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
-        className="absolute inset-0 bg-ink/20 backdrop-blur-[2px]"
+        className="absolute inset-0 bg-black/50"
         onClick={onCancel}
       />
-      <div className="relative bg-surface-0 border border-border rounded-xl shadow-2xl p-6 max-w-sm w-full">
+      <div className="relative bg-[#FAF8F4] border border-[#D2C4A8] rounded-xl shadow-2xl p-6 max-w-sm w-full">
         {title && (
           <h2 className="font-display text-lg text-ink mb-2">{title}</h2>
         )}
