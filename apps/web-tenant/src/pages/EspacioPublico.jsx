@@ -65,18 +65,18 @@ function BookingModal({ workshop, brand, onConfirm, onClose }) {
   const headerBg  = workshop.headerType === 'COLOR' && workshop.headerValue ? workshop.headerValue : brand.primary;
   const headerImg = workshop.headerType === 'IMAGE' && workshop.headerValue ? workshop.headerValue : null;
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    if (!nombre.trim())                           { setError('El nombre es requerido'); return; }
-    if (!email.trim() || !email.includes('@'))    { setError('Email inválido'); return; }
-    if (!telefono.trim())                         { setError('El teléfono es requerido'); return; }
-    setLoading(true);
+  async function handleSubmit(metodoPago) {
+    if (!nombre.trim())                        { setError('El nombre es requerido'); return; }
+    if (!email.trim() || !email.includes('@')) { setError('Email inválido'); return; }
+    if (!telefono.trim())                      { setError('El teléfono es requerido'); return; }
+    setLoading(metodoPago);
     setError('');
     try {
       const reserva = await reservasApi.create(workshop.id, {
         nombre:   nombre.trim(),
         email:    email.trim(),
         telefono: telefono.trim(),
+        metodoPago,
       });
       onConfirm(reserva);
     } catch (err) {
@@ -109,7 +109,7 @@ function BookingModal({ workshop, brand, onConfirm, onClose }) {
             {formatFecha(workshop.fecha)} · {formatHora(workshop.fecha)}
           </p>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          <form onSubmit={e => e.preventDefault()} className="flex flex-col gap-3">
             <div>
               <label className={LABEL}>Nombre completo *</label>
               <input
@@ -147,14 +147,25 @@ function BookingModal({ workshop, brand, onConfirm, onClose }) {
             {error && (
               <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
             )}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2.5 rounded-xl text-sm font-semibold transition-opacity disabled:opacity-50 mt-1"
-              style={{ backgroundColor: brand.button, color: contrastText(brand.button) }}
-            >
-              {loading ? 'Confirmando…' : 'Confirmar reserva'}
-            </button>
+            <div className="flex gap-2 mt-1">
+              <button
+                type="button"
+                onClick={() => handleSubmit('EFECTIVO')}
+                disabled={!!loading}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-[#D2C4A8] text-[#2B241A] hover:bg-[#F2EDE3] transition-colors disabled:opacity-50"
+              >
+                {loading === 'EFECTIVO' ? 'Confirmando…' : 'Efectivo'}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSubmit('MERCADO_PAGO')}
+                disabled={!!loading}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-opacity disabled:opacity-50"
+                style={{ backgroundColor: brand.button, color: contrastText(brand.button) }}
+              >
+                {loading === 'MERCADO_PAGO' ? 'Confirmando…' : 'Mercado Pago'}
+              </button>
+            </div>
             <button type="button" onClick={onClose} className="text-xs text-[#6B5F4C] hover:text-[#2B241A] text-center py-1 transition-colors">
               Cancelar
             </button>

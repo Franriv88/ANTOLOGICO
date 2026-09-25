@@ -30,6 +30,7 @@ export const reservas = {
   list: async () => [],
   listByEspacio: async () => [],
   create: async () => { throw new Error('Reservas aún no implementadas en Firebase'); },
+  markPaid: async () => { throw new Error('Reservas aún no implementadas en Firebase'); },
   cancel: async () => { throw new Error('Reservas aún no implementadas en Firebase'); },
 };
 

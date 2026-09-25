@@ -23,19 +23,31 @@ export const reservas = {
     return (d.reservas ?? []).filter(r => wsIds.has(r.workshopId));
   },
 
-  create: async (workshopId, { nombre, email, telefono }) => {
+  create: async (workshopId, { nombre, email, telefono, metodoPago = 'MERCADO_PAGO' }) => {
     const d = db();
     if (!d.reservas) d.reservas = [];
     const reserva = {
       id: uid(), workshopId, nombre, email, telefono: telefono ?? '',
       fecha_reserva: new Date().toISOString(),
       estado: 'CONFIRMADA',
+      metodoPago,
+      estadoPago: metodoPago === 'MERCADO_PAGO' ? 'PAGADO' : 'PENDIENTE',
     };
     d.reservas.push(reserva);
     const wi = d.workshops.findIndex(w => w.id === workshopId);
     if (wi >= 0 && d.workshops[wi].cuposDisponibles > 0) d.workshops[wi].cuposDisponibles--;
     save(d);
     return reserva;
+  },
+
+  markPaid: async (id) => {
+    const d = db();
+    const i = d.reservas.findIndex(r => r.id === id);
+    if (i >= 0) {
+      d.reservas[i] = { ...d.reservas[i], estadoPago: 'PAGADO' };
+      save(d);
+    }
+    return d.reservas[i] ?? null;
   },
 
   cancel: async (id) => {

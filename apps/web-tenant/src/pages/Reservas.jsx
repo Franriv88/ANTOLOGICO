@@ -13,6 +13,7 @@ function StatCard({ label, value, accent }) {
   const valueColor =
     accent === 'green' ? 'text-[#10B981]' :
     accent === 'red'   ? 'text-danger'    :
+    accent === 'amber' ? 'text-[#B98527]' :
     'text-ink';
   return (
     <div className="bg-surface-100 border border-border rounded-xl px-5 py-4">
@@ -36,6 +37,29 @@ function StateBadge({ estado }) {
       </span>
     );
   return <span className="text-xs text-ink-muted">{estado}</span>;
+}
+
+function PagoBadge({ metodoPago, estadoPago }) {
+  if (!metodoPago) return null;
+  if (metodoPago === 'MERCADO_PAGO') {
+    return (
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-600">
+        Mercado Pago
+      </span>
+    );
+  }
+  if (estadoPago === 'PAGADO') {
+    return (
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[#10B981]/10 text-[#10B981]">
+        Efectivo · Pagado
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[#B98527]/10 text-[#B98527]">
+      Efectivo · Pendiente
+    </span>
+  );
 }
 
 function EmptyState({ hasReservas }) {
@@ -93,7 +117,8 @@ export default function Reservas() {
   const [loading,   setLoading]     = useState(true);
   const [filterWs,  setFilterWs]    = useState('');
   const [search,    setSearch]      = useState('');
-  const [cancelTarget, setCancelTarget] = useState(null); // { id, nombre, workshopId }
+  const [cancelTarget,  setCancelTarget]  = useState(null);
+  const [markingPaid,   setMarkingPaid]   = useState(null);
 
   useEffect(() => {
     if (!activeEspacio?.id) return;
@@ -133,7 +158,22 @@ export default function Reservas() {
     total:       reservas.length,
     confirmadas: reservas.filter(r => r.estado === 'CONFIRMADA').length,
     canceladas:  reservas.filter(r => r.estado === 'CANCELADA').length,
+    efectivoPendiente: reservas.filter(
+      r => r.estado === 'CONFIRMADA' && r.metodoPago === 'EFECTIVO' && r.estadoPago === 'PENDIENTE'
+    ).length,
   }), [reservas]);
+
+  async function handleMarkPaid(id) {
+    setMarkingPaid(id);
+    try {
+      await api.reservas.markPaid(id);
+      setReservas(prev =>
+        prev.map(r => r.id === id ? { ...r, estadoPago: 'PAGADO' } : r),
+      );
+    } finally {
+      setMarkingPaid(null);
+    }
+  }
 
   async function handleCancel() {
     if (!cancelTarget) return;
@@ -163,10 +203,11 @@ export default function Reservas() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <StatCard label="Total"       value={stats.total}       />
-        <StatCard label="Confirmadas" value={stats.confirmadas} accent="green" />
-        <StatCard label="Canceladas"  value={stats.canceladas}  accent="red"   />
+      <div className="grid grid-cols-4 gap-4 mb-6">
+        <StatCard label="Total"              value={stats.total}              />
+        <StatCard label="Confirmadas"        value={stats.confirmadas}        accent="green"  />
+        <StatCard label="Canceladas"         value={stats.canceladas}         accent="red"    />
+        <StatCard label="Efectivo pendiente" value={stats.efectivoPendiente}  accent={stats.efectivoPendiente > 0 ? 'amber' : undefined} />
       </div>
 
       {/* Filters */}
@@ -217,6 +258,9 @@ export default function Reservas() {
                 <th className="text-left px-4 py-3 text-xs font-medium text-ink-muted uppercase tracking-wide">
                   Estado
                 </th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-ink-muted uppercase tracking-wide">
+                  Pago
+                </th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>
@@ -248,7 +292,19 @@ export default function Reservas() {
                     <td className="px-4 py-3">
                       <StateBadge estado={r.estado} />
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-4 py-3">
+                      <PagoBadge metodoPago={r.metodoPago} estadoPago={r.estadoPago} />
+                    </td>
+                    <td className="px-4 py-3 text-right whitespace-nowrap">
+                      {r.estado === 'CONFIRMADA' && r.metodoPago === 'EFECTIVO' && r.estadoPago === 'PENDIENTE' && (
+                        <button
+                          onClick={() => handleMarkPaid(r.id)}
+                          disabled={markingPaid === r.id}
+                          className="text-xs text-primary hover:opacity-70 transition-opacity disabled:opacity-40 mr-3"
+                        >
+                          {markingPaid === r.id ? '…' : 'Marcar pagado'}
+                        </button>
+                      )}
                       {r.estado === 'CONFIRMADA' && (
                         <button
                           onClick={() => setCancelTarget({ id: r.id, nombre: r.nombre, workshopId: r.workshopId })}
