@@ -55,10 +55,10 @@ export default function Login() {
       try {
         localStorage.removeItem('ant_demo_data');
         await loginDemo(DEMO_EMAIL, DEMO_PASSWORD);
-        navigate('/workshops');
+        // Reload completo para que EspacioContext re-inicialice sin datos previos
+        window.location.href = '/workshops';
       } catch (err) {
         setError(err.message);
-      } finally {
         setLoading(false);
       }
     }
