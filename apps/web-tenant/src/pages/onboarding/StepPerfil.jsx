@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { DEMO_MODE } from '../../lib/demo';
-import { upsertProfesional } from '../../dataconnect-generated';
+import { profesionales as profesionalesApi } from '../../services/api';
 
 const INPUT_CLS =
   'w-full px-3 py-2 bg-white border border-border rounded-md text-sm text-ink ' +
@@ -21,9 +20,7 @@ export default function StepPerfil({ onNext }) {
     setLoading(true);
     setError('');
     try {
-      if (!DEMO_MODE) {
-        await upsertProfesional({ nombre: nombre.trim(), email: user.email });
-      }
+      await profesionalesApi.upsert({ nombre: nombre.trim(), email: user.email });
       onNext({ nombre: nombre.trim() });
     } catch (err) {
       setError(err.message);

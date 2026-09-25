@@ -9,6 +9,10 @@ function uid() {
 function db()     { return getOrInitDemoData(); }
 function save(d)  { saveDemoData(d); }
 
+export const profesionales = {
+  upsert: async () => {},
+};
+
 export const espacios = {
   list: async () => db().espacios,
 

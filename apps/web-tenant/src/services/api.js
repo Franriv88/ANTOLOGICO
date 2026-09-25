@@ -16,7 +16,15 @@ import {
   updateWorkshop,
   updateWorkshopEstado,
   deleteWorkshop,
+  upsertProfesional,
 } from '../dataconnect-generated';
+
+export const profesionales = {
+  upsert: async ({ nombre, email }) => {
+    const result = await upsertProfesional({ nombre, email });
+    if (result.errors?.length) throw new Error(result.errors.map(e => e.message).join(' | '));
+  },
+};
 
 
 export const espacios = {
