@@ -565,7 +565,7 @@ export default function WorkshopForm() {
     return <Layout><p className="text-sm text-ink-muted">Cargando taller…</p></Layout>;
   }
 
-  const fechaGlow = IS_MULTI(form.tipo) && form.scheduleMode === 'WEEKLY' && !form.fecha;
+  const fechaGlow = IS_MULTI(form.tipo) && !form.fecha;
 
   return (
     <Layout>
@@ -638,6 +638,18 @@ export default function WorkshopForm() {
               {IS_MULTI(form.tipo) && (
                 <div>
                   <label className={LABEL_CLS}>Modalidad de encuentros</label>
+
+                  {!form.fecha && (
+                    <div className="flex items-start gap-2 mb-3 px-3 py-2.5 bg-primary/5 border border-primary/25 rounded-lg">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E85D4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0">
+                        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                      </svg>
+                      <p className="text-xs text-primary leading-snug">
+                        Primero indicá la <strong>Fecha de inicio</strong> en el panel de la derecha y luego elegí los días específicos o la frecuencia.
+                      </p>
+                    </div>
+                  )}
+
                   <div className="flex gap-2 mb-3">
                     {[
                       { mode: 'SPECIFIC_DATES', label: 'Días específicos' },
