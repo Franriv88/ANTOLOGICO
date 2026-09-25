@@ -26,6 +26,11 @@ export const profesionales = {
   },
 };
 
+export const reservas = {
+  list: async () => [],
+  create: async () => { throw new Error('Reservas aún no implementadas en Firebase'); },
+};
+
 
 export const espacios = {
   list: async () => {

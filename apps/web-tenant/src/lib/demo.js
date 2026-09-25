@@ -103,9 +103,13 @@ const BASE_WORKSHOPS = [
 export function getOrInitDemoData() {
   try {
     const raw = localStorage.getItem(DATA_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (!parsed.reservas) parsed.reservas = [];
+      return parsed;
+    }
   } catch {}
-  const initial = { espacios: [BASE_ESPACIO], workshops: BASE_WORKSHOPS };
+  const initial = { espacios: [BASE_ESPACIO], workshops: BASE_WORKSHOPS, reservas: [] };
   localStorage.setItem(DATA_KEY, JSON.stringify(initial));
   return initial;
 }

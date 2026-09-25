@@ -13,6 +13,25 @@ export const profesionales = {
   upsert: async () => {},
 };
 
+export const reservas = {
+  list: async (workshopId) => (db().reservas ?? []).filter(r => r.workshopId === workshopId),
+
+  create: async (workshopId, { nombre, email }) => {
+    const d = db();
+    if (!d.reservas) d.reservas = [];
+    const reserva = {
+      id: uid(), workshopId, nombre, email,
+      fecha_reserva: new Date().toISOString(),
+      estado: 'CONFIRMADA',
+    };
+    d.reservas.push(reserva);
+    const wi = d.workshops.findIndex(w => w.id === workshopId);
+    if (wi >= 0 && d.workshops[wi].cuposDisponibles > 0) d.workshops[wi].cuposDisponibles--;
+    save(d);
+    return reserva;
+  },
+};
+
 export const espacios = {
   list: async () => db().espacios,
 

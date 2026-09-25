@@ -7,6 +7,7 @@ import Onboarding from './pages/onboarding/Onboarding';
 import Workshops    from './pages/Workshops';
 import WorkshopForm from './pages/WorkshopForm';
 import Configuracion from './pages/Configuracion';
+import EspacioPublico from './pages/EspacioPublico';
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
@@ -30,6 +31,7 @@ export default function App() {
             {/* Rutas públicas */}
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<DevLogin />} />
+            <Route path="/p/:espacioId" element={<EspacioPublico />} />
 
             {/* Onboarding — requiere auth pero aún no tiene espacio */}
             <Route
