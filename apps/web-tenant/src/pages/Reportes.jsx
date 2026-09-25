@@ -56,7 +56,7 @@ function monthData(reservas, wsMap) {
 function yearData(reservas, wsMap, startYear) {
   const currentYear = new Date().getFullYear();
   const years = [];
-  for (let y = startYear; y <= currentYear; y++) years.push(y);
+  for (let y = startYear; y <= currentYear + 5; y++) years.push(y);
   return years.map(y => ({
     label: String(y),
     value: reservas
@@ -300,22 +300,25 @@ export default function Reportes() {
           {top3.length > 0 && (
             <div className="mb-8">
               <h2 className="text-sm font-semibold text-ink mb-3">Top 3 más demandados</h2>
-              <div className="flex flex-col gap-2">
+              <div className="grid grid-cols-3 gap-4">
                 {top3.map((w, i) => (
-                  <div key={w.id} className="flex items-center gap-4 bg-surface-100 border border-border rounded-xl px-5 py-4">
-                    <span className="text-xl w-8 shrink-0">{MEDALS[i]}</span>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-medium text-ink truncate">{w.nombre}</p>
-                        <TipoChip tipo={w.tipo} />
+                  <div key={w.id} className="bg-surface-100 border border-border rounded-xl p-5">
+                    <span className="text-2xl block mb-3">{MEDALS[i]}</span>
+                    <p className="font-medium text-ink text-sm leading-snug mb-2 line-clamp-2">{w.nombre}</p>
+                    <TipoChip tipo={w.tipo} />
+                    <div className="mt-4 pt-3 border-t border-border/60 flex flex-col gap-1">
+                      <div className="flex justify-between items-baseline">
+                        <span className="text-xs text-ink-muted">Ocupación</span>
+                        <span className="text-sm font-mono text-ink">{Math.round(w.ocupacion)}%</span>
                       </div>
-                      <p className="text-xs text-ink-muted mt-0.5">
-                        {w.totalRes} reserva{w.totalRes !== 1 ? 's' : ''} confirmada{w.totalRes !== 1 ? 's' : ''}
-                      </p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-sm font-mono text-ink">{Math.round(w.ocupacion)}% ocupación</p>
-                      <p className="text-xs text-ink-muted">{w.inscritos}/{w.cuposTotales} cupos</p>
+                      <div className="flex justify-between items-baseline">
+                        <span className="text-xs text-ink-muted">Cupos</span>
+                        <span className="text-xs font-mono text-ink-muted">{w.inscritos}/{w.cuposTotales}</span>
+                      </div>
+                      <div className="flex justify-between items-baseline">
+                        <span className="text-xs text-ink-muted">Reservas</span>
+                        <span className="text-xs font-mono font-medium text-ink">{w.totalRes}</span>
+                      </div>
                     </div>
                   </div>
                 ))}

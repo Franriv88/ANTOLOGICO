@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useEspacio } from '../context/EspacioContext';
 
@@ -179,8 +179,8 @@ export default function Layout({ children }) {
 
       {/* ── Sidebar ── */}
       <aside className="w-56 shrink-0 bg-surface-100 border-r border-border flex flex-col h-screen">
-        {/* Logo */}
-        <div className="px-4 py-4 border-b border-border shrink-0 flex items-center gap-3">
+        {/* Logo — link al Home */}
+        <Link to="/workshops" className="px-4 py-4 border-b border-border shrink-0 flex items-center gap-3 hover:bg-surface-200/50 transition-colors">
           {activeEspacio?.logoUrl ? (
             <>
               <img
@@ -199,7 +199,7 @@ export default function Layout({ children }) {
           ) : (
             <span className="font-display text-xl text-ink">Antológico</span>
           )}
-        </div>
+        </Link>
 
         {/* Selector de espacio */}
         {espacios.length > 1 ? (
