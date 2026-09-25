@@ -103,37 +103,37 @@ const BASE_WORKSHOPS = [
 const BASE_RESERVAS = [
   {
     id: 'demo-res-001', workshopId: 'demo-ws-001',
-    nombre: 'María González', email: 'maria.gonzalez@gmail.com',
+    nombre: 'María González', email: 'maria.gonzalez@gmail.com', telefono: '+54 9 11 2345-6789',
     fecha_reserva: new Date(Date.now() - 2 * 86_400_000).toISOString(),
     estado: 'CONFIRMADA',
   },
   {
     id: 'demo-res-002', workshopId: 'demo-ws-001',
-    nombre: 'Carlos Rodríguez', email: 'carlos.r@hotmail.com',
+    nombre: 'Carlos Rodríguez', email: 'carlos.r@hotmail.com', telefono: '+54 9 11 5678-1234',
     fecha_reserva: new Date(Date.now() - 1 * 86_400_000).toISOString(),
     estado: 'CONFIRMADA',
   },
   {
     id: 'demo-res-003', workshopId: 'demo-ws-002',
-    nombre: 'Laura Martínez', email: 'lauramartinez@gmail.com',
+    nombre: 'Laura Martínez', email: 'lauramartinez@gmail.com', telefono: '+54 9 351 4321-8765',
     fecha_reserva: new Date(Date.now() - 3 * 86_400_000).toISOString(),
     estado: 'CONFIRMADA',
   },
   {
     id: 'demo-res-004', workshopId: 'demo-ws-002',
-    nombre: 'Andrés Pérez', email: 'andres.perez@yahoo.com',
+    nombre: 'Andrés Pérez', email: 'andres.perez@yahoo.com', telefono: '+54 9 221 9876-5432',
     fecha_reserva: new Date(Date.now() - 5 * 86_400_000).toISOString(),
     estado: 'CANCELADA',
   },
   {
     id: 'demo-res-005', workshopId: 'demo-ws-003',
-    nombre: 'Valeria Torres', email: 'val.torres@gmail.com',
+    nombre: 'Valeria Torres', email: 'val.torres@gmail.com', telefono: '+54 9 11 3344-5566',
     fecha_reserva: new Date(Date.now() - 7 * 86_400_000).toISOString(),
     estado: 'CONFIRMADA',
   },
   {
     id: 'demo-res-006', workshopId: 'demo-ws-003',
-    nombre: 'Sofía Ramírez', email: 'sofiram@gmail.com',
+    nombre: 'Sofía Ramírez', email: 'sofiram@gmail.com', telefono: '+54 9 11 7788-9900',
     fecha_reserva: new Date(Date.now() - 6 * 86_400_000).toISOString(),
     estado: 'CONFIRMADA',
   },

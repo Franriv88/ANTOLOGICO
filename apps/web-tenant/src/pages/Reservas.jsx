@@ -232,6 +232,9 @@ export default function Reservas() {
                     <td className="px-4 py-3">
                       <p className="font-medium text-ink">{r.nombre}</p>
                       <p className="text-xs text-ink-muted">{r.email}</p>
+                      {r.telefono && (
+                        <p className="text-xs text-ink-muted font-mono">{r.telefono}</p>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <p className="text-ink truncate max-w-[220px]">{ws?.nombre ?? '—'}</p>

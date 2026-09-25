@@ -53,10 +53,11 @@ function contrastText(hex) {
 // ── BookingModal ──────────────────────────────────────────────────────────────
 
 function BookingModal({ workshop, brand, onConfirm, onClose }) {
-  const [nombre,  setNombre]  = useState('');
-  const [email,   setEmail]   = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error,   setError]   = useState('');
+  const [nombre,   setNombre]   = useState('');
+  const [email,    setEmail]    = useState('');
+  const [telefono, setTelefono] = useState('');
+  const [loading,  setLoading]  = useState(false);
+  const [error,    setError]    = useState('');
 
   const INPUT = 'w-full px-3 py-2 bg-white border border-[#D2C4A8] rounded-lg text-sm text-[#2B241A] focus:outline-none focus:ring-2 focus:ring-offset-1';
   const LABEL = 'block text-xs font-medium text-[#6B5F4C] mb-1';
@@ -68,10 +69,15 @@ function BookingModal({ workshop, brand, onConfirm, onClose }) {
     e.preventDefault();
     if (!nombre.trim())                           { setError('El nombre es requerido'); return; }
     if (!email.trim() || !email.includes('@'))    { setError('Email inválido'); return; }
+    if (!telefono.trim())                         { setError('El teléfono es requerido'); return; }
     setLoading(true);
     setError('');
     try {
-      const reserva = await reservasApi.create(workshop.id, { nombre: nombre.trim(), email: email.trim() });
+      const reserva = await reservasApi.create(workshop.id, {
+        nombre:   nombre.trim(),
+        email:    email.trim(),
+        telefono: telefono.trim(),
+      });
       onConfirm(reserva);
     } catch (err) {
       setError(err.message);
@@ -127,6 +133,17 @@ function BookingModal({ workshop, brand, onConfirm, onClose }) {
                 style={{ '--tw-ring-color': brand.primary }}
               />
             </div>
+            <div>
+              <label className={LABEL}>Teléfono *</label>
+              <input
+                type="tel"
+                value={telefono}
+                onChange={e => { setTelefono(e.target.value); setError(''); }}
+                placeholder="+54 9 11 1234-5678"
+                className={INPUT}
+                style={{ '--tw-ring-color': brand.primary }}
+              />
+            </div>
             {error && (
               <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
             )}
@@ -174,6 +191,7 @@ function ConfirmationView({ reserva, workshop, brand, onBack }) {
           <div className="mt-3 pt-3 border-t border-[#D2C4A8]">
             <p className="text-xs text-[#6B5F4C]">A nombre de: <span className="font-semibold text-[#2B241A]">{reserva.nombre}</span></p>
             <p className="text-xs text-[#6B5F4C]">{reserva.email}</p>
+            {reserva.telefono && <p className="text-xs text-[#6B5F4C]">{reserva.telefono}</p>}
             <p className="text-xs font-mono text-[#9B9083] mt-1.5">Código: #{reserva.id.slice(-8).toUpperCase()}</p>
           </div>
         </div>

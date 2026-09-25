@@ -23,11 +23,11 @@ export const reservas = {
     return (d.reservas ?? []).filter(r => wsIds.has(r.workshopId));
   },
 
-  create: async (workshopId, { nombre, email }) => {
+  create: async (workshopId, { nombre, email, telefono }) => {
     const d = db();
     if (!d.reservas) d.reservas = [];
     const reserva = {
-      id: uid(), workshopId, nombre, email,
+      id: uid(), workshopId, nombre, email, telefono: telefono ?? '',
       fecha_reserva: new Date().toISOString(),
       estado: 'CONFIRMADA',
     };
