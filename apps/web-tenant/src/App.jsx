@@ -8,6 +8,7 @@ import Workshops    from './pages/Workshops';
 import WorkshopForm from './pages/WorkshopForm';
 import Configuracion from './pages/Configuracion';
 import Reservas from './pages/Reservas';
+import Reportes from './pages/Reportes';
 import EspacioPublico from './pages/EspacioPublico';
 
 function RequireAuth({ children }) {
@@ -57,6 +58,11 @@ export default function App() {
             <Route
               path="/reservas"
               element={<RequireAuth><RequireEspacio><Reservas /></RequireEspacio></RequireAuth>}
+            />
+
+            <Route
+              path="/reportes"
+              element={<RequireAuth><RequireEspacio><Reportes /></RequireEspacio></RequireAuth>}
             />
 
             <Route

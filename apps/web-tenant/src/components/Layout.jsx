@@ -141,7 +141,7 @@ export function injectBrandTheme({ primary, button, bg, dFont, bFont }) {
 const NAV = [
   { to: '/workshops', label: 'Talleres' },
   { to: '/reservas',  label: 'Reservas' },
-  { to: '/reportes',  label: 'Reportes',     disabled: true },
+  { to: '/reportes',  label: 'Reportes' },
   { to: '/config',    label: 'Configuración' },
 ];
 
