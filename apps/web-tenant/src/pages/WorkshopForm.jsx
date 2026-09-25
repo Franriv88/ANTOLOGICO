@@ -682,19 +682,18 @@ export default function WorkshopForm() {
               <div>
                 <div className="flex items-baseline justify-between mb-1">
                   <label className={LABEL_CLS} style={{ marginBottom: 0 }}>Descripción</label>
-                  <span className={`text-xs font-mono ${form.descripcion.length > 180 ? 'text-danger' : 'text-ink-muted'}`}>
-                    {form.descripcion.length}/200
+                  <span className={`text-xs font-mono ${form.descripcion.length > 75 ? 'text-danger' : 'text-ink-muted'}`}>
+                    {form.descripcion.length}/90
                   </span>
                 </div>
                 <textarea
                   value={form.descripcion}
                   onChange={e => set('descripcion', e.target.value)}
-                  rows={4}
-                  maxLength={200}
+                  rows={3}
+                  maxLength={90}
                   placeholder="Describí el taller brevemente…"
                   className={INPUT_CLS + ' resize-none'}
                 />
-                <p className="mt-1 text-xs text-ink-muted/70">Los primeros 90 caracteres se muestran en la tarjeta pública.</p>
               </div>
 
               {/* Experiencia previa */}
