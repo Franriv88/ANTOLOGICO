@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { DEMO_MODE } from '../../lib/demo';
 import { upsertProfesional } from '../../dataconnect-generated';
 
 const INPUT_CLS =
@@ -20,7 +21,9 @@ export default function StepPerfil({ onNext }) {
     setLoading(true);
     setError('');
     try {
-      await upsertProfesional({ nombre: nombre.trim(), email: user.email });
+      if (!DEMO_MODE) {
+        await upsertProfesional({ nombre: nombre.trim(), email: user.email });
+      }
       onNext({ nombre: nombre.trim() });
     } catch (err) {
       setError(err.message);

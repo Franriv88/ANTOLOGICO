@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { DEMO_MODE } from '../../lib/demo';
 import { listPlanes } from '../../dataconnect-generated';
 
 const FEATURES_FALLBACK = {
@@ -17,6 +18,7 @@ export default function StepPlan({ onFinish, onBack }) {
   const [loading, setLoading]     = useState(false);
 
   useEffect(() => {
+    if (DEMO_MODE) { setPlanes([]); return; }
     listPlanes()
       .then(({ data }) => setPlanes(data?.planes ?? []))
       .catch(() => setPlanes([]));
