@@ -49,6 +49,20 @@ export default function Login() {
       }
     }
 
+    async function handleNewUser() {
+      setError('');
+      setLoading(true);
+      try {
+        localStorage.removeItem('ant_demo_data');
+        await loginDemo(DEMO_EMAIL, DEMO_PASSWORD);
+        navigate('/workshops');
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
     return (
       <div className="min-h-screen bg-surface-0 flex items-center justify-center px-4">
         <div className="bg-surface-100 border border-border rounded-xl p-8 w-full max-w-sm">
@@ -93,6 +107,18 @@ export default function Login() {
               {loading ? 'Ingresando…' : 'Ingresar'}
             </button>
           </form>
+
+          <div className="mt-4 pt-4 border-t border-border">
+            <p className="text-xs text-ink-muted text-center mb-3">¿Querés ver el flujo de registro completo?</p>
+            <button
+              type="button"
+              onClick={handleNewUser}
+              disabled={loading}
+              className="w-full py-2 border border-border rounded-md text-xs font-medium text-ink-muted hover:text-ink hover:bg-surface-200 transition-colors disabled:opacity-50"
+            >
+              Empezar como usuario nuevo →
+            </button>
+          </div>
         </div>
       </div>
     );

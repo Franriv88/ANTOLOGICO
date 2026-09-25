@@ -8,6 +8,12 @@ const FEATURES_FALLBACK = {
   Estudio:      ['Talleres ilimitados', 'Múltiples espacios', 'Encabezado con imagen', 'Reportes', 'Auditoría'],
 };
 
+const PLANES_DEMO = [
+  { id: 'esencial',    nombre: 'Esencial',    precioMensual: 5900,  features: FEATURES_FALLBACK.Esencial },
+  { id: 'profesional', nombre: 'Profesional', precioMensual: 12900, features: FEATURES_FALLBACK.Profesional },
+  { id: 'estudio',     nombre: 'Estudio',     precioMensual: 24900, features: FEATURES_FALLBACK.Estudio },
+];
+
 function formatPrecio(n) {
   return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
 }
@@ -18,7 +24,7 @@ export default function StepPlan({ onFinish, onBack }) {
   const [loading, setLoading]     = useState(false);
 
   useEffect(() => {
-    if (DEMO_MODE) { setPlanes([]); return; }
+    if (DEMO_MODE) { setPlanes(PLANES_DEMO); return; }
     listPlanes()
       .then(({ data }) => setPlanes(data?.planes ?? []))
       .catch(() => setPlanes([]));
@@ -46,29 +52,16 @@ export default function StepPlan({ onFinish, onBack }) {
 
       {/* Cards de planes */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {list.length === 0 ? (
-          // Fallback estático si el seed aún no se corrió
-          ['Esencial', 'Profesional', 'Estudio'].map((nombre) => (
-            <PlanCard
-              key={nombre}
-              nombre={nombre}
-              features={FEATURES_FALLBACK[nombre]}
-              selected={selected === nombre}
-              onSelect={() => setSelected(nombre)}
-            />
-          ))
-        ) : (
-          list.map((plan) => (
-            <PlanCard
-              key={plan.id}
-              nombre={plan.nombre}
-              precioMensual={plan.precioMensual}
-              features={Array.isArray(plan.features) ? plan.features : FEATURES_FALLBACK[plan.nombre] ?? []}
-              selected={selected === plan.id}
-              onSelect={() => setSelected(plan.id)}
-            />
-          ))
-        )}
+        {list.map((plan) => (
+          <PlanCard
+            key={plan.id}
+            nombre={plan.nombre}
+            precioMensual={plan.precioMensual}
+            features={Array.isArray(plan.features) ? plan.features : FEATURES_FALLBACK[plan.nombre] ?? []}
+            selected={selected === plan.id}
+            onSelect={() => setSelected(plan.id)}
+          />
+        ))}
       </div>
 
       <p className="text-xs text-center text-ink-muted">

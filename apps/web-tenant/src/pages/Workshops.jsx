@@ -135,6 +135,12 @@ const IconPerson = () => (
   </svg>
 );
 
+const IconPersonGroup = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+  </svg>
+);
+
 function parseBrand(espacio) {
   const bc = espacio?.brandColors;
   const palette = Array.isArray(bc) ? bc : (bc?.palette ?? []);
@@ -351,9 +357,9 @@ export default function Workshops() {
                 className="rounded-xl overflow-hidden flex flex-col border"
                 style={{ backgroundColor: '#ffffff', borderColor: cardBorderColor }}
               >
-                {/* Encabezado de color */}
+                {/* Encabezado — imagen o color, alto */}
                 <div
-                  className="relative h-20 shrink-0"
+                  className="relative h-40 shrink-0"
                   style={{
                     backgroundColor: headerBg,
                     ...(headerImg && {
@@ -363,45 +369,54 @@ export default function Workshops() {
                     }),
                   }}
                 >
-                  {/* Botón editar */}
-                  <button
-                    onClick={() => navigate(`/workshops/${w.id}/editar`)}
-                    title="Editar taller"
-                    className="absolute top-2 left-2 w-7 h-7 flex items-center justify-center rounded-md bg-black/25 hover:bg-black/40 text-white transition-colors"
+                  {/* Precio — badge top-left */}
+                  <div
+                    className="absolute top-3 left-3 px-3 py-1.5 rounded-lg font-mono font-bold text-sm text-white shadow-md"
+                    style={{ backgroundColor: 'rgba(0,0,0,0.52)', backdropFilter: 'blur(4px)' }}
                   >
-                    <IconPencil />
-                  </button>
+                    {formatPrecio(w.precio)}
+                  </div>
 
-                  {/* Botón eliminar */}
-                  <button
-                    onClick={() => handleDeleteRequest(w.id, w.nombre)}
-                    title="Eliminar taller"
-                    className="absolute top-2 right-2 w-7 h-7 flex items-center justify-center rounded-md bg-black/25 hover:bg-black/40 text-white transition-colors"
-                  >
-                    <IconTrash />
-                  </button>
+                  {/* Botones top-right: editar + eliminar */}
+                  <div className="absolute top-3 right-3 flex gap-1.5">
+                    <button
+                      onClick={() => navigate(`/workshops/${w.id}/editar`)}
+                      title="Editar taller"
+                      className="w-8 h-8 flex items-center justify-center rounded-lg bg-black/35 hover:bg-black/55 text-white transition-colors shadow-md"
+                    >
+                      <IconPencil />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteRequest(w.id, w.nombre)}
+                      title="Eliminar taller"
+                      className="w-8 h-8 flex items-center justify-center rounded-lg bg-black/35 hover:bg-black/55 text-white transition-colors shadow-md"
+                    >
+                      <IconTrash />
+                    </button>
+                  </div>
 
-                  {/* Badge estado */}
+                  {/* Badges de estado */}
                   {isOculto && (
-                    <span className="absolute bottom-2 left-2 text-xs bg-black/40 text-white/90 px-1.5 py-0.5 rounded font-medium">
+                    <span className="absolute bottom-2 left-3 text-xs bg-black/40 text-white/90 px-2 py-0.5 rounded font-medium">
                       Oculto
                     </span>
                   )}
-                  {isAgotado && (
-                    <span className="absolute bottom-2 left-2 text-xs bg-black/40 text-white/90 px-1.5 py-0.5 rounded font-medium">
-                      Agotado
+                  {w.estado === 'CANCELADO' && (
+                    <span className="absolute bottom-2 left-3 text-xs bg-danger/70 text-white px-2 py-0.5 rounded font-medium">
+                      Cancelado
                     </span>
                   )}
                 </div>
 
                 {/* Cuerpo */}
-                <div className="flex flex-col flex-1 p-4 gap-2">
+                <div className="flex flex-col flex-1 p-4 gap-2.5">
+                  {/* Título + tipo */}
                   <div className="flex items-start justify-between gap-2">
                     <h2
-                      className="font-semibold text-sm leading-snug"
+                      className="font-bold text-sm leading-snug uppercase tracking-wide"
                       style={{
                         fontFamily: brand.displayFont ? `'${brand.displayFont}', serif` : undefined,
-                        color: brand.textCard || undefined,
+                        color: brand.textCard || '#1A1611',
                       }}
                     >{w.nombre}</h2>
                     {w.tipo && TIPO_CONFIG[w.tipo] && (
@@ -411,10 +426,19 @@ export default function Workshops() {
                     )}
                   </div>
 
+                  {/* Cupos */}
+                  <div className="flex items-center gap-1.5" style={{ color: cardTextMuted }}>
+                    <IconPersonGroup />
+                    <span className="text-xs font-semibold font-mono">
+                      {Math.max(0, w.cuposTotales - w.cuposDisponibles)}/{w.cuposTotales} CUPOS
+                    </span>
+                  </div>
+
+                  {/* Fecha y hora */}
                   <p className="text-xs font-mono" style={{ color: cardTextMuted }}>
-                    {formatFecha(w.fecha)} · {formatHora(w.fecha)}
+                    {formatFecha(w.fecha)} — {formatHora(w.fecha)}
                     {formatDuracion(w.duracionHoras, w.duracionMinutos) && (
-                      <span style={{ color: cardTextMuted, opacity: 0.7 }}>
+                      <span style={{ opacity: 0.7 }}>
                         {' · '}{formatDuracion(w.duracionHoras, w.duracionMinutos)}
                       </span>
                     )}
@@ -422,64 +446,52 @@ export default function Workshops() {
 
                   <ScheduleChip w={w} />
 
-                  <div className="flex items-end justify-between mt-auto pt-3 border-t" style={{ borderColor: cardBorderColor }}>
-                    <div>
-                      <p className="text-base font-mono font-semibold leading-tight" style={{ color: cardTextMain }}>
-                        {formatPrecio(w.precio)}
-                      </p>
-                      <div className="flex items-center gap-1 text-xs font-mono mt-0.5">
-                        <IconPerson style={{ color: '#6B5F4C' }} />
-                        <span style={{ color: '#6B5F4C' }}>{Math.max(0, w.cuposTotales - w.cuposDisponibles)} de {w.cuposTotales}</span>
-                      </div>
-                    </div>
+                  {/* Footer: SlotBadge + acciones rápidas */}
+                  <div className="mt-auto pt-3 border-t flex flex-col gap-2" style={{ borderColor: cardBorderColor }}>
                     <SlotBadge status={getSlotStatus(w.cuposDisponibles, w.cuposTotales)} />
-                  </div>
 
-                  {/* Acciones rápidas */}
-                  <div className="flex gap-1.5 pt-1 flex-wrap">
-                    {/* Agotar — toggle independiente */}
-                    <button
-                      onClick={() => handleQuickStatus(w, 'agotar')}
-                      className="flex-1 py-1.5 text-xs font-medium rounded-md border transition-all"
-                      style={isAgotado
-                        ? { backgroundColor: '#fffbeb', color: '#b45309', borderColor: '#fcd34d' }
-                        : { backgroundColor: '#ffffff', color: '#6B5F4C', borderColor: cardBorderColor }}
-                    >
-                      Agotar
-                    </button>
+                    <div className="flex gap-1.5 flex-wrap">
+                      <button
+                        onClick={() => handleQuickStatus(w, 'agotar')}
+                        className="flex-1 py-1.5 text-xs font-medium rounded-md border transition-all"
+                        style={isAgotado
+                          ? { backgroundColor: '#fffbeb', color: '#b45309', borderColor: '#fcd34d' }
+                          : { backgroundColor: '#ffffff', color: '#6B5F4C', borderColor: cardBorderColor }}
+                      >
+                        Agotar
+                      </button>
 
-                    {/* Ocultar / Mostrar — toggle pareado */}
-                    <div className="flex flex-1 rounded-md overflow-hidden border" style={{ borderColor: cardBorderColor }}>
-                      <button
-                        onClick={() => !isOculto && handleQuickStatus(w, 'ocultar')}
-                        className="flex-1 py-1.5 text-xs font-medium transition-all"
-                        style={isOculto
-                          ? { backgroundColor: '#E4DAC5', color: '#2B241A' }
-                          : { backgroundColor: '#ffffff', color: '#6B5F4C' }}
-                      >
-                        Ocultar
-                      </button>
-                      <div className="w-px shrink-0" style={{ backgroundColor: cardBorderColor }} />
-                      <button
-                        onClick={() => isOculto && handleQuickStatus(w, 'mostrar')}
-                        className="flex-1 py-1.5 text-xs font-medium transition-all"
-                        style={!isOculto
-                          ? { backgroundColor: '#E4DAC5', color: '#2B241A' }
-                          : { backgroundColor: '#ffffff', color: '#6B5F4C' }}
-                      >
-                        Mostrar
-                      </button>
+                      <div className="flex flex-1 rounded-md overflow-hidden border" style={{ borderColor: cardBorderColor }}>
+                        <button
+                          onClick={() => !isOculto && handleQuickStatus(w, 'ocultar')}
+                          className="flex-1 py-1.5 text-xs font-medium transition-all"
+                          style={isOculto
+                            ? { backgroundColor: '#E4DAC5', color: '#2B241A' }
+                            : { backgroundColor: '#ffffff', color: '#6B5F4C' }}
+                        >
+                          Ocultar
+                        </button>
+                        <div className="w-px shrink-0" style={{ backgroundColor: cardBorderColor }} />
+                        <button
+                          onClick={() => isOculto && handleQuickStatus(w, 'mostrar')}
+                          className="flex-1 py-1.5 text-xs font-medium transition-all"
+                          style={!isOculto
+                            ? { backgroundColor: '#E4DAC5', color: '#2B241A' }
+                            : { backgroundColor: '#ffffff', color: '#6B5F4C' }}
+                        >
+                          Mostrar
+                        </button>
+                      </div>
+
+                      {w.estado !== 'CANCELADO' && (
+                        <button
+                          onClick={() => handleCancelRequest(w.id, w.nombre)}
+                          className="w-full py-1.5 text-xs font-medium rounded-md border border-border bg-white text-ink-muted hover:bg-ink/5 hover:text-ink hover:border-ink/30 transition-all"
+                        >
+                          Cancelar taller
+                        </button>
+                      )}
                     </div>
-
-                    {/* Cancelar taller */}
-                    {w.estado !== 'CANCELADO' && (
-                      <button
-                        onClick={() => handleCancelRequest(w.id, w.nombre)}
-                        className="w-full py-1.5 text-xs font-medium rounded-md border border-border bg-white text-ink-muted hover:bg-ink/5 hover:text-ink hover:border-ink/30 transition-all"
-                      >
-                        Cancelar taller
-                      </button>
-                    )}
                   </div>
                 </div>
               </div>
