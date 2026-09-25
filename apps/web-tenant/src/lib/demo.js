@@ -163,5 +163,24 @@ export function getOrInitDemoData() {
 }
 
 export function saveDemoData(d) {
-  localStorage.setItem(DATA_KEY, JSON.stringify(d));
+  try {
+    localStorage.setItem(DATA_KEY, JSON.stringify(d));
+  } catch (e) {
+    if (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014) {
+      // Base64 images son demasiado grandes; guardar sin ellas y reintentar
+      const stripped = {
+        ...d,
+        workshops: d.workshops.map(w => ({
+          ...w,
+          headerValue: (w.headerType === 'IMAGE' && w.headerValue?.startsWith('data:'))
+            ? null : w.headerValue,
+        })),
+        espacios: d.espacios.map(esp => ({
+          ...esp,
+          logoUrl: esp.logoUrl?.startsWith('data:') ? null : esp.logoUrl,
+        })),
+      };
+      try { localStorage.setItem(DATA_KEY, JSON.stringify(stripped)); } catch { /* sin espacio disponible */ }
+    }
+  }
 }

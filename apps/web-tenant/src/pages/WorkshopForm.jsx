@@ -639,7 +639,7 @@ export default function WorkshopForm() {
                 <div>
                   <label className={LABEL_CLS}>Modalidad de encuentros</label>
 
-                  {!form.fecha && (
+                  {!form.fecha && form.scheduleMode !== 'SPECIFIC_DATES' && (
                     <div className="flex items-start gap-2 mb-3 px-3 py-2.5 bg-primary/5 border border-primary/25 rounded-lg">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E85D4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0">
                         <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
@@ -672,7 +672,14 @@ export default function WorkshopForm() {
                   {form.scheduleMode === 'SPECIFIC_DATES' && (
                     <MultiDateCalendar
                       selected={form.specificDates}
-                      onChange={dates => set('specificDates', dates)}
+                      onChange={dates => {
+                        setForm(prev => ({
+                          ...prev,
+                          specificDates: dates,
+                          ...(dates.length > 0 ? { fecha: dates[0] } : {}),
+                        }));
+                        setErrors(prev => ({ ...prev, specificDates: '', fecha: '' }));
+                      }}
                       startDate={form.fecha}
                     />
                   )}
