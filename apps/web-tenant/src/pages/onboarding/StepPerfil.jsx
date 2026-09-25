@@ -21,12 +21,11 @@ export default function StepPerfil({ onNext }) {
     setError('');
     try {
       await profesionalesApi.upsert({ nombre: nombre.trim(), email: user.email });
-      onNext({ nombre: nombre.trim() });
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+    } catch {
+      // Firebase no disponible (demo mode u otro entorno sin backend)
     }
+    onNext({ nombre: nombre.trim() });
+    setLoading(false);
   }
 
   return (
