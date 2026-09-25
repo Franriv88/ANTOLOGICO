@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useEspacio } from '../context/EspacioContext';
 import * as api from '../services/api';
+import Layout from '../components/Layout';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -248,12 +249,17 @@ export default function Reportes() {
   const chartPeriodLabel = PERIODS.find(p => p.id === period)?.chartLabel ?? '';
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64 text-ink-muted text-sm">Cargando reportes…</div>;
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-64 text-ink-muted text-sm">Cargando reportes…</div>
+      </Layout>
+    );
   }
 
   const hasData = workshops.length > 0;
 
   return (
+    <Layout>
     <div className="max-w-5xl mx-auto">
 
       {/* Header + period tabs */}
@@ -306,19 +312,11 @@ export default function Reportes() {
                     <span className="text-2xl block mb-3">{MEDALS[i]}</span>
                     <p className="font-medium text-ink text-sm leading-snug mb-2 line-clamp-2">{w.nombre}</p>
                     <TipoChip tipo={w.tipo} />
-                    <div className="mt-4 pt-3 border-t border-border/60 flex flex-col gap-1">
-                      <div className="flex justify-between items-baseline">
-                        <span className="text-xs text-ink-muted">Ocupación</span>
-                        <span className="text-sm font-mono text-ink">{Math.round(w.ocupacion)}%</span>
-                      </div>
-                      <div className="flex justify-between items-baseline">
-                        <span className="text-xs text-ink-muted">Cupos</span>
-                        <span className="text-xs font-mono text-ink-muted">{w.inscritos}/{w.cuposTotales}</span>
-                      </div>
-                      <div className="flex justify-between items-baseline">
-                        <span className="text-xs text-ink-muted">Reservas</span>
-                        <span className="text-xs font-mono font-medium text-ink">{w.totalRes}</span>
-                      </div>
+                    <div className="mt-4 pt-3 border-t border-border/60">
+                      <p className="text-2xl font-mono font-medium text-ink leading-none">{w.totalRes}</p>
+                      <p className="text-xs text-ink-muted mt-1">
+                        inscripci{w.totalRes !== 1 ? 'ones' : 'ón'} confirmada{w.totalRes !== 1 ? 's' : ''}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -401,5 +399,6 @@ export default function Reportes() {
         </>
       )}
     </div>
+    </Layout>
   );
 }

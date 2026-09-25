@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useEspacio } from '../context/EspacioContext';
 import * as api from '../services/api';
+import Layout from '../components/Layout';
 
 function formatDate(iso) {
   if (!iso) return '—';
@@ -184,18 +185,21 @@ export default function Reservas() {
     setCancelTarget(null);
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64 text-ink-muted text-sm">
-        Cargando reservas…
-      </div>
-    );
-  }
-
   const cancelReserva = cancelTarget ? reservas.find(r => r.id === cancelTarget.id) : null;
   const cancelWsNombre = cancelTarget ? (wsMap[cancelTarget.workshopId]?.nombre ?? '—') : '';
 
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-64 text-ink-muted text-sm">
+          Cargando reservas…
+        </div>
+      </Layout>
+    );
+  }
+
   return (
+    <Layout>
     <div className="max-w-5xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
@@ -332,5 +336,6 @@ export default function Reservas() {
         />
       )}
     </div>
+    </Layout>
   );
 }
