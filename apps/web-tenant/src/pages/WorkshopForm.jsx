@@ -5,6 +5,7 @@ import TimeSelect from '../components/TimeSelect';
 import { workshops as api } from '../services/api';
 import { useEspacio } from '../context/EspacioContext';
 import { TIPO_CONFIG, TIPOS } from '../lib/tipoWorkshop';
+import { DEMO_MODE } from '../lib/demo';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const HEADER_PALETTE = [
@@ -373,7 +374,7 @@ export default function WorkshopForm() {
   const navigate = useNavigate();
   const { activeEspacio } = useEspacio();
   const planNombre = activeEspacio?.plan?.nombre ?? null;
-  const canUploadImage = planNombre === 'Profesional' || planNombre === 'Estudio';
+  const canUploadImage = DEMO_MODE || planNombre === 'Profesional' || planNombre === 'Estudio';
   const imgInputRef = useRef(null);
 
   // Paleta: colores de marca del espacio primero, luego el default
@@ -540,7 +541,9 @@ export default function WorkshopForm() {
         // Base64 data URLs no caben en varchar(500); se guardará null hasta implementar Storage
         headerValue: (form.headerValue && !form.headerValue.startsWith('data:'))
           ? form.headerValue
-          : (form.headerType === 'COLOR' ? (form.headerValue || null) : null),
+          : (DEMO_MODE && form.headerType === 'IMAGE' && form.headerValue?.startsWith('data:'))
+            ? form.headerValue  // En demo, localStorage no tiene límite de varchar
+            : (form.headerType === 'COLOR' ? (form.headerValue || null) : null),
       };
 
       if (isEdit) {
