@@ -38,6 +38,14 @@ async function ensureSeeded() {
   return _seedPromise;
 }
 
+// Firestore tiene límite de 1MB por documento — base64 lo excede fácilmente
+function stripBase64(obj) {
+  const out = { ...obj };
+  if (out.headerValue?.startsWith('data:'))  out.headerValue  = null;
+  if (out.logoUrl?.startsWith('data:'))       out.logoUrl      = null;
+  return out;
+}
+
 function uid() {
   return crypto.randomUUID
     ? crypto.randomUUID()
@@ -88,7 +96,7 @@ export const espacios = {
   update: async (id, payload) => {
     await ensureSeeded();
     const ref = doc(firestore, C_ESPACIOS, id);
-    await updateDoc(ref, payload);
+    await updateDoc(ref, stripBase64(payload));
     const snap = await getDoc(ref);
     return docToObj(snap);
   },
@@ -123,12 +131,12 @@ export const workshops = {
   create: async (espacioId, payload) => {
     await ensureSeeded();
     const id = uid();
-    const ws = {
+    const ws = stripBase64({
       espacioId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       ...payload,
-    };
+    });
     await setDoc(doc(firestore, C_WORKSHOPS, id), ws);
     return { id, ...ws };
   },
@@ -136,7 +144,7 @@ export const workshops = {
   update: async (id, _espacioId, payload) => {
     await ensureSeeded();
     const ref = doc(firestore, C_WORKSHOPS, id);
-    await updateDoc(ref, { ...payload, updatedAt: new Date().toISOString() });
+    await updateDoc(ref, { ...stripBase64(payload), updatedAt: new Date().toISOString() });
     const snap = await getDoc(ref);
     return docToObj(snap);
   },

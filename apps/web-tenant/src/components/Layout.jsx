@@ -71,23 +71,16 @@ export function injectBrandTheme({ primary, button, bg, dFont, bFont }) {
   `;
 
   if (bg) {
-    const textOnBg  = contrastText(bg);
-    const isDark    = textOnBg === '#ffffff';
-    const ink       = isDark ? 'rgba(255,255,255,0.95)'  : '#2B241A';
-    const inkMuted  = isDark ? 'rgba(255,255,255,0.72)'  : '#6B5F4C';
-    const border    = isDark ? 'rgba(255,255,255,0.18)'  : '#D2C4A8';
-    const surf0     = isDark ? 'rgba(255,255,255,0.04)'  : '#EFE7D8';
-    const surf1     = isDark ? 'rgba(255,255,255,0.08)'  : '#FBF8F2';
-    const surf2     = isDark ? 'rgba(255,255,255,0.14)'  : '#E4DAC5';
+    const textOnBg = contrastText(bg);
+    const isDark   = textOnBg === '#ffffff';
+    const ink      = isDark ? 'rgba(255,255,255,0.95)' : '#2B241A';
+    const inkMuted = isDark ? 'rgba(255,255,255,0.72)' : '#6B5F4C';
     css += `
       #dashboard-main { background-color: ${bg}; }
 
-      #dashboard-main .text-ink         { color: ${ink} !important; }
-      #dashboard-main .text-ink-muted   { color: ${inkMuted} !important; }
-      #dashboard-main .border-border    { border-color: ${border} !important; }
-      #dashboard-main .bg-surface-0     { background-color: ${surf0} !important; }
-      #dashboard-main .bg-surface-100   { background-color: ${surf1} !important; }
-      #dashboard-main .bg-surface-200   { background-color: ${surf2} !important; }
+      /* Texto sobre el fondo de marca */
+      #dashboard-main .text-ink       { color: ${ink} !important; }
+      #dashboard-main .text-ink-muted { color: ${inkMuted} !important; }
 
       #dashboard-main h1:not([class*="text-"]),
       #dashboard-main h2:not([class*="text-"]),
@@ -96,16 +89,24 @@ export function injectBrandTheme({ primary, button, bg, dFont, bFont }) {
       #dashboard-main span:not([class*="text-"]):not([style*="color"]),
       #dashboard-main label:not([class*="text-"]) { color: ${ink}; }
 
-      /* ── Form element resets: always dark text on white bg ── */
+      /* Contenedores: siempre estética original (cream/blanco) */
+      #dashboard-main .bg-surface-0   { background-color: #EFE7D8 !important; }
+      #dashboard-main .bg-surface-100 { background-color: #FBF8F2 !important; }
+      #dashboard-main .bg-surface-200 { background-color: #E4DAC5 !important; }
+      #dashboard-main .border-border  { border-color: #D2C4A8 !important; }
+
+      /* Texto dentro de contenedores: siempre oscuro */
+      #dashboard-main .bg-surface-0 .text-ink,
+      #dashboard-main .bg-surface-100 .text-ink,
+      #dashboard-main .bg-white .text-ink  { color: #2B241A !important; }
+      #dashboard-main .bg-surface-0 .text-ink-muted,
+      #dashboard-main .bg-surface-100 .text-ink-muted,
+      #dashboard-main .bg-white .text-ink-muted { color: #6B5F4C !important; }
+
+      /* Form elements: siempre fondo blanco texto oscuro */
       #dashboard-main input,
       #dashboard-main textarea,
-      #dashboard-main select,
-      #dashboard-main input.text-ink,
-      #dashboard-main textarea.text-ink,
-      #dashboard-main select.text-ink,
-      #dashboard-main input[class*="text-"],
-      #dashboard-main textarea[class*="text-"],
-      #dashboard-main select[class*="text-"] {
+      #dashboard-main select {
         color: #2B241A !important;
         background-color: #ffffff !important;
         border-color: #D2C4A8 !important;
@@ -121,14 +122,10 @@ export function injectBrandTheme({ primary, button, bg, dFont, bFont }) {
       #dashboard-main input[type="date"]::-webkit-datetime-edit-month-field,
       #dashboard-main input[type="date"]::-webkit-datetime-edit-year-field { color: #2B241A !important; }
 
-      /* Non-primary/danger buttons: reset only text color, NOT background
-         (bg stays as defined by its own class/style — color swatches use inline bg) */
+      /* Botones no-primary: texto oscuro */
       #dashboard-main button:not([class*="bg-primary"]):not([class*="bg-danger"]):not([class*="bg-amber"]):not([class*="bg-ink"]):not([class*="bg-black"]):not([style*="background-color"]) {
         color: #2B241A !important;
       }
-      /* White-bg containers reset text classes */
-      #dashboard-main .bg-white .text-ink  { color: #2B241A !important; }
-      #dashboard-main .bg-white .text-ink-muted { color: #6B5F4C !important; }
     `;
   }
 
