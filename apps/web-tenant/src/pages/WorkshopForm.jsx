@@ -7,6 +7,24 @@ import { useEspacio } from '../context/EspacioContext';
 import { TIPO_CONFIG, TIPOS } from '../lib/tipoWorkshop';
 import { DEMO_MODE } from '../lib/demo';
 
+function compressHeaderImage(file) {
+  return new Promise(resolve => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const maxPx = 800;
+      const scale = Math.min(1, maxPx / Math.max(img.width, img.height));
+      const canvas = document.createElement('canvas');
+      canvas.width  = Math.round(img.width  * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL('image/jpeg', 0.82));
+    };
+    img.src = url;
+  });
+}
+
 // ── Constants ─────────────────────────────────────────────────────────────────
 const HEADER_PALETTE = [
   '#E85D4A', '#8C2E1F', '#B98527', '#E8A23A',
@@ -535,12 +553,7 @@ export default function WorkshopForm() {
         experienciaPrevia: form.experienciaPrevia,
         scheduleData:      buildScheduleData(form),
         headerType:  form.headerType || 'COLOR',
-        // Base64 data URLs no caben en varchar(500); se guardará null hasta implementar Storage
-        headerValue: (form.headerValue && !form.headerValue.startsWith('data:'))
-          ? form.headerValue
-          : (DEMO_MODE && form.headerType === 'IMAGE' && form.headerValue?.startsWith('data:'))
-            ? form.headerValue  // En demo, localStorage no tiene límite de varchar
-            : (form.headerType === 'COLOR' ? (form.headerValue || null) : null),
+        headerValue: form.headerValue || null,
       };
 
       if (isEdit) {
@@ -893,24 +906,22 @@ export default function WorkshopForm() {
                       type="file"
                       accept="image/*"
                       className="hidden"
-                      onChange={e => {
+                      onChange={async e => {
                         const file = e.target.files?.[0];
                         if (!file) return;
-                        const reader = new FileReader();
-                        reader.onload = ev => setForm(prev => ({ ...prev, headerType: 'IMAGE', headerValue: ev.target.result }));
-                        reader.readAsDataURL(file);
+                        const compressed = await compressHeaderImage(file);
+                        setForm(prev => ({ ...prev, headerType: 'IMAGE', headerValue: compressed }));
                       }}
                     />
                     <div
                       onClick={() => imgInputRef.current?.click()}
                       onDragOver={e => e.preventDefault()}
-                      onDrop={e => {
+                      onDrop={async e => {
                         e.preventDefault();
                         const file = e.dataTransfer.files?.[0];
                         if (!file || !file.type.startsWith('image/')) return;
-                        const reader = new FileReader();
-                        reader.onload = ev => setForm(prev => ({ ...prev, headerType: 'IMAGE', headerValue: ev.target.result }));
-                        reader.readAsDataURL(file);
+                        const compressed = await compressHeaderImage(file);
+                        setForm(prev => ({ ...prev, headerType: 'IMAGE', headerValue: compressed }));
                       }}
                       className="relative border-2 border-dashed border-border rounded-lg overflow-hidden cursor-pointer hover:border-primary/40 transition-colors"
                       style={{ height: 80 }}
