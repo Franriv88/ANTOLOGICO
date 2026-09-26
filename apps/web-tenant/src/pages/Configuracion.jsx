@@ -176,6 +176,7 @@ const COLOR_ROLES = [
   { key: 'secondary',    label: 'Secundario',         hint: 'Badges, categorías, etiquetas' },
   { key: 'button',       label: 'Botones',            hint: 'Botón "Reservar" y CTAs' },
   { key: 'bg',           label: 'Fondo',              hint: 'Fondo general de tu página pública' },
+  { key: 'card',         label: 'Fondo de cards',     hint: 'Color de fondo de las tarjetas de talleres' },
   { key: 'textHeading',  label: 'Fuente encabezado',  hint: 'Color de títulos y nombre del espacio' },
   { key: 'textCard',     label: 'Fuente en cards',    hint: 'Texto del nombre y descripción de talleres' },
 ];
@@ -193,8 +194,9 @@ function BrandPreview({ palette, roles, fontPair, logoData, logoShape, espacioNa
   const secondary    = isValidColor(roles.secondary)    ? roles.secondary    : (palette[1] || '#B98527');
   const button       = isValidColor(roles.button)       ? roles.button       : primary;
   const bg           = isValidColor(roles.bg)           ? roles.bg           : '#F5F0EB';
+  const card         = isValidColor(roles.card)         ? roles.card         : '#ffffff';
   const textHeading  = isValidColor(roles.textHeading)  ? roles.textHeading  : contrastText(primary);
-  const textCard     = isValidColor(roles.textCard)     ? roles.textCard     : '#2B241A';
+  const textCard     = isValidColor(roles.textCard)     ? roles.textCard     : (contrastText(card) === '#ffffff' ? '#f0f0f0' : '#2B241A');
 
   const displayFont = fontPair ? `'${fontPair.display}', serif` : 'Georgia, serif';
   const bodyFont    = fontPair ? `'${fontPair.body}', sans-serif` : 'system-ui, sans-serif';
@@ -221,7 +223,7 @@ function BrandPreview({ palette, roles, fontPair, logoData, logoShape, espacioNa
 
       {/* Workshop card */}
       <div className="p-3">
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+        <div className="rounded-lg shadow-sm overflow-hidden" style={{ backgroundColor: card }}>
           <div className="h-10 w-full" style={{ backgroundColor: primary, opacity: 0.65 }} />
           <div className="px-3 py-2.5">
             <div className="flex items-center gap-2 mb-1">
@@ -340,7 +342,7 @@ function TabIdentidad({ espacio, refresh }) {
 
   const parseBrandColors = () => {
     const raw = espacio.brandColors;
-    const emptyRoles = { primary: '', secondary: '', button: '', bg: '', textHeading: '', textCard: '' };
+    const emptyRoles = { primary: '', secondary: '', button: '', bg: '', card: '', textHeading: '', textCard: '' };
     if (!raw) return { palette: ['#E85D4A'], roles: emptyRoles };
     if (Array.isArray(raw)) return { palette: raw, roles: emptyRoles };
     return {

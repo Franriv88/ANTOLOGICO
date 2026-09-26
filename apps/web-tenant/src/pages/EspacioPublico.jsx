@@ -39,9 +39,11 @@ function parseBrand(espacio) {
   const bc = espacio?.brandColors;
   const palette = Array.isArray(bc) ? bc : (bc?.palette ?? []);
   const roles   = (!bc || Array.isArray(bc)) ? {} : (bc.roles ?? {});
-  const primary = roles.primary || palette[0] || '#E85D4A';
-  const button  = roles.button  || primary;
-  return { primary, button };
+  const primary  = roles.primary  || palette[0] || '#E85D4A';
+  const button   = roles.button   || primary;
+  const card     = roles.card     || '#ffffff';
+  const textCard = roles.textCard || (contrastText(card) === '#ffffff' ? '#f0f0f0' : '#2B241A');
+  return { primary, button, card, textCard };
 }
 
 function contrastText(hex) {
@@ -228,8 +230,17 @@ function WorkshopCard({ w, brand, onReservar }) {
   const headerBg  = w.headerType === 'COLOR' && w.headerValue ? w.headerValue : brand.primary;
   const headerImg = w.headerType === 'IMAGE' && w.headerValue ? w.headerValue : null;
 
+  const cardOnLight = contrastText(brand.card) !== '#ffffff';
+  const inkMain     = brand.textCard;
+  const inkMuted    = cardOnLight ? 'rgba(43,36,26,0.55)' : 'rgba(255,255,255,0.60)';
+  const borderColor = cardOnLight ? '#D2C4A8' : 'rgba(255,255,255,0.15)';
+  const dividerColor = cardOnLight ? '#EDE8DE' : 'rgba(255,255,255,0.15)';
+
   return (
-    <div className="bg-white rounded-2xl overflow-hidden border border-[#D2C4A8] shadow-sm hover:shadow-md transition-shadow flex flex-col">
+    <div
+      className="rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col"
+      style={{ backgroundColor: brand.card, border: `1px solid ${borderColor}` }}
+    >
       {/* Header */}
       <div
         className="relative h-36 shrink-0"
@@ -251,28 +262,30 @@ function WorkshopCard({ w, brand, onReservar }) {
 
       {/* Body */}
       <div className="p-4 flex flex-col gap-1.5 flex-1">
-        <h3 className="font-bold text-base text-[#1A1611] leading-snug">{w.nombre}</h3>
-        <p className="text-xs font-mono text-[#6B5F4C] capitalize">
+        <h3 className="font-bold text-base leading-snug" style={{ color: inkMain }}>{w.nombre}</h3>
+        <p className="text-xs font-mono capitalize" style={{ color: inkMuted }}>
           {formatFecha(w.fecha)} · {formatHora(w.fecha)}
         </p>
         {w.descripcion && (
-          <p className="text-xs text-[#6B5F4C] leading-relaxed mt-0.5">
+          <p className="text-xs leading-relaxed mt-0.5" style={{ color: inkMuted }}>
             {w.descripcion.length > 90 ? w.descripcion.slice(0, 90).trimEnd() + '…' : w.descripcion}
           </p>
         )}
         {w.experienciaPrevia === true && (
-          <span className="inline-flex items-center text-xs text-[#6B5F4C] bg-[#F2EDE3] border border-[#D2C4A8] rounded px-2 py-0.5 self-start">
+          <span className="inline-flex items-center gap-1 text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300 rounded-full px-2.5 py-0.5 self-start">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             Se requiere experiencia previa
           </span>
         )}
         {w.experienciaPrevia === false && (
-          <span className="inline-flex items-center text-xs text-[#059669] bg-emerald-50 border border-emerald-200 rounded px-2 py-0.5 self-start">
-            Para todos los niveles
+          <span className="inline-flex items-center gap-1 text-xs text-[#059669] bg-emerald-50 border border-emerald-200 rounded-full px-2.5 py-0.5 self-start">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            No se requiere experiencia previa
           </span>
         )}
 
-        <div className="mt-auto pt-3 border-t border-[#EDE8DE] flex items-center justify-between gap-3">
-          <span className="text-xs text-[#9B9083] font-mono shrink-0">
+        <div className="mt-auto pt-3 flex items-center justify-between gap-3" style={{ borderTop: `1px solid ${dividerColor}` }}>
+          <span className="text-xs font-mono shrink-0" style={{ color: inkMuted }}>
             {isAgotado ? 'Sin cupos' : `${w.cuposDisponibles} cupo${w.cuposDisponibles !== 1 ? 's' : ''}`}
           </span>
           <button
