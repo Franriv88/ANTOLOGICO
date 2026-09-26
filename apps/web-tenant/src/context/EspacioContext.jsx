@@ -23,8 +23,8 @@ export function EspacioProvider({ children }) {
       .then((list) => {
         setEspacios(list);
         setActive((prev) => {
-          if (prev && list.some((e) => e.id === prev.id)) return prev;
-          return list[0] ?? null;
+          const match = prev ? list.find((e) => e.id === prev.id) : null;
+          return match ?? list[0] ?? null;
         });
       })
       .catch(console.error)
@@ -43,7 +43,10 @@ export function EspacioProvider({ children }) {
       }
       flushSync(() => {
         setEspacios(list);
-        setActive((prev) => (prev && list.some((e) => e.id === prev.id) ? prev : list[0] ?? null));
+        setActive((prev) => {
+          const match = list.find((e) => e.id === prev?.id);
+          return match ?? list[0] ?? null;
+        });
         setLoading(false);
       });
       return list;
