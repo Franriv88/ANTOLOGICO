@@ -157,21 +157,27 @@ export default function Layout({ children }) {
   const { user, logout } = useAuth();
   const { espacios, activeEspacio, setActive } = useEspacio();
 
-  // Apply saved brand theme on load (real-time changes are handled by TabIdentidad)
   useEffect(() => {
-    const bc       = activeEspacio?.brandColors;
-    const roles    = bc?.roles;
-    const apply    = bc?.applyToDashboard;
-    const fontKey  = activeEspacio?.brandFont ?? '';
+    const bc      = activeEspacio?.brandColors;
+    const apply   = bc?.applyToDashboard;
+    const roles   = bc?.roles ?? {};
+    const palette = Array.isArray(bc?.palette) ? bc.palette : [];
+    const fontKey = activeEspacio?.brandFont ?? '';
     const [dFont, bFont] = fontKey.split('|');
 
-    // Only inject here if TabIdentidad isn't mounted (i.e. it hasn't set its own style)
-    // Check is implicit: if Tab is open it manages the same ID
     document.getElementById('brand-dashboard-theme')?.remove();
 
-    if (!apply || !roles?.primary) return;
+    if (!apply) return;
 
-    injectBrandTheme({ primary: roles.primary, button: roles.button, bg: roles.bg, dFont, bFont });
+    // Usa fallback a palette[0] igual que TabIdentidad (roles puede estar vacío)
+    const isHex = (c) => typeof c === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(c);
+    const effectivePrimary = isHex(roles.primary) ? roles.primary : palette[0] ?? '';
+    if (!effectivePrimary) return;
+
+    const effectiveButton = isHex(roles.button) ? roles.button : effectivePrimary;
+    const effectiveBg     = isHex(roles.bg)     ? roles.bg     : '';
+
+    injectBrandTheme({ primary: effectivePrimary, button: effectiveButton, bg: effectiveBg, dFont, bFont });
   }, [activeEspacio?.brandColors, activeEspacio?.brandFont]);
 
   return (
