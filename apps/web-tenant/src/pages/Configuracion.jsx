@@ -800,7 +800,12 @@ function TabSuscripcion({ espacio, refresh }) {
 
 export default function Configuracion() {
   const { activeEspacio, refresh } = useEspacio();
-  const [tab, setTab] = useState('espacio');
+  const [tab, setTab] = useState(() => sessionStorage.getItem('config_tab') || 'espacio');
+
+  function handleSetTab(t) {
+    setTab(t);
+    sessionStorage.setItem('config_tab', t);
+  }
 
   if (!activeEspacio) return null;
 
@@ -822,7 +827,7 @@ export default function Configuracion() {
 
         <div className="flex gap-1 mb-7 border-b border-border">
           {TABS.map(t => (
-            <button key={t.key} onClick={() => setTab(t.key)}
+            <button key={t.key} onClick={() => handleSetTab(t.key)}
               className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${tab === t.key ? 'border-primary text-primary' : 'border-transparent text-ink-muted hover:text-ink'}`}>
               {t.label}
             </button>
