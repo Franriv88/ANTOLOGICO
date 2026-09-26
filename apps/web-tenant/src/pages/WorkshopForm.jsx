@@ -322,7 +322,7 @@ function WeeklyPicker({ startDate, endDate, numSessions, frequency, onEndDateCha
       </div>
 
       <p className="text-xs text-ink-muted">
-        Se repite todos los <strong>{dayName?.toLowerCase()}</strong> <span className="text-ink-muted/70">({freqLabel})</span>. Elegí la <span className="underline underline-offset-2">última fecha manualmente</span>, o indicá la cantidad de encuentros:
+        Se repite todos los <strong>{dayName?.toLowerCase()}</strong> <span className="text-ink-muted/70">({freqLabel})</span>.<br/>Elegí la última fecha <span className="underline underline-offset-2">manualmente</span>, o indicá la cantidad de encuentros:
         <input
           type="number"
           min="2"
