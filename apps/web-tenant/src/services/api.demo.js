@@ -11,29 +11,55 @@ const C_WORKSHOPS = 'demo_workshops';
 const C_RESERVAS  = 'demo_reservas';
 const C_META      = 'demo_meta';
 
-// ─── Siembra inicial — corre una sola vez por proyecto ───────────────────────
+// ─── Siembra inicial — corre una sola vez; refresca fechas si están vencidas ──
 let _seedPromise = null;
+
+function future(days) {
+  return new Date(Date.now() + days * 86_400_000).toISOString();
+}
+
+// Offsets de días para cada workshop semilla (mismo orden que BASE_WORKSHOPS)
+const SEED_WS_OFFSETS = [7, 14, 21, 3];
 
 async function ensureSeeded() {
   if (_seedPromise) return _seedPromise;
   _seedPromise = (async () => {
     const metaRef  = doc(firestore, C_META, 'seed');
     const metaSnap = await getDoc(metaRef);
-    if (metaSnap.exists()) return;
 
+    if (!metaSnap.exists()) {
+      // Primera siembra
+      const batch = writeBatch(firestore);
+      const { id: _id, ...espacioData } = BASE_ESPACIO;
+      batch.set(doc(firestore, C_ESPACIOS, BASE_ESPACIO.id), espacioData);
+      BASE_WORKSHOPS.forEach((ws, i) => {
+        const { id: _wsId, ...wsData } = ws;
+        batch.set(doc(firestore, C_WORKSHOPS, ws.id), { ...wsData, fecha: future(SEED_WS_OFFSETS[i]) });
+      });
+      for (const r of BASE_RESERVAS) {
+        const { id: _rId, ...rData } = r;
+        batch.set(doc(firestore, C_RESERVAS, r.id), rData);
+      }
+      batch.set(metaRef, { seeded: true, seededAt: new Date().toISOString() });
+      await batch.commit();
+      return;
+    }
+
+    // Ya sembrado: actualizar fechas de seed workshops si están en el pasado
+    const now = Date.now();
     const batch = writeBatch(firestore);
-    const { id: _id, ...espacioData } = BASE_ESPACIO;
-    batch.set(doc(firestore, C_ESPACIOS, BASE_ESPACIO.id), espacioData);
-    for (const ws of BASE_WORKSHOPS) {
-      const { id: _wsId, ...wsData } = ws;
-      batch.set(doc(firestore, C_WORKSHOPS, ws.id), wsData);
+    let needsUpdate = false;
+    for (let i = 0; i < BASE_WORKSHOPS.length; i++) {
+      const ws = BASE_WORKSHOPS[i];
+      const snap = await getDoc(doc(firestore, C_WORKSHOPS, ws.id));
+      if (!snap.exists()) continue;
+      const stored = snap.data();
+      if (!stored.fecha || new Date(stored.fecha).getTime() < now) {
+        batch.update(doc(firestore, C_WORKSHOPS, ws.id), { fecha: future(SEED_WS_OFFSETS[i]) });
+        needsUpdate = true;
+      }
     }
-    for (const r of BASE_RESERVAS) {
-      const { id: _rId, ...rData } = r;
-      batch.set(doc(firestore, C_RESERVAS, r.id), rData);
-    }
-    batch.set(metaRef, { seeded: true, seededAt: new Date().toISOString() });
-    await batch.commit();
+    if (needsUpdate) await batch.commit();
   })();
   return _seedPromise;
 }

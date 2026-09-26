@@ -355,14 +355,11 @@ export default function EspacioPublico() {
 
   const brand       = parseBrand(espacio);
   const headerText  = contrastText(brand.primary);
-  const todayMidnight = new Date(); todayMidnight.setHours(0, 0, 0, 0);
-  const upcoming = workshops
-    .filter(w => !w.fecha || new Date(w.fecha) >= todayMidnight)
-    .sort((a, b) => {
-      const da = a.fecha ? new Date(a.fecha).getTime() : Infinity;
-      const db = b.fecha ? new Date(b.fecha).getTime() : Infinity;
-      return da - db;
-    });
+  const upcoming = [...workshops].sort((a, b) => {
+    const da = a.fecha ? new Date(a.fecha).getTime() : Infinity;
+    const db = b.fecha ? new Date(b.fecha).getTime() : Infinity;
+    return da - db;
+  });
 
   return (
     <div className="min-h-screen bg-[#FAF8F4]">
