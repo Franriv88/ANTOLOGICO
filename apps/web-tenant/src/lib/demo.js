@@ -10,7 +10,6 @@ const DEMO_USER = {
 };
 
 const SESSION_KEY = 'ant_demo_session';
-const DATA_KEY    = 'ant_demo_data';
 
 export function getDemoUser()    { return DEMO_USER; }
 export function getDemoSession() {
@@ -23,14 +22,16 @@ export function clearDemoSession() {
   localStorage.removeItem(SESSION_KEY);
 }
 
-// ─── Initial demo data ────────────────────────────────────────────────────────
+// ─── Datos iniciales (se usan para sembrar Firestore una sola vez) ────────────
 
 function future(days) {
   return new Date(Date.now() + days * 86_400_000).toISOString();
 }
 
-const BASE_ESPACIO = {
-  id:                  'demo-espacio-001',
+export const DEMO_ESPACIO_ID = 'demo-espacio-001';
+
+export const BASE_ESPACIO = {
+  id:                  DEMO_ESPACIO_ID,
   nombre:              'Estudio de Yoga Zen',
   estado:              'ACTIVO',
   cancelacionPendiente: false,
@@ -42,12 +43,12 @@ const BASE_ESPACIO = {
   logoShape:           'round',
   brandColors:         ['#E85D4A'],
   brandFont:           'IBM Plex Sans',
-  createdAt:           new Date().toISOString(),
+  createdAt:           new Date(Date.now() - 30 * 86_400_000).toISOString(),
 };
 
-const BASE_WORKSHOPS = [
+export const BASE_WORKSHOPS = [
   {
-    id: 'demo-ws-001', espacioId: 'demo-espacio-001',
+    id: 'demo-ws-001', espacioId: DEMO_ESPACIO_ID,
     nombre: 'Yoga Restaurativo para principiantes',
     tipo: 'TALLER',
     descripcion: 'Una sesión tranquila enfocada en la relajación y restauración del cuerpo.',
@@ -60,7 +61,7 @@ const BASE_WORKSHOPS = [
     createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
   },
   {
-    id: 'demo-ws-002', espacioId: 'demo-espacio-001',
+    id: 'demo-ws-002', espacioId: DEMO_ESPACIO_ID,
     nombre: 'Meditación Mindfulness — 4 semanas',
     tipo: 'CURSO',
     descripcion: 'Programa de 4 semanas para desarrollar una práctica diaria de meditación.',
@@ -73,7 +74,7 @@ const BASE_WORKSHOPS = [
     createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
   },
   {
-    id: 'demo-ws-003', espacioId: 'demo-espacio-001',
+    id: 'demo-ws-003', espacioId: DEMO_ESPACIO_ID,
     nombre: 'Retiro de Yin Yoga',
     tipo: 'WORKSHOP',
     descripcion: 'Jornada intensiva de Yin Yoga para trabajar la flexibilidad y la relajación profunda.',
@@ -86,7 +87,7 @@ const BASE_WORKSHOPS = [
     createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
   },
   {
-    id: 'demo-ws-004', espacioId: 'demo-espacio-001',
+    id: 'demo-ws-004', espacioId: DEMO_ESPACIO_ID,
     nombre: 'Clase de Respiración Pranayama',
     tipo: 'CLASE',
     descripcion: 'Técnicas de respiración para reducir el estrés y mejorar la concentración.',
@@ -100,7 +101,7 @@ const BASE_WORKSHOPS = [
   },
 ];
 
-const BASE_RESERVAS = [
+export const BASE_RESERVAS = [
   {
     id: 'demo-res-001', workshopId: 'demo-ws-001',
     nombre: 'María González', email: 'maria.gonzalez@gmail.com', telefono: '+54 9 11 2345-6789',
@@ -138,49 +139,3 @@ const BASE_RESERVAS = [
     estado: 'CONFIRMADA', metodoPago: 'EFECTIVO', estadoPago: 'PENDIENTE',
   },
 ];
-
-export function getOrInitDemoData() {
-  try {
-    const raw = localStorage.getItem(DATA_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (!parsed.reservas || parsed.reservas.length === 0) {
-        parsed.reservas = BASE_RESERVAS;
-      } else {
-        // Migrate: add metodoPago/estadoPago to old entries that lack them
-        parsed.reservas = parsed.reservas.map(r => ({
-          metodoPago: 'MERCADO_PAGO',
-          estadoPago: r.estado === 'CANCELADA' ? null : 'PAGADO',
-          ...r,
-        }));
-      }
-      return parsed;
-    }
-  } catch {}
-  const initial = { espacios: [BASE_ESPACIO], workshops: BASE_WORKSHOPS, reservas: BASE_RESERVAS };
-  localStorage.setItem(DATA_KEY, JSON.stringify(initial));
-  return initial;
-}
-
-export function saveDemoData(d) {
-  try {
-    localStorage.setItem(DATA_KEY, JSON.stringify(d));
-  } catch (e) {
-    if (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014) {
-      // Base64 images son demasiado grandes; guardar sin ellas y reintentar
-      const stripped = {
-        ...d,
-        workshops: d.workshops.map(w => ({
-          ...w,
-          headerValue: (w.headerType === 'IMAGE' && w.headerValue?.startsWith('data:'))
-            ? null : w.headerValue,
-        })),
-        espacios: d.espacios.map(esp => ({
-          ...esp,
-          logoUrl: esp.logoUrl?.startsWith('data:') ? null : esp.logoUrl,
-        })),
-      };
-      try { localStorage.setItem(DATA_KEY, JSON.stringify(stripped)); } catch { /* sin espacio disponible */ }
-    }
-  }
-}

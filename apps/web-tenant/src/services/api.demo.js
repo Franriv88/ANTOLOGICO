@@ -1,4 +1,42 @@
-import { getOrInitDemoData, saveDemoData } from '../lib/demo';
+import {
+  collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc,
+  query, where, writeBatch,
+} from 'firebase/firestore';
+import { firestore } from '../lib/firebase';
+import { BASE_ESPACIO, BASE_WORKSHOPS, BASE_RESERVAS } from '../lib/demo';
+
+// ─── Colecciones Firestore (prefijo demo_ para aislar del futuro real) ────────
+const C_ESPACIOS  = 'demo_espacios';
+const C_WORKSHOPS = 'demo_workshops';
+const C_RESERVAS  = 'demo_reservas';
+const C_META      = 'demo_meta';
+
+// ─── Siembra inicial — corre una sola vez por proyecto ───────────────────────
+let _seedPromise = null;
+
+async function ensureSeeded() {
+  if (_seedPromise) return _seedPromise;
+  _seedPromise = (async () => {
+    const metaRef  = doc(firestore, C_META, 'seed');
+    const metaSnap = await getDoc(metaRef);
+    if (metaSnap.exists()) return;
+
+    const batch = writeBatch(firestore);
+    const { id: _id, ...espacioData } = BASE_ESPACIO;
+    batch.set(doc(firestore, C_ESPACIOS, BASE_ESPACIO.id), espacioData);
+    for (const ws of BASE_WORKSHOPS) {
+      const { id: _wsId, ...wsData } = ws;
+      batch.set(doc(firestore, C_WORKSHOPS, ws.id), wsData);
+    }
+    for (const r of BASE_RESERVAS) {
+      const { id: _rId, ...rData } = r;
+      batch.set(doc(firestore, C_RESERVAS, r.id), rData);
+    }
+    batch.set(metaRef, { seeded: true, seededAt: new Date().toISOString() });
+    await batch.commit();
+  })();
+  return _seedPromise;
+}
 
 function uid() {
   return crypto.randomUUID
@@ -6,94 +44,59 @@ function uid() {
     : Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
 
-function db()     { return getOrInitDemoData(); }
-function save(d)  { saveDemoData(d); }
+function docToObj(snap) {
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+}
+
+function snapToList(snap) {
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+// ─── API ──────────────────────────────────────────────────────────────────────
 
 export const profesionales = {
   upsert: async () => {},
 };
 
-export const reservas = {
-  list: async (workshopId) =>
-    (db().reservas ?? []).filter(r => r.workshopId === workshopId),
-
-  listByEspacio: async (espacioId) => {
-    const d = db();
-    const wsIds = new Set(d.workshops.filter(w => w.espacioId === espacioId).map(w => w.id));
-    return (d.reservas ?? []).filter(r => wsIds.has(r.workshopId));
-  },
-
-  create: async (workshopId, { nombre, email, telefono, metodoPago = 'MERCADO_PAGO' }) => {
-    const d = db();
-    if (!d.reservas) d.reservas = [];
-    const reserva = {
-      id: uid(), workshopId, nombre, email, telefono: telefono ?? '',
-      fecha_reserva: new Date().toISOString(),
-      estado: 'CONFIRMADA',
-      metodoPago,
-      estadoPago: metodoPago === 'MERCADO_PAGO' ? 'PAGADO' : 'PENDIENTE',
-    };
-    d.reservas.push(reserva);
-    const wi = d.workshops.findIndex(w => w.id === workshopId);
-    if (wi >= 0 && d.workshops[wi].cuposDisponibles > 0) d.workshops[wi].cuposDisponibles--;
-    save(d);
-    return reserva;
-  },
-
-  markPaid: async (id) => {
-    const d = db();
-    const i = d.reservas.findIndex(r => r.id === id);
-    if (i >= 0) {
-      d.reservas[i] = { ...d.reservas[i], estadoPago: 'PAGADO' };
-      save(d);
-    }
-    return d.reservas[i] ?? null;
-  },
-
-  cancel: async (id) => {
-    const d = db();
-    const i = d.reservas.findIndex(r => r.id === id);
-    if (i >= 0 && d.reservas[i].estado !== 'CANCELADA') {
-      const workshopId = d.reservas[i].workshopId;
-      d.reservas[i] = { ...d.reservas[i], estado: 'CANCELADA' };
-      const wi = d.workshops.findIndex(w => w.id === workshopId);
-      if (wi >= 0) d.workshops[wi].cuposDisponibles++;
-      save(d);
-    }
-    return d.reservas[i] ?? null;
-  },
-};
-
 export const espacios = {
-  list: async () => db().espacios,
+  list: async () => {
+    await ensureSeeded();
+    const snap = await getDocs(collection(firestore, C_ESPACIOS));
+    return snapToList(snap);
+  },
 
-  get: async (id) => db().espacios.find((e) => e.id === id) ?? null,
+  get: async (id) => {
+    await ensureSeeded();
+    const snap = await getDoc(doc(firestore, C_ESPACIOS, id));
+    return docToObj(snap);
+  },
 
   create: async (payload) => {
-    const d = db();
+    await ensureSeeded();
+    const id      = uid();
     const espacio = {
-      id: uid(), estado: 'ACTIVO', cancelacionPendiente: false,
+      estado: 'ACTIVO', cancelacionPendiente: false,
       logoUrl: null, logoShape: 'round', brandColors: null, brandFont: null,
       rubro: null, plan: null, dominio_on_espacio: null,
       createdAt: new Date().toISOString(),
       ...payload,
     };
-    d.espacios.push(espacio);
-    save(d);
-    return espacio;
+    await setDoc(doc(firestore, C_ESPACIOS, id), espacio);
+    return { id, ...espacio };
   },
 
   update: async (id, payload) => {
-    const d = db();
-    const i = d.espacios.findIndex((e) => e.id === id);
-    if (i >= 0) { d.espacios[i] = { ...d.espacios[i], ...payload }; save(d); }
-    return d.espacios[i] ?? null;
+    await ensureSeeded();
+    const ref = doc(firestore, C_ESPACIOS, id);
+    await updateDoc(ref, payload);
+    const snap = await getDoc(ref);
+    return docToObj(snap);
   },
 
-  updateIdentidad:      async (id, payload)  => espacios.update(id, payload),
-  updatePlan:           async (id, planId)   => espacios.update(id, { planId }),
-  solicitarCancelacion: async (id)           => espacios.update(id, { cancelacionPendiente: true }),
-  reactivarSuscripcion: async (id)           => espacios.update(id, { cancelacionPendiente: false }),
+  updateIdentidad:      async (id, payload) => espacios.update(id, payload),
+  updatePlan:           async (id, planId)  => espacios.update(id, { planId }),
+  solicitarCancelacion: async (id)          => espacios.update(id, { cancelacionPendiente: true }),
+  reactivarSuscripcion: async (id)          => espacios.update(id, { cancelacionPendiente: false }),
 };
 
 export const rubros = {
@@ -102,48 +105,121 @@ export const rubros = {
 
 export const workshops = {
   list: async (espacioId, params = {}) => {
-    let ws = db().workshops.filter((w) => w.espacioId === espacioId);
-    if (params.estado) ws = ws.filter((w) => w.estado === params.estado);
-    if (params.q)      ws = ws.filter((w) => w.nombre.toLowerCase().includes(params.q.toLowerCase()));
-    return ws;
+    await ensureSeeded();
+    const q    = query(collection(firestore, C_WORKSHOPS), where('espacioId', '==', espacioId));
+    const snap = await getDocs(q);
+    let list   = snapToList(snap);
+    if (params.estado) list = list.filter(w => w.estado === params.estado);
+    if (params.q)      list = list.filter(w => w.nombre.toLowerCase().includes(params.q.toLowerCase()));
+    return list;
   },
 
-  get: async (id) => db().workshops.find((w) => w.id === id) ?? null,
+  get: async (id) => {
+    await ensureSeeded();
+    const snap = await getDoc(doc(firestore, C_WORKSHOPS, id));
+    return docToObj(snap);
+  },
 
   create: async (espacioId, payload) => {
-    const d = db();
+    await ensureSeeded();
+    const id = uid();
     const ws = {
-      id: uid(), espacioId,
+      espacioId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       ...payload,
     };
-    d.workshops.push(ws);
-    save(d);
-    return ws;
+    await setDoc(doc(firestore, C_WORKSHOPS, id), ws);
+    return { id, ...ws };
   },
 
   update: async (id, _espacioId, payload) => {
-    const d = db();
-    const i = d.workshops.findIndex((w) => w.id === id);
-    if (i >= 0) {
-      d.workshops[i] = { ...d.workshops[i], ...payload, updatedAt: new Date().toISOString() };
-      save(d);
-    }
-    return d.workshops[i] ?? null;
+    await ensureSeeded();
+    const ref = doc(firestore, C_WORKSHOPS, id);
+    await updateDoc(ref, { ...payload, updatedAt: new Date().toISOString() });
+    const snap = await getDoc(ref);
+    return docToObj(snap);
   },
 
   quickStatus: async (id, _espacioId, estado, cuposDisponibles) => {
-    const d = db();
-    const i = d.workshops.findIndex((w) => w.id === id);
-    if (i >= 0) { d.workshops[i] = { ...d.workshops[i], estado, cuposDisponibles }; save(d); }
-    return d.workshops[i] ?? null;
+    await ensureSeeded();
+    const ref = doc(firestore, C_WORKSHOPS, id);
+    await updateDoc(ref, { estado, cuposDisponibles, updatedAt: new Date().toISOString() });
+    const snap = await getDoc(ref);
+    return docToObj(snap);
   },
 
-  remove: async (id, _espacioId) => {
-    const d = db();
-    d.workshops = d.workshops.filter((w) => w.id !== id);
-    save(d);
+  remove: async (id) => {
+    await ensureSeeded();
+    await deleteDoc(doc(firestore, C_WORKSHOPS, id));
     return null;
+  },
+};
+
+export const reservas = {
+  list: async (workshopId) => {
+    await ensureSeeded();
+    const q    = query(collection(firestore, C_RESERVAS), where('workshopId', '==', workshopId));
+    const snap = await getDocs(q);
+    return snapToList(snap);
+  },
+
+  listByEspacio: async (espacioId) => {
+    await ensureSeeded();
+    const wsSnap = await getDocs(
+      query(collection(firestore, C_WORKSHOPS), where('espacioId', '==', espacioId)),
+    );
+    const wsIds  = new Set(wsSnap.docs.map(d => d.id));
+    const rSnap  = await getDocs(collection(firestore, C_RESERVAS));
+    return snapToList(rSnap).filter(r => wsIds.has(r.workshopId));
+  },
+
+  create: async (workshopId, { nombre, email, telefono, metodoPago = 'MERCADO_PAGO' }) => {
+    await ensureSeeded();
+    const id     = uid();
+    const reserva = {
+      workshopId, nombre, email, telefono: telefono ?? '',
+      fecha_reserva: new Date().toISOString(),
+      estado:     'CONFIRMADA',
+      metodoPago,
+      estadoPago: metodoPago === 'MERCADO_PAGO' ? 'PAGADO' : 'PENDIENTE',
+    };
+    const batch   = writeBatch(firestore);
+    batch.set(doc(firestore, C_RESERVAS, id), reserva);
+    // Descuenta cupo
+    const wsRef   = doc(firestore, C_WORKSHOPS, workshopId);
+    const wsSnap  = await getDoc(wsRef);
+    if (wsSnap.exists() && (wsSnap.data().cuposDisponibles ?? 0) > 0) {
+      batch.update(wsRef, { cuposDisponibles: wsSnap.data().cuposDisponibles - 1 });
+    }
+    await batch.commit();
+    return { id, ...reserva };
+  },
+
+  markPaid: async (id) => {
+    await ensureSeeded();
+    const ref = doc(firestore, C_RESERVAS, id);
+    await updateDoc(ref, { estadoPago: 'PAGADO' });
+    const snap = await getDoc(ref);
+    return docToObj(snap);
+  },
+
+  cancel: async (id) => {
+    await ensureSeeded();
+    const ref    = doc(firestore, C_RESERVAS, id);
+    const snap   = await getDoc(ref);
+    if (!snap.exists() || snap.data().estado === 'CANCELADA') return docToObj(snap);
+
+    const batch  = writeBatch(firestore);
+    batch.update(ref, { estado: 'CANCELADA' });
+    // Restaura cupo
+    const wsRef  = doc(firestore, C_WORKSHOPS, snap.data().workshopId);
+    const wsSnap = await getDoc(wsRef);
+    if (wsSnap.exists()) {
+      batch.update(wsRef, { cuposDisponibles: (wsSnap.data().cuposDisponibles ?? 0) + 1 });
+    }
+    await batch.commit();
+    const updated = await getDoc(ref);
+    return docToObj(updated);
   },
 };

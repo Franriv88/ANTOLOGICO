@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, connectAuthEmulator } from 'firebase/auth';
 import { getDataConnect, connectDataConnectEmulator } from 'firebase/data-connect';
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { connectorConfig } from '../dataconnect-generated';
 
 const firebaseConfig = {
@@ -12,11 +13,13 @@ const firebaseConfig = {
   appId:             import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-export const app  = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const dc   = getDataConnect(app, connectorConfig);
+export const app       = initializeApp(firebaseConfig);
+export const auth      = getAuth(app);
+export const dc        = getDataConnect(app, connectorConfig);
+export const firestore = getFirestore(app);
 
 if (import.meta.env.DEV) {
   connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
   connectDataConnectEmulator(dc, '127.0.0.1', 9399);
+  connectFirestoreEmulator(firestore, '127.0.0.1', 8080);
 }

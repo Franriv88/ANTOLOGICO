@@ -1,0 +1,25 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Colecciones del demo — lectura y escritura pública para permitir
+    // vista pública y reservas desde el celular sin autenticación real.
+    match /demo_espacios/{id} {
+      allow read, write: if true;
+    }
+    match /demo_workshops/{id} {
+      allow read, write: if true;
+    }
+    match /demo_reservas/{id} {
+      allow read, write: if true;
+    }
+    match /demo_meta/{id} {
+      allow read, write: if true;
+    }
+
+    // Todo lo demás: denegado por defecto.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
