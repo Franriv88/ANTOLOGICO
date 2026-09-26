@@ -12,6 +12,25 @@ function isValidColor(str) {
   return s.color !== '';
 }
 
+function hexToRgb(hex) {
+  if (!hex?.startsWith('#')) return null;
+  const h = hex.replace('#', '');
+  const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+  if (full.length !== 6) return null;
+  return {
+    r: parseInt(full.slice(0, 2), 16),
+    g: parseInt(full.slice(2, 4), 16),
+    b: parseInt(full.slice(4, 6), 16),
+  };
+}
+
+function contrastOnColor(hex) {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return 'white';
+  const lum = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
+  return lum > 0.55 ? 'dark' : 'light';
+}
+
 function lastDayOfCurrentMonth() {
   const now = new Date();
   return new Date(now.getFullYear(), now.getMonth() + 1, 0)
@@ -518,35 +537,47 @@ function TabIdentidad({ espacio, refresh }) {
                 </button>
               )}
             </div>
-            <div className="flex flex-col gap-2">
-              {colors.map((color, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <button type="button" onClick={() => swatchRefs.current[i]?.click()}
-                    className="w-9 h-9 rounded-lg border-2 border-white shadow-sm shrink-0 hover:scale-105 transition-transform"
-                    style={{ backgroundColor: isValidColor(color) ? color : '#ccc' }} />
-                  <input ref={el => swatchRefs.current[i] = el} type="color"
-                    value={isValidColor(color) ? color : '#E85D4A'}
-                    onChange={e => updateColor(i, e.target.value)} className="sr-only" />
-                  <input type="text" value={color} onChange={e => updateColor(i, e.target.value)}
-                    placeholder="#E85D4A"
-                    className="flex-1 px-2 py-1.5 bg-white border border-border rounded-md text-xs font-mono text-ink focus:outline-none focus:border-primary" />
-                  {colors.length > 1 && (
-                    <button type="button" onClick={() => removeColor(i)}
-                      className="p-1.5 text-ink-muted hover:text-danger rounded-md hover:bg-danger/8 transition-colors">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                      </svg>
+            <div className="grid grid-cols-2 gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))' }}>
+              {colors.map((color, i) => {
+                const valid   = isValidColor(color) ? color : '#cccccc';
+                const rgb     = hexToRgb(valid);
+                const on      = contrastOnColor(valid);
+                const text    = on === 'dark' ? 'rgba(26,22,17,0.95)' : 'rgba(255,255,255,0.95)';
+                const muted   = on === 'dark' ? 'rgba(26,22,17,0.50)' : 'rgba(255,255,255,0.55)';
+                const btnBg   = on === 'dark' ? 'rgba(0,0,0,0.10)' : 'rgba(255,255,255,0.18)';
+                return (
+                  <div key={i} className="relative rounded-xl overflow-hidden" style={{ backgroundColor: valid }}>
+                    {colors.length > 1 && (
+                      <button type="button" onClick={() => removeColor(i)}
+                        className="absolute top-1.5 right-1.5 w-5 h-5 flex items-center justify-center rounded-full transition-colors"
+                        style={{ backgroundColor: btnBg }}
+                        title="Eliminar">
+                        <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke={text} strokeWidth="3" strokeLinecap="round">
+                          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                      </button>
+                    )}
+                    <button type="button" onClick={() => swatchRefs.current[i]?.click()}
+                      className="w-full p-3 pt-4 text-left">
+                      <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: muted }}>HEX</p>
+                      <p className="text-sm font-mono font-bold mb-2.5 leading-none" style={{ color: text }}>{valid}</p>
+                      <p className="text-[10px] font-semibold uppercase tracking-widest mb-0.5" style={{ color: muted }}>CSS</p>
+                      <p className="text-xs font-mono leading-tight" style={{ color: text }}>
+                        {rgb ? `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})` : '—'}
+                      </p>
                     </button>
-                  )}
-                </div>
-              ))}
+                    <input ref={el => swatchRefs.current[i] = el} type="color"
+                      value={valid} onChange={e => updateColor(i, e.target.value)} className="sr-only" />
+                  </div>
+                );
+              })}
               {colors.length < 8 && (
                 <button type="button" onClick={addColor}
-                  className="self-start mt-1 flex items-center gap-1.5 text-xs text-primary hover:text-primary-strong font-medium transition-colors">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  className="rounded-xl border-2 border-dashed border-border text-ink-muted hover:border-primary/40 hover:text-primary transition-colors flex flex-col items-center justify-center gap-1 min-h-[100px]">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                     <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
                   </svg>
-                  Agregar color
+                  <span className="text-[11px] font-medium">Agregar</span>
                 </button>
               )}
             </div>
