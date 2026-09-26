@@ -322,7 +322,15 @@ function WeeklyPicker({ startDate, endDate, numSessions, frequency, onEndDateCha
       </div>
 
       <p className="text-xs text-ink-muted">
-        Se repite todos los <strong>{dayName?.toLowerCase()}</strong> <span className="text-ink-muted/70">({freqLabel})</span>. Elegí la última fecha:
+        Se repite todos los <strong>{dayName?.toLowerCase()}</strong> <span className="text-ink-muted/70">({freqLabel})</span>. Elegí la <span className="underline underline-offset-2">última fecha manualmente</span>, o indicá la cantidad de encuentros:
+        <input
+          type="number"
+          min="2"
+          value={numSessions}
+          onChange={e => onNumSessionsChange(e.target.value)}
+          placeholder="Ej: 8"
+          className="inline-block ml-2 w-20 px-2 py-1 bg-white border border-border rounded-md text-sm text-[#2B241A] font-mono focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+        />
       </p>
       <WeekdayCalendarPicker
         startDate={startDate}
@@ -332,17 +340,6 @@ function WeeklyPicker({ startDate, endDate, numSessions, frequency, onEndDateCha
         computedDates={dates}
         step={step}
       />
-      <div className="flex items-center gap-3">
-        <span className="text-xs text-ink-muted shrink-0">o indicá la cantidad de encuentros:</span>
-        <input
-          type="number"
-          min="2"
-          value={numSessions}
-          onChange={e => onNumSessionsChange(e.target.value)}
-          placeholder="Ej: 8"
-          className="w-20 px-2 py-1.5 bg-white border border-border rounded-md text-sm text-[#2B241A] font-mono focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
-        />
-      </div>
       {endDate && (
         <p className="text-xs text-ink-muted italic bg-surface-100 rounded-md px-3 py-2 border border-border">
           Todos los {dayName?.toLowerCase()} ({freqLabel}) hasta el {formatShortDate(endDate)}
