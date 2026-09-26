@@ -260,12 +260,7 @@ export default function Workshops() {
     }
   }
 
-  // TODOS: muestra todos excepto los pasados
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const displayItems = estado === ''
-    ? items.filter(w => new Date(w.fecha) >= today)
-    : items;
+  const displayItems = items;
 
   return (
     <Layout>

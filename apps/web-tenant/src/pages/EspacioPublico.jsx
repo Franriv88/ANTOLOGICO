@@ -355,8 +355,11 @@ export default function EspacioPublico() {
 
   const brand       = parseBrand(espacio);
   const headerText  = contrastText(brand.primary);
-  const today       = new Date(); today.setHours(0,0,0,0);
-  const upcoming    = workshops.filter(w => new Date(w.fecha) >= today);
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const upcoming = workshops.filter(w => {
+    if (!w.fecha) return true;
+    return w.fecha.slice(0, 10) >= todayStr;
+  });
 
   return (
     <div className="min-h-screen bg-[#FAF8F4]">
