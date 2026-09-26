@@ -10,7 +10,7 @@ import { TIPO_CONFIG, formatDuracion } from '../lib/tipoWorkshop';
 const ESTADOS = ['', 'BORRADOR', 'PUBLICADO', 'CANCELADO', 'FINALIZADO'];
 const ESTADO_LABEL = {
   '': 'Todos',
-  BORRADOR: 'Borrador',
+  BORRADOR: 'Ocultos',
   PUBLICADO: 'Publicado',
   CANCELADO: 'Cancelado',
   FINALIZADO: 'Finalizado',
@@ -260,7 +260,11 @@ export default function Workshops() {
     }
   }
 
-  const displayItems = items;
+  const displayItems = [...items].sort((a, b) => {
+    const da = a.fecha ? new Date(a.fecha).getTime() : Infinity;
+    const db = b.fecha ? new Date(b.fecha).getTime() : Infinity;
+    return da - db;
+  });
 
   return (
     <Layout>

@@ -132,7 +132,7 @@ const EMPTY = {
   hora: '09:00',
   duracionHoras: '',
   duracionMinutos: '0',
-  _estadoAction: 'OCULTAR',   // 'ACTIVO' | 'OCULTAR' | 'AGOTAR'
+  _estadoAction: 'ACTIVO',    // 'ACTIVO' | 'OCULTAR' | 'AGOTAR'
   experienciaPrevia: null,
   scheduleMode: null,          // 'SPECIFIC_DATES' | 'WEEKLY'
   specificDates: [],
