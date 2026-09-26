@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import Layout from '../components/Layout';
-import { injectBrandTheme } from '../components/Layout';
 import { useEspacio } from '../context/EspacioContext';
 import { espacios as espacioApi, rubros as rubrosApi } from '../services/api';
 
@@ -323,12 +322,11 @@ function TabIdentidad({ espacio, refresh }) {
   const parseBrandColors = () => {
     const raw = espacio.brandColors;
     const emptyRoles = { primary: '', secondary: '', button: '', bg: '', textHeading: '', textCard: '' };
-    if (!raw) return { palette: ['#E85D4A'], roles: emptyRoles, applyToDashboard: false };
-    if (Array.isArray(raw)) return { palette: raw, roles: emptyRoles, applyToDashboard: false };
+    if (!raw) return { palette: ['#E85D4A'], roles: emptyRoles };
+    if (Array.isArray(raw)) return { palette: raw, roles: emptyRoles };
     return {
-      palette:          raw.palette          ?? ['#E85D4A'],
-      roles:            { ...emptyRoles, ...(raw.roles ?? {}) },
-      applyToDashboard: raw.applyToDashboard ?? false,
+      palette: raw.palette ?? ['#E85D4A'],
+      roles:   { ...emptyRoles, ...(raw.roles ?? {}) },
     };
   };
 
@@ -355,9 +353,6 @@ function TabIdentidad({ espacio, refresh }) {
     FONT_PAIRS.find(p => p.key === espacio.brandFont) ?? null
   );
 
-  // Dashboard toggle
-  const [applyToDashboard, setApplyToDashboard] = useState(parsed.applyToDashboard);
-
   // Save state
   const [saving, setSaving] = useState(false);
   const [saved,  setSaved]  = useState(false);
@@ -374,24 +369,6 @@ function TabIdentidad({ espacio, refresh }) {
     link.href = GOOGLE_FONTS_URL;
     document.head.appendChild(link);
   }, []);
-
-  // Real-time dashboard theme: apply immediately when toggle is ON
-  useEffect(() => {
-    const [dFont, bFont] = (fontPair?.key ?? '').split('|');
-    // Fall back to first palette color when no role is explicitly assigned
-    const effectivePrimary = isValidColor(roles.primary) ? roles.primary : validPalette[0] ?? '';
-    const effectiveButton  = isValidColor(roles.button)  ? roles.button  : effectivePrimary;
-    const effectiveBg      = isValidColor(roles.bg)      ? roles.bg      : '';
-    if (applyToDashboard && effectivePrimary) {
-      injectBrandTheme({ primary: effectivePrimary, button: effectiveButton, bg: effectiveBg, dFont, bFont });
-    } else {
-      document.getElementById('brand-dashboard-theme')?.remove();
-    }
-    return () => {
-      document.getElementById('brand-dashboard-theme')?.remove();
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [applyToDashboard, roles.primary, roles.button, roles.bg, fontPair, validPalette[0]]);
 
   // ── Logo ──────────────────────────────────────────────────────────────────
   async function handleLogoFile(file) {
@@ -444,7 +421,7 @@ function TabIdentidad({ espacio, refresh }) {
       await espacioApi.updateIdentidad(espacio.id, {
         logoUrl:     logoData || null,
         logoShape,
-        brandColors: { palette: validColors, roles, applyToDashboard },
+        brandColors: { palette: validColors, roles },
         brandFont:   fontPair?.key ?? null,
       });
       await refresh();
@@ -670,36 +647,6 @@ function TabIdentidad({ espacio, refresh }) {
             espacioName={espacio.nombre}
           />
 
-          {/* Dashboard theme toggle */}
-          <div className="mt-1 bg-surface-100 border border-border rounded-xl px-4 py-3">
-            <div className="flex items-center justify-between mb-1.5">
-              <p className="text-xs font-medium text-ink">Aplicar al Dashboard</p>
-              {/* Toggle: w-11=44px, knob w-5=20px. ON: 44-20-2=22px → translate-x-[22px] */}
-              <button
-                type="button"
-                role="switch"
-                aria-checked={applyToDashboard}
-                onClick={() => setApplyToDashboard(v => !v)}
-                className={`w-11 h-6 rounded-full transition-colors duration-200 shrink-0 relative overflow-hidden ${
-                  applyToDashboard ? 'bg-primary' : 'bg-gray-300'
-                }`}
-              >
-                <span
-                  className="absolute w-5 h-5 bg-white rounded-full shadow transition-all duration-200"
-                  style={{
-                    top: '50%',
-                    left: 0,
-                    transform: `translateX(${applyToDashboard ? '22px' : '2px'}) translateY(-50%)`
-                  }}
-                />
-              </button>
-            </div>
-            <p className="text-xs text-ink-muted">
-              {applyToDashboard
-                ? 'Activo — principal, botones y fondo se aplican al panel ahora mismo.'
-                : 'Inactivo — el panel usa los colores del sistema.'}
-            </p>
-          </div>
         </div>
       </div>
 

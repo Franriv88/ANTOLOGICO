@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useEspacio } from '../context/EspacioContext';
@@ -153,29 +152,6 @@ const IconLogout = () => (
 export default function Layout({ children }) {
   const { user, logout } = useAuth();
   const { espacios, activeEspacio, setActive } = useEspacio();
-
-  useEffect(() => {
-    const bc      = activeEspacio?.brandColors;
-    const apply   = bc?.applyToDashboard;
-    const roles   = bc?.roles ?? {};
-    const palette = Array.isArray(bc?.palette) ? bc.palette : [];
-    const fontKey = activeEspacio?.brandFont ?? '';
-    const [dFont, bFont] = fontKey.split('|');
-
-    document.getElementById('brand-dashboard-theme')?.remove();
-
-    if (!apply) return;
-
-    // Usa fallback a palette[0] igual que TabIdentidad (roles puede estar vacío)
-    const isHex = (c) => typeof c === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(c);
-    const effectivePrimary = isHex(roles.primary) ? roles.primary : palette[0] ?? '';
-    if (!effectivePrimary) return;
-
-    const effectiveButton = isHex(roles.button) ? roles.button : effectivePrimary;
-    const effectiveBg     = isHex(roles.bg)     ? roles.bg     : '';
-
-    injectBrandTheme({ primary: effectivePrimary, button: effectiveButton, bg: effectiveBg, dFont, bFont });
-  }, [activeEspacio?.brandColors, activeEspacio?.brandFont]);
 
   return (
     <div className="flex h-screen overflow-hidden">

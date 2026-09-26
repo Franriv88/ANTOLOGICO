@@ -38,11 +38,12 @@ async function ensureSeeded() {
   return _seedPromise;
 }
 
-// Firestore tiene límite de 1MB por documento — base64 lo excede fácilmente
+// Firestore tiene límite de 1MB por documento — solo eliminar base64 si supera ~800KB
+const MAX_B64 = 800_000;
 function stripBase64(obj) {
   const out = { ...obj };
-  if (out.headerValue?.startsWith('data:'))  out.headerValue  = null;
-  if (out.logoUrl?.startsWith('data:'))       out.logoUrl      = null;
+  if (out.headerValue?.startsWith('data:') && out.headerValue.length > MAX_B64) out.headerValue = null;
+  if (out.logoUrl?.startsWith('data:')     && out.logoUrl.length     > MAX_B64) out.logoUrl      = null;
   return out;
 }
 
