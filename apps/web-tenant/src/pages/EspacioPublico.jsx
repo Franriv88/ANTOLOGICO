@@ -386,7 +386,7 @@ function BookingModal({ workshop, brand, prefill, onConfirm, onClose }) {
                 onClick={() => handleSubmit('MERCADO_PAGO')}
                 disabled={!!loading}
                 className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
-                style={{ backgroundColor: '#1B1464', color: '#ffffff' }}
+                style={{ backgroundColor: '#fee600', color: '#1B1464' }}
               >
                 {loading === 'MERCADO_PAGO' ? 'Confirmando…' : (
                   <>
