@@ -4,6 +4,8 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updateProfile,
+  sendEmailVerification,
+  sendPasswordResetEmail,
   signOut as fbSignOut,
   onAuthStateChanged as fbOnAuthChanged,
 } from 'firebase/auth';
@@ -46,7 +48,13 @@ export async function register(email, password, nombre, telefono) {
   await updateProfile(user, { displayName: nombre });
   const profile = { nombre, email, telefono, createdAt: new Date().toISOString() };
   await saveProfile(user.uid, profile);
+  // Send verification email (non-blocking — ignore errors in case of emulator)
+  try { await sendEmailVerification(user); } catch (_) {}
   return { user, profile };
+}
+
+export async function sendPasswordReset(email) {
+  await sendPasswordResetEmail(auth, email);
 }
 
 export async function logout() {

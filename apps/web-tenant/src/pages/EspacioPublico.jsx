@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { espacios as espaciosApi, workshops as workshopsApi, reservas as reservasApi } from '../services/api';
 import { getSlotStatus } from '../lib/slotStatus';
-import { loginGoogle, loginEmail, register, logout, subscribeAuth, authErrorMsg } from '../services/userAuth';
+import { loginGoogle, loginEmail, register, logout, subscribeAuth, authErrorMsg, sendPasswordReset } from '../services/userAuth';
 // SlotBadge no se usa aquí — reemplazado por PublicSlotBadge con fondo sólido
 
 // Badge con fondo sólido para legibilidad sobre cualquier imagen o color
@@ -57,13 +57,21 @@ function contrastText(hex) {
 // ── AuthModal ─────────────────────────────────────────────────────────────────
 
 function AuthModal({ brand, onClose, onSuccess }) {
-  const [tab,      setTab]      = useState('login');
-  const [nombre,   setNombre]   = useState('');
-  const [email,    setEmail]    = useState('');
-  const [telefono, setTelefono] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading,  setLoading]  = useState(false);
-  const [error,    setError]    = useState('');
+  const [tab,        setTab]        = useState('login');
+  const [nombre,     setNombre]     = useState('');
+  const [email,      setEmail]      = useState('');
+  const [telefono,   setTelefono]   = useState('');
+  const [password,   setPassword]   = useState('');
+  const [loading,    setLoading]    = useState(false);
+  const [error,      setError]      = useState('');
+  // "Olvidé mi contraseña"
+  const [resetMode,  setResetMode]  = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetDone,  setResetDone]  = useState(false);
+  const [resetErr,   setResetErr]   = useState('');
+  // verificación de email tras registro
+  const [verifyEmail, setVerifyEmail] = useState(null); // null o email string
+  const [pendingAuth, setPendingAuth] = useState(null);
 
   const INPUT = 'w-full px-3 py-2 bg-white border border-[#D2C4A8] rounded-lg text-sm text-[#2B241A] focus:outline-none focus:ring-2 focus:ring-offset-1';
   const LABEL = 'block text-xs font-medium text-[#6B5F4C] mb-1';
@@ -82,11 +90,107 @@ function AuthModal({ brand, onClose, onSuccess }) {
         onSuccess(await loginEmail(email, password));
       } else {
         if (!nombre.trim()) { setError('El nombre es requerido'); setLoading(false); return; }
-        onSuccess(await register(email, password, nombre.trim(), telefono.trim()));
+        const result = await register(email, password, nombre.trim(), telefono.trim());
+        // Muestra pantalla de verificación antes de continuar
+        setPendingAuth(result);
+        setVerifyEmail(email.trim());
+        setLoading(false);
       }
     } catch (e) { setError(authErrorMsg(e.code)); setLoading(false); }
   }
 
+  async function handleReset(e) {
+    e.preventDefault();
+    if (!resetEmail.trim()) { setResetErr('Ingresá tu email'); return; }
+    setLoading('reset'); setResetErr('');
+    try {
+      await sendPasswordReset(resetEmail.trim());
+      setResetDone(true);
+    } catch (e) {
+      setResetErr(e.code === 'auth/user-not-found' ? 'No existe una cuenta con ese email' : 'No pudimos enviar el email. Intentá de nuevo.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // ── Pantalla: verificación de email enviada ──────────────────────────────────
+  if (verifyEmail) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-black/55" onClick={onClose} />
+        <div className="relative bg-[#FAF8F4] border border-[#D2C4A8] rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden p-6 text-center">
+          <div className="w-14 h-14 rounded-full mx-auto mb-4 flex items-center justify-center" style={{ backgroundColor: brand.button + '22' }}>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={brand.button} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+              <polyline points="22,6 12,13 2,6"/>
+            </svg>
+          </div>
+          <h3 className="font-display text-lg text-[#1A1611] mb-1">¡Cuenta creada!</h3>
+          <p className="text-sm text-[#6B5F4C] mb-1">Te enviamos un email de verificación a:</p>
+          <p className="text-sm font-semibold text-[#2B241A] mb-4">{verifyEmail}</p>
+          <p className="text-xs text-[#9B9083] mb-5">Revisá tu bandeja (y el spam) para confirmar tu cuenta. Podés continuar ahora si querés.</p>
+          <button
+            onClick={() => { if (pendingAuth) onSuccess(pendingAuth); else onClose(); }}
+            className="w-full py-2.5 rounded-xl text-sm font-bold mb-2"
+            style={{ backgroundColor: brand.button, color: contrastText(brand.button) }}>
+            Continuar
+          </button>
+          <button onClick={onClose} className="w-full py-2 text-xs text-[#6B5F4C] hover:text-[#2B241A] transition-colors">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Pantalla: recuperar contraseña ───────────────────────────────────────────
+  if (resetMode) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-black/55" onClick={onClose} />
+        <div className="relative bg-[#FAF8F4] border border-[#D2C4A8] rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+          <div className="px-6 pt-6 pb-2">
+            <h3 className="font-display text-lg text-[#1A1611] mb-1">Recuperar contraseña</h3>
+            <p className="text-sm text-[#6B5F4C] mb-5">Te enviamos un enlace para crear una nueva contraseña.</p>
+            {resetDone ? (
+              <div className="flex flex-col gap-3 pb-2">
+                <div className="flex items-start gap-3 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-3">
+                  <svg width="16" height="16" className="mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                  <p className="text-sm text-emerald-800">¡Listo! Revisá tu email — el enlace llega en unos segundos.</p>
+                </div>
+                <button onClick={() => { setResetMode(false); setResetDone(false); setResetEmail(''); }}
+                  className="w-full py-2.5 rounded-xl text-sm font-bold mt-1"
+                  style={{ backgroundColor: brand.button, color: contrastText(brand.button) }}>
+                  Volver al inicio de sesión
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleReset} className="flex flex-col gap-3 pb-2">
+                <div>
+                  <label className={LABEL}>Email *</label>
+                  <input type="email" autoFocus value={resetEmail} onChange={e => setResetEmail(e.target.value)} placeholder="tu@email.com" className={INPUT} />
+                </div>
+                {resetErr && <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{resetErr}</p>}
+                <button type="submit" disabled={!!loading}
+                  className="w-full py-2.5 rounded-xl text-sm font-bold transition-opacity disabled:opacity-50 mt-1"
+                  style={{ backgroundColor: brand.button, color: contrastText(brand.button) }}>
+                  {loading === 'reset' ? 'Enviando…' : 'Enviar enlace de recuperación'}
+                </button>
+              </form>
+            )}
+          </div>
+          <button type="button" onClick={() => setResetMode(false)}
+            className="w-full py-3 text-xs text-[#6B5F4C] hover:text-[#2B241A] text-center transition-colors border-t border-[#D2C4A8]">
+            ← Volver
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Pantalla principal: login / registro ──────────────────────────────────────
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/55" onClick={onClose} />
@@ -138,10 +242,16 @@ function AuthModal({ brand, onClose, onSuccess }) {
             <div>
               <label className={LABEL}>Contraseña *</label>
               <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder={tab === 'register' ? 'Mínimo 6 caracteres' : '••••••••'} className={INPUT} />
+              {tab === 'login' && (
+                <button type="button" onClick={() => { setResetEmail(email); setResetMode(true); }}
+                  className="text-xs text-[#9B9083] hover:text-[#6B5F4C] mt-1.5 float-right transition-colors">
+                  ¿Olvidaste tu contraseña?
+                </button>
+              )}
             </div>
-            {error && <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
+            {error && <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 clear-both">{error}</p>}
             <button type="submit" disabled={!!loading}
-              className="w-full py-2.5 rounded-xl text-sm font-bold transition-opacity disabled:opacity-50 mt-1"
+              className="w-full py-2.5 rounded-xl text-sm font-bold transition-opacity disabled:opacity-50 mt-1 clear-both"
               style={{ backgroundColor: brand.button, color: contrastText(brand.button) }}>
               {loading === 'form' ? (tab === 'login' ? 'Ingresando…' : 'Creando cuenta…') : (tab === 'login' ? 'Ingresar' : 'Crear cuenta')}
             </button>
@@ -257,18 +367,45 @@ function BookingModal({ workshop, brand, prefill, onConfirm, onClose }) {
                 type="button"
                 onClick={() => handleSubmit('EFECTIVO')}
                 disabled={!!loading}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-[#D2C4A8] text-[#2B241A] hover:bg-[#F2EDE3] transition-colors disabled:opacity-50"
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-[#D2C4A8] text-[#2B241A] hover:bg-[#F2EDE3] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {loading === 'EFECTIVO' ? 'Confirmando…' : 'Efectivo'}
+                {loading === 'EFECTIVO' ? 'Confirmando…' : (
+                  <>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="6" width="20" height="12" rx="2"/>
+                      <circle cx="12" cy="12" r="2.5"/>
+                      <path d="M6 12h.01M18 12h.01"/>
+                    </svg>
+                    Efectivo
+                  </>
+                )}
               </button>
               <button
                 type="button"
                 onClick={() => handleSubmit('MERCADO_PAGO')}
                 disabled={!!loading}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-opacity disabled:opacity-50"
-                style={{ backgroundColor: brand.button, color: contrastText(brand.button) }}
+                className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+                style={{ backgroundColor: '#1B1464', color: '#ffffff' }}
               >
-                {loading === 'MERCADO_PAGO' ? 'Confirmando…' : 'Mercado Pago'}
+                {loading === 'MERCADO_PAGO' ? 'Confirmando…' : (
+                  <>
+                    <svg viewBox="0 0 48 30" width="28" height="18" aria-hidden="true">
+                      <defs>
+                        <clipPath id="mpOvalClip">
+                          <ellipse cx="24" cy="15" rx="22.5" ry="13.5"/>
+                        </clipPath>
+                      </defs>
+                      <ellipse cx="24" cy="15" rx="22.5" ry="13.5" fill="#009EE3"/>
+                      <rect x="0" y="9.5" width="48" height="11" fill="white" clipPath="url(#mpOvalClip)"/>
+                      <ellipse cx="24" cy="15" rx="22.5" ry="13.5" fill="none" stroke="#1B1464" strokeWidth="2"/>
+                      <g clipPath="url(#mpOvalClip)">
+                        <path d="M13 15.5 Q16 11 20 14 Q23.5 17 27 14 Q31 11 35 15.5"
+                              stroke="#1B1464" fill="none" strokeWidth="2.5" strokeLinecap="round"/>
+                      </g>
+                    </svg>
+                    Mercado Pago
+                  </>
+                )}
               </button>
             </div>
             <button type="button" onClick={onClose} className="text-xs text-[#6B5F4C] hover:text-[#2B241A] text-center py-1 transition-colors">
