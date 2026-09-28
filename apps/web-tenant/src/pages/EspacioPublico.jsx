@@ -406,6 +406,7 @@ export default function EspacioPublico() {
                 espacio.logoShape === 'square'  ? 'rounded-none' :
                                                   'rounded-2xl border-2 border-white/30'
               }`}
+              style={espacio.logoScale && espacio.logoScale !== 1 ? { transform: `scale(${espacio.logoScale})`, transformOrigin: 'center' } : undefined}
             />
           ) : (
             <div

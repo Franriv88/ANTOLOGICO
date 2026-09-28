@@ -189,7 +189,7 @@ const TABS = [
 
 // ── Brand Preview ─────────────────────────────────────────────────────────────
 
-function BrandPreview({ palette, roles, fontPair, logoData, logoShape, espacioName }) {
+function BrandPreview({ palette, roles, fontPair, logoData, logoShape, logoScale, espacioName }) {
   const primary      = isValidColor(roles.primary)      ? roles.primary      : (palette[0] || '#E85D4A');
   const secondary    = isValidColor(roles.secondary)    ? roles.secondary    : (palette[1] || '#B98527');
   const button       = isValidColor(roles.button)       ? roles.button       : primary;
@@ -209,7 +209,8 @@ function BrandPreview({ palette, roles, fontPair, logoData, logoShape, espacioNa
         <div className="flex items-center gap-3 mb-1">
           {logoData && (
             <div className={`w-9 h-9 overflow-hidden shrink-0 ${shapeCls}`} style={shapeCls !== 'rounded-none' ? { background: 'rgba(255,255,255,0.15)' } : {}}>
-              <img src={logoData} alt="" className="w-full h-full object-contain" />
+              <img src={logoData} alt="" className="w-full h-full object-contain"
+                style={logoScale && logoScale !== 1 ? { transform: `scale(${logoScale})`, transformOrigin: 'center' } : undefined} />
             </div>
           )}
           <div>
@@ -356,6 +357,7 @@ function TabIdentidad({ espacio, refresh }) {
   // Logo
   const [logoData,   setLogoData]  = useState(espacio.logoUrl   ?? '');
   const [logoShape,  setLogoShape] = useState(espacio.logoShape  ?? 'rounded');
+  const [logoScale,  setLogoScale] = useState(espacio.logoScale  ?? 1);
   const [removingBg, setRemovingBg] = useState(false);
   const [bgError,    setBgError]   = useState('');
   const logoInputRef    = useRef(null);
@@ -443,6 +445,7 @@ function TabIdentidad({ espacio, refresh }) {
       await espacioApi.updateIdentidad(espacio.id, {
         logoUrl:     logoData || null,
         logoShape,
+        logoScale,
         brandColors: { palette: validColors, roles },
         brandFont:   fontPair?.key ?? null,
       });
@@ -481,7 +484,8 @@ function TabIdentidad({ espacio, refresh }) {
                     : 'bg-surface-200 border-2 border-dashed border-border hover:border-primary/50'
                 }`}>
                 {logoData
-                  ? <img ref={logoImgRef} src={logoData} alt="Logo" className="w-full h-full object-contain" crossOrigin="anonymous" />
+                  ? <img ref={logoImgRef} src={logoData} alt="Logo" className="w-full h-full object-contain" crossOrigin="anonymous"
+                      style={{ transform: `scale(${logoScale})`, transformOrigin: 'center', transition: 'transform 0.1s' }} />
                   : <span className="font-display text-3xl text-ink-muted/40 select-none">A</span>}
               </button>
               <div className="flex flex-col gap-2 flex-1">
@@ -496,6 +500,17 @@ function TabIdentidad({ espacio, refresh }) {
                     ))}
                   </div>
                 </div>
+                {logoData && (
+                  <div>
+                    <p className="text-xs text-ink-muted mb-1.5">Tamaño <span className="font-mono text-ink ml-1">{Math.round(logoScale * 100)}%</span></p>
+                    <input
+                      type="range" min="0.4" max="2" step="0.05"
+                      value={logoScale}
+                      onChange={e => setLogoScale(parseFloat(e.target.value))}
+                      className="w-full accent-primary"
+                    />
+                  </div>
+                )}
                 <div className="flex flex-wrap gap-2 mt-1">
                   <button type="button" onClick={() => logoInputRef.current?.click()}
                     className="px-3 py-1.5 text-xs font-medium border border-border rounded-md bg-white text-ink hover:bg-surface-200 transition-colors">
@@ -697,6 +712,7 @@ function TabIdentidad({ espacio, refresh }) {
             fontPair={fontPair}
             logoData={logoData}
             logoShape={logoShape}
+            logoScale={logoScale}
             espacioName={espacio.nombre}
           />
 

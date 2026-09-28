@@ -170,6 +170,7 @@ export default function Layout({ children }) {
                   activeEspacio.logoShape === 'square'  ? 'rounded-none' :
                   'rounded-xl'
                 }`}
+                style={activeEspacio.logoScale && activeEspacio.logoScale !== 1 ? { transform: `scale(${activeEspacio.logoScale})`, transformOrigin: 'center' } : undefined}
               />
               <span className="font-display text-base text-ink leading-tight truncate">
                 {activeEspacio.nombre ?? 'Antológico'}
