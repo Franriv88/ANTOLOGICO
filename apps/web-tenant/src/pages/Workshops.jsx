@@ -415,7 +415,7 @@ export default function Workshops() {
                       className="font-bold text-sm leading-snug uppercase tracking-wide"
                       style={{
                         fontFamily: brand.displayFont ? `'${brand.displayFont}', serif` : undefined,
-                        color: brand.textCard || '#1A1611',
+                        color: '#1A1611',
                       }}
                     >{w.nombre}</h2>
                     {w.tipo && TIPO_CONFIG[w.tipo] && (
