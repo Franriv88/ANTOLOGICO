@@ -366,6 +366,7 @@ function TabIdentidad({ espacio, refresh }) {
 
   // Palette
   const [colors,    setColors]    = useState(parsed.palette);
+  const [hoveredChip, setHoveredChip] = useState(null);
   const swatchRefs = useRef({});
 
   // Roles
@@ -639,19 +640,25 @@ function TabIdentidad({ espacio, refresh }) {
                       )}
                     </div>
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      {validPalette.map((c, i) => (
-                        <button key={i} type="button"
-                          onClick={() => setRoles(r => ({ ...r, [role.key]: c }))}
-                          title={c}
-                          className={`w-7 h-7 rounded-md border-2 ${roles[role.key] === c ? 'border-ink scale-110 shadow-md' : 'border-transparent'}`}
-                          style={{
-                            backgroundColor: c,
-                            transition: 'transform 0.18s ease, box-shadow 0.18s ease',
-                          }}
-                          onMouseEnter={e => { if (roles[role.key] !== c) e.currentTarget.style.transform = 'translateY(-5px) rotate(-6deg) scale(1.12)'; }}
-                          onMouseLeave={e => { if (roles[role.key] !== c) e.currentTarget.style.transform = ''; }}
-                        />
-                      ))}
+                      {validPalette.map((c, i) => {
+                        const chipId   = `${role.key}-${i}`;
+                        const selected = roles[role.key] === c;
+                        const hovered  = hoveredChip === chipId && !selected;
+                        return (
+                          <button key={i} type="button"
+                            onClick={() => setRoles(r => ({ ...r, [role.key]: c }))}
+                            title={c}
+                            className={`w-7 h-7 rounded-md border-2 ${selected ? 'border-ink shadow-md' : 'border-transparent'}`}
+                            style={{
+                              backgroundColor: c,
+                              transform: selected ? 'scale(1.1)' : hovered ? 'translateY(-5px) rotate(-6deg) scale(1.12)' : 'none',
+                              transition: 'transform 0.18s ease, box-shadow 0.18s ease',
+                            }}
+                            onMouseEnter={() => { if (!selected) setHoveredChip(chipId); }}
+                            onMouseLeave={() => setHoveredChip(null)}
+                          />
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
