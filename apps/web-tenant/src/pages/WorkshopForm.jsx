@@ -141,6 +141,7 @@ const EMPTY = {
   weeklyFrequency: 'SEMANAL',  // 'SEMANAL' | 'QUINCENAL'
   headerType: 'COLOR',         // 'COLOR' | 'IMAGE'
   headerValue: '#E85D4A',      // hex para COLOR, URL para IMAGE
+  direccionId: null,
 };
 
 function deriveEstadoAction(w) {
@@ -435,6 +436,7 @@ export default function WorkshopForm() {
           weeklyFrequency:     w.scheduleData?.frequency ?? 'SEMANAL',
           headerType:          w.headerType  ?? 'COLOR',
           headerValue:         w.headerValue ?? '#E85D4A',
+          direccionId:         w.direccionId ?? null,
         });
       })
       .catch((e) => alert(e.message))
@@ -552,8 +554,9 @@ export default function WorkshopForm() {
         estado:            estadoFinal,
         experienciaPrevia: form.experienciaPrevia,
         scheduleData:      buildScheduleData(form),
-        headerType:  form.headerType || 'COLOR',
-        headerValue: form.headerValue || null,
+        headerType:   form.headerType || 'COLOR',
+        headerValue:  form.headerValue || null,
+        direccionId:  form.direccionId || null,
       };
 
       if (isEdit) {
@@ -748,6 +751,25 @@ export default function WorkshopForm() {
                   ))}
                 </div>
               </div>
+
+              {/* ── Dirección ── */}
+              {(activeEspacio?.direcciones ?? []).length > 0 && (
+                <div>
+                  <label className={LABEL_CLS}>Dirección del taller</label>
+                  <select
+                    value={form.direccionId ?? ''}
+                    onChange={e => set('direccionId', e.target.value || null)}
+                    className={INPUT_CLS}
+                  >
+                    <option value="">Sin dirección asignada</option>
+                    {(activeEspacio.direcciones).map(d => (
+                      <option key={d.id} value={d.id}>
+                        {d.nombre} — {d.calle} {d.altura}, {d.barrio}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
             </div>
 

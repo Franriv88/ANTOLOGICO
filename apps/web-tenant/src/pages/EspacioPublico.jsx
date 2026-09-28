@@ -450,9 +450,10 @@ function ConfirmationView({ reserva, workshop, brand, onBack }) {
 
 // ── WorkshopCard ──────────────────────────────────────────────────────────────
 
-function WorkshopCard({ w, brand, onReservar, isBooked }) {
+function WorkshopCard({ w, brand, onReservar, isBooked, direcciones }) {
   const slotStatus = getSlotStatus(w.cuposDisponibles, w.cuposTotales);
   const isAgotado  = w.cuposDisponibles === 0;
+  const dir = direcciones?.find(d => d.id === w.direccionId);
 
   const headerBg  = w.headerType === 'COLOR' && w.headerValue ? w.headerValue : brand.primary;
   const headerImg = w.headerType === 'IMAGE' && w.headerValue ? w.headerValue : null;
@@ -466,7 +467,11 @@ function WorkshopCard({ w, brand, onReservar, isBooked }) {
   return (
     <div
       className="rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col"
-      style={{ backgroundColor: brand.card, border: `1px solid ${borderColor}` }}
+      style={{
+        backgroundColor: brand.card,
+        border: `1px solid ${borderColor}`,
+        ...(isAgotado && !isBooked ? { opacity: 0.55, filter: 'grayscale(30%)' } : {}),
+      }}
     >
       {/* Header */}
       <div
@@ -507,6 +512,14 @@ function WorkshopCard({ w, brand, onReservar, isBooked }) {
         <p className="text-xs font-mono capitalize" style={{ color: inkMuted }}>
           {formatFecha(w.fecha)} · {formatHora(w.fecha)}
         </p>
+        {dir && (
+          <p className="text-xs flex items-center gap-1" style={{ color: inkMuted }}>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+            </svg>
+            {dir.calle} {dir.altura}{dir.piso ? `, Piso ${dir.piso}` : ''}{dir.apto ? `, Apto ${dir.apto}` : ''} — {dir.barrio}
+          </p>
+        )}
         {w.descripcion && (
           <p className="text-xs leading-relaxed mt-0.5" style={{ color: inkMuted }}>
             {w.descripcion.length > 90 ? w.descripcion.slice(0, 90).trimEnd() + '…' : w.descripcion}
@@ -761,7 +774,7 @@ export default function EspacioPublico() {
             <h2 className="font-display text-xl text-[#1A1611] mb-5">Talleres disponibles</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {upcoming.map(w => (
-                <WorkshopCard key={w.id} w={w} brand={brand} onReservar={setBooking} isBooked={bookedIds.includes(w.id)} />
+                <WorkshopCard key={w.id} w={w} brand={brand} onReservar={setBooking} isBooked={bookedIds.includes(w.id)} direcciones={espacio.direcciones ?? []} />
               ))}
             </div>
           </>
