@@ -41,9 +41,10 @@ function parseBrand(espacio) {
   const roles   = (!bc || Array.isArray(bc)) ? {} : (bc.roles ?? {});
   const primary  = roles.primary  || palette[0] || '#E85D4A';
   const button   = roles.button   || primary;
+  const bg       = roles.bg       || '#FAF8F4';
   const card     = roles.card     || '#ffffff';
   const textCard = roles.textCard || (contrastText(card) === '#ffffff' ? '#f0f0f0' : '#2B241A');
-  return { primary, button, card, textCard };
+  return { primary, button, bg, card, textCard };
 }
 
 function contrastText(hex) {
@@ -398,7 +399,7 @@ export default function EspacioPublico() {
   });
 
   return (
-    <div className="min-h-screen bg-[#FAF8F4]">
+    <div className="min-h-screen" style={{ backgroundColor: brand.bg }}>
       {/* Modals */}
       {booking && (
         <BookingModal
