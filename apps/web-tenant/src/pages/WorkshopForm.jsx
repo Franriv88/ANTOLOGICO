@@ -189,9 +189,10 @@ const EMPTY = {
   weeklyEndDate: '',
   weeklyNumSessions: '',       // synced with weeklyEndDate (bidireccional)
   weeklyFrequency: 'SEMANAL',  // 'SEMANAL' | 'QUINCENAL'
-  headerType: 'COLOR',         // 'COLOR' | 'IMAGE'
-  headerValue: '#E85D4A',      // hex para COLOR, URL para IMAGE
-  direccionId: null,
+  headerType:          'COLOR',        // 'COLOR' | 'IMAGE'
+  headerValue:         '#E85D4A',      // hex para COLOR, URL para IMAGE
+  headerImagePosition: { x: 50, y: 50 },
+  direccionId:         null,
 };
 
 function deriveEstadoAction(w) {
@@ -441,7 +442,28 @@ export default function WorkshopForm() {
   const { activeEspacio } = useEspacio();
   const planNombre = activeEspacio?.plan?.nombre ?? null;
   const canUploadImage = DEMO_MODE || planNombre === 'Profesional' || planNombre === 'Estudio';
-  const imgInputRef = useRef(null);
+  const imgInputRef  = useRef(null);
+  const dragStateRef = useRef(null); // { startX, startY, startPosX, startPosY }
+
+  function onImgPointerDown(e) {
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    dragStateRef.current = {
+      startX:   e.clientX,
+      startY:   e.clientY,
+      startPosX: form.headerImagePosition?.x ?? 50,
+      startPosY: form.headerImagePosition?.y ?? 50,
+    };
+  }
+  function onImgPointerMove(e) {
+    if (!dragStateRef.current) return;
+    const { startX, startY, startPosX, startPosY } = dragStateRef.current;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = Math.max(0, Math.min(100, startPosX - (e.clientX - startX) / rect.width  * 100));
+    const y = Math.max(0, Math.min(100, startPosY - (e.clientY - startY) / rect.height * 100));
+    set('headerImagePosition', { x, y });
+  }
+  function onImgPointerUp() { dragStateRef.current = null; }
 
   // Paleta: colores de marca del espacio primero, luego el default
   const rawBC = activeEspacio?.brandColors;
@@ -484,9 +506,10 @@ export default function WorkshopForm() {
           weeklyEndDate:       existingEndDate,
           weeklyNumSessions:   existingDates.length ? String(existingDates.length) : '',
           weeklyFrequency:     w.scheduleData?.frequency ?? 'SEMANAL',
-          headerType:          w.headerType  ?? 'COLOR',
-          headerValue:         w.headerValue ?? '#E85D4A',
-          direccionId:         w.direccionId ?? null,
+          headerType:          w.headerType          ?? 'COLOR',
+          headerValue:         w.headerValue         ?? '#E85D4A',
+          headerImagePosition: w.headerImagePosition ?? { x: 50, y: 50 },
+          direccionId:         w.direccionId         ?? null,
         });
       })
       .catch((e) => alert(e.message))
@@ -604,9 +627,10 @@ export default function WorkshopForm() {
         estado:            estadoFinal,
         experienciaPrevia: form.experienciaPrevia,
         scheduleData:      buildScheduleData(form),
-        headerType:   form.headerType || 'COLOR',
-        headerValue:  form.headerValue || null,
-        direccionId:  form.direccionId || null,
+        headerType:          form.headerType          || 'COLOR',
+        headerValue:         form.headerValue         || null,
+        headerImagePosition: form.headerImagePosition ?? { x: 50, y: 50 },
+        direccionId:         form.direccionId         || null,
       };
 
       if (isEdit) {
@@ -982,43 +1006,71 @@ export default function WorkshopForm() {
                         const file = e.target.files?.[0];
                         if (!file) return;
                         const compressed = await compressHeaderImage(file);
-                        setForm(prev => ({ ...prev, headerType: 'IMAGE', headerValue: compressed }));
+                        setForm(prev => ({ ...prev, headerType: 'IMAGE', headerValue: compressed, headerImagePosition: { x: 50, y: 50 } }));
                       }}
                     />
-                    <div
-                      onClick={() => imgInputRef.current?.click()}
-                      onDragOver={e => e.preventDefault()}
-                      onDrop={async e => {
-                        e.preventDefault();
-                        const file = e.dataTransfer.files?.[0];
-                        if (!file || !file.type.startsWith('image/')) return;
-                        const compressed = await compressHeaderImage(file);
-                        setForm(prev => ({ ...prev, headerType: 'IMAGE', headerValue: compressed }));
-                      }}
-                      className="relative border-2 border-dashed border-border rounded-lg overflow-hidden cursor-pointer hover:border-primary/40 transition-colors"
-                      style={{ height: 80 }}
-                    >
-                      {form.headerValue && form.headerValue.startsWith('data:') ? (
-                        <img
-                          src={form.headerValue}
-                          alt=""
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
+                    {/* Preview — mismo aspect ratio que la card real (h-36 / ~312px ≈ 2.17:1) */}
+                    {form.headerValue && form.headerValue.startsWith('data:') ? (
+                      <div className="flex flex-col gap-1.5">
+                        <div
+                          className="relative w-full rounded-lg overflow-hidden border border-border"
+                          style={{ aspectRatio: '2.17 / 1', cursor: 'grab', touchAction: 'none' }}
+                          onPointerDown={onImgPointerDown}
+                          onPointerMove={onImgPointerMove}
+                          onPointerUp={onImgPointerUp}
+                          onPointerLeave={onImgPointerUp}
+                        >
+                          <img
+                            src={form.headerValue}
+                            alt=""
+                            draggable={false}
+                            className="w-full h-full object-cover select-none"
+                            style={{
+                              objectPosition: `${form.headerImagePosition?.x ?? 50}% ${form.headerImagePosition?.y ?? 50}%`,
+                              pointerEvents: 'none',
+                            }}
+                          />
+                          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/45 text-white text-[10px] font-medium px-2 py-0.5 rounded-full backdrop-blur-sm pointer-events-none select-none">
+                            Arrastrá para encuadrar
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => imgInputRef.current?.click()}
+                            className="text-xs text-primary hover:underline"
+                          >
+                            Cambiar imagen
+                          </button>
+                          <span className="text-ink-muted text-xs">·</span>
+                          <button
+                            type="button"
+                            onClick={() => setForm(prev => ({ ...prev, headerValue: '', headerImagePosition: { x: 50, y: 50 } }))}
+                            className="text-xs text-danger hover:underline"
+                          >
+                            Quitar imagen
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        onClick={() => imgInputRef.current?.click()}
+                        onDragOver={e => e.preventDefault()}
+                        onDrop={async e => {
+                          e.preventDefault();
+                          const file = e.dataTransfer.files?.[0];
+                          if (!file || !file.type.startsWith('image/')) return;
+                          const compressed = await compressHeaderImage(file);
+                          setForm(prev => ({ ...prev, headerType: 'IMAGE', headerValue: compressed, headerImagePosition: { x: 50, y: 50 } }));
+                        }}
+                        className="relative border-2 border-dashed border-border rounded-lg overflow-hidden cursor-pointer hover:border-primary/40 transition-colors"
+                        style={{ aspectRatio: '2.17 / 1' }}
+                      >
                         <div className="flex flex-col items-center justify-center h-full gap-1">
                           <p className="text-xs font-medium text-ink-muted">Arrastrá o hacé click</p>
                           <p className="text-xs text-ink-muted/60">JPG, PNG, WebP</p>
                         </div>
-                      )}
-                    </div>
-                    {form.headerValue && form.headerValue.startsWith('data:') && (
-                      <button
-                        type="button"
-                        onClick={() => setForm(prev => ({ ...prev, headerValue: '' }))}
-                        className="mt-1 text-xs text-danger hover:underline"
-                      >
-                        Quitar imagen
-                      </button>
+                      </div>
                     )}
                   </div>
                 )}

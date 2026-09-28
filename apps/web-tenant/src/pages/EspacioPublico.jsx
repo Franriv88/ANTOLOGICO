@@ -311,7 +311,11 @@ function BookingModal({ workshop, brand, prefill, onConfirm, onClose }) {
           className="h-24 relative flex items-end p-4"
           style={{
             backgroundColor: headerBg,
-            ...(headerImg && { backgroundImage: `url(${headerImg})`, backgroundSize: 'cover', backgroundPosition: 'center' }),
+            ...(headerImg && {
+              backgroundImage: `url(${headerImg})`,
+              backgroundSize: 'cover',
+              backgroundPosition: `${workshop.headerImagePosition?.x ?? 50}% ${workshop.headerImagePosition?.y ?? 50}%`,
+            }),
           }}
         >
           <div className="bg-black/50 backdrop-blur-sm px-2.5 py-1 rounded-md text-white text-xs font-mono font-bold">
@@ -478,7 +482,11 @@ function WorkshopCard({ w, brand, onReservar, isBooked, direcciones }) {
         className="relative h-36 shrink-0"
         style={{
           backgroundColor: headerBg,
-          ...(headerImg && { backgroundImage: `url(${headerImg})`, backgroundSize: 'cover', backgroundPosition: 'center' }),
+          ...(headerImg && {
+            backgroundImage: `url(${headerImg})`,
+            backgroundSize: 'cover',
+            backgroundPosition: `${w.headerImagePosition?.x ?? 50}% ${w.headerImagePosition?.y ?? 50}%`,
+          }),
         }}
       >
         {!isBooked && (
@@ -512,14 +520,6 @@ function WorkshopCard({ w, brand, onReservar, isBooked, direcciones }) {
         <p className="text-xs font-mono capitalize" style={{ color: inkMuted }}>
           {formatFecha(w.fecha)} · {formatHora(w.fecha)}
         </p>
-        {dir && (
-          <p className="text-xs flex items-center gap-1" style={{ color: inkMuted }}>
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
-            </svg>
-            {dir.calle} {dir.altura}{dir.piso ? `, Piso ${dir.piso}` : ''}{dir.apto ? `, Apto ${dir.apto}` : ''} — {dir.barrio}
-          </p>
-        )}
         {w.descripcion && (
           <p className="text-xs leading-relaxed mt-0.5" style={{ color: inkMuted }}>
             {w.descripcion.length > 90 ? w.descripcion.slice(0, 90).trimEnd() + '…' : w.descripcion}
@@ -538,28 +538,35 @@ function WorkshopCard({ w, brand, onReservar, isBooked, direcciones }) {
           </span>
         )}
 
-        <div className="mt-auto pt-3 flex items-center justify-between gap-3" style={{ borderTop: `1px solid ${dividerColor}` }}>
-          <span className="text-xs font-mono shrink-0" style={{ color: inkMuted }}>
-            {isBooked ? 'Reservado' : isAgotado ? 'Sin cupos' : `${w.cuposDisponibles} cupo${w.cuposDisponibles !== 1 ? 's' : ''}`}
-          </span>
-          {isBooked ? (
-            <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold shrink-0 bg-emerald-100 text-emerald-700 border border-emerald-200">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              Reservaste
-            </span>
-          ) : (
-            <button
-              onClick={() => !isAgotado && onReservar(w)}
-              disabled={isAgotado}
-              className="px-5 py-2 rounded-xl text-sm font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0 hover:brightness-110 hover:scale-[1.03] active:scale-95 shadow-sm"
-              style={{
-                backgroundColor: isAgotado ? '#D2C4A8' : brand.button,
-                color: isAgotado ? '#6B5F4C' : contrastText(brand.button),
-              }}
-            >
-              {isAgotado ? 'Agotado' : 'Reservar'}
-            </button>
+        <div className="mt-auto pt-3 flex flex-col gap-2" style={{ borderTop: `1px solid ${dividerColor}` }}>
+          {dir && (
+            <p className="text-xs flex items-center gap-1" style={{ color: inkMuted }}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+              {dir.calle} {dir.altura}{dir.piso ? `, Piso ${dir.piso}` : ''}{dir.apto ? `, Apto ${dir.apto}` : ''} — {dir.barrio}
+            </p>
           )}
+          <div className="flex items-center justify-end gap-3">
+            {isBooked ? (
+              <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold shrink-0 bg-emerald-100 text-emerald-700 border border-emerald-200">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Reservaste
+              </span>
+            ) : (
+              <button
+                onClick={() => !isAgotado && onReservar(w)}
+                disabled={isAgotado}
+                className="px-5 py-2 rounded-xl text-sm font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0 hover:brightness-110 hover:scale-[1.03] active:scale-95 shadow-sm"
+                style={{
+                  backgroundColor: isAgotado ? '#D2C4A8' : brand.button,
+                  color: isAgotado ? '#6B5F4C' : contrastText(brand.button),
+                }}
+              >
+                {isAgotado ? 'Agotado' : 'Reservar'}
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
