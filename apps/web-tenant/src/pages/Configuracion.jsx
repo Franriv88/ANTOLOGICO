@@ -276,7 +276,7 @@ function CancelSubscriptionModal({ nombre, loading, error, onConfirm, onClose })
 
 // ── Tab: Mi espacio ───────────────────────────────────────────────────────────
 
-const EMPTY_DIR = { nombre: '', barrio: '', calle: '', altura: '', piso: '', apto: '' };
+const EMPTY_DIR = { barrio: '', calle: '', altura: '', piso: '', apto: '' };
 
 function normalize(s) { return (s ?? '').toLowerCase().trim().replace(/\s+/g, ' '); }
 
@@ -295,6 +295,9 @@ function TabEspacio({ espacio, refresh }) {
   const [newDir,      setNewDir]      = useState(EMPTY_DIR);
   const [dirError,    setDirError]    = useState('');
   const [dirSaving,   setDirSaving]   = useState(false);
+  // Paso 2: asignar nombre
+  const [pendingDir,  setPendingDir]  = useState(null); // dirección validada esperando nombre
+  const [dirNombre,   setDirNombre]   = useState('');
 
   useEffect(() => { rubrosApi.list().then(setRubros).catch(() => {}); }, []);
 
@@ -320,7 +323,7 @@ function TabEspacio({ espacio, refresh }) {
 
   function setDir(field, val) { setNewDir(p => ({ ...p, [field]: val })); setDirError(''); }
 
-  async function handleAddDir() {
+  async function handleValidateDir() {
     const { barrio, calle, altura } = newDir;
     if (!barrio.trim() || !calle.trim() || !altura.trim()) {
       setDirError('Barrio, calle y altura son obligatorios');
@@ -339,11 +342,17 @@ function TabEspacio({ espacio, refresh }) {
       });
       return;
     }
+    // Pasa al paso 2: pedir nombre
+    setPendingDir({ ...newDir });
+    setDirNombre(`Dirección ${direcciones.length + 1}`);
+  }
+
+  async function handleConfirmDir() {
     const entry = {
-      id:     crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2),
-      nombre: newDir.nombre.trim() || `Dirección ${direcciones.length + 1}`,
-      barrio: barrio.trim(), calle: calle.trim(), altura: altura.trim(),
-      piso: newDir.piso.trim(), apto: newDir.apto.trim(),
+      id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2),
+      nombre: dirNombre.trim() || `Dirección ${direcciones.length + 1}`,
+      barrio: pendingDir.barrio.trim(), calle: pendingDir.calle.trim(), altura: pendingDir.altura.trim(),
+      piso: pendingDir.piso.trim(), apto: pendingDir.apto.trim(),
     };
     const updated = [...direcciones, entry];
     setDirSaving(true);
@@ -351,11 +360,18 @@ function TabEspacio({ espacio, refresh }) {
       await espacioApi.update(espacio.id, { direcciones: updated });
       setDirecciones(updated);
       setNewDir(EMPTY_DIR);
+      setPendingDir(null);
+      setDirNombre('');
       setShowAddDir(false);
       await refresh();
     } catch(e) {
       setDirError(e.message || 'Error al guardar la dirección.');
     } finally { setDirSaving(false); }
+  }
+
+  function cancelAddDir() {
+    setShowAddDir(false); setNewDir(EMPTY_DIR);
+    setPendingDir(null); setDirNombre(''); setDirError('');
   }
 
   async function handleRemoveDir(id) {
@@ -424,53 +440,85 @@ function TabEspacio({ espacio, refresh }) {
 
           {/* Formulario de nueva dirección */}
           {showAddDir ? (
-            <div className="border border-border rounded-xl p-4 flex flex-col gap-3 bg-surface-1">
-              <div>
-                <label className={LABEL_CLS}>Nombre de la dirección (opcional)</label>
-                <input type="text" value={newDir.nombre} onChange={e => setDir('nombre', e.target.value)}
-                  placeholder={`Dirección ${direcciones.length + 1}`} className={INPUT_CLS} />
+            pendingDir ? (
+              /* ── Paso 2: nombre identificador ── */
+              <div className="border border-border rounded-xl p-4 flex flex-col gap-3 bg-surface-1">
+                <div className="flex items-start gap-2 bg-[#F0EAE0] rounded-lg px-3 py-2.5">
+                  <svg width="13" height="13" className="mt-0.5 shrink-0 text-ink-muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                  </svg>
+                  <p className="text-xs text-ink-muted">
+                    {pendingDir.calle} {pendingDir.altura}{pendingDir.piso ? `, Piso ${pendingDir.piso}` : ''}{pendingDir.apto ? `, Apto ${pendingDir.apto}` : ''} — {pendingDir.barrio}
+                  </p>
+                </div>
+                <div>
+                  <label className={LABEL_CLS}>Usá un identificador para recordar esta dirección</label>
+                  <input
+                    type="text"
+                    autoFocus
+                    value={dirNombre}
+                    onChange={e => setDirNombre(e.target.value)}
+                    placeholder="Ej: Salón principal, Sede Norte, Estudio 2…"
+                    className={INPUT_CLS}
+                  />
+                </div>
+                {dirError && <p className="text-xs text-danger">{dirError}</p>}
+                <div className="flex gap-2 pt-1">
+                  <button type="button" onClick={handleConfirmDir} disabled={dirSaving}
+                    className="px-4 py-2 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary-strong transition-colors disabled:opacity-50">
+                    {dirSaving ? 'Guardando…' : 'Confirmar y guardar'}
+                  </button>
+                  <button type="button" onClick={cancelAddDir}
+                    className="px-4 py-2 border border-border text-ink-muted rounded-md text-sm hover:text-ink transition-colors">
+                    Cancelar
+                  </button>
+                </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className={LABEL_CLS}>Barrio *</label>
-                  <input type="text" value={newDir.barrio} onChange={e => setDir('barrio', e.target.value)}
-                    placeholder="Palermo" className={INPUT_CLS} />
+            ) : (
+              /* ── Paso 1: datos de la dirección ── */
+              <div className="border border-border rounded-xl p-4 flex flex-col gap-3 bg-surface-1">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={LABEL_CLS}>Barrio *</label>
+                    <input type="text" autoFocus value={newDir.barrio} onChange={e => setDir('barrio', e.target.value)}
+                      placeholder="Palermo" className={INPUT_CLS} />
+                  </div>
+                  <div>
+                    <label className={LABEL_CLS}>Calle *</label>
+                    <input type="text" value={newDir.calle} onChange={e => setDir('calle', e.target.value)}
+                      placeholder="Thames" className={INPUT_CLS} />
+                  </div>
                 </div>
-                <div>
-                  <label className={LABEL_CLS}>Calle *</label>
-                  <input type="text" value={newDir.calle} onChange={e => setDir('calle', e.target.value)}
-                    placeholder="Thames" className={INPUT_CLS} />
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className={LABEL_CLS}>Altura *</label>
+                    <input type="text" value={newDir.altura} onChange={e => setDir('altura', e.target.value)}
+                      placeholder="1234" className={INPUT_CLS} />
+                  </div>
+                  <div>
+                    <label className={LABEL_CLS}>Piso</label>
+                    <input type="text" value={newDir.piso} onChange={e => setDir('piso', e.target.value)}
+                      placeholder="3" className={INPUT_CLS} />
+                  </div>
+                  <div>
+                    <label className={LABEL_CLS}>Apto</label>
+                    <input type="text" value={newDir.apto} onChange={e => setDir('apto', e.target.value)}
+                      placeholder="B" className={INPUT_CLS} />
+                  </div>
+                </div>
+                {dirError && <p className="text-xs text-danger">{dirError}</p>}
+                <div className="flex gap-2 pt-1">
+                  <button type="button" onClick={handleValidateDir}
+                    className="px-4 py-2 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary-strong transition-colors">
+                    Guardar Dirección
+                  </button>
+                  <button type="button" onClick={cancelAddDir}
+                    className="px-4 py-2 border border-border text-ink-muted rounded-md text-sm hover:text-ink transition-colors">
+                    Cancelar
+                  </button>
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className={LABEL_CLS}>Altura *</label>
-                  <input type="text" value={newDir.altura} onChange={e => setDir('altura', e.target.value)}
-                    placeholder="1234" className={INPUT_CLS} />
-                </div>
-                <div>
-                  <label className={LABEL_CLS}>Piso</label>
-                  <input type="text" value={newDir.piso} onChange={e => setDir('piso', e.target.value)}
-                    placeholder="3" className={INPUT_CLS} />
-                </div>
-                <div>
-                  <label className={LABEL_CLS}>Apto</label>
-                  <input type="text" value={newDir.apto} onChange={e => setDir('apto', e.target.value)}
-                    placeholder="B" className={INPUT_CLS} />
-                </div>
-              </div>
-              {dirError && <p className="text-xs text-danger">{dirError}</p>}
-              <div className="flex gap-2 pt-1">
-                <button type="button" onClick={handleAddDir} disabled={dirSaving}
-                  className="px-4 py-2 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary-strong transition-colors disabled:opacity-50">
-                  {dirSaving ? 'Guardando…' : 'Guardar dirección'}
-                </button>
-                <button type="button" onClick={() => { setShowAddDir(false); setNewDir(EMPTY_DIR); setDirError(''); }}
-                  className="px-4 py-2 border border-border text-ink-muted rounded-md text-sm hover:text-ink transition-colors">
-                  Cancelar
-                </button>
-              </div>
-            </div>
+            )
           ) : (
             <button type="button" onClick={() => setShowAddDir(true)}
               className="flex items-center gap-2 text-sm text-primary font-semibold hover:text-primary-strong transition-colors">

@@ -1,5 +1,55 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
+
+// ── Custom Select con estética del proyecto ───────────────────────────────────
+function CustomSelect({ value, onChange, options, placeholder = 'Seleccioná una opción' }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    function outside(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
+    document.addEventListener('mousedown', outside);
+    return () => document.removeEventListener('mousedown', outside);
+  }, []);
+  const selected = options.find(o => o.value === value);
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(p => !p)}
+        className="w-full px-3 py-2 bg-white border border-border rounded-md text-sm text-left flex items-center justify-between gap-2 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+      >
+        <span className={selected ? 'text-ink' : 'text-ink-muted'}>{selected ? selected.label : placeholder}</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+          className={`shrink-0 text-ink-muted transition-transform duration-150 ${open ? 'rotate-180' : ''}`}>
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </button>
+      {open && (
+        <div className="absolute z-30 w-full mt-1 bg-[#FAF8F4] border border-border rounded-lg shadow-lg overflow-hidden">
+          {options.map(o => (
+            <button
+              key={o.value ?? '__none__'}
+              type="button"
+              onClick={() => { onChange(o.value); setOpen(false); }}
+              className={`w-full px-3 py-2.5 text-sm text-left transition-colors flex items-center gap-2 ${
+                value === o.value
+                  ? 'bg-primary/8 text-primary font-semibold'
+                  : 'text-ink hover:bg-[#F0EAE0]'
+              }`}
+            >
+              {value === o.value && (
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              )}
+              <span className={value === o.value ? '' : 'ml-[20px]'}>{o.label}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 import Layout from '../components/Layout';
 import TimeSelect from '../components/TimeSelect';
 import { workshops as api } from '../services/api';
@@ -756,18 +806,18 @@ export default function WorkshopForm() {
               {(activeEspacio?.direcciones ?? []).length > 0 && (
                 <div>
                   <label className={LABEL_CLS}>Dirección del taller</label>
-                  <select
-                    value={form.direccionId ?? ''}
-                    onChange={e => set('direccionId', e.target.value || null)}
-                    className={INPUT_CLS}
-                  >
-                    <option value="">Sin dirección asignada</option>
-                    {(activeEspacio.direcciones).map(d => (
-                      <option key={d.id} value={d.id}>
-                        {d.nombre} — {d.calle} {d.altura}, {d.barrio}
-                      </option>
-                    ))}
-                  </select>
+                  <CustomSelect
+                    value={form.direccionId ?? null}
+                    onChange={val => set('direccionId', val || null)}
+                    placeholder="Sin dirección asignada"
+                    options={[
+                      { value: null, label: 'Sin dirección asignada' },
+                      ...(activeEspacio.direcciones ?? []).map(d => ({
+                        value: d.id,
+                        label: `${d.nombre} — ${d.calle} ${d.altura}, ${d.barrio}`,
+                      })),
+                    ]}
+                  />
                 </div>
               )}
 
