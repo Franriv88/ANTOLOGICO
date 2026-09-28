@@ -257,4 +257,11 @@ export const reservas = {
     const updated = await getDoc(ref);
     return docToObj(updated);
   },
+
+  listByEmail: async (email) => {
+    await ensureSeeded();
+    const q    = query(collection(firestore, C_RESERVAS), where('email', '==', email));
+    const snap = await getDocs(q);
+    return snapToList(snap).sort((a, b) => new Date(b.fecha_reserva) - new Date(a.fecha_reserva));
+  },
 };

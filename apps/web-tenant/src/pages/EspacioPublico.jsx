@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { espacios as espaciosApi, workshops as workshopsApi, reservas as reservasApi } from '../services/api';
 import { getSlotStatus } from '../lib/slotStatus';
+import { loginGoogle, loginEmail, register, logout, subscribeAuth, authErrorMsg } from '../services/userAuth';
 // SlotBadge no se usa aquí — reemplazado por PublicSlotBadge con fondo sólido
 
 // Badge con fondo sólido para legibilidad sobre cualquier imagen o color
@@ -53,12 +54,113 @@ function contrastText(hex) {
   return (0.299*r + 0.587*g + 0.114*b)/255 > 0.5 ? '#1A1611' : '#ffffff';
 }
 
-// ── BookingModal ──────────────────────────────────────────────────────────────
+// ── AuthModal ─────────────────────────────────────────────────────────────────
 
-function BookingModal({ workshop, brand, onConfirm, onClose }) {
+function AuthModal({ brand, onClose, onSuccess }) {
+  const [tab,      setTab]      = useState('login');
   const [nombre,   setNombre]   = useState('');
   const [email,    setEmail]    = useState('');
   const [telefono, setTelefono] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading,  setLoading]  = useState(false);
+  const [error,    setError]    = useState('');
+
+  const INPUT = 'w-full px-3 py-2 bg-white border border-[#D2C4A8] rounded-lg text-sm text-[#2B241A] focus:outline-none focus:ring-2 focus:ring-offset-1';
+  const LABEL = 'block text-xs font-medium text-[#6B5F4C] mb-1';
+
+  async function handleGoogle() {
+    setLoading('google'); setError('');
+    try   { onSuccess(await loginGoogle()); }
+    catch (e) { setError(authErrorMsg(e.code)); setLoading(false); }
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setLoading('form'); setError('');
+    try {
+      if (tab === 'login') {
+        onSuccess(await loginEmail(email, password));
+      } else {
+        if (!nombre.trim()) { setError('El nombre es requerido'); setLoading(false); return; }
+        onSuccess(await register(email, password, nombre.trim(), telefono.trim()));
+      }
+    } catch (e) { setError(authErrorMsg(e.code)); setLoading(false); }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/55" onClick={onClose} />
+      <div className="relative bg-[#FAF8F4] border border-[#D2C4A8] rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+        <div className="px-6 pt-6 pb-2">
+          {/* Tabs */}
+          <div className="flex gap-1 p-1 bg-[#F0EAE0] rounded-xl mb-5">
+            {['login', 'register'].map(t => (
+              <button key={t} type="button" onClick={() => { setTab(t); setError(''); }}
+                className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors ${tab === t ? 'bg-white shadow-sm text-[#1A1611]' : 'text-[#6B5F4C] hover:text-[#1A1611]'}`}>
+                {t === 'login' ? 'Ingresar' : 'Crear cuenta'}
+              </button>
+            ))}
+          </div>
+
+          {/* Google */}
+          <button type="button" onClick={handleGoogle} disabled={!!loading}
+            className="w-full flex items-center justify-center gap-3 py-2.5 px-4 border border-[#D2C4A8] rounded-xl bg-white hover:bg-[#F8F5F0] transition-colors text-sm font-medium text-[#1A1611] mb-4 disabled:opacity-60">
+            <svg width="18" height="18" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            {loading === 'google' ? 'Conectando…' : 'Continuar con Google'}
+          </button>
+
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex-1 h-px bg-[#D2C4A8]" /><span className="text-xs text-[#9B9083]">o</span><div className="flex-1 h-px bg-[#D2C4A8]" />
+          </div>
+
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3 pb-2">
+            {tab === 'register' && (
+              <>
+                <div>
+                  <label className={LABEL}>Nombre completo *</label>
+                  <input type="text" value={nombre} onChange={e => setNombre(e.target.value)} placeholder="Tu nombre" autoFocus className={INPUT} />
+                </div>
+                <div>
+                  <label className={LABEL}>Teléfono</label>
+                  <input type="tel" value={telefono} onChange={e => setTelefono(e.target.value)} placeholder="+54 9 11 1234-5678" className={INPUT} />
+                </div>
+              </>
+            )}
+            <div>
+              <label className={LABEL}>Email *</label>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="tu@email.com" autoFocus={tab === 'login'} className={INPUT} />
+            </div>
+            <div>
+              <label className={LABEL}>Contraseña *</label>
+              <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder={tab === 'register' ? 'Mínimo 6 caracteres' : '••••••••'} className={INPUT} />
+            </div>
+            {error && <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
+            <button type="submit" disabled={!!loading}
+              className="w-full py-2.5 rounded-xl text-sm font-bold transition-opacity disabled:opacity-50 mt-1"
+              style={{ backgroundColor: brand.button, color: contrastText(brand.button) }}>
+              {loading === 'form' ? (tab === 'login' ? 'Ingresando…' : 'Creando cuenta…') : (tab === 'login' ? 'Ingresar' : 'Crear cuenta')}
+            </button>
+          </form>
+        </div>
+        <button type="button" onClick={onClose} className="w-full py-3 text-xs text-[#6B5F4C] hover:text-[#2B241A] text-center transition-colors border-t border-[#D2C4A8]">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── BookingModal ──────────────────────────────────────────────────────────────
+
+function BookingModal({ workshop, brand, prefill, onConfirm, onClose }) {
+  const [nombre,   setNombre]   = useState(prefill?.nombre   ?? '');
+  const [email,    setEmail]    = useState(prefill?.email    ?? '');
+  const [telefono, setTelefono] = useState(prefill?.telefono ?? '');
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState('');
 
@@ -335,9 +437,12 @@ export default function EspacioPublico() {
   const [workshops, setWorkshops] = useState([]);
   const [loading,   setLoading]   = useState(true);
   const [notFound,  setNotFound]  = useState(false);
-  const [booking,   setBooking]   = useState(null);
-  const [confirmed, setConfirmed] = useState(null);
-  const [bookedIds, setBookedIds] = useState([]);
+  const [booking,      setBooking]      = useState(null);
+  const [confirmed,    setConfirmed]    = useState(null);
+  const [bookedIds,    setBookedIds]    = useState([]);
+  const [currentUser,  setCurrentUser]  = useState(undefined); // undefined = loading, null = guest
+  const [showAuth,     setShowAuth]     = useState(false);
+  const [userReservas, setUserReservas] = useState([]);
 
   useEffect(() => {
     async function load() {
@@ -358,11 +463,56 @@ export default function EspacioPublico() {
     load();
   }, [espacioId]);
 
+  useEffect(() => {
+    return subscribeAuth((user, profile) => {
+      if (!user) { setCurrentUser(null); setUserReservas([]); return; }
+      setCurrentUser({ user, profile: profile ?? {} });
+      loadUserReservas(user.email ?? profile?.email ?? '');
+    });
+  }, []);
+
+  async function loadUserReservas(email) {
+    if (!email) return;
+    try {
+      const list = await reservasApi.listByEmail(email);
+      const wsIds = [...new Set(list.map(r => r.workshopId))];
+      const wsMap = {};
+      await Promise.all(wsIds.map(async id => {
+        const ws = await workshopsApi.get(id);
+        if (ws) wsMap[id] = ws;
+      }));
+      setUserReservas(list.map(r => ({ ...r, workshop: wsMap[r.workshopId] ?? null })));
+    } catch { /* silencioso */ }
+  }
+
+  async function handleCancelReserva(reservaId) {
+    await reservasApi.cancel(reservaId);
+    setUserReservas(prev => prev.map(r => r.id === reservaId ? { ...r, estado: 'CANCELADA' } : r));
+    setWorkshops(prev => {
+      const res = userReservas.find(r => r.id === reservaId);
+      if (!res) return prev;
+      return prev.map(w => w.id === res.workshopId ? { ...w, cuposDisponibles: (w.cuposDisponibles ?? 0) + 1 } : w);
+    });
+  }
+
+  function handleAuthSuccess({ user, profile }) {
+    setCurrentUser({ user, profile: profile ?? {} });
+    setShowAuth(false);
+    loadUserReservas(user.email ?? profile?.email ?? '');
+  }
+
+  function handleLogout() {
+    logout();
+    setCurrentUser(null);
+    setUserReservas([]);
+  }
+
   function handleConfirm(reserva) {
     setWorkshops(prev =>
       prev.map(w => w.id === booking.id ? { ...w, cuposDisponibles: Math.max(0, w.cuposDisponibles - 1) } : w)
     );
     setBookedIds(prev => [...prev, booking.id]);
+    if (currentUser) loadUserReservas(currentUser.user.email ?? currentUser.profile?.email ?? '');
     setConfirmed({ reserva, workshop: booking });
     setBooking(null);
   }
@@ -401,10 +551,12 @@ export default function EspacioPublico() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: brand.bg }}>
       {/* Modals */}
+      {showAuth && <AuthModal brand={brand} onClose={() => setShowAuth(false)} onSuccess={handleAuthSuccess} />}
       {booking && (
         <BookingModal
           workshop={booking}
           brand={brand}
+          prefill={currentUser ? { nombre: currentUser.profile?.nombre ?? '', email: currentUser.user?.email ?? '', telefono: currentUser.profile?.telefono ?? '' } : undefined}
           onConfirm={handleConfirm}
           onClose={() => setBooking(null)}
         />
@@ -419,7 +571,28 @@ export default function EspacioPublico() {
       )}
 
       {/* Hero */}
-      <div className="w-full pt-12 pb-10 px-4" style={{ backgroundColor: brand.primary }}>
+      <div className="w-full pt-4 pb-10 px-4" style={{ backgroundColor: brand.primary }}>
+        {/* Nav usuario */}
+        <div className="max-w-2xl mx-auto flex justify-end mb-6">
+          {currentUser === undefined ? null : currentUser ? (
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium drop-shadow" style={{ color: headerText, opacity: 0.9 }}>
+                Hola, {currentUser.profile?.nombre?.split(' ')[0] ?? 'tú'}
+              </span>
+              <button onClick={handleLogout}
+                className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-white/30 hover:bg-white/10 transition-colors"
+                style={{ color: headerText }}>
+                Salir
+              </button>
+            </div>
+          ) : (
+            <button onClick={() => setShowAuth(true)}
+              className="px-4 py-1.5 text-xs font-semibold rounded-lg border border-white/30 hover:bg-white/10 transition-colors"
+              style={{ color: headerText }}>
+              Ingresar
+            </button>
+          )}
+        </div>
         <div className="max-w-2xl mx-auto text-center">
           {espacio.logoUrl ? (
             <div className={`w-20 h-20 mx-auto mb-5 overflow-hidden shadow-lg shrink-0 ${
@@ -470,6 +643,47 @@ export default function EspacioPublico() {
           </>
         )}
       </div>
+
+      {/* Mis reservas */}
+      {currentUser && userReservas.length > 0 && (
+        <div className="max-w-2xl mx-auto px-4 pb-10">
+          <h2 className="font-display text-xl text-[#1A1611] mb-4">Mis reservas</h2>
+          <div className="flex flex-col gap-3">
+            {userReservas.map(r => {
+              const ws    = r.workshop;
+              const hBg   = ws?.headerType === 'COLOR' && ws?.headerValue ? ws.headerValue : brand.primary;
+              const isCancelada = r.estado === 'CANCELADA';
+              return (
+                <div key={r.id} className="rounded-xl overflow-hidden border border-[#D2C4A8] bg-[#FAF8F4] flex">
+                  <div className="w-2 shrink-0" style={{ backgroundColor: hBg }} />
+                  <div className="flex-1 px-4 py-3 flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-[#1A1611] leading-snug">{ws?.nombre ?? '—'}</p>
+                      {ws?.fecha && (
+                        <p className="text-xs font-mono text-[#6B5F4C] mt-0.5 capitalize">
+                          {formatFecha(ws.fecha)} · {formatHora(ws.fecha)}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${isCancelada ? 'bg-[#F2EDE3] text-[#9B9083]' : 'bg-emerald-100 text-emerald-700'}`}>
+                        {isCancelada ? 'Cancelada' : 'Confirmada'}
+                      </span>
+                      {!isCancelada && (
+                        <button
+                          onClick={() => handleCancelReserva(r.id)}
+                          className="text-xs text-[#9B9083] hover:text-red-500 transition-colors border border-[#D2C4A8] rounded-lg px-2.5 py-1 hover:border-red-300">
+                          Cancelar
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <div className="text-center py-8 text-xs text-[#9B9083] border-t border-[#EDE8DE]">
