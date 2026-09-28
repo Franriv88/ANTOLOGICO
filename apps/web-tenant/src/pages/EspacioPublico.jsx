@@ -385,11 +385,13 @@ function BookingModal({ workshop, brand, prefill, onConfirm, onClose }) {
                 type="button"
                 onClick={() => handleSubmit('MERCADO_PAGO')}
                 disabled={!!loading}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
-                style={{ backgroundColor: '#fee600', color: '#1B1464' }}
+                className="flex-1 rounded-xl transition-opacity disabled:opacity-50 overflow-hidden"
+                style={{ backgroundColor: '#fee600', color: '#1B1464', height: '44px', padding: '4px 8px' }}
               >
-                {loading === 'MERCADO_PAGO' ? 'Confirmando…' : (
-                  <img src={mpLogo} alt="Mercado Pago" className="h-full w-full object-contain px-3 py-1" />
+                {loading === 'MERCADO_PAGO' ? (
+                  <span className="text-sm font-semibold">Confirmando…</span>
+                ) : (
+                  <img src={mpLogo} alt="Mercado Pago" style={{ height: '100%', width: '100%', objectFit: 'contain' }} />
                 )}
               </button>
             </div>
