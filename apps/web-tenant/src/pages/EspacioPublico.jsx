@@ -398,16 +398,18 @@ export default function EspacioPublico() {
       <div className="w-full pt-12 pb-10 px-4" style={{ backgroundColor: brand.primary }}>
         <div className="max-w-2xl mx-auto text-center">
           {espacio.logoUrl ? (
-            <img
-              src={espacio.logoUrl}
-              alt={espacio.nombre}
-              className={`w-20 h-20 mx-auto mb-5 object-cover shadow-lg ${
-                espacio.logoShape === 'round'   ? 'rounded-full border-2 border-white/30' :
-                espacio.logoShape === 'square'  ? 'rounded-none' :
-                                                  'rounded-2xl border-2 border-white/30'
-              }`}
-              style={espacio.logoScale && espacio.logoScale !== 1 ? { transform: `scale(${espacio.logoScale})`, transformOrigin: 'center' } : undefined}
-            />
+            <div className={`w-20 h-20 mx-auto mb-5 overflow-hidden shadow-lg shrink-0 ${
+              espacio.logoShape === 'round'   ? 'rounded-full border-2 border-white/30' :
+              espacio.logoShape === 'square'  ? 'rounded-none' :
+                                                'rounded-2xl border-2 border-white/30'
+            }`}>
+              <img
+                src={espacio.logoUrl}
+                alt={espacio.nombre}
+                className="w-full h-full object-cover"
+                style={{ transform: `scale(${espacio.logoScale ?? 1})`, transformOrigin: 'center' }}
+              />
+            </div>
           ) : (
             <div
               className="w-20 h-20 rounded-full mx-auto mb-5 flex items-center justify-center text-3xl font-bold border-2 border-white/25 shadow-lg"

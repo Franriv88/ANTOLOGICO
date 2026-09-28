@@ -162,16 +162,18 @@ export default function Layout({ children }) {
         <Link to="/workshops" className="px-4 py-4 border-b border-border shrink-0 flex items-center gap-3 hover:bg-surface-200/50 transition-colors">
           {activeEspacio?.logoUrl ? (
             <>
-              <img
-                src={activeEspacio.logoUrl}
-                alt={activeEspacio.nombre ?? 'Logo'}
-                className={`w-9 h-9 object-contain shrink-0 ${
-                  activeEspacio.logoShape === 'round'   ? 'rounded-full' :
-                  activeEspacio.logoShape === 'square'  ? 'rounded-none' :
-                  'rounded-xl'
-                }`}
-                style={activeEspacio.logoScale && activeEspacio.logoScale !== 1 ? { transform: `scale(${activeEspacio.logoScale})`, transformOrigin: 'center' } : undefined}
-              />
+              <div className={`w-9 h-9 overflow-hidden shrink-0 ${
+                activeEspacio.logoShape === 'round'   ? 'rounded-full' :
+                activeEspacio.logoShape === 'square'  ? 'rounded-none' :
+                'rounded-xl'
+              }`}>
+                <img
+                  src={activeEspacio.logoUrl}
+                  alt={activeEspacio.nombre ?? 'Logo'}
+                  className="w-full h-full object-contain"
+                  style={{ transform: `scale(${activeEspacio.logoScale ?? 1})`, transformOrigin: 'center' }}
+                />
+              </div>
               <span className="font-display text-base text-ink leading-tight truncate">
                 {activeEspacio.nombre ?? 'Antológico'}
               </span>
