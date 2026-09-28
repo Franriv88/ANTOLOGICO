@@ -389,10 +389,7 @@ function BookingModal({ workshop, brand, prefill, onConfirm, onClose }) {
                 style={{ backgroundColor: '#fee600', color: '#1B1464' }}
               >
                 {loading === 'MERCADO_PAGO' ? 'Confirmando…' : (
-                  <>
-                    <img src={mpLogo} alt="" aria-hidden="true" className="h-5 w-auto object-contain" />
-                    Mercado Pago
-                  </>
+                  <img src={mpLogo} alt="Mercado Pago" className="h-full w-full object-contain px-3 py-1" />
                 )}
               </button>
             </div>
