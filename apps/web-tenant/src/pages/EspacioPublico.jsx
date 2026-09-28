@@ -291,7 +291,7 @@ function WorkshopCard({ w, brand, onReservar }) {
           <button
             onClick={() => !isAgotado && onReservar(w)}
             disabled={isAgotado}
-            className="px-4 py-1.5 rounded-lg text-xs font-semibold transition-opacity disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+            className="px-5 py-2 rounded-xl text-sm font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0 hover:brightness-110 hover:scale-[1.03] active:scale-95 shadow-sm"
             style={{
               backgroundColor: isAgotado ? '#D2C4A8' : brand.button,
               color: isAgotado ? '#6B5F4C' : contrastText(brand.button),
@@ -401,9 +401,10 @@ export default function EspacioPublico() {
             <img
               src={espacio.logoUrl}
               alt={espacio.nombre}
-              className={`w-20 h-20 mx-auto mb-5 object-cover border-2 border-white/30 shadow-lg ${
-                espacio.logoShape === 'round' ? 'rounded-full' :
-                espacio.logoShape === 'square' ? 'rounded-none' : 'rounded-2xl'
+              className={`w-20 h-20 mx-auto mb-5 object-cover shadow-lg ${
+                espacio.logoShape === 'round'   ? 'rounded-full border-2 border-white/30' :
+                espacio.logoShape === 'square'  ? 'rounded-none' :
+                                                  'rounded-2xl border-2 border-white/30'
               }`}
             />
           ) : (

@@ -208,7 +208,7 @@ function BrandPreview({ palette, roles, fontPair, logoData, logoShape, espacioNa
       <div className="px-5 py-5" style={{ backgroundColor: primary }}>
         <div className="flex items-center gap-3 mb-1">
           {logoData && (
-            <div className={`w-9 h-9 overflow-hidden shrink-0 ${shapeCls}`} style={{ background: 'rgba(255,255,255,0.15)' }}>
+            <div className={`w-9 h-9 overflow-hidden shrink-0 ${shapeCls}`} style={shapeCls !== 'rounded-none' ? { background: 'rgba(255,255,255,0.15)' } : {}}>
               <img src={logoData} alt="" className="w-full h-full object-contain" />
             </div>
           )}
@@ -358,8 +358,9 @@ function TabIdentidad({ espacio, refresh }) {
   const [logoShape,  setLogoShape] = useState(espacio.logoShape  ?? 'rounded');
   const [removingBg, setRemovingBg] = useState(false);
   const [bgError,    setBgError]   = useState('');
-  const logoInputRef = useRef(null);
-  const logoImgRef   = useRef(null);
+  const logoInputRef    = useRef(null);
+  const logoImgRef      = useRef(null);
+  const addColorInputRef = useRef(null);
 
   // Palette
   const [colors,    setColors]    = useState(parsed.palette);
@@ -420,7 +421,7 @@ function TabIdentidad({ espacio, refresh }) {
   }
 
   // ── Colors ────────────────────────────────────────────────────────────────
-  function addColor()       { if (colors.length < 8) setColors(p => [...p, '#E85D4A']); }
+  function addColor()       { if (colors.length < 8) addColorInputRef.current?.click(); }
   function removeColor(i)   { setColors(p => p.filter((_, idx) => idx !== i)); }
   function updateColor(i,v) { setColors(p => p.map((c, idx) => idx === i ? v : c)); }
 
@@ -474,7 +475,11 @@ function TabIdentidad({ espacio, refresh }) {
             </div>
             <div className="flex items-start gap-5">
               <button type="button" onClick={() => logoInputRef.current?.click()}
-                className={`w-24 h-24 bg-surface-200 border-2 border-dashed border-border hover:border-primary/50 flex items-center justify-center overflow-hidden shrink-0 transition-colors cursor-pointer ${shapeCls}`}>
+                className={`w-24 h-24 flex items-center justify-center overflow-hidden shrink-0 transition-colors cursor-pointer ${shapeCls} ${
+                  logoShape === 'square' && logoData
+                    ? 'bg-transparent'
+                    : 'bg-surface-200 border-2 border-dashed border-border hover:border-primary/50'
+                }`}>
                 {logoData
                   ? <img ref={logoImgRef} src={logoData} alt="Logo" className="w-full h-full object-contain" crossOrigin="anonymous" />
                   : <span className="font-display text-3xl text-ink-muted/40 select-none">A</span>}
@@ -574,13 +579,22 @@ function TabIdentidad({ espacio, refresh }) {
                 );
               })}
               {colors.length < 8 && (
-                <button type="button" onClick={addColor}
-                  className="rounded-xl border-2 border-dashed border-border text-ink-muted hover:border-primary/40 hover:text-primary transition-colors flex flex-col items-center justify-center gap-1 min-h-[100px]">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-                  </svg>
-                  <span className="text-[11px] font-medium">Agregar</span>
-                </button>
+                <>
+                  <input
+                    ref={addColorInputRef}
+                    type="color"
+                    defaultValue="#E85D4A"
+                    className="sr-only"
+                    onChange={e => setColors(p => [...p, e.target.value])}
+                  />
+                  <button type="button" onClick={addColor}
+                    className="rounded-xl border-2 border-dashed border-border text-ink-muted hover:border-primary/40 hover:text-primary transition-colors flex flex-col items-center justify-center gap-1 min-h-[100px]">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    <span className="text-[11px] font-medium">Agregar</span>
+                  </button>
+                </>
               )}
             </div>
           </section>
@@ -613,8 +627,14 @@ function TabIdentidad({ espacio, refresh }) {
                         <button key={i} type="button"
                           onClick={() => setRoles(r => ({ ...r, [role.key]: c }))}
                           title={c}
-                          className={`w-7 h-7 rounded-md transition-all border-2 ${roles[role.key] === c ? 'border-ink scale-110 shadow-md' : 'border-transparent hover:scale-105'}`}
-                          style={{ backgroundColor: c }} />
+                          className={`w-7 h-7 rounded-md border-2 ${roles[role.key] === c ? 'border-ink scale-110 shadow-md' : 'border-transparent'}`}
+                          style={{
+                            backgroundColor: c,
+                            transition: 'transform 0.18s ease, box-shadow 0.18s ease',
+                          }}
+                          onMouseEnter={e => { if (roles[role.key] !== c) e.currentTarget.style.transform = 'translateY(-5px) rotate(-6deg) scale(1.12)'; }}
+                          onMouseLeave={e => { if (roles[role.key] !== c) e.currentTarget.style.transform = ''; }}
+                        />
                       ))}
                     </div>
                   </div>
