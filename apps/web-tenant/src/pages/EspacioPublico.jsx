@@ -406,7 +406,7 @@ export default function EspacioPublico() {
               <img
                 src={espacio.logoUrl}
                 alt={espacio.nombre}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
                 style={{ transform: `scale(${espacio.logoScale ?? 1})`, transformOrigin: 'center' }}
               />
             </div>
