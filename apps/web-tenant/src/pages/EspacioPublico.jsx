@@ -223,7 +223,7 @@ function ConfirmationView({ reserva, workshop, brand, onBack }) {
 
 // ── WorkshopCard ──────────────────────────────────────────────────────────────
 
-function WorkshopCard({ w, brand, onReservar }) {
+function WorkshopCard({ w, brand, onReservar, isBooked }) {
   const slotStatus = getSlotStatus(w.cuposDisponibles, w.cuposTotales);
   const isAgotado  = w.cuposDisponibles === 0;
 
@@ -249,15 +249,29 @@ function WorkshopCard({ w, brand, onReservar }) {
           ...(headerImg && { backgroundImage: `url(${headerImg})`, backgroundSize: 'cover', backgroundPosition: 'center' }),
         }}
       >
-        <div
-          className="absolute top-3 left-3 px-3 py-1.5 rounded-lg font-mono font-bold text-sm text-white shadow-md"
-          style={{ backgroundColor: 'rgba(0,0,0,0.52)', backdropFilter: 'blur(4px)' }}
-        >
-          {formatPrecio(w.precio)}
-        </div>
-        <div className="absolute top-3 right-3">
-          <PublicSlotBadge status={slotStatus} />
-        </div>
+        {!isBooked && (
+          <div
+            className="absolute top-3 left-3 px-3 py-1.5 rounded-lg font-mono font-bold text-sm text-white shadow-md"
+            style={{ backgroundColor: 'rgba(0,0,0,0.52)', backdropFilter: 'blur(4px)' }}
+          >
+            {formatPrecio(w.precio)}
+          </div>
+        )}
+        {!isBooked && (
+          <div className="absolute top-3 right-3">
+            <PublicSlotBadge status={slotStatus} />
+          </div>
+        )}
+        {isBooked && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2" style={{ backgroundColor: 'rgba(0,0,0,0.58)', backdropFilter: 'blur(2px)' }}>
+            <div className="w-11 h-11 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.18)' }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <p className="text-white text-sm font-bold tracking-wide drop-shadow">¡Ya tenés tu lugar!</p>
+          </div>
+        )}
       </div>
 
       {/* Body */}
@@ -286,19 +300,26 @@ function WorkshopCard({ w, brand, onReservar }) {
 
         <div className="mt-auto pt-3 flex items-center justify-between gap-3" style={{ borderTop: `1px solid ${dividerColor}` }}>
           <span className="text-xs font-mono shrink-0" style={{ color: inkMuted }}>
-            {isAgotado ? 'Sin cupos' : `${w.cuposDisponibles} cupo${w.cuposDisponibles !== 1 ? 's' : ''}`}
+            {isBooked ? 'Reservado' : isAgotado ? 'Sin cupos' : `${w.cuposDisponibles} cupo${w.cuposDisponibles !== 1 ? 's' : ''}`}
           </span>
-          <button
-            onClick={() => !isAgotado && onReservar(w)}
-            disabled={isAgotado}
-            className="px-5 py-2 rounded-xl text-sm font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0 hover:brightness-110 hover:scale-[1.03] active:scale-95 shadow-sm"
-            style={{
-              backgroundColor: isAgotado ? '#D2C4A8' : brand.button,
-              color: isAgotado ? '#6B5F4C' : contrastText(brand.button),
-            }}
-          >
-            {isAgotado ? 'Agotado' : 'Reservar'}
-          </button>
+          {isBooked ? (
+            <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold shrink-0 bg-emerald-100 text-emerald-700 border border-emerald-200">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              Reservaste
+            </span>
+          ) : (
+            <button
+              onClick={() => !isAgotado && onReservar(w)}
+              disabled={isAgotado}
+              className="px-5 py-2 rounded-xl text-sm font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0 hover:brightness-110 hover:scale-[1.03] active:scale-95 shadow-sm"
+              style={{
+                backgroundColor: isAgotado ? '#D2C4A8' : brand.button,
+                color: isAgotado ? '#6B5F4C' : contrastText(brand.button),
+              }}
+            >
+              {isAgotado ? 'Agotado' : 'Reservar'}
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -315,6 +336,7 @@ export default function EspacioPublico() {
   const [notFound,  setNotFound]  = useState(false);
   const [booking,   setBooking]   = useState(null);
   const [confirmed, setConfirmed] = useState(null);
+  const [bookedIds, setBookedIds] = useState([]);
 
   useEffect(() => {
     async function load() {
@@ -339,6 +361,7 @@ export default function EspacioPublico() {
     setWorkshops(prev =>
       prev.map(w => w.id === booking.id ? { ...w, cuposDisponibles: Math.max(0, w.cuposDisponibles - 1) } : w)
     );
+    setBookedIds(prev => [...prev, booking.id]);
     setConfirmed({ reserva, workshop: booking });
     setBooking(null);
   }
@@ -440,7 +463,7 @@ export default function EspacioPublico() {
             <h2 className="font-display text-xl text-[#1A1611] mb-5">Talleres disponibles</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {upcoming.map(w => (
-                <WorkshopCard key={w.id} w={w} brand={brand} onReservar={setBooking} />
+                <WorkshopCard key={w.id} w={w} brand={brand} onReservar={setBooking} isBooked={bookedIds.includes(w.id)} />
               ))}
             </div>
           </>
