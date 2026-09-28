@@ -366,7 +366,6 @@ function TabIdentidad({ espacio, refresh }) {
 
   // Palette
   const [colors,    setColors]    = useState(parsed.palette);
-  const [extracting, setExtracting] = useState(false);
   const swatchRefs = useRef({});
 
   // Roles
@@ -395,8 +394,18 @@ function TabIdentidad({ espacio, refresh }) {
   }, []);
 
   // ── Logo ──────────────────────────────────────────────────────────────────
+  const extractOnLoad = useRef(false);
+
+  function triggerExtract() {
+    const img = logoImgRef.current;
+    if (!img) return;
+    const extracted = extractDominantColors(img, 6);
+    if (extracted.length) setColors(extracted);
+  }
+
   async function handleLogoFile(file) {
     if (!file?.type.startsWith('image/')) return;
+    extractOnLoad.current = true;
     setLogoData(await compressImage(file, 480));
     setBgError('');
   }
@@ -413,6 +422,7 @@ function TabIdentidad({ espacio, refresh }) {
         reader.onload = e => res(e.target.result);
         reader.readAsDataURL(result);
       });
+      extractOnLoad.current = true;
       setLogoData(base64);
     } catch (e) {
       setBgError('No se pudo quitar el fondo. Probá con otra imagen.');
@@ -435,14 +445,6 @@ function TabIdentidad({ espacio, refresh }) {
   function removeColor(i)   { setColors(p => p.filter((_, idx) => idx !== i)); }
   function updateColor(i,v) { setColors(p => p.map((c, idx) => idx === i ? v : c)); }
 
-  function handleExtractColors() {
-    if (!logoImgRef.current) return;
-    setExtracting(true);
-    try {
-      const extracted = extractDominantColors(logoImgRef.current, 6);
-      if (extracted.length) setColors(extracted);
-    } finally { setExtracting(false); }
-  }
 
   // ── Save ──────────────────────────────────────────────────────────────────
   async function handleSave(e) {
@@ -493,7 +495,8 @@ function TabIdentidad({ espacio, refresh }) {
                 }`}>
                 {logoData
                   ? <img ref={logoImgRef} src={logoData} alt="Logo" className="w-full h-full object-contain" crossOrigin="anonymous"
-                      style={{ transform: `scale(${logoScale})`, transformOrigin: 'center', transition: 'transform 0.1s' }} />
+                      style={{ transform: `scale(${logoScale})`, transformOrigin: 'center', transition: 'transform 0.1s' }}
+                      onLoad={() => { if (extractOnLoad.current) { extractOnLoad.current = false; triggerExtract(); } }} />
                   : <span className="font-display text-3xl text-ink-muted/40 select-none">A</span>}
               </button>
               <div className="flex flex-col gap-2 flex-1">
@@ -557,15 +560,6 @@ function TabIdentidad({ espacio, refresh }) {
                 <h3 className="text-sm font-semibold text-ink mb-0.5">Paleta de marca</h3>
                 <p className="text-xs text-ink-muted">Aparecen primero al elegir color de encabezado de talleres.</p>
               </div>
-              {logoData && (
-                <button type="button" onClick={handleExtractColors} disabled={extracting}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20 hover:border-primary/50 rounded-md text-xs font-semibold disabled:opacity-50 transition-colors shrink-0">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="3"/><path d="M3 12h1M20 12h1M12 3v1M12 20v1M5.6 5.6l.7.7M17.7 17.7l.7.7M17.7 6.3l-.7.7M6.3 17.7l-.7.7"/>
-                  </svg>
-                  {extracting ? 'Extrayendo…' : 'Extraer colores del logo'}
-                </button>
-              )}
             </div>
             <div className="grid grid-cols-2 gap-2" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))' }}>
               {colors.map((color, i) => {
