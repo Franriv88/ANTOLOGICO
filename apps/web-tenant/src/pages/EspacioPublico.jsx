@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { espacios as espaciosApi, workshops as workshopsApi, reservas as reservasApi } from '../services/api';
 import { getSlotStatus } from '../lib/slotStatus';
 import { loginGoogle, loginEmail, register, logout, subscribeAuth, authErrorMsg, sendPasswordReset } from '../services/userAuth';
+import mpLogo from '../assets/Mercado_Pago.png';
 // SlotBadge no se usa aquí — reemplazado por PublicSlotBadge con fondo sólido
 
 // Badge con fondo sólido para legibilidad sobre cualquier imagen o color
@@ -389,20 +390,7 @@ function BookingModal({ workshop, brand, prefill, onConfirm, onClose }) {
               >
                 {loading === 'MERCADO_PAGO' ? 'Confirmando…' : (
                   <>
-                    <svg viewBox="0 0 48 30" width="28" height="18" aria-hidden="true">
-                      <defs>
-                        <clipPath id="mpOvalClip">
-                          <ellipse cx="24" cy="15" rx="22.5" ry="13.5"/>
-                        </clipPath>
-                      </defs>
-                      <ellipse cx="24" cy="15" rx="22.5" ry="13.5" fill="#009EE3"/>
-                      <rect x="0" y="9.5" width="48" height="11" fill="white" clipPath="url(#mpOvalClip)"/>
-                      <ellipse cx="24" cy="15" rx="22.5" ry="13.5" fill="none" stroke="#1B1464" strokeWidth="2"/>
-                      <g clipPath="url(#mpOvalClip)">
-                        <path d="M13 15.5 Q16 11 20 14 Q23.5 17 27 14 Q31 11 35 15.5"
-                              stroke="#1B1464" fill="none" strokeWidth="2.5" strokeLinecap="round"/>
-                      </g>
-                    </svg>
+                    <img src={mpLogo} alt="" aria-hidden="true" className="h-5 w-auto object-contain" />
                     Mercado Pago
                   </>
                 )}
