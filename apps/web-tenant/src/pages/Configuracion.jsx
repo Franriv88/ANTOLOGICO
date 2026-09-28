@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Layout from '../components/Layout';
 import { useEspacio } from '../context/EspacioContext';
 import { espacios as espacioApi, rubros as rubrosApi } from '../services/api';
@@ -433,12 +433,12 @@ function TabIdentidad({ espacio, refresh }) {
   }
 
   // ── Colors ────────────────────────────────────────────────────────────────
-  useEffect(() => {
-    const el = addColorInputRef.current;
+  const addColorRef = useCallback((el) => {
+    addColorInputRef.current = el;
     if (!el) return;
-    function onPickerClose(e) { setColors(p => p.length < 8 ? [...p, e.target.value] : p); }
-    el.addEventListener('change', onPickerClose);
-    return () => el.removeEventListener('change', onPickerClose);
+    el.addEventListener('change', (e) => {
+      setColors(p => p.length < 8 ? [...p, e.target.value] : p);
+    });
   }, []);
 
   function addColor()       { if (colors.length < 8) addColorInputRef.current?.click(); }
@@ -598,7 +598,7 @@ function TabIdentidad({ espacio, refresh }) {
               {colors.length < 8 && (
                 <>
                   <input
-                    ref={addColorInputRef}
+                    ref={addColorRef}
                     type="color"
                     defaultValue="#E85D4A"
                     className="sr-only"
