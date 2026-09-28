@@ -623,10 +623,10 @@ function TabIdentidad({ espacio, refresh }) {
                 <h3 className="text-sm font-semibold text-ink mb-0.5">Roles de color</h3>
                 <p className="text-xs text-ink-muted">Asigná cada color de tu paleta a un rol en tu página pública. La preview se actualiza en tiempo real.</p>
               </div>
-              <div className="flex flex-col gap-3 bg-surface-100 border border-border rounded-xl p-4" style={{ backgroundColor: '#FBF8F2', borderColor: '#D2C4A8', color: '#2B241A' }}>
-                {COLOR_ROLES.map(role => (
-                  <div key={role.key}>
-                    <div className="flex items-center justify-between mb-1.5">
+              <div className="flex flex-col bg-surface-100 border border-border rounded-xl overflow-hidden" style={{ backgroundColor: '#FBF8F2', borderColor: '#D2C4A8', color: '#2B241A' }}>
+                {COLOR_ROLES.map((role, roleIdx) => (
+                  <div key={role.key} className="px-4 py-3.5" style={roleIdx > 0 ? { borderTop: '1px solid #E8DFD0' } : {}}>
+                    <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         {isValidColor(roles[role.key]) && (
                           <span className="w-3 h-3 rounded-full inline-block border border-white shadow-sm" style={{ backgroundColor: roles[role.key] }} />
