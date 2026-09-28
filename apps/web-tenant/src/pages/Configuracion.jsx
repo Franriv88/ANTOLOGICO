@@ -423,6 +423,14 @@ function TabIdentidad({ espacio, refresh }) {
   }
 
   // ── Colors ────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const el = addColorInputRef.current;
+    if (!el) return;
+    function onPickerClose(e) { setColors(p => p.length < 8 ? [...p, e.target.value] : p); }
+    el.addEventListener('change', onPickerClose);
+    return () => el.removeEventListener('change', onPickerClose);
+  }, []);
+
   function addColor()       { if (colors.length < 8) addColorInputRef.current?.click(); }
   function removeColor(i)   { setColors(p => p.filter((_, idx) => idx !== i)); }
   function updateColor(i,v) { setColors(p => p.map((c, idx) => idx === i ? v : c)); }
@@ -600,7 +608,6 @@ function TabIdentidad({ espacio, refresh }) {
                     type="color"
                     defaultValue="#E85D4A"
                     className="sr-only"
-                    onChange={e => setColors(p => [...p, e.target.value])}
                   />
                   <button type="button" onClick={addColor}
                     className="rounded-xl border-2 border-dashed border-border text-ink-muted hover:border-primary/40 hover:text-primary transition-colors flex flex-col items-center justify-center gap-1 min-h-[100px]">
