@@ -72,7 +72,7 @@ export default function Landing() {
             to="/login"
             className="px-6 py-3 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-strong transition-colors"
           >
-            Empezar gratis con Google
+            Empezar gratis →
           </Link>
           <a
             href="#planes"

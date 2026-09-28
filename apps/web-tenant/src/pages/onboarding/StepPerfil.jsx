@@ -9,9 +9,10 @@ const LABEL_CLS = 'block text-xs font-medium text-ink-muted mb-1';
 
 export default function StepPerfil({ onNext }) {
   const { user } = useAuth();
-  const [nombre, setNombre] = useState(user?.displayName ?? '');
-  const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState('');
+  const [nombre,   setNombre]   = useState(user?.displayName ?? '');
+  const [telefono, setTelefono] = useState('');
+  const [loading,  setLoading]  = useState(false);
+  const [error,    setError]    = useState('');
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -24,14 +25,14 @@ export default function StepPerfil({ onNext }) {
     } catch {
       // Firebase no disponible (demo mode u otro entorno sin backend)
     }
-    onNext({ nombre: nombre.trim() });
+    onNext({ nombre: nombre.trim(), telefono: telefono.trim() });
     setLoading(false);
   }
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
       <div>
-        <h2 className="font-display text-xl text-ink mb-1">¿Cómo te llamás?</h2>
+        <h2 className="font-display text-xl text-ink mb-1">Tu perfil</h2>
         <p className="text-sm text-ink-muted">
           Este nombre aparecerá en tu panel y en tus comunicaciones con usuarios.
         </p>
@@ -51,12 +52,23 @@ export default function StepPerfil({ onNext }) {
       </div>
 
       <div>
-        <label className={LABEL_CLS}>Email (de tu cuenta Google)</label>
+        <label className={LABEL_CLS}>Email</label>
         <input
           type="email"
           value={user?.email ?? ''}
           disabled
           className={INPUT_CLS + ' bg-surface-100 text-ink-muted cursor-not-allowed'}
+        />
+      </div>
+
+      <div>
+        <label className={LABEL_CLS}>Teléfono de contacto <span className="font-normal">(opcional)</span></label>
+        <input
+          type="tel"
+          value={telefono}
+          onChange={(e) => setTelefono(e.target.value)}
+          placeholder="Ej: +54 9 11 1234-5678"
+          className={INPUT_CLS}
         />
       </div>
 

@@ -9,9 +9,9 @@ const FEATURES_FALLBACK = {
 };
 
 const PLANES_DEMO = [
-  { id: 'esencial',    nombre: 'Esencial',    precioMensual: 5900,  features: FEATURES_FALLBACK.Esencial },
-  { id: 'profesional', nombre: 'Profesional', precioMensual: 12900, features: FEATURES_FALLBACK.Profesional },
-  { id: 'estudio',     nombre: 'Estudio',     precioMensual: 24900, features: FEATURES_FALLBACK.Estudio },
+  { id: 'esencial',    nombre: 'Esencial',    precioMensual: 5900,  features: FEATURES_FALLBACK.Esencial,    highlight: false },
+  { id: 'profesional', nombre: 'Profesional', precioMensual: 12900, features: FEATURES_FALLBACK.Profesional, highlight: true  },
+  { id: 'estudio',     nombre: 'Estudio',     precioMensual: 24900, features: FEATURES_FALLBACK.Estudio,     highlight: false },
 ];
 
 function formatPrecio(n) {
@@ -58,14 +58,17 @@ export default function StepPlan({ onFinish, onBack }) {
             nombre={plan.nombre}
             precioMensual={plan.precioMensual}
             features={Array.isArray(plan.features) ? plan.features : FEATURES_FALLBACK[plan.nombre] ?? []}
+            highlight={plan.highlight}
             selected={selected === plan.id}
-            onSelect={() => setSelected(plan.id)}
+            onSelect={() => setSelected(plan.id === selected ? null : plan.id)}
           />
         ))}
       </div>
 
       <p className="text-xs text-center text-ink-muted">
-        Comenzás en modo prueba — sin límite de tiempo para explorar el panel.
+        {selected
+          ? 'Podés cambiar de plan cuando quieras desde la configuración.'
+          : 'Podés elegir un plan ahora o hacerlo después desde la configuración.'}
       </p>
 
       <div className="flex gap-3">
@@ -81,25 +84,32 @@ export default function StepPlan({ onFinish, onBack }) {
           disabled={loading}
           className="flex-1 py-2.5 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary-strong transition-colors disabled:opacity-50"
         >
-          {loading ? 'Iniciando…' : 'Comenzar →'}
+          {loading ? 'Iniciando…' : selected ? 'Comenzar →' : 'Continuar sin plan →'}
         </button>
       </div>
     </div>
   );
 }
 
-function PlanCard({ nombre, precioMensual, features = [], selected, onSelect }) {
+function PlanCard({ nombre, precioMensual, features = [], highlight, selected, onSelect }) {
   return (
     <button
       type="button"
       onClick={onSelect}
-      className={`w-full text-left px-4 py-3 rounded-lg border-2 transition-colors ${
+      className={`relative w-full text-left px-4 py-3 rounded-lg border-2 transition-colors ${
         selected
           ? 'border-primary bg-primary/5'
+          : highlight
+          ? 'border-primary/40 hover:border-primary bg-white'
           : 'border-border hover:border-primary/40 bg-white'
       }`}
     >
-      <div className="flex items-center justify-between mb-2">
+      {highlight && (
+        <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-xs font-semibold bg-primary text-white rounded-full px-2.5 py-0.5 whitespace-nowrap">
+          Recomendado
+        </span>
+      )}
+      <div className="flex items-center justify-between mb-2 mt-1">
         <span className="font-semibold text-sm text-ink">{nombre}</span>
         {precioMensual && (
           <span className="text-xs font-mono text-ink-muted">
