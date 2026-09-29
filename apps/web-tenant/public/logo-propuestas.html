@@ -184,57 +184,62 @@ const NET_K2 = {
   edges:[[0,1],[1,2],[2,3],[3,4],[4,5],[0,6],[6,2],[3,5]],
   center:[155,91]
 };
+// Gear 8-diente: outer=7, inner=5, cada 22.5° alternando
+const _GEAR8 = 'M7,0 L4.62,-1.91 L4.95,-4.95 L1.91,-4.62 L0,-7 L-1.91,-4.62 L-4.95,-4.95 L-4.62,-1.91 L-7,0 L-4.62,1.91 L-4.95,4.95 L-1.91,4.62 L0,7 L1.91,4.62 L4.95,4.95 L4.62,1.91 Z';
+// Gear 8-diente más pequeño: outer=6, inner=4.5
+const _GEAR6 = 'M6,0 L3.97,-1.65 L4.24,-4.24 L1.65,-3.97 L0,-6 L-1.65,-3.97 L-4.24,-4.24 L-3.97,-1.65 L-6,0 L-3.97,1.65 L-4.24,4.24 L-1.65,3.97 L0,6 L1.65,3.97 L4.24,4.24 L3.97,1.65 Z';
+
 const ICONS = {
   camera:
     '<rect x="-6" y="-4.5" width="12" height="9" rx="1.5" fill="none" stroke="white" stroke-width="1.4"/>' +
     '<circle cx="0" cy="0.5" r="2.8" fill="none" stroke="white" stroke-width="1.4"/>' +
     '<rect x="-2.2" y="-7" width="4.4" height="2.6" rx="1" fill="white"/>',
   microscope:
-    '<circle cx="0" cy="-6.5" r="1.3" fill="white"/>' +
-    '<line x1="0" y1="-5.2" x2="0" y2="-1" stroke="white" stroke-width="1.4" stroke-linecap="round"/>' +
-    '<path d="M0,-1 L2.5,5" stroke="white" stroke-width="1.4" stroke-linecap="round" fill="none"/>' +
-    '<line x1="-5" y1="7" x2="5" y2="7" stroke="white" stroke-width="1.7" stroke-linecap="round"/>' +
-    '<line x1="0" y1="5" x2="0" y2="7" stroke="white" stroke-width="1.4"/>' +
-    '<line x1="-3" y1="2.5" x2="3.5" y2="2.5" stroke="white" stroke-width="1.2"/>',
+    '<line x1="-4.5" y1="7" x2="4.5" y2="7" stroke="white" stroke-width="1.8" stroke-linecap="round"/>' +
+    '<line x1="0" y1="7" x2="0" y2="-4.5" stroke="white" stroke-width="1.4"/>' +
+    '<circle cx="0" cy="-6" r="1.5" fill="white"/>' +
+    '<line x1="-3" y1="1.5" x2="3" y2="1.5" stroke="white" stroke-width="1.3"/>' +
+    '<path d="M0,-4.5 L3.5,4" stroke="white" stroke-width="1.5" stroke-linecap="round" fill="none"/>',
   hourglass:
     '<path d="M-5.5,-7 H5.5 L0,0 L5.5,7 H-5.5 L0,0 Z" fill="none" stroke="white" stroke-width="1.4" stroke-linejoin="round"/>' +
     '<line x1="-5.5" y1="-7" x2="5.5" y2="-7" stroke="white" stroke-width="1.7" stroke-linecap="round"/>' +
     '<line x1="-5.5" y1="7" x2="5.5" y2="7" stroke="white" stroke-width="1.7" stroke-linecap="round"/>' +
-    '<ellipse cx="0" cy="3.5" rx="2.5" ry="1.5" fill="white" opacity="0.7"/>',
+    '<ellipse cx="0" cy="3.5" rx="2.5" ry="1.5" fill="white" opacity="0.8"/>',
   music:
     '<ellipse cx="-1.5" cy="5.5" rx="3.5" ry="2.2" transform="rotate(-20,-1.5,5.5)" fill="white"/>' +
     '<line x1="2" y1="4.5" x2="2" y2="-6" stroke="white" stroke-width="1.5"/>' +
     '<path d="M2,-6 Q8,-4 6,-1" stroke="white" stroke-width="1.4" fill="none" stroke-linecap="round"/>',
   gear:
-    '<circle cx="0" cy="0" r="3.2" fill="none" stroke="white" stroke-width="1.5"/>' +
-    '<circle cx="0" cy="0" r="5.6" fill="none" stroke="white" stroke-width="2.8" stroke-dasharray="2.2 2.3"/>',
+    '<path d="' + _GEAR8 + '" fill="none" stroke="white" stroke-width="1.3" stroke-linejoin="round"/>' +
+    '<circle cx="0" cy="0" r="2.5" fill="none" stroke="white" stroke-width="1.3"/>',
   laptop:
     '<rect x="-7" y="-5.5" width="14" height="9" rx="1.5" fill="none" stroke="white" stroke-width="1.4"/>' +
-    '<line x1="-4.5" y1="-0.5" x2="4.5" y2="-0.5" stroke="white" stroke-width="1.1" opacity="0.75"/>' +
-    '<line x1="-4.5" y1="1.8" x2="1.5" y2="1.8" stroke="white" stroke-width="1.1" opacity="0.75"/>' +
+    '<line x1="-4.5" y1="-0.5" x2="4.5" y2="-0.5" stroke="white" stroke-width="1.1" opacity="0.8"/>' +
+    '<line x1="-4.5" y1="1.8" x2="1.5" y2="1.8" stroke="white" stroke-width="1.1" opacity="0.8"/>' +
     '<path d="M-9,3.5 L9,3.5 L10,7 L-10,7 Z" fill="none" stroke="white" stroke-width="1.3" stroke-linejoin="round"/>',
   tool:
-    '<circle cx="0" cy="-4.5" r="2.8" fill="none" stroke="white" stroke-width="1.5"/>' +
-    '<path d="M-1.5,-2 L-3.5,2 L0,6 L3.5,2 L1.5,-2" stroke="white" stroke-width="1.4" fill="none" stroke-linejoin="round" stroke-linecap="round"/>',
+    '<circle cx="-2.5" cy="-5" r="2.3" fill="none" stroke="white" stroke-width="1.3"/>' +
+    '<line x1="-0.5" y1="-3" x2="1.5" y2="0" stroke="white" stroke-width="1.8" stroke-linecap="round"/>' +
+    '<circle cx="1.5" cy="0" r="2" fill="none" stroke="white" stroke-width="1.3"/>' +
+    '<line x1="3" y1="1.3" x2="5.5" y2="5.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/>' +
+    '<path d="M4.5,5 L6.5,6.5 M5.5,6.5 L7,5" stroke="white" stroke-width="1.4" stroke-linecap="round" fill="none"/>',
   chart:
     '<rect x="-6.5" y="-7" width="13" height="14" rx="1.5" fill="none" stroke="white" stroke-width="1.3"/>' +
     '<rect x="-5" y="0.5" width="2.5" height="5" rx="0.5" fill="white"/>' +
     '<rect x="-1.5" y="-3.5" width="2.5" height="8.5" rx="0.5" fill="white"/>' +
     '<rect x="2" y="-1.5" width="2.5" height="6.5" rx="0.5" fill="white"/>',
   circuit:
-    '<circle cx="0" cy="0" r="3" fill="none" stroke="white" stroke-width="1.5"/>' +
-    '<circle cx="0" cy="0" r="5.8" fill="none" stroke="white" stroke-width="2.6" stroke-dasharray="2 2.2"/>' +
-    '<circle cx="0" cy="-5.8" r="1.2" fill="white"/>' +
-    '<circle cx="5.8" cy="0" r="1.2" fill="white"/>' +
-    '<circle cx="0" cy="5.8" r="1.2" fill="white"/>' +
-    '<circle cx="-5.8" cy="0" r="1.2" fill="white"/>'
+    '<path d="' + _GEAR6 + '" fill="none" stroke="white" stroke-width="1.3" stroke-linejoin="round"/>' +
+    '<circle cx="0" cy="0" r="2" fill="none" stroke="white" stroke-width="1.3"/>' +
+    '<line x1="-1.3" y1="0" x2="1.3" y2="0" stroke="white" stroke-width="1.1"/>' +
+    '<line x1="0" y1="-1.3" x2="0" y2="1.3" stroke="white" stroke-width="1.1"/>'
 };
 
 // K3: Red Envolvente — trazado del layout de la imagen de referencia (760×433)
 // Nodos: 0=cámara, 1=microscopio, 2=reloj de arena, 3=música, 4=engranaje,
 //        5=laptop, 6=herramienta, 7=gráfico, 8=circuito, 9=punto hub
 const NET_K3 = {
-  dashed:true,
+  dashed:true, dasharray:'9 6', edgeSW:'2',
   nodes:[
     {x:130, y:172, icon:'camera',      r:22},  // 0 izq-centro
     {x:238, y:220, icon:'microscope',  r:22},  // 1 izq interior
@@ -269,10 +274,11 @@ function renderK(svg, net, wm, th) {
   const it      = th==='cr' ? '#E85D4A' : '#fff';
   const da      = net.dashed ? {'stroke-dasharray':'3 2'} : {};
 
-  const sw = net.dashed ? '1.2' : '1';
+  const sw  = net.edgeSW || (net.dashed ? '1.2' : '1');
+  const da2 = net.dasharray ? {'stroke-dasharray': net.dasharray} : da;
   net.edges.forEach(([a,b]) => {
     const na=net.nodes[a], nb=net.nodes[b];
-    svg.appendChild(ne('line',{x1:na.x,y1:na.y,x2:nb.x,y2:nb.y,stroke:lc,'stroke-width':sw,...da,opacity:'.42'}));
+    svg.appendChild(ne('line',{x1:na.x,y1:na.y,x2:nb.x,y2:nb.y,stroke:lc,'stroke-width':sw,...da2,opacity:'.45'}));
   });
   if (net.center) svg.appendChild(ne('circle',{cx:net.center[0],cy:net.center[1],r:'3',fill:primary}));
 
@@ -286,15 +292,23 @@ function renderK(svg, net, wm, th) {
       const r = n.r || 9;
       const fill = idx%2===0 ? primary : accent;
       const g = ne('g', {transform:`translate(${n.x},${n.y})`});
-      let html = `<circle cx="0" cy="0" r="${r}" fill="${fill}"/>`;
-      if (n.icon && typeof ICONS!=='undefined' && ICONS[n.icon]) {
+      g.appendChild(ne('circle', {cx:'0',cy:'0',r:String(r),fill}));
+      if (n.icon && ICONS[n.icon]) {
+        // Parsear SVG dentro de un <div><svg>...</svg></div> garantiza namespace correcto
         const sc = r > 14 ? (r/11).toFixed(3) : '1';
-        html += `<g transform="scale(${sc})">${ICONS[n.icon].replace(/white/g, it)}</g>`;
+        const div = document.createElement('div');
+        div.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg">' +
+          ICONS[n.icon].replace(/white/g, it) + '</svg>';
+        const tmpSvg = div.firstChild;
+        const ig = ne('g', {transform:`scale(${sc})`});
+        while (tmpSvg && tmpSvg.firstChild) ig.appendChild(tmpSvg.firstChild);
+        g.appendChild(ig);
       } else if (n.i) {
         const fs = (r * 0.88).toFixed(1);
-        html += `<text x="0" y="${(r*.36).toFixed(1)}" text-anchor="middle" fill="${it}" font-size="${fs}" font-family="Arial,sans-serif">${n.i}</text>`;
+        const t = ne('text', {x:'0',y:(r*.36).toFixed(1),'text-anchor':'middle',fill:it,'font-size':fs,'font-family':'Arial,sans-serif'});
+        t.textContent = n.i;
+        g.appendChild(t);
       }
-      g.innerHTML = html;
       svg.appendChild(g);
     });
   }
