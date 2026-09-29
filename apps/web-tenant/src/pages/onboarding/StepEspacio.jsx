@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { espacios as espacioApi } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 const INPUT_CLS =
   'w-full px-3 py-2 bg-white border border-border rounded-md text-sm text-ink ' +
@@ -24,6 +25,7 @@ const RUBROS = [
 ];
 
 export default function StepEspacio({ onNext, onBack }) {
+  const { user } = useAuth();
   const [nombre, setNombre]             = useState('');
   const [selectedRubro, setRubro]       = useState('');
   const [rubroPersonalizado, setCustom] = useState('');
@@ -46,6 +48,7 @@ export default function StepEspacio({ onNext, onBack }) {
         nombre:            nombre.trim(),
         rubroId:           null,
         rubroPersonalizado: rubroFinal,
+        userId:            user?.uid ?? null,
       });
       onNext({ espacioId: key.id, espacioNombre: nombre.trim() });
     } catch (err) {

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
+import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 import { DEMO_MODE } from '../../lib/demo';
+import { firestore } from '../../lib/firebase';
 import { listPlanes } from '../../dataconnect-generated';
 
 const FEATURES_FALLBACK = {
@@ -24,7 +26,16 @@ export default function StepPlan({ onFinish, onBack }) {
   const [loading, setLoading]     = useState(false);
 
   useEffect(() => {
-    if (DEMO_MODE) { setPlanes(PLANES_DEMO); return; }
+    if (DEMO_MODE) {
+      // Leer planes de Firestore (gestionados por Super Admin), con fallback a hardcoded
+      getDocs(query(collection(firestore, 'demo_planes'), orderBy('order')))
+        .then(snap => {
+          const fromDB = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+          setPlanes(fromDB.length > 0 ? fromDB : PLANES_DEMO);
+        })
+        .catch(() => setPlanes(PLANES_DEMO));
+      return;
+    }
     listPlanes()
       .then(({ data }) => setPlanes(data?.planes ?? []))
       .catch(() => setPlanes([]));
