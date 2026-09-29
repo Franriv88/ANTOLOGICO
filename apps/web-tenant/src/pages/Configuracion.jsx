@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { QRCodeCanvas } from 'qrcode.react';
 import Swal from 'sweetalert2';
 import Layout from '../components/Layout';
 import { useEspacio } from '../context/EspacioContext';
@@ -274,6 +275,113 @@ function CancelSubscriptionModal({ nombre, loading, error, onConfirm, onClose })
   );
 }
 
+// ── Compartir espacio ────────────────────────────────────────────────────────
+
+function CompartirEspacio({ espacio }) {
+  const [copied, setCopied] = useState(false);
+  const [useLogo, setUseLogo] = useState(true);
+  const qrRef = useRef(null);
+
+  const publicUrl = `${window.location.origin}/p/${espacio.id}`;
+  const logoUrl   = espacio.logoUrl ?? null;
+  const QR_SIZE   = 200;
+  const LOGO_SIZE = Math.round(QR_SIZE * 0.22);
+
+  function handleCopy() {
+    navigator.clipboard.writeText(publicUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  function handleDownload() {
+    const canvas = qrRef.current?.querySelector('canvas');
+    if (!canvas) return;
+    const link = document.createElement('a');
+    link.download = `qr-${espacio.nombre?.toLowerCase().replace(/\s+/g, '-') ?? 'espacio'}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  }
+
+  return (
+    <div className="border-t border-border pt-6">
+      <h3 className="text-sm font-semibold text-ink mb-0.5">Compartir tu espacio</h3>
+      <p className="text-xs text-ink-muted mb-5">Esta es la URL pública que podés compartir con tus clientes para que vean y reserven tus talleres.</p>
+
+      {/* URL */}
+      <div className="flex items-center gap-2 mb-6">
+        <div className="flex-1 px-3 py-2 bg-surface-100 border border-border rounded-md text-sm text-ink font-mono truncate">
+          {publicUrl}
+        </div>
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="shrink-0 px-4 py-2 text-sm font-medium border border-border rounded-md bg-white hover:bg-surface-200 transition-colors"
+        >
+          {copied ? '¡Copiado!' : 'Copiar'}
+        </button>
+        <a
+          href={publicUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="shrink-0 px-4 py-2 text-sm font-medium border border-border rounded-md bg-white hover:bg-surface-200 transition-colors"
+        >
+          Abrir →
+        </a>
+      </div>
+
+      {/* QR */}
+      <div className="flex items-start gap-6">
+        <div ref={qrRef} className="shrink-0">
+          <QRCodeCanvas
+            value={publicUrl}
+            size={QR_SIZE}
+            bgColor="#ffffff"
+            fgColor="#1A1611"
+            level="H"
+            imageSettings={logoUrl && useLogo ? {
+              src:    logoUrl,
+              width:  LOGO_SIZE,
+              height: LOGO_SIZE,
+              excavate: true,
+            } : undefined}
+          />
+        </div>
+
+        <div className="flex flex-col gap-3 pt-1">
+          <p className="text-xs text-ink-muted">Imprimí o compartí este QR. Tus clientes llegan directo a tu página de talleres.</p>
+
+          {logoUrl && (
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={useLogo}
+                onChange={e => setUseLogo(e.target.checked)}
+                className="w-4 h-4 accent-primary"
+              />
+              <span className="text-xs text-ink">Mostrar logo en el centro</span>
+            </label>
+          )}
+
+          <button
+            type="button"
+            onClick={handleDownload}
+            className="self-start px-4 py-2 text-sm font-medium bg-primary text-white rounded-md hover:bg-primary-strong transition-colors"
+          >
+            Descargar QR
+          </button>
+
+          {!logoUrl && (
+            <p className="text-xs text-ink-muted">
+              Subí tu logo en la pestaña <strong>Identidad</strong> para centrarlo en el QR.
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Tab: Mi espacio ───────────────────────────────────────────────────────────
 
 const EMPTY_DIR = { barrio: '', calle: '', altura: '', piso: '', apto: '' };
@@ -409,6 +517,9 @@ function TabEspacio({ espacio, refresh }) {
           {saved && <span className="text-xs text-green-600 font-medium">¡Guardado!</span>}
         </div>
       </form>
+
+      {/* ── Compartir ── */}
+      <CompartirEspacio espacio={espacio} />
 
       {/* ── Direcciones ── */}
       <div>
