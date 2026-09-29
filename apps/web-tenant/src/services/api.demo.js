@@ -144,10 +144,11 @@ export const espacios = {
     return docToObj(snap);
   },
 
-  updateIdentidad:      async (id, payload) => espacios.update(id, payload),
-  updatePlan:           async (id, planId)  => espacios.update(id, { planId }),
-  solicitarCancelacion: async (id)          => espacios.update(id, { cancelacionPendiente: true }),
-  reactivarSuscripcion: async (id)          => espacios.update(id, { cancelacionPendiente: false }),
+  updateIdentidad:      async (id, payload)       => espacios.update(id, payload),
+  updateRedes:          async (id, redesSociales) => espacios.update(id, { redesSociales }),
+  updatePlan:           async (id, planId)        => espacios.update(id, { planId }),
+  solicitarCancelacion: async (id)                => espacios.update(id, { cancelacionPendiente: true }),
+  reactivarSuscripcion: async (id)                => espacios.update(id, { cancelacionPendiente: false }),
 };
 
 export const rubros = {
