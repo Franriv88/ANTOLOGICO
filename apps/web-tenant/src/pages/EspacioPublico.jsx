@@ -4,6 +4,7 @@ import { espacios as espaciosApi, workshops as workshopsApi, reservas as reserva
 import { getSlotStatus } from '../lib/slotStatus';
 import { loginGoogle, loginEmail, register, logout, subscribeAuth, authErrorMsg, sendPasswordReset, checkRedirectResult } from '../services/userAuth';
 import mpLogo from '../assets/Mercado_Pago.png';
+import { SocialIconsRow } from '../components/SocialIcons';
 // SlotBadge no se usa aquí — reemplazado por PublicSlotBadge con fondo sólido
 
 // Badge con fondo sólido para legibilidad sobre cualquier imagen o color
@@ -836,7 +837,10 @@ export default function EspacioPublico() {
       )}
 
       {/* Footer */}
-      <div className="text-center py-8 text-xs text-[#9B9083] border-t border-[#EDE8DE] flex flex-col items-center gap-2">
+      <div className="py-8 text-xs text-[#9B9083] border-t border-[#EDE8DE] flex flex-col items-center gap-4">
+        {espacio?.redesSociales?.links && Object.values(espacio.redesSociales.links).some(v => v?.trim()) && (
+          <SocialIconsRow redesSociales={espacio.redesSociales} size={22} />
+        )}
         <Link to="/mis-reservas" className="text-[#E85D4A] hover:underline font-medium">Ver todas mis reservas →</Link>
         <span>Powered by <span className="font-semibold">Antológico</span></span>
       </div>

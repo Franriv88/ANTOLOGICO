@@ -4,6 +4,7 @@ import Swal from 'sweetalert2';
 import Layout from '../components/Layout';
 import { useEspacio } from '../context/EspacioContext';
 import { espacios as espacioApi, rubros as rubrosApi } from '../services/api';
+import { SOCIAL_NETWORKS, SocialIcon } from '../components/SocialIcons';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -388,6 +389,155 @@ const EMPTY_DIR = { barrio: '', calle: '', altura: '', piso: '', apto: '' };
 
 function normalize(s) { return (s ?? '').toLowerCase().trim().replace(/\s+/g, ' '); }
 
+// ── Redes Sociales ────────────────────────────────────────────────────────────
+
+function RedesSocialesSection({ espacio, refresh }) {
+  const parseRedes = () => {
+    const rs = espacio.redesSociales;
+    if (!rs) return { style: 'brand', minimalColor: '', links: {} };
+    return { style: rs.style ?? 'brand', minimalColor: rs.minimalColor ?? '', links: rs.links ?? {} };
+  };
+
+  const init = parseRedes();
+  const [links,        setLinks]        = useState(init.links);
+  const [style,        setStyle]        = useState(init.style);
+  const [minimalColor, setMinimalColor] = useState(init.minimalColor);
+  const [saving,       setSaving]       = useState(false);
+  const [saved,        setSaved]        = useState(false);
+  const [error,        setError]        = useState('');
+
+  // Paleta de la identidad del espacio
+  const palette = (() => {
+    const bc = espacio.brandColors;
+    if (!bc) return [];
+    const arr = Array.isArray(bc) ? bc : (bc.palette ?? []);
+    return arr.filter(c => isValidColor(c));
+  })();
+
+  // Si el color minimal no está elegido, usamos el primero de la paleta o primary
+  const effectiveMinimalColor = minimalColor || palette[0] || '#E85D4A';
+
+  async function handleSave() {
+    setSaving(true); setError(''); setSaved(false);
+    try {
+      const cleanLinks = Object.fromEntries(
+        Object.entries(links).filter(([, v]) => v?.trim())
+      );
+      await espacioApi.updateRedes(espacio.id, {
+        style,
+        minimalColor: style === 'minimal' ? effectiveMinimalColor : null,
+        links: cleanLinks,
+      });
+      await refresh();
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (e) {
+      setError(e.message || 'Error al guardar.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const iconColor = (net) => style === 'brand' ? net.color : effectiveMinimalColor;
+
+  return (
+    <div className="border-t border-border pt-6">
+      <h3 className="text-sm font-semibold text-ink mb-0.5">Redes Sociales</h3>
+      <p className="text-xs text-ink-muted mb-5">Aparecen en el footer de tu página pública. Solo se muestran las que tengan URL.</p>
+
+      {/* Selector de estilo */}
+      <div className="flex gap-2 mb-5">
+        {[
+          { v: 'brand',   label: 'Colores de la red' },
+          { v: 'minimal', label: 'Minimalista'       },
+        ].map(({ v, label }) => (
+          <button
+            key={v} type="button"
+            onClick={() => setStyle(v)}
+            className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
+              style === v
+                ? 'border-primary bg-primary/8 text-primary'
+                : 'border-border text-ink-muted hover:border-primary/40 bg-white'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* Picker de color para modo minimal */}
+      {style === 'minimal' && (
+        <div className="mb-5">
+          <p className="text-xs text-ink-muted mb-2">Color de los íconos</p>
+          {palette.length > 0 ? (
+            <div className="flex flex-wrap gap-2 items-center">
+              {palette.map((c, i) => (
+                <button
+                  key={i} type="button"
+                  onClick={() => setMinimalColor(c)}
+                  title={c}
+                  className="w-7 h-7 rounded-md border-2 transition-all"
+                  style={{
+                    backgroundColor: c,
+                    borderColor: effectiveMinimalColor === c ? '#1A1611' : 'transparent',
+                    transform: effectiveMinimalColor === c ? 'scale(1.15)' : 'none',
+                  }}
+                />
+              ))}
+              <span className="text-xs font-mono text-ink-muted ml-1">{effectiveMinimalColor}</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={effectiveMinimalColor}
+                onChange={e => setMinimalColor(e.target.value)}
+                className="w-8 h-8 rounded cursor-pointer border border-border"
+              />
+              <span className="text-xs text-ink-muted">
+                Definí tu paleta en <strong>Identidad</strong> para elegir desde ahí.
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Inputs por red social */}
+      <div className="flex flex-col gap-3 mb-5">
+        {SOCIAL_NETWORKS.map(net => (
+          <div key={net.key} className="flex items-center gap-3">
+            <div className="w-8 flex justify-center shrink-0">
+              <SocialIcon id={net.key} color={iconColor(net)} size={20} />
+            </div>
+            <span className="w-20 text-xs font-medium text-ink shrink-0">{net.label}</span>
+            <input
+              type="url"
+              value={links[net.key] ?? ''}
+              onChange={e => setLinks(p => ({ ...p, [net.key]: e.target.value }))}
+              placeholder={net.placeholder}
+              className={INPUT_CLS + ' text-xs'}
+            />
+          </div>
+        ))}
+      </div>
+
+      {error && <p className="text-xs text-danger mb-3">{error}</p>}
+
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={saving}
+          className="px-5 py-2 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary-strong transition-colors disabled:opacity-50"
+        >
+          {saving ? 'Guardando…' : 'Guardar redes'}
+        </button>
+        {saved && <span className="text-xs text-green-600 font-medium">¡Guardado!</span>}
+      </div>
+    </div>
+  );
+}
+
 function TabEspacio({ espacio, refresh }) {
   const [nombre, setNombre]                = useState(espacio.nombre ?? '');
   const [rubroId, setRubroId]              = useState(espacio.rubro?.id ?? '');
@@ -645,6 +795,9 @@ function TabEspacio({ espacio, refresh }) {
           )}
         </div>
       </div>
+
+      {/* ── Redes Sociales ── */}
+      <RedesSocialesSection espacio={espacio} refresh={refresh} />
     </div>
   );
 }

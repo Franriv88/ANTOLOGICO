@@ -5,6 +5,7 @@ import {
   updateEspacio,
   updateEspacioPlanId,
   updateEspacioIdentidad,
+  updateEspacioRedes,
   solicitarCancelacionEspacio,
   reactivarSuscripcionEspacio,
   listRubros,
@@ -53,8 +54,12 @@ export const espacios = {
     const { data } = await updateEspacio({ id, ...payload });
     return data.espacio_update;
   },
-  updateIdentidad: async (id, { logoUrl, logoShape, brandColors, brandFont }) => {
-    const { data } = await updateEspacioIdentidad({ id, logoUrl, logoShape, brandColors, brandFont });
+  updateIdentidad: async (id, { logoUrl, logoShape, logoScale, brandColors, brandFont }) => {
+    const { data } = await updateEspacioIdentidad({ id, logoUrl, logoShape, logoScale, brandColors, brandFont });
+    return data.espacio_update;
+  },
+  updateRedes: async (id, redesSociales) => {
+    const { data } = await updateEspacioRedes({ id, redesSociales });
     return data.espacio_update;
   },
   updatePlan: async (id, planId) => {

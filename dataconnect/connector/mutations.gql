@@ -40,6 +40,7 @@ mutation UpdateEspacioIdentidad(
   $id:          UUID!
   $logoUrl:     String
   $logoShape:   String
+  $logoScale:   Float
   $brandColors: Any
   $brandFont:   String
 ) @auth(level: USER) {
@@ -53,8 +54,27 @@ mutation UpdateEspacioIdentidad(
     data: {
       logoUrl:        $logoUrl
       logoShape:      $logoShape
+      logoScale:      $logoScale
       brandColors:    $brandColors
       brandFont:      $brandFont
+      updatedAt_expr: "request.time"
+    }
+  )
+}
+
+mutation UpdateEspacioRedes(
+  $id:           UUID!
+  $redesSociales: Any
+) @auth(level: USER) {
+  espacio_update(
+    first: {
+      where: {
+        id: { eq: $id }
+        profesionalUid: { eq_expr: "auth.uid" }
+      }
+    }
+    data: {
+      redesSociales:  $redesSociales
       updatedAt_expr: "request.time"
     }
   )

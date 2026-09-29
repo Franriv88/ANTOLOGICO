@@ -113,6 +113,20 @@ exports.updateEspacio = function updateEspacio(dcOrVars, vars) {
 }
 ;
 
+const updateEspacioRedesRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'UpdateEspacioRedes', inputVars);
+}
+updateEspacioRedesRef.operationName = 'UpdateEspacioRedes';
+exports.updateEspacioRedesRef = updateEspacioRedesRef;
+
+exports.updateEspacioRedes = function updateEspacioRedes(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(updateEspacioRedesRef(dcInstance, inputVars));
+}
+;
+
 const createWorkshopRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
