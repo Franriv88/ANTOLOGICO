@@ -1,5 +1,8 @@
 {
-  "buildCommand": "pnpm build:demo",
+  "buildCommand": "pnpm --filter @antologico/web-tenant build:demo",
   "outputDirectory": "apps/web-tenant/dist",
-  "installCommand": "pnpm install"
+  "installCommand": "npm install -g pnpm@9.15.4 && pnpm install",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }

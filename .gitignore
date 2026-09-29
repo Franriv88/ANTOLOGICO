@@ -38,3 +38,11 @@ ios/
 
 # Archivos de diseño / exportaciones
 *.zip
+
+.vercel
+.env*
+
+# Firebase emulator runtime data
+emulator-data/
+firebase-export-*/
+dataconnect/.dataconnect/pgliteData/

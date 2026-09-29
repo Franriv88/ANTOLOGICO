@@ -830,8 +830,9 @@ export default function EspacioPublico() {
       )}
 
       {/* Footer */}
-      <div className="text-center py-8 text-xs text-[#9B9083] border-t border-[#EDE8DE]">
-        Powered by <span className="font-semibold">Antológico</span>
+      <div className="text-center py-8 text-xs text-[#9B9083] border-t border-[#EDE8DE] flex flex-col items-center gap-2">
+        <Link to="/mis-reservas" className="text-[#E85D4A] hover:underline font-medium">Ver todas mis reservas →</Link>
+        <span>Powered by <span className="font-semibold">Antológico</span></span>
       </div>
     </div>
   );
