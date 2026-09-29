@@ -304,7 +304,7 @@ function CompartirEspacio({ espacio }) {
   }
 
   return (
-    <div className="border-t border-border pt-6">
+    <div>
       <h3 className="text-sm font-semibold text-ink mb-0.5">Compartir tu espacio</h3>
       <p className="text-xs text-ink-muted mb-5">Esta es la URL pública que podés compartir con tus clientes para que vean y reserven tus talleres.</p>
 
@@ -490,36 +490,40 @@ function TabEspacio({ espacio, refresh }) {
   }
 
   return (
-    <div className="flex flex-col gap-8 max-w-lg">
-      {/* ── Datos del espacio ── */}
-      <form onSubmit={handleSave} className="flex flex-col gap-5">
-        <div>
-          <label className={LABEL_CLS}>Nombre del espacio *</label>
-          <input type="text" value={nombre} onChange={e => setNombre(e.target.value)} className={INPUT_CLS} placeholder="Ej: Estudio Coral" />
-        </div>
-        <div>
-          <label className={LABEL_CLS}>Rubro</label>
-          <select value={rubroId} onChange={e => { setRubroId(e.target.value); setRubroPers(''); }} className={INPUT_CLS}>
-            <option value="">Otro / Sin categoría</option>
-            {rubros.map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
-          </select>
-          {!rubroId && (
-            <input type="text" value={rubroPersonalizado} onChange={e => setRubroPers(e.target.value)}
-              placeholder="Describí el rubro de tu espacio" className={INPUT_CLS + ' mt-2'} />
-          )}
-        </div>
-        {error && <p className="text-xs text-danger">{error}</p>}
-        <div className="flex items-center gap-3">
-          <button type="submit" disabled={saving}
-            className="px-5 py-2 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary-strong transition-colors disabled:opacity-50">
-            {saving ? 'Guardando…' : 'Guardar cambios'}
-          </button>
-          {saved && <span className="text-xs text-green-600 font-medium">¡Guardado!</span>}
-        </div>
-      </form>
+    <div className="flex flex-col gap-8 max-w-3xl">
+      {/* ── Fila superior: QR + Datos ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        {/* Columna izquierda: Compartir */}
+        <CompartirEspacio espacio={espacio} />
 
-      {/* ── Compartir ── */}
-      <CompartirEspacio espacio={espacio} />
+        {/* Columna derecha: Datos del espacio */}
+        <form onSubmit={handleSave} className="flex flex-col gap-5">
+          <div>
+            <h3 className="text-sm font-semibold text-ink mb-3">Datos del espacio</h3>
+            <label className={LABEL_CLS}>Nombre del espacio *</label>
+            <input type="text" value={nombre} onChange={e => setNombre(e.target.value)} className={INPUT_CLS} placeholder="Ej: Estudio Coral" />
+          </div>
+          <div>
+            <label className={LABEL_CLS}>Rubro</label>
+            <select value={rubroId} onChange={e => { setRubroId(e.target.value); setRubroPers(''); }} className={INPUT_CLS}>
+              <option value="">Otro / Sin categoría</option>
+              {rubros.map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
+            </select>
+            {!rubroId && (
+              <input type="text" value={rubroPersonalizado} onChange={e => setRubroPers(e.target.value)}
+                placeholder="Describí el rubro de tu espacio" className={INPUT_CLS + ' mt-2'} />
+            )}
+          </div>
+          {error && <p className="text-xs text-danger">{error}</p>}
+          <div className="flex items-center gap-3">
+            <button type="submit" disabled={saving}
+              className="px-5 py-2 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary-strong transition-colors disabled:opacity-50">
+              {saving ? 'Guardando…' : 'Guardar cambios'}
+            </button>
+            {saved && <span className="text-xs text-green-600 font-medium">¡Guardado!</span>}
+          </div>
+        </form>
+      </div>
 
       {/* ── Direcciones ── */}
       <div>
