@@ -184,19 +184,65 @@ const NET_K2 = {
   edges:[[0,1],[1,2],[2,3],[3,4],[4,5],[0,6],[6,2],[3,5]],
   center:[155,91]
 };
+const ICONS = {
+  camera:
+    '<rect x="-6" y="-4.5" width="12" height="9" rx="1.5" fill="none" stroke="white" stroke-width="1.4"/>' +
+    '<circle cx="0" cy="0.5" r="2.8" fill="none" stroke="white" stroke-width="1.4"/>' +
+    '<rect x="-2.2" y="-7" width="4.4" height="2.6" rx="1" fill="white"/>',
+  microscope:
+    '<circle cx="0" cy="-6.5" r="1.3" fill="white"/>' +
+    '<line x1="0" y1="-5.2" x2="0" y2="-1" stroke="white" stroke-width="1.4" stroke-linecap="round"/>' +
+    '<path d="M0,-1 L2.5,5" stroke="white" stroke-width="1.4" stroke-linecap="round" fill="none"/>' +
+    '<line x1="-5" y1="7" x2="5" y2="7" stroke="white" stroke-width="1.7" stroke-linecap="round"/>' +
+    '<line x1="0" y1="5" x2="0" y2="7" stroke="white" stroke-width="1.4"/>' +
+    '<line x1="-3" y1="2.5" x2="3.5" y2="2.5" stroke="white" stroke-width="1.2"/>',
+  hourglass:
+    '<path d="M-5.5,-7 H5.5 L0,0 L5.5,7 H-5.5 L0,0 Z" fill="none" stroke="white" stroke-width="1.4" stroke-linejoin="round"/>' +
+    '<line x1="-5.5" y1="-7" x2="5.5" y2="-7" stroke="white" stroke-width="1.7" stroke-linecap="round"/>' +
+    '<line x1="-5.5" y1="7" x2="5.5" y2="7" stroke="white" stroke-width="1.7" stroke-linecap="round"/>' +
+    '<ellipse cx="0" cy="3.5" rx="2.5" ry="1.5" fill="white" opacity="0.7"/>',
+  music:
+    '<ellipse cx="-1.5" cy="5.5" rx="3.5" ry="2.2" transform="rotate(-20,-1.5,5.5)" fill="white"/>' +
+    '<line x1="2" y1="4.5" x2="2" y2="-6" stroke="white" stroke-width="1.5"/>' +
+    '<path d="M2,-6 Q8,-4 6,-1" stroke="white" stroke-width="1.4" fill="none" stroke-linecap="round"/>',
+  gear:
+    '<circle cx="0" cy="0" r="3.2" fill="none" stroke="white" stroke-width="1.5"/>' +
+    '<circle cx="0" cy="0" r="5.6" fill="none" stroke="white" stroke-width="2.8" stroke-dasharray="2.2 2.3"/>',
+  laptop:
+    '<rect x="-7" y="-5.5" width="14" height="9" rx="1.5" fill="none" stroke="white" stroke-width="1.4"/>' +
+    '<line x1="-4.5" y1="-0.5" x2="4.5" y2="-0.5" stroke="white" stroke-width="1.1" opacity="0.75"/>' +
+    '<line x1="-4.5" y1="1.8" x2="1.5" y2="1.8" stroke="white" stroke-width="1.1" opacity="0.75"/>' +
+    '<path d="M-9,3.5 L9,3.5 L10,7 L-10,7 Z" fill="none" stroke="white" stroke-width="1.3" stroke-linejoin="round"/>',
+  tool:
+    '<circle cx="0" cy="-4.5" r="2.8" fill="none" stroke="white" stroke-width="1.5"/>' +
+    '<path d="M-1.5,-2 L-3.5,2 L0,6 L3.5,2 L1.5,-2" stroke="white" stroke-width="1.4" fill="none" stroke-linejoin="round" stroke-linecap="round"/>',
+  chart:
+    '<rect x="-6.5" y="-7" width="13" height="14" rx="1.5" fill="none" stroke="white" stroke-width="1.3"/>' +
+    '<rect x="-5" y="0.5" width="2.5" height="5" rx="0.5" fill="white"/>' +
+    '<rect x="-1.5" y="-3.5" width="2.5" height="8.5" rx="0.5" fill="white"/>' +
+    '<rect x="2" y="-1.5" width="2.5" height="6.5" rx="0.5" fill="white"/>',
+  circuit:
+    '<circle cx="0" cy="0" r="3" fill="none" stroke="white" stroke-width="1.5"/>' +
+    '<circle cx="0" cy="0" r="5.8" fill="none" stroke="white" stroke-width="2.6" stroke-dasharray="2 2.2"/>' +
+    '<circle cx="0" cy="-5.8" r="1.2" fill="white"/>' +
+    '<circle cx="5.8" cy="0" r="1.2" fill="white"/>' +
+    '<circle cx="0" cy="5.8" r="1.2" fill="white"/>' +
+    '<circle cx="-5.8" cy="0" r="1.2" fill="white"/>'
+};
+
 const NET_K3 = {
   dashed:true,
   nodes:[
-    {x:42,  y:60,  i:'⊙', r:11},
-    {x:108, y:40,  i:'✦', r:11},
-    {x:168, y:20,  i:'',  r:4 },
-    {x:200, y:28,  i:'⚗', r:11},
-    {x:258, y:42,  i:'♪', r:11},
-    {x:335, y:38,  i:'⚙', r:11},
-    {x:78,  y:150, i:'☰', r:11},
-    {x:150, y:166, i:'✏', r:11},
-    {x:240, y:162, i:'⊞', r:11},
-    {x:322, y:148, i:'♦', r:11}
+    {x:42,  y:60,  icon:'camera',      r:11},
+    {x:108, y:40,  icon:'microscope',  r:11},
+    {x:168, y:20,  icon:'',            r:4 },
+    {x:200, y:28,  icon:'hourglass',   r:11},
+    {x:258, y:42,  icon:'music',       r:11},
+    {x:335, y:38,  icon:'gear',        r:11},
+    {x:78,  y:150, icon:'laptop',      r:11},
+    {x:150, y:166, icon:'tool',        r:11},
+    {x:240, y:162, icon:'chart',       r:11},
+    {x:322, y:148, icon:'circuit',     r:11}
   ],
   edges:[
     [0,1],[1,2],[2,3],[3,4],[4,5],
@@ -222,14 +268,19 @@ function renderK(svg, net, wm, th) {
     svg.appendChild(ne('line',{x1:na.x,y1:na.y,x2:nb.x,y2:nb.y,stroke:lc,'stroke-width':'1',...da,opacity:'.38'}));
   });
   if (net.center) svg.appendChild(ne('circle',{cx:net.center[0],cy:net.center[1],r:'3',fill:primary}));
-  net.nodes.forEach((n,i) => {
+  net.nodes.forEach((n,idx) => {
     const r = n.r || 9;
-    svg.appendChild(ne('circle',{cx:n.x,cy:n.y,r,fill:i%2===0?primary:accent}));
-    if (n.i) {
+    const fill = idx%2===0 ? primary : accent;
+    const g = ne('g', {transform:`translate(${n.x},${n.y})`});
+    let html = `<circle cx="0" cy="0" r="${r}" fill="${fill}"/>`;
+    if (n.icon && typeof ICONS!=='undefined' && ICONS[n.icon]) {
+      html += ICONS[n.icon].replace(/white/g, it);
+    } else if (n.i) {
       const fs = (r * 0.88).toFixed(1);
-      const t=ne('text',{x:n.x,y:n.y+(r*.36),'text-anchor':'middle',fill:it,'font-size':fs,'font-family':'Arial,sans-serif'});
-      t.textContent=n.i; svg.appendChild(t);
+      html += `<text x="0" y="${(r*.36).toFixed(1)}" text-anchor="middle" fill="${it}" font-size="${fs}" font-family="Arial,sans-serif">${n.i}</text>`;
     }
+    g.innerHTML = html;
+    svg.appendChild(g);
   });
   if (wm) {
     const t=ne('text',{x:wm.x,y:wm.y,'text-anchor':wm.a||'middle',fill:ink,'font-size':wm.sz,'font-family':"'Fraunces','Georgia',serif",'font-weight':'600','letter-spacing':'-0.5'});
