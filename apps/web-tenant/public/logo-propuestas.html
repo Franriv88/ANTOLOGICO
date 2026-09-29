@@ -108,6 +108,33 @@
   </div>
 </div>
 
+<!-- K3 ────────────────────────────────────────────────────────────────────── -->
+<div class="c" onclick="pick(this)">
+  <div class="ch">
+    <div class="ch-l">
+      <h2>K3 — Red envolvente</h2>
+      <p>Los nodos rodean el nombre por completo: la palabra vive dentro de la red, no separada de ella</p>
+    </div>
+    <div class="ck"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+  </div>
+  <div class="pvs">
+    <div class="pv l"><svg id="k3-l" style="width:100%;max-width:280px;height:auto" viewBox="0 0 300 150"></svg></div>
+    <div class="pv d"><svg id="k3-d" style="width:100%;max-width:280px;height:auto" viewBox="0 0 300 150"></svg></div>
+    <div class="pv cr"><svg id="k3-cr" style="width:100%;max-width:280px;height:auto" viewBox="0 0 300 150"></svg></div>
+  </div>
+  <div class="srow">
+    <div class="si"><svg id="k3-lg" style="width:200px;height:auto" viewBox="0 0 300 150"></svg><span>grande</span></div>
+    <div class="si"><svg id="k3-sm" style="width:100px;height:auto" viewBox="0 0 300 150"></svg><span>pequeño</span></div>
+    <div class="si fav-wrap">
+      <div class="fav-row">
+        <div class="si"><svg width="40" height="40" viewBox="0 0 48 48" fill="none"><line x1="24" y1="6" x2="7" y2="42" stroke="#E85D4A" stroke-width="1.5" opacity=".4"/><line x1="24" y1="6" x2="41" y2="42" stroke="#E85D4A" stroke-width="1.5" opacity=".4"/><line x1="15" y1="27" x2="33" y2="27" stroke="#E85D4A" stroke-width="1.5" opacity=".4"/><circle cx="24" cy="6" r="6" fill="#E85D4A"/><circle cx="15" cy="27" r="4.5" fill="#B98527"/><circle cx="33" cy="27" r="4.5" fill="#E85D4A"/><circle cx="7" cy="42" r="5.5" fill="#B98527"/><circle cx="41" cy="42" r="5.5" fill="#E85D4A"/></svg><span>32px</span></div>
+        <div class="si"><svg width="24" height="24" viewBox="0 0 48 48" fill="none"><line x1="24" y1="6" x2="7" y2="42" stroke="#E85D4A" stroke-width="2" opacity=".4"/><line x1="24" y1="6" x2="41" y2="42" stroke="#E85D4A" stroke-width="2" opacity=".4"/><line x1="15" y1="27" x2="33" y2="27" stroke="#E85D4A" stroke-width="2" opacity=".4"/><circle cx="24" cy="6" r="6" fill="#E85D4A"/><circle cx="15" cy="27" r="4.5" fill="#B98527"/><circle cx="33" cy="27" r="4.5" fill="#E85D4A"/><circle cx="7" cy="42" r="5.5" fill="#B98527"/><circle cx="41" cy="42" r="5.5" fill="#E85D4A"/></svg><span>16px</span></div>
+      </div>
+      <span>favicon</span>
+    </div>
+  </div>
+</div>
+
 <!-- P ─────────────────────────────────────────────────────────────────────── -->
 <div class="c" onclick="pick(this)">
   <div class="ch">
@@ -157,6 +184,25 @@ const NET_K2 = {
   edges:[[0,1],[1,2],[2,3],[3,4],[4,5],[0,6],[6,2],[3,5]],
   center:[155,91]
 };
+const NET_K3 = {
+  dashed:true,
+  nodes:[
+    {x:78, y:12, i:'♪'},
+    {x:148,y:8,  i:'⊙'},
+    {x:215,y:18, i:'✦'},
+    {x:264,y:48, i:'⚙'},
+    {x:272,y:90, i:'⚗'},
+    {x:218,y:130,i:'☰'},
+    {x:148,y:140,i:'✏'},
+    {x:62, y:130,i:'⊞'},
+    {x:18, y:84, i:'♦'}
+  ],
+  edges:[
+    [0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,0],
+    [0,3],[1,7],[2,6],[1,4],[3,8]
+  ],
+  center:[148,74]
+};
 const NET_P = {
   nodes:[{x:22,y:20,i:'♪'},{x:58,y:38,i:'⚙'},{x:22,y:60,i:'✏'},{x:58,y:78,i:'✦'}],
   edges:[[0,1],[1,2],[2,3],[0,2],[1,3]]
@@ -188,10 +234,12 @@ function renderK(svg, net, wm, th) {
 
 const WM_K  = {x:150,y:106,sz:44,a:'middle'};
 const WM_K2 = {x:150,y:44, sz:42,a:'middle'};
+const WM_K3 = {x:150,y:82, sz:42,a:'middle'};
 const WM_P  = {x:82, y:72, sz:46,a:'start'};
 
 [['k',  NET_K,  WM_K,  [116]],
  ['k2', NET_K2, WM_K2, [122]],
+ ['k3', NET_K3, WM_K3, [150]],
  ['p',  NET_P,  WM_P,  [100]]
 ].forEach(([pfx, net, wm]) => {
   ['l','d','cr','lg','sm'].forEach(s => {
