@@ -1,0 +1,216 @@
+<title>Antológico — Propuestas de Logo</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  :root{--coral:#E85D4A;--ocre:#B98527;--cream:#FAF7F2;--ink:#2B241A;--muted:#6B5F4C;--border:#D2C4A8;--bg:#FAF7F2;--card:#FFFFFF;--parchment:#EFE9DC;color-scheme:light}
+  @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1A1611;--card:#251F18;--ink:#EFE9DC;--muted:#9B9083;--border:rgba(255,255,255,.1);--parchment:#2D251C;color-scheme:dark}}
+  :root[data-theme="dark"]{--bg:#1A1611;--card:#251F18;--ink:#EFE9DC;--muted:#9B9083;--border:rgba(255,255,255,.1);--parchment:#2D251C;color-scheme:dark}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--ink);padding:28px 16px 72px;min-height:100vh}
+  header{max-width:720px;margin:0 auto 36px;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .title{font-family:'Fraunces',serif;font-size:1.15rem;font-weight:600;letter-spacing:-.01em}
+  .sub{font-size:.72rem;color:var(--muted);margin-top:4px;line-height:1.5}
+  .toggle{display:flex;gap:4px;background:var(--parchment);border-radius:8px;padding:4px;border:1px solid var(--border);flex-shrink:0}
+  .toggle button{background:none;border:none;cursor:pointer;padding:4px 11px;border-radius:5px;font-size:.7rem;font-weight:600;color:var(--muted);font-family:inherit;transition:all .12s}
+  .toggle button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+
+  .grid{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+
+  .c{background:var(--card);border:1.5px solid var(--border);border-radius:20px;overflow:hidden;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+  .c:hover{border-color:#B98527;box-shadow:0 0 0 3px rgba(185,133,39,.08)}
+  .c.sel{border-color:var(--coral);box-shadow:0 0 0 4px rgba(232,93,74,.12)}
+
+  .ch{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .ch-l h2{font-size:.82rem;font-weight:600}
+  .ch-l p{font-size:.68rem;color:var(--muted);margin-top:2px;line-height:1.45;max-width:420px}
+  .ck{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .12s}
+  .c.sel .ck{background:var(--coral);border-color:var(--coral)}
+  .ck svg{display:none}.c.sel .ck svg{display:block}
+
+  .pvs{display:flex}
+  .pv{flex:1;display:flex;align-items:center;justify-content:center;padding:24px 10px;min-height:160px}
+  .pv+.pv{border-left:1px solid var(--border)}
+  .pv.l{background:#FAF7F2}.pv.d{background:#1A1611}.pv.cr{background:#E85D4A}
+
+  .srow{display:flex;align-items:flex-end;gap:20px;padding:18px 20px;border-top:1px solid var(--border);background:var(--parchment);flex-wrap:wrap}
+  .si{display:flex;flex-direction:column;align-items:center;gap:5px}
+  .si span{font-size:.58rem;color:var(--muted);font-family:monospace;text-transform:uppercase;letter-spacing:.05em}
+  .si.fav-wrap{display:flex;flex-direction:column;align-items:center;gap:10px}
+  .fav-row{display:flex;align-items:flex-end;gap:10px}
+
+  .pill{display:inline-block;font-size:.62rem;font-weight:600;background:var(--coral);color:#fff;padding:2px 8px;border-radius:99px;margin-left:8px;vertical-align:middle}
+</style>
+
+<header>
+  <div>
+    <div class="title">Antológico <span style="color:var(--muted);font-weight:400;font-size:.85rem">— propuestas de logo</span></div>
+    <div class="sub">3 conceptos finalistas · Red de Conocimiento</div>
+  </div>
+  <div class="toggle">
+    <button class="on" onclick="setTheme('light',this)">Claro</button>
+    <button onclick="setTheme('dark',this)">Oscuro</button>
+    <button onclick="setTheme('system',this)">Sistema</button>
+  </div>
+</header>
+
+<div class="grid">
+
+<!-- K ─────────────────────────────────────────────────────────────────────── -->
+<div class="c" onclick="pick(this)">
+  <div class="ch">
+    <div class="ch-l">
+      <h2>K — Red arriba</h2>
+      <p>La red de rubros introduce al nombre: la plataforma como punto de encuentro visible desde el primer vistazo</p>
+    </div>
+    <div class="ck"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+  </div>
+  <div class="pvs">
+    <div class="pv l"><svg id="k-l" style="width:100%;max-width:280px;height:auto" viewBox="0 0 300 116"></svg></div>
+    <div class="pv d"><svg id="k-d" style="width:100%;max-width:280px;height:auto" viewBox="0 0 300 116"></svg></div>
+    <div class="pv cr"><svg id="k-cr" style="width:100%;max-width:280px;height:auto" viewBox="0 0 300 116"></svg></div>
+  </div>
+  <div class="srow">
+    <div class="si"><svg id="k-lg" style="width:200px;height:auto" viewBox="0 0 300 116"></svg><span>grande</span></div>
+    <div class="si"><svg id="k-sm" style="width:100px;height:auto" viewBox="0 0 300 116"></svg><span>pequeño</span></div>
+    <div class="si fav-wrap">
+      <div class="fav-row">
+        <div class="si"><svg width="40" height="40" viewBox="0 0 48 48" fill="none"><line x1="24" y1="6" x2="7" y2="42" stroke="#E85D4A" stroke-width="1.5" opacity=".4"/><line x1="24" y1="6" x2="41" y2="42" stroke="#E85D4A" stroke-width="1.5" opacity=".4"/><line x1="15" y1="27" x2="33" y2="27" stroke="#E85D4A" stroke-width="1.5" opacity=".4"/><circle cx="24" cy="6" r="6" fill="#E85D4A"/><circle cx="15" cy="27" r="4.5" fill="#B98527"/><circle cx="33" cy="27" r="4.5" fill="#E85D4A"/><circle cx="7" cy="42" r="5.5" fill="#B98527"/><circle cx="41" cy="42" r="5.5" fill="#E85D4A"/></svg><span>32px</span></div>
+        <div class="si"><svg width="24" height="24" viewBox="0 0 48 48" fill="none"><line x1="24" y1="6" x2="7" y2="42" stroke="#E85D4A" stroke-width="2" opacity=".4"/><line x1="24" y1="6" x2="41" y2="42" stroke="#E85D4A" stroke-width="2" opacity=".4"/><line x1="15" y1="27" x2="33" y2="27" stroke="#E85D4A" stroke-width="2" opacity=".4"/><circle cx="24" cy="6" r="6" fill="#E85D4A"/><circle cx="15" cy="27" r="4.5" fill="#B98527"/><circle cx="33" cy="27" r="4.5" fill="#E85D4A"/><circle cx="7" cy="42" r="5.5" fill="#B98527"/><circle cx="41" cy="42" r="5.5" fill="#E85D4A"/></svg><span>16px</span></div>
+      </div>
+      <span>favicon</span>
+    </div>
+  </div>
+</div>
+
+<!-- K2 ────────────────────────────────────────────────────────────────────── -->
+<div class="c" onclick="pick(this)">
+  <div class="ch">
+    <div class="ch-l">
+      <h2>K2 — Red abajo</h2>
+      <p>El nombre va primero con autoridad y la red fluye debajo como firma: el saber que sostiene a cada profesional</p>
+    </div>
+    <div class="ck"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+  </div>
+  <div class="pvs">
+    <div class="pv l"><svg id="k2-l" style="width:100%;max-width:280px;height:auto" viewBox="0 0 300 122"></svg></div>
+    <div class="pv d"><svg id="k2-d" style="width:100%;max-width:280px;height:auto" viewBox="0 0 300 122"></svg></div>
+    <div class="pv cr"><svg id="k2-cr" style="width:100%;max-width:280px;height:auto" viewBox="0 0 300 122"></svg></div>
+  </div>
+  <div class="srow">
+    <div class="si"><svg id="k2-lg" style="width:200px;height:auto" viewBox="0 0 300 122"></svg><span>grande</span></div>
+    <div class="si"><svg id="k2-sm" style="width:100px;height:auto" viewBox="0 0 300 122"></svg><span>pequeño</span></div>
+    <div class="si fav-wrap">
+      <div class="fav-row">
+        <div class="si"><svg width="40" height="40" viewBox="0 0 48 48" fill="none"><line x1="24" y1="6" x2="7" y2="42" stroke="#E85D4A" stroke-width="1.5" opacity=".4"/><line x1="24" y1="6" x2="41" y2="42" stroke="#E85D4A" stroke-width="1.5" opacity=".4"/><line x1="15" y1="27" x2="33" y2="27" stroke="#E85D4A" stroke-width="1.5" opacity=".4"/><circle cx="24" cy="6" r="6" fill="#E85D4A"/><circle cx="15" cy="27" r="4.5" fill="#B98527"/><circle cx="33" cy="27" r="4.5" fill="#E85D4A"/><circle cx="7" cy="42" r="5.5" fill="#B98527"/><circle cx="41" cy="42" r="5.5" fill="#E85D4A"/></svg><span>32px</span></div>
+        <div class="si"><svg width="24" height="24" viewBox="0 0 48 48" fill="none"><line x1="24" y1="6" x2="7" y2="42" stroke="#E85D4A" stroke-width="2" opacity=".4"/><line x1="24" y1="6" x2="41" y2="42" stroke="#E85D4A" stroke-width="2" opacity=".4"/><line x1="15" y1="27" x2="33" y2="27" stroke="#E85D4A" stroke-width="2" opacity=".4"/><circle cx="24" cy="6" r="6" fill="#E85D4A"/><circle cx="15" cy="27" r="4.5" fill="#B98527"/><circle cx="33" cy="27" r="4.5" fill="#E85D4A"/><circle cx="7" cy="42" r="5.5" fill="#B98527"/><circle cx="41" cy="42" r="5.5" fill="#E85D4A"/></svg><span>16px</span></div>
+      </div>
+      <span>favicon</span>
+    </div>
+  </div>
+</div>
+
+<!-- P ─────────────────────────────────────────────────────────────────────── -->
+<div class="c" onclick="pick(this)">
+  <div class="ch">
+    <div class="ch-l">
+      <h2>P — Composición lateral</h2>
+      <p>El cluster de nodos como insignia a la izquierda, el nombre extendido a la derecha: asimétrico, contemporáneo, escalable</p>
+    </div>
+    <div class="ck"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+  </div>
+  <div class="pvs">
+    <div class="pv l"><svg id="p-l" style="width:100%;max-width:340px;height:auto" viewBox="0 0 350 100"></svg></div>
+    <div class="pv d"><svg id="p-d" style="width:100%;max-width:340px;height:auto" viewBox="0 0 350 100"></svg></div>
+    <div class="pv cr"><svg id="p-cr" style="width:100%;max-width:340px;height:auto" viewBox="0 0 350 100"></svg></div>
+  </div>
+  <div class="srow">
+    <div class="si"><svg id="p-lg" style="width:220px;height:auto" viewBox="0 0 350 100"></svg><span>grande</span></div>
+    <div class="si"><svg id="p-sm" style="width:110px;height:auto" viewBox="0 0 350 100"></svg><span>pequeño</span></div>
+    <div class="si fav-wrap">
+      <div class="fav-row">
+        <div class="si"><svg width="40" height="40" viewBox="0 0 48 48" fill="none"><line x1="24" y1="6" x2="7" y2="42" stroke="#E85D4A" stroke-width="1.5" opacity=".4"/><line x1="24" y1="6" x2="41" y2="42" stroke="#E85D4A" stroke-width="1.5" opacity=".4"/><line x1="15" y1="27" x2="33" y2="27" stroke="#E85D4A" stroke-width="1.5" opacity=".4"/><circle cx="24" cy="6" r="6" fill="#E85D4A"/><circle cx="15" cy="27" r="4.5" fill="#B98527"/><circle cx="33" cy="27" r="4.5" fill="#E85D4A"/><circle cx="7" cy="42" r="5.5" fill="#B98527"/><circle cx="41" cy="42" r="5.5" fill="#E85D4A"/></svg><span>32px</span></div>
+        <div class="si"><svg width="24" height="24" viewBox="0 0 48 48" fill="none"><line x1="24" y1="6" x2="7" y2="42" stroke="#E85D4A" stroke-width="2" opacity=".4"/><line x1="24" y1="6" x2="41" y2="42" stroke="#E85D4A" stroke-width="2" opacity=".4"/><line x1="15" y1="27" x2="33" y2="27" stroke="#E85D4A" stroke-width="2" opacity=".4"/><circle cx="24" cy="6" r="6" fill="#E85D4A"/><circle cx="15" cy="27" r="4.5" fill="#B98527"/><circle cx="33" cy="27" r="4.5" fill="#E85D4A"/><circle cx="7" cy="42" r="5.5" fill="#B98527"/><circle cx="41" cy="42" r="5.5" fill="#E85D4A"/></svg><span>16px</span></div>
+      </div>
+      <span>favicon</span>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+const NS = 'http://www.w3.org/2000/svg';
+function ne(tag, a) {
+  const e = document.createElementNS(NS, tag);
+  for (const [k,v] of Object.entries(a)) e.setAttribute(k, String(v));
+  return e;
+}
+
+const NET_K = {
+  dashed:true,
+  nodes:[{x:50,y:26,i:'♪'},{x:95,y:14,i:'⊙'},{x:150,y:11,i:'✦'},{x:205,y:18,i:'⚙'},{x:248,y:28,i:'⚗'},{x:232,y:60,i:'☰'},{x:68,y:60,i:'✏'}],
+  edges:[[0,1],[1,2],[2,3],[3,4],[4,5],[0,6],[6,2],[3,5]],
+  center:[155,42]
+};
+const NET_K2 = {
+  dashed:true,
+  nodes:[{x:50,y:75,i:'♪'},{x:95,y:63,i:'⊙'},{x:150,y:60,i:'✦'},{x:205,y:67,i:'⚙'},{x:248,y:77,i:'⚗'},{x:232,y:109,i:'☰'},{x:68,y:109,i:'✏'}],
+  edges:[[0,1],[1,2],[2,3],[3,4],[4,5],[0,6],[6,2],[3,5]],
+  center:[155,91]
+};
+const NET_P = {
+  nodes:[{x:22,y:20,i:'♪'},{x:58,y:38,i:'⚙'},{x:22,y:60,i:'✏'},{x:58,y:78,i:'✦'}],
+  edges:[[0,1],[1,2],[2,3],[0,2],[1,3]]
+};
+
+function renderK(svg, net, wm, th) {
+  const ink     = th==='d'  ? '#EFE9DC' : th==='cr' ? '#fff'                : '#2B241A';
+  const primary = th==='cr' ? 'rgba(255,255,255,.88)' : '#E85D4A';
+  const accent  = th==='cr' ? 'rgba(255,255,255,.6)'  : '#B98527';
+  const lc      = th==='cr' ? 'rgba(255,255,255,.38)' : '#E85D4A';
+  const it      = th==='cr' ? '#E85D4A' : '#fff';
+  const da      = net.dashed ? {'stroke-dasharray':'3 2'} : {};
+
+  net.edges.forEach(([a,b]) => {
+    const na=net.nodes[a], nb=net.nodes[b];
+    svg.appendChild(ne('line',{x1:na.x,y1:na.y,x2:nb.x,y2:nb.y,stroke:lc,'stroke-width':'1',...da,opacity:'.38'}));
+  });
+  if (net.center) svg.appendChild(ne('circle',{cx:net.center[0],cy:net.center[1],r:'3',fill:primary}));
+  net.nodes.forEach((n,i) => {
+    svg.appendChild(ne('circle',{cx:n.x,cy:n.y,r:'9',fill:i%2===0?primary:accent}));
+    const t=ne('text',{x:n.x,y:n.y+3.5,'text-anchor':'middle',fill:it,'font-size':'9.5','font-family':'Arial,sans-serif'});
+    t.textContent=n.i; svg.appendChild(t);
+  });
+  if (wm) {
+    const t=ne('text',{x:wm.x,y:wm.y,'text-anchor':wm.a||'middle',fill:ink,'font-size':wm.sz,'font-family':"'Fraunces','Georgia',serif",'font-weight':'600','letter-spacing':'-0.5'});
+    t.textContent='Antológico'; svg.appendChild(t);
+  }
+}
+
+const WM_K  = {x:150,y:106,sz:44,a:'middle'};
+const WM_K2 = {x:150,y:44, sz:42,a:'middle'};
+const WM_P  = {x:82, y:72, sz:46,a:'start'};
+
+[['k',  NET_K,  WM_K,  [116]],
+ ['k2', NET_K2, WM_K2, [122]],
+ ['p',  NET_P,  WM_P,  [100]]
+].forEach(([pfx, net, wm]) => {
+  ['l','d','cr','lg','sm'].forEach(s => {
+    const el = document.getElementById(`${pfx}-${s}`);
+    if (!el) return;
+    const th = s==='d' ? 'd' : s==='cr' ? 'cr' : 'l';
+    renderK(el, net, wm, th);
+  });
+});
+
+function pick(el) {
+  document.querySelectorAll('.c').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+}
+function setTheme(t,btn) {
+  document.querySelectorAll('.toggle button').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  t==='system'
+    ? document.documentElement.removeAttribute('data-theme')
+    : document.documentElement.setAttribute('data-theme',t);
+}
+</script>
