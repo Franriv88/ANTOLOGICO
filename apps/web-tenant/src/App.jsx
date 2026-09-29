@@ -18,6 +18,29 @@ function RequireAuth({ children }) {
   return user ? children : <Navigate to="/login" replace />;
 }
 
+function RequireDesktop({ children }) {
+  const isMobile = window.matchMedia('(max-width: 768px)').matches;
+  if (!isMobile) return children;
+  return (
+    <div className="min-h-screen bg-[#FAF7F2] flex items-center justify-center p-6 text-center">
+      <div>
+        <div className="w-16 h-16 rounded-2xl bg-[#E85D4A]/10 flex items-center justify-center mx-auto mb-5">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#E85D4A" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+          </svg>
+        </div>
+        <h1 className="font-display text-xl text-[#1A1611] mb-2">Abrí el panel desde tu computadora</h1>
+        <p className="text-sm text-[#6B5F4C] mb-6 max-w-xs mx-auto">
+          El panel de gestión está optimizado para pantallas grandes. Usá una computadora o tablet para gestionar tus talleres.
+        </p>
+        <a href="/mis-reservas" className="text-sm text-[#E85D4A] hover:underline">
+          ¿Sos alumno? Ver mis reservas →
+        </a>
+      </div>
+    </div>
+  );
+}
+
 // Redirige al onboarding si el profesional no tiene espacios todavía
 function RequireEspacio({ children }) {
   const { activeEspacio, loading } = useEspacio();
@@ -40,36 +63,36 @@ export default function App() {
             {/* Onboarding — requiere auth pero aún no tiene espacio */}
             <Route
               path="/onboarding"
-              element={<RequireAuth><Onboarding /></RequireAuth>}
+              element={<RequireDesktop><RequireAuth><Onboarding /></RequireAuth></RequireDesktop>}
             />
 
             {/* Panel del tenant — requiere auth + al menos un espacio */}
             <Route
               path="/workshops"
-              element={<RequireAuth><RequireEspacio><Workshops /></RequireEspacio></RequireAuth>}
+              element={<RequireDesktop><RequireAuth><RequireEspacio><Workshops /></RequireEspacio></RequireAuth></RequireDesktop>}
             />
             <Route
               path="/workshops/nuevo"
-              element={<RequireAuth><RequireEspacio><WorkshopForm /></RequireEspacio></RequireAuth>}
+              element={<RequireDesktop><RequireAuth><RequireEspacio><WorkshopForm /></RequireEspacio></RequireAuth></RequireDesktop>}
             />
             <Route
               path="/workshops/:id/editar"
-              element={<RequireAuth><RequireEspacio><WorkshopForm /></RequireEspacio></RequireAuth>}
+              element={<RequireDesktop><RequireAuth><RequireEspacio><WorkshopForm /></RequireEspacio></RequireAuth></RequireDesktop>}
             />
 
             <Route
               path="/reservas"
-              element={<RequireAuth><RequireEspacio><Reservas /></RequireEspacio></RequireAuth>}
+              element={<RequireDesktop><RequireAuth><RequireEspacio><Reservas /></RequireEspacio></RequireAuth></RequireDesktop>}
             />
 
             <Route
               path="/reportes"
-              element={<RequireAuth><RequireEspacio><Reportes /></RequireEspacio></RequireAuth>}
+              element={<RequireDesktop><RequireAuth><RequireEspacio><Reportes /></RequireEspacio></RequireAuth></RequireDesktop>}
             />
 
             <Route
               path="/config"
-              element={<RequireAuth><RequireEspacio><Configuracion /></RequireEspacio></RequireAuth>}
+              element={<RequireDesktop><RequireAuth><RequireEspacio><Configuracion /></RequireEspacio></RequireAuth></RequireDesktop>}
             />
 
             {/* Fallback */}
