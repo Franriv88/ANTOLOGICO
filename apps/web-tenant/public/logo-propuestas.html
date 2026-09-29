@@ -118,13 +118,13 @@
     <div class="ck"><svg width="10" height="10" viewBox="0 0 12 12" fill="none"><polyline points="2 6 5 9 10 3" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
   </div>
   <div class="pvs">
-    <div class="pv l"><svg id="k3-l" style="width:100%;max-width:340px;height:auto" viewBox="0 0 380 180"></svg></div>
-    <div class="pv d"><svg id="k3-d" style="width:100%;max-width:340px;height:auto" viewBox="0 0 380 180"></svg></div>
-    <div class="pv cr"><svg id="k3-cr" style="width:100%;max-width:340px;height:auto" viewBox="0 0 380 180"></svg></div>
+    <div class="pv l"><svg id="k3-l" style="width:100%;max-width:600px;height:auto" viewBox="0 0 760 433"></svg></div>
+    <div class="pv d"><svg id="k3-d" style="width:100%;max-width:600px;height:auto" viewBox="0 0 760 433"></svg></div>
+    <div class="pv cr"><svg id="k3-cr" style="width:100%;max-width:600px;height:auto" viewBox="0 0 760 433"></svg></div>
   </div>
   <div class="srow">
-    <div class="si"><svg id="k3-lg" style="width:220px;height:auto" viewBox="0 0 380 180"></svg><span>grande</span></div>
-    <div class="si"><svg id="k3-sm" style="width:110px;height:auto" viewBox="0 0 380 180"></svg><span>pequeño</span></div>
+    <div class="si"><svg id="k3-lg" style="width:380px;height:auto" viewBox="0 0 760 433"></svg><span>grande</span></div>
+    <div class="si"><svg id="k3-sm" style="width:190px;height:auto" viewBox="0 0 760 433"></svg><span>pequeño</span></div>
     <div class="si fav-wrap">
       <div class="fav-row">
         <div class="si"><svg width="40" height="40" viewBox="0 0 48 48" fill="none"><line x1="24" y1="6" x2="7" y2="42" stroke="#E85D4A" stroke-width="1.5" opacity=".4"/><line x1="24" y1="6" x2="41" y2="42" stroke="#E85D4A" stroke-width="1.5" opacity=".4"/><line x1="15" y1="27" x2="33" y2="27" stroke="#E85D4A" stroke-width="1.5" opacity=".4"/><circle cx="24" cy="6" r="6" fill="#E85D4A"/><circle cx="15" cy="27" r="4.5" fill="#B98527"/><circle cx="33" cy="27" r="4.5" fill="#E85D4A"/><circle cx="7" cy="42" r="5.5" fill="#B98527"/><circle cx="41" cy="42" r="5.5" fill="#E85D4A"/></svg><span>32px</span></div>
@@ -230,24 +230,30 @@ const ICONS = {
     '<circle cx="-5.8" cy="0" r="1.2" fill="white"/>'
 };
 
+// K3: Red Envolvente — trazado del layout de la imagen de referencia (760×433)
+// Nodos: 0=cámara, 1=microscopio, 2=reloj de arena, 3=música, 4=engranaje,
+//        5=laptop, 6=herramienta, 7=gráfico, 8=circuito, 9=punto hub
 const NET_K3 = {
   dashed:true,
   nodes:[
-    {x:42,  y:60,  icon:'camera',      r:11},
-    {x:108, y:40,  icon:'microscope',  r:11},
-    {x:168, y:20,  icon:'',            r:4 },
-    {x:200, y:28,  icon:'hourglass',   r:11},
-    {x:258, y:42,  icon:'music',       r:11},
-    {x:335, y:38,  icon:'gear',        r:11},
-    {x:78,  y:150, icon:'laptop',      r:11},
-    {x:150, y:166, icon:'tool',        r:11},
-    {x:240, y:162, icon:'chart',       r:11},
-    {x:322, y:148, icon:'circuit',     r:11}
+    {x:130, y:172, icon:'camera',      r:22},  // 0 izq-centro
+    {x:238, y:220, icon:'microscope',  r:22},  // 1 izq interior
+    {x:330, y:60,  icon:'hourglass',   r:22},  // 2 arriba centro
+    {x:445, y:106, icon:'music',       r:22},  // 3 arriba derecha
+    {x:600, y:82,  icon:'gear',        r:22},  // 4 arriba derecha
+    {x:130, y:318, icon:'laptop',      r:22},  // 5 abajo izquierda
+    {x:265, y:358, icon:'tool',        r:22},  // 6 abajo centro-izq
+    {x:435, y:340, icon:'chart',       r:22},  // 7 abajo centro-der
+    {x:615, y:293, icon:'circuit',     r:22},  // 8 abajo derecha
+    {x:348, y:128, icon:'',            r:5 }   // 9 punto hub
   ],
   edges:[
-    [0,1],[1,2],[2,3],[3,4],[4,5],
-    [0,6],[1,6],[1,7],[2,7],[3,8],[5,9],
-    [6,7],[7,8],[8,9]
+    [0,1],[0,5],
+    [1,5],[1,6],[1,9],
+    [9,2],[9,3],[2,3],
+    [3,4],[3,7],
+    [4,8],
+    [5,6],[6,7],[7,8]
   ]
 };
 const NET_P = {
@@ -263,34 +269,42 @@ function renderK(svg, net, wm, th) {
   const it      = th==='cr' ? '#E85D4A' : '#fff';
   const da      = net.dashed ? {'stroke-dasharray':'3 2'} : {};
 
+  const sw = net.dashed ? '1.2' : '1';
   net.edges.forEach(([a,b]) => {
     const na=net.nodes[a], nb=net.nodes[b];
-    svg.appendChild(ne('line',{x1:na.x,y1:na.y,x2:nb.x,y2:nb.y,stroke:lc,'stroke-width':'1',...da,opacity:'.38'}));
+    svg.appendChild(ne('line',{x1:na.x,y1:na.y,x2:nb.x,y2:nb.y,stroke:lc,'stroke-width':sw,...da,opacity:'.42'}));
   });
   if (net.center) svg.appendChild(ne('circle',{cx:net.center[0],cy:net.center[1],r:'3',fill:primary}));
-  net.nodes.forEach((n,idx) => {
-    const r = n.r || 9;
-    const fill = idx%2===0 ? primary : accent;
-    const g = ne('g', {transform:`translate(${n.x},${n.y})`});
-    let html = `<circle cx="0" cy="0" r="${r}" fill="${fill}"/>`;
-    if (n.icon && typeof ICONS!=='undefined' && ICONS[n.icon]) {
-      html += ICONS[n.icon].replace(/white/g, it);
-    } else if (n.i) {
-      const fs = (r * 0.88).toFixed(1);
-      html += `<text x="0" y="${(r*.36).toFixed(1)}" text-anchor="middle" fill="${it}" font-size="${fs}" font-family="Arial,sans-serif">${n.i}</text>`;
-    }
-    g.innerHTML = html;
-    svg.appendChild(g);
-  });
-  if (wm) {
+
+  function drawWM() {
+    if (!wm) return;
     const t=ne('text',{x:wm.x,y:wm.y,'text-anchor':wm.a||'middle',fill:ink,'font-size':wm.sz,'font-family':"'Fraunces','Georgia',serif",'font-weight':'600','letter-spacing':'-0.5'});
     t.textContent='Antológico'; svg.appendChild(t);
   }
+  function drawNodes() {
+    net.nodes.forEach((n,idx) => {
+      const r = n.r || 9;
+      const fill = idx%2===0 ? primary : accent;
+      const g = ne('g', {transform:`translate(${n.x},${n.y})`});
+      let html = `<circle cx="0" cy="0" r="${r}" fill="${fill}"/>`;
+      if (n.icon && typeof ICONS!=='undefined' && ICONS[n.icon]) {
+        const sc = r > 14 ? (r/11).toFixed(3) : '1';
+        html += `<g transform="scale(${sc})">${ICONS[n.icon].replace(/white/g, it)}</g>`;
+      } else if (n.i) {
+        const fs = (r * 0.88).toFixed(1);
+        html += `<text x="0" y="${(r*.36).toFixed(1)}" text-anchor="middle" fill="${it}" font-size="${fs}" font-family="Arial,sans-serif">${n.i}</text>`;
+      }
+      g.innerHTML = html;
+      svg.appendChild(g);
+    });
+  }
+
+  if (wm && wm.first) { drawWM(); drawNodes(); } else { drawNodes(); drawWM(); }
 }
 
 const WM_K  = {x:150,y:106,sz:44,a:'middle'};
 const WM_K2 = {x:150,y:44, sz:42,a:'middle'};
-const WM_K3 = {x:190,y:135,sz:58,a:'middle'};
+const WM_K3 = {x:380,y:275,sz:122,a:'middle',first:true};
 const WM_P  = {x:82, y:72, sz:46,a:'start'};
 
 [['k',  NET_K,  WM_K,  [116]],
