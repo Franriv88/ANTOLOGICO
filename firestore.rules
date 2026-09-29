@@ -16,6 +16,15 @@ service cloud.firestore {
     match /demo_meta/{id} {
       allow read, write: if true;
     }
+    match /demo_planes/{id} {
+      allow read, write: if true;
+    }
+    match /demo_usuarios/{id} {
+      allow read, write: if true;
+    }
+    match /sa_admins/{id} {
+      allow read, write: if true;
+    }
 
     // Todo lo demás: denegado por defecto.
     match /{document=**} {
