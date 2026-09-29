@@ -1,0 +1,31 @@
+<svg viewBox="0 0 816 497" xmlns="http://www.w3.org/2000/svg">
+  <!-- aristas -->
+  <g stroke="#A8907E" stroke-width="2.8" stroke-linecap="round" stroke-dasharray="0.1 6.5" fill="none" opacity="0.65">
+    <line x1="256" y1="108" x2="392" y2="128"/><line x1="256" y1="108" x2="184" y2="190"/>
+    <line x1="256" y1="108" x2="315" y2="198"/><line x1="184" y1="190" x2="315" y2="198"/>
+    <line x1="315" y1="198" x2="392" y2="128"/><line x1="392" y1="128" x2="522" y2="190"/>
+    <line x1="522" y1="190" x2="656" y2="158"/><line x1="184" y1="190" x2="140" y2="238"/>
+    <line x1="315" y1="198" x2="268" y2="240"/><line x1="392" y1="128" x2="400" y2="235"/>
+    <line x1="522" y1="190" x2="548" y2="238"/><line x1="656" y1="158" x2="712" y2="244"/>
+    <line x1="213" y1="413" x2="150" y2="345"/><line x1="213" y1="413" x2="365" y2="445"/>
+    <line x1="365" y1="445" x2="322" y2="348"/><line x1="365" y1="445" x2="446" y2="392"/>
+    <line x1="446" y1="392" x2="430" y2="348"/><line x1="446" y1="392" x2="561" y2="428"/>
+    <line x1="561" y1="428" x2="598" y2="350"/><line x1="561" y1="428" x2="692" y2="390"/>
+    <line x1="692" y1="390" x2="740" y2="345"/>
+  </g>
+  <!-- wordmark -->
+  <text x="78" y="335" fill="#F4ECE1" font-family="'Playfair Display',Georgia,serif" font-weight="600" font-size="134" textLength="672" lengthAdjust="spacing">Antológico</text>
+  <!-- hubs -->
+  <circle cx="256" cy="108" r="6" fill="#B8923A"/>
+  <circle cx="446" cy="392" r="6" fill="#B8923A"/>
+  <!-- nodos -->
+  <circle cx="392" cy="128" r="29" fill="#E35D4A"/>
+  <circle cx="184" cy="190" r="29" fill="#E35D4A"/>
+  <circle cx="315" cy="198" r="29" fill="#B98527"/>
+  <circle cx="522" cy="190" r="29" fill="#B98527"/>
+  <circle cx="656" cy="158" r="29" fill="#E35D4A"/>
+  <circle cx="213" cy="413" r="29" fill="#B98527"/>
+  <circle cx="365" cy="445" r="29" fill="#E35D4A"/>
+  <circle cx="561" cy="428" r="29" fill="#B98527"/>
+  <circle cx="692" cy="390" r="29" fill="#E35D4A"/>
+</svg>

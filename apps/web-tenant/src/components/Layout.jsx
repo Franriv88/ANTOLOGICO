@@ -1,6 +1,7 @@
 import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useEspacio } from '../context/EspacioContext';
+import { IconAntologico } from './LogoAntologico';
 
 function TrialBanner({ espacio }) {
   if (!espacio?.trialStartedAt) return null;
@@ -214,7 +215,10 @@ export default function Layout({ children }) {
               </span>
             </>
           ) : (
-            <span className="font-display text-xl text-ink">Antológico</span>
+            <>
+              <IconAntologico size={36} />
+              <span className="font-display text-base text-ink leading-tight">Antológico</span>
+            </>
           )}
         </Link>
 
