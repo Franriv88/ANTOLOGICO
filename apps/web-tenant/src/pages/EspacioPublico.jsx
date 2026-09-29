@@ -588,6 +588,7 @@ export default function EspacioPublico() {
   const [currentUser,  setCurrentUser]  = useState(undefined); // undefined = loading, null = guest
   const [showAuth,     setShowAuth]     = useState(false);
   const [userReservas, setUserReservas] = useState([]);
+  const [menuOpen,     setMenuOpen]     = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -721,11 +722,60 @@ export default function EspacioPublico() {
         />
       )}
 
+      {/* Hamburger menu overlay */}
+      {menuOpen && (
+        <div className="fixed inset-0 z-50 flex">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setMenuOpen(false)} />
+          <div className="relative w-64 max-w-[80vw] bg-white h-full shadow-xl flex flex-col">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[#EDE8DE]">
+              <span className="font-semibold text-sm text-[#1A1611]">Menú</span>
+              <button onClick={() => setMenuOpen(false)} className="p-1 rounded-md hover:bg-[#FAF7F2] text-[#6B5F4C] transition-colors">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+            <nav className="flex flex-col p-3">
+              <Link
+                to="/mis-reservas"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm text-[#2B241A] hover:bg-[#FAF7F2] transition-colors"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E85D4A" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                </svg>
+                Mis reservas
+              </Link>
+              <Link
+                to="/mis-datos"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm text-[#2B241A] hover:bg-[#FAF7F2] transition-colors"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E85D4A" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+                </svg>
+                Mis datos
+              </Link>
+            </nav>
+          </div>
+        </div>
+      )}
+
       {/* Hero */}
       <div className="w-full pt-4 pb-10 px-4" style={{ backgroundColor: brand.primary }}>
         {/* Nav usuario */}
-        <div className="max-w-2xl mx-auto flex justify-end mb-6">
-          {currentUser === undefined ? null : currentUser ? (
+        <div className="max-w-2xl mx-auto flex items-center justify-between mb-6">
+          <button
+            onClick={() => setMenuOpen(true)}
+            className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+            style={{ color: headerText }}
+            aria-label="Abrir menú"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
+          {currentUser === undefined ? <div /> : currentUser ? (
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium drop-shadow" style={{ color: headerText, opacity: 0.9 }}>
                 Hola, {currentUser.profile?.nombre?.split(' ')[0] ?? 'tú'}
@@ -838,15 +888,16 @@ export default function EspacioPublico() {
 
       {/* Footer */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-40 py-3 text-xs text-[#9B9083] border-t border-[#EDE8DE] flex flex-col items-center gap-2"
+        className="fixed bottom-0 left-0 right-0 z-40 py-2 text-xs text-[#9B9083] border-t border-[#EDE8DE] flex flex-col items-center gap-1.5"
         style={{ backgroundColor: brand.bg }}
       >
-        {espacio?.redesSociales?.links && Object.values(espacio.redesSociales.links).some(v => v?.trim()) && (
-          <SocialIconsRow redesSociales={espacio.redesSociales} size={20} />
-        )}
-        <div className="flex items-center gap-4">
-          <Link to="/mis-reservas" className="text-[#E85D4A] hover:underline font-medium">Ver todas mis reservas →</Link>
-          <span>Powered by <span className="font-semibold">Antológico</span></span>
+        <SocialIconsRow redesSociales={espacio.redesSociales} size={20} />
+        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-0.5">
+          <span>Powered by <span className="font-semibold text-[#6B5F4C]">Antológico</span></span>
+          <span className="opacity-30">·</span>
+          <a href="/" className="hover:underline opacity-70 hover:opacity-100 transition-opacity">
+            ¿Querés tu propio espacio? →
+          </a>
         </div>
       </div>
     </div>

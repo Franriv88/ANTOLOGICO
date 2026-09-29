@@ -11,6 +11,7 @@ import Reservas from './pages/Reservas';
 import Reportes from './pages/Reportes';
 import EspacioPublico from './pages/EspacioPublico';
 import MisReservas    from './pages/MisReservas';
+import MisDatos       from './pages/MisDatos';
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
@@ -59,6 +60,7 @@ export default function App() {
             <Route path="/login" element={<DevLogin />} />
             <Route path="/p/:espacioId" element={<EspacioPublico />} />
             <Route path="/mis-reservas" element={<MisReservas />} />
+            <Route path="/mis-datos"    element={<MisDatos />} />
 
             {/* Onboarding — requiere auth pero aún no tiene espacio */}
             <Route

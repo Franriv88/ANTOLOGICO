@@ -14,9 +14,8 @@ export const SOCIAL_NETWORKS = [
   { key: 'facebook',  label: 'Facebook',  color: '#1877F2', placeholder: 'facebook.com/tuespacio'  },
   { key: 'tiktok',    label: 'TikTok',    color: '#010101', placeholder: 'tiktok.com/@tuespacio'   },
   { key: 'youtube',   label: 'YouTube',   color: '#FF0000', placeholder: 'youtube.com/@tuespacio'  },
-  { key: 'x',         label: 'X',         color: '#000000', placeholder: 'x.com/tuespacio'         },
-  { key: 'linkedin',  label: 'LinkedIn',  color: '#0A66C2', placeholder: 'linkedin.com/in/tuespacio' },
-  { key: 'whatsapp',  label: 'WhatsApp',  color: '#25D366', placeholder: 'wa.me/549...'            },
+  { key: 'x',         label: 'X',         color: '#000000', placeholder: 'x.com/tuespacio'  },
+  { key: 'whatsapp',  label: 'WhatsApp',  color: '#25D366', placeholder: 'wa.me/549...'   },
 ];
 
 // Ícono individual de una red social
@@ -41,11 +40,12 @@ export function SocialIcon({ id, color = 'currentColor', size = 20 }) {
 export function SocialIconsRow({ redesSociales, size = 22 }) {
   if (!redesSociales?.links) return null;
 
-  const style       = redesSociales.style ?? 'brand';
-  const minColor    = redesSociales.minimalColor ?? '#E85D4A';
-  const links       = redesSociales.links ?? {};
+  const style      = redesSociales.style ?? 'brand';
+  const minColor   = redesSociales.minimalColor ?? '#E85D4A';
+  const links      = redesSociales.links ?? {};
+  const visibleMap = redesSociales.visible ?? {};
 
-  const active = SOCIAL_NETWORKS.filter(n => links[n.key]?.trim());
+  const active = SOCIAL_NETWORKS.filter(n => links[n.key]?.trim() && visibleMap[n.key] !== false);
   if (active.length === 0) return null;
 
   return (

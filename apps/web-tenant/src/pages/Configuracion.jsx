@@ -394,14 +394,15 @@ function normalize(s) { return (s ?? '').toLowerCase().trim().replace(/\s+/g, ' 
 function RedesSocialesSection({ espacio, refresh }) {
   const parseRedes = () => {
     const rs = espacio.redesSociales;
-    if (!rs) return { style: 'brand', minimalColor: '', links: {} };
-    return { style: rs.style ?? 'brand', minimalColor: rs.minimalColor ?? '', links: rs.links ?? {} };
+    if (!rs) return { style: 'brand', minimalColor: '', links: {}, visible: {} };
+    return { style: rs.style ?? 'brand', minimalColor: rs.minimalColor ?? '', links: rs.links ?? {}, visible: rs.visible ?? {} };
   };
 
   const init = parseRedes();
   const [links,        setLinks]        = useState(init.links);
   const [style,        setStyle]        = useState(init.style);
   const [minimalColor, setMinimalColor] = useState(init.minimalColor);
+  const [visible,      setVisible]      = useState(init.visible);
   const [saving,       setSaving]       = useState(false);
   const [saved,        setSaved]        = useState(false);
   const [error,        setError]        = useState('');
@@ -427,6 +428,7 @@ function RedesSocialesSection({ espacio, refresh }) {
         style,
         minimalColor: style === 'minimal' ? effectiveMinimalColor : null,
         links: cleanLinks,
+        visible,
       });
       await refresh();
       setSaved(true);
@@ -443,7 +445,7 @@ function RedesSocialesSection({ espacio, refresh }) {
   return (
     <div className="border-t border-border pt-6">
       <h3 className="text-sm font-semibold text-ink mb-0.5">Redes Sociales</h3>
-      <p className="text-xs text-ink-muted mb-5">Aparecen en el footer de tu página pública. Solo se muestran las que tengan URL.</p>
+      <p className="text-xs text-ink-muted mb-5">Aparecen en el footer de tu página pública. Marcá las que querés mostrar (deben tener URL).</p>
 
       {/* Selector de estilo */}
       <div className="flex gap-2 mb-5">
@@ -506,7 +508,14 @@ function RedesSocialesSection({ espacio, refresh }) {
       <div className="flex flex-col gap-3 mb-5">
         {SOCIAL_NETWORKS.map(net => (
           <div key={net.key} className="flex items-center gap-3">
-            <div className="w-8 flex justify-center shrink-0">
+            <input
+              type="checkbox"
+              checked={visible[net.key] !== false}
+              onChange={e => setVisible(p => ({ ...p, [net.key]: e.target.checked }))}
+              className="w-4 h-4 accent-primary cursor-pointer shrink-0"
+              title="Mostrar en footer"
+            />
+            <div className="w-7 flex justify-center shrink-0">
               <SocialIcon id={net.key} color={iconColor(net)} size={20} />
             </div>
             <span className="w-20 text-xs font-medium text-ink shrink-0">{net.label}</span>

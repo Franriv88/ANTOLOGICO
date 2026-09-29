@@ -93,6 +93,10 @@ export function subscribeAuth(cb) {
   });
 }
 
+export async function updateUserProfile(uid, data) {
+  await saveProfile(uid, data);
+}
+
 export function authErrorMsg(code) {
   return (
     code === 'auth/wrong-password'       ? 'Contraseña incorrecta' :
