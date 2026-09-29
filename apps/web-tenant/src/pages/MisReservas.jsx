@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { reservas as reservasApi, workshops as workshopsApi, espacios as espaciosApi } from '../services/api';
-import { loginGoogle, loginEmail, register, logout, subscribeAuth, authErrorMsg, sendPasswordReset } from '../services/userAuth';
+import { loginGoogle, loginEmail, register, logout, subscribeAuth, authErrorMsg, sendPasswordReset, checkRedirectResult } from '../services/userAuth';
 
 function contrastText(hex) {
   if (!hex?.startsWith('#') || hex.length < 7) return '#ffffff';
@@ -231,6 +231,15 @@ export default function MisReservas() {
   const [currentUser, setCurrentUser] = useState(undefined); // undefined = loading
   const [reservas,    setReservas]    = useState([]);
   const [loadingR,    setLoadingR]    = useState(false);
+
+  useEffect(() => {
+    checkRedirectResult().then(result => {
+      if (result) {
+        setCurrentUser({ user: result.user, profile: result.profile ?? {} });
+        loadReservas(result.user.email ?? result.profile?.email ?? '');
+      }
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     return subscribeAuth((user, profile) => {

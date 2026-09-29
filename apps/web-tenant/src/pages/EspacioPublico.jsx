@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { espacios as espaciosApi, workshops as workshopsApi, reservas as reservasApi } from '../services/api';
 import { getSlotStatus } from '../lib/slotStatus';
-import { loginGoogle, loginEmail, register, logout, subscribeAuth, authErrorMsg, sendPasswordReset } from '../services/userAuth';
+import { loginGoogle, loginEmail, register, logout, subscribeAuth, authErrorMsg, sendPasswordReset, checkRedirectResult } from '../services/userAuth';
 import mpLogo from '../assets/Mercado_Pago.png';
 // SlotBadge no se usa aquí — reemplazado por PublicSlotBadge con fondo sólido
 
@@ -606,6 +606,12 @@ export default function EspacioPublico() {
     }
     load();
   }, [espacioId]);
+
+  useEffect(() => {
+    checkRedirectResult().then(result => {
+      if (result) handleAuthSuccess(result);
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     return subscribeAuth((user, profile) => {

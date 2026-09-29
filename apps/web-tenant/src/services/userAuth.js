@@ -1,6 +1,8 @@
 import {
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updateProfile,
@@ -15,6 +17,13 @@ import { auth, firestore } from '../lib/firebase.js';
 const C_USUARIOS = 'demo_usuarios';
 const googleProvider = new GoogleAuthProvider();
 
+function isMobileOrPWA() {
+  return (
+    /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ||
+    window.matchMedia('(display-mode: standalone)').matches
+  );
+}
+
 async function saveProfile(uid, data) {
   await setDoc(doc(firestore, C_USUARIOS, uid), data, { merge: true });
 }
@@ -25,7 +34,23 @@ async function fetchProfile(uid) {
 }
 
 export async function loginGoogle() {
+  if (isMobileOrPWA()) {
+    await signInWithRedirect(auth, googleProvider);
+    return null; // la página se redirige; el resultado llega via checkRedirectResult
+  }
   const { user } = await signInWithPopup(auth, googleProvider);
+  return ensureProfile(user);
+}
+
+// Llamar en el mount de cualquier página que use Google login.
+// Devuelve { user, profile } si había un redirect pendiente, null si no.
+export async function checkRedirectResult() {
+  const result = await getRedirectResult(auth);
+  if (!result) return null;
+  return ensureProfile(result.user);
+}
+
+async function ensureProfile(user) {
   const existing = await fetchProfile(user.uid);
   if (!existing.nombre) {
     await saveProfile(user.uid, {
