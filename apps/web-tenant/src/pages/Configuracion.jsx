@@ -492,11 +492,8 @@ function TabEspacio({ espacio, refresh }) {
   return (
     <div className="flex flex-col gap-8 max-w-3xl">
       {/* ── Fila superior: QR + Datos ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-        {/* Columna izquierda: Compartir */}
-        <CompartirEspacio espacio={espacio} />
-
-        {/* Columna derecha: Datos del espacio */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+        {/* Columna izquierda: Datos del espacio */}
         <form onSubmit={handleSave} className="flex flex-col gap-5">
           <div>
             <h3 className="text-sm font-semibold text-ink mb-3">Datos del espacio</h3>
@@ -523,6 +520,9 @@ function TabEspacio({ espacio, refresh }) {
             {saved && <span className="text-xs text-green-600 font-medium">¡Guardado!</span>}
           </div>
         </form>
+
+        {/* Columna derecha: Compartir */}
+        <CompartirEspacio espacio={espacio} />
       </div>
 
       {/* ── Direcciones ── */}
