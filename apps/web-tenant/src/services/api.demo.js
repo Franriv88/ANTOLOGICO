@@ -94,9 +94,12 @@ export const profesionales = {
 };
 
 export const espacios = {
-  list: async () => {
+  list: async (userId) => {
     await ensureSeeded();
-    const snap = await getDocs(collection(firestore, C_ESPACIOS));
+    const q = userId
+      ? query(collection(firestore, C_ESPACIOS), where('userId', '==', userId))
+      : collection(firestore, C_ESPACIOS);
+    const snap = await getDocs(q);
     return snapToList(snap);
   },
 

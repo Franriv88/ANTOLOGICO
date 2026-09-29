@@ -19,7 +19,7 @@ export function EspacioProvider({ children }) {
       return;
     }
     setLoading(true);
-    espacioApi.list()
+    espacioApi.list(user.uid)
       .then((list) => {
         setEspacios(list);
         setActive((prev) => {
@@ -35,7 +35,7 @@ export function EspacioProvider({ children }) {
     if (!user) return [];
     setLoading(true);
     try {
-      let list = await espacioApi.list();
+      let list = await espacioApi.list(user.uid);
       // Si la query devuelve vacío pero tenemos un espacio recién creado, lo usamos
       // como fallback para evitar la redirección al onboarding (posible cache o timing)
       if (list.length === 0 && fallback) {
