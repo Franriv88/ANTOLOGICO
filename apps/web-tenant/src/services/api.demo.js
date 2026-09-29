@@ -114,6 +114,7 @@ export const espacios = {
       logoUrl: null, logoShape: 'round', brandColors: null, brandFont: null,
       rubro: null, plan: null, dominio_on_espacio: null,
       createdAt: new Date().toISOString(),
+      trialStartedAt: new Date().toISOString(),
       ...payload,
     };
     await setDoc(doc(firestore, C_ESPACIOS, id), espacio);

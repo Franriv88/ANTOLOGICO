@@ -28,16 +28,19 @@ export default function Onboarding() {
   }
 
   async function finish(planId) {
-    // Solo intentar asignar plan si planId es un UUID válido (no un nombre de fallback)
-    const isUUID = planId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(planId);
-    if (isUUID && data.espacioId) {
+    if (planId && data.espacioId) {
       try {
-        await espacioApi.updatePlan(data.espacioId, planId);
+        // UUID real → API de plan; nombre demo → guardamos como selectedPlan
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(planId);
+        if (isUUID) {
+          await espacioApi.updatePlan(data.espacioId, planId);
+        } else {
+          await espacioApi.update(data.espacioId, { selectedPlan: planId });
+        }
       } catch (e) {
         console.error('Error al guardar el plan:', e);
       }
     }
-    // Pasar el espacio recién creado como fallback por si listMyEspacios devuelve vacío
     await refresh(data.espacioId ? { id: data.espacioId, nombre: data.espacioNombre || 'Mi espacio', estado: 'ACTIVO' } : null);
     navigate('/workshops', { replace: true });
   }

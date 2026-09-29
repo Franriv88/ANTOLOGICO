@@ -60,15 +60,15 @@ export default function StepPlan({ onFinish, onBack }) {
             features={Array.isArray(plan.features) ? plan.features : FEATURES_FALLBACK[plan.nombre] ?? []}
             highlight={plan.highlight}
             selected={selected === plan.id}
-            onSelect={() => setSelected(plan.id === selected ? null : plan.id)}
+            onSelect={() => setSelected(plan.id)}
           />
         ))}
       </div>
 
       <p className="text-xs text-center text-ink-muted">
         {selected
-          ? 'Podés cambiar de plan cuando quieras desde la configuración.'
-          : 'Podés elegir un plan ahora o hacerlo después desde la configuración.'}
+          ? 'Los 14 días de prueba son gratuitos. El pago se configura después.'
+          : 'Seleccioná un plan para continuar. Podés cambiarlo cuando quieras.'}
       </p>
 
       <div className="flex gap-3">
@@ -81,10 +81,10 @@ export default function StepPlan({ onFinish, onBack }) {
         </button>
         <button
           onClick={handleFinish}
-          disabled={loading}
+          disabled={loading || !selected}
           className="flex-1 py-2.5 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary-strong transition-colors disabled:opacity-50"
         >
-          {loading ? 'Iniciando…' : selected ? 'Comenzar →' : 'Continuar sin plan →'}
+          {loading ? 'Iniciando…' : 'Comenzar 14 días gratis →'}
         </button>
       </div>
     </div>
@@ -109,7 +109,7 @@ function PlanCard({ nombre, precioMensual, features = [], highlight, selected, o
           Recomendado
         </span>
       )}
-      <div className="flex items-center justify-between mb-2 mt-1">
+      <div className="flex items-center justify-between mb-1 mt-1">
         <span className="font-semibold text-sm text-ink">{nombre}</span>
         {precioMensual && (
           <span className="text-xs font-mono text-ink-muted">
@@ -117,6 +117,7 @@ function PlanCard({ nombre, precioMensual, features = [], highlight, selected, o
           </span>
         )}
       </div>
+      <p className="text-xs text-primary font-medium mb-2">14 días gratis</p>
       <ul className="flex flex-col gap-0.5">
         {features.map((f, i) => (
           <li key={i} className="text-xs text-ink-muted flex items-center gap-1.5">

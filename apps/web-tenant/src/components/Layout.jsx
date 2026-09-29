@@ -2,6 +2,41 @@ import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useEspacio } from '../context/EspacioContext';
 
+function TrialBanner({ espacio }) {
+  if (!espacio?.trialStartedAt) return null;
+  if (espacio?.planId) return null; // plan real activo
+
+  const daysElapsed = Math.floor((Date.now() - new Date(espacio.trialStartedAt)) / 86_400_000);
+  const daysLeft    = Math.max(0, 14 - daysElapsed);
+
+  const isExpired = daysLeft === 0;
+  const isUrgent  = daysLeft <= 3;
+
+  const bgCls     = isExpired || isUrgent ? 'bg-danger/8 border-danger/20'  : 'bg-amber-50 border-amber-200';
+  const textCls   = isExpired || isUrgent ? 'text-danger'                    : 'text-amber-700';
+  const btnCls    = isExpired || isUrgent
+    ? 'bg-danger text-white hover:bg-danger/90'
+    : 'bg-amber-600 text-white hover:bg-amber-700';
+
+  const message = isExpired
+    ? 'Tu período de prueba ha vencido. Activá tu plan para seguir usando Antológico.'
+    : isUrgent
+    ? `¡Quedan solo ${daysLeft} día${daysLeft !== 1 ? 's' : ''} de prueba gratuita! Activá tu plan.`
+    : `Prueba gratuita · Te quedan ${daysLeft} días`;
+
+  return (
+    <div className={`border-b px-5 py-2 flex items-center justify-between gap-4 shrink-0 ${bgCls}`}>
+      <p className={`text-xs font-medium ${textCls}`}>{message}</p>
+      <Link
+        to="/config"
+        className={`shrink-0 text-xs font-semibold px-3 py-1 rounded-md transition-colors ${btnCls}`}
+      >
+        Activar plan
+      </Link>
+    </div>
+  );
+}
+
 const IconExternal = () => (
   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
@@ -281,6 +316,7 @@ export default function Layout({ children }) {
           </button>
         </header>
 
+        <TrialBanner espacio={activeEspacio} />
         <main id="dashboard-main" className="flex-1 overflow-y-auto p-8">{children}</main>
       </div>
     </div>
