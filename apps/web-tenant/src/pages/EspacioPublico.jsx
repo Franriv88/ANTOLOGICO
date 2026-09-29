@@ -700,7 +700,7 @@ export default function EspacioPublico() {
   });
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: brand.bg }}>
+    <div className="min-h-screen pb-20" style={{ backgroundColor: brand.bg }}>
       {/* Modals */}
       {showAuth && <AuthModal brand={brand} onClose={() => setShowAuth(false)} onSuccess={handleAuthSuccess} />}
       {booking && (
@@ -837,12 +837,17 @@ export default function EspacioPublico() {
       )}
 
       {/* Footer */}
-      <div className="py-8 text-xs text-[#9B9083] border-t border-[#EDE8DE] flex flex-col items-center gap-4">
+      <div
+        className="fixed bottom-0 left-0 right-0 z-40 py-3 text-xs text-[#9B9083] border-t border-[#EDE8DE] flex flex-col items-center gap-2"
+        style={{ backgroundColor: brand.bg }}
+      >
         {espacio?.redesSociales?.links && Object.values(espacio.redesSociales.links).some(v => v?.trim()) && (
-          <SocialIconsRow redesSociales={espacio.redesSociales} size={22} />
+          <SocialIconsRow redesSociales={espacio.redesSociales} size={20} />
         )}
-        <Link to="/mis-reservas" className="text-[#E85D4A] hover:underline font-medium">Ver todas mis reservas →</Link>
-        <span>Powered by <span className="font-semibold">Antológico</span></span>
+        <div className="flex items-center gap-4">
+          <Link to="/mis-reservas" className="text-[#E85D4A] hover:underline font-medium">Ver todas mis reservas →</Link>
+          <span>Powered by <span className="font-semibold">Antológico</span></span>
+        </div>
       </div>
     </div>
   );
