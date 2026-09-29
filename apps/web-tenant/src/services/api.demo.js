@@ -100,7 +100,19 @@ export const espacios = {
       ? query(collection(firestore, C_ESPACIOS), where('userId', '==', userId))
       : collection(firestore, C_ESPACIOS);
     const snap = await getDocs(q);
-    return snapToList(snap);
+    const list = snapToList(snap);
+
+    // Si no hay resultados, reclamar el espacio semilla que no tenga userId asignado
+    if (list.length === 0 && userId) {
+      const seedRef  = doc(firestore, C_ESPACIOS, BASE_ESPACIO.id);
+      const seedSnap = await getDoc(seedRef);
+      if (seedSnap.exists() && !seedSnap.data().userId) {
+        await updateDoc(seedRef, { userId });
+        return [{ id: BASE_ESPACIO.id, ...seedSnap.data(), userId }];
+      }
+    }
+
+    return list;
   },
 
   get: async (id) => {
