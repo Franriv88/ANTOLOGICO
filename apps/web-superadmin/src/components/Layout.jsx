@@ -2,8 +2,9 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const NAV = [
-  { to: '/tenants', label: 'Tenants' },
-  { to: '/planes',  label: 'Planes' },
+  { to: '/tenants',  label: 'Tenants' },
+  { to: '/planes',   label: 'Planes' },
+  { to: '/reportes', label: 'Reportes' },
 ];
 
 const IconLogout = () => (
