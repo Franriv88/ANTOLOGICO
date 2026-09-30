@@ -887,19 +887,29 @@ export default function EspacioPublico() {
       )}
 
       {/* Footer */}
-      <div
-        className="fixed bottom-0 left-0 right-0 z-40 py-2 text-xs text-[#9B9083] border-t border-[#EDE8DE] flex flex-col items-center gap-1.5"
-        style={{ backgroundColor: brand.bg }}
-      >
-        <SocialIconsRow redesSociales={espacio.redesSociales} size={20} />
-        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-0.5">
-          <span>Powered by <span className="font-semibold text-[#6B5F4C]">Antológico</span></span>
-          <span className="opacity-30">·</span>
-          <a href="/" className="hover:underline opacity-70 hover:opacity-100 transition-opacity">
-            ¿Querés tu propio espacio? →
-          </a>
-        </div>
-      </div>
+      {(() => {
+        const footerText = contrastText(brand.bg) === '#ffffff' ? 'rgba(255,255,255,0.6)' : '#6B5F4C';
+        const footerStrong = contrastText(brand.bg) === '#ffffff' ? 'rgba(255,255,255,0.85)' : '#2B241A';
+        return (
+          <div
+            className="fixed bottom-0 left-0 right-0 z-40 py-2.5 text-xs flex flex-col items-center gap-1.5"
+            style={{
+              backgroundColor: brand.bg,
+              boxShadow: '0 -1px 0 0 rgba(0,0,0,0.10)',
+              color: footerText,
+            }}
+          >
+            <SocialIconsRow redesSociales={espacio.redesSociales} size={20} />
+            <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-0.5">
+              <span>Powered by <span className="font-semibold" style={{ color: footerStrong }}>Antológico</span></span>
+              <span className="opacity-25">·</span>
+              <a href="/" className="hover:underline opacity-60 hover:opacity-90 transition-opacity">
+                ¿Querés tu propio espacio? →
+              </a>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

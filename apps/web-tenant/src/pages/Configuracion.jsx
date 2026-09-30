@@ -1114,9 +1114,9 @@ function TabIdentidad({ espacio, refresh }) {
                             className="w-6 h-6 rounded-full border-2 transition-all"
                             style={{
                               backgroundColor: c,
-                              borderColor: selected ? '#1A1611' : 'transparent',
+                              borderColor: selected ? '#1A1611' : 'rgba(0,0,0,0.18)',
                               transform: selected ? 'scale(1.18)' : hovered ? 'scale(1.12)' : 'scale(1)',
-                              boxShadow: selected ? '0 0 0 1px rgba(0,0,0,0.15)' : 'none',
+                              boxShadow: selected ? '0 0 0 2px rgba(0,0,0,0.12)' : 'none',
                             }}
                             onMouseEnter={() => { if (!selected) setHoveredChip(chipId); }}
                             onMouseLeave={() => setHoveredChip(null)}
