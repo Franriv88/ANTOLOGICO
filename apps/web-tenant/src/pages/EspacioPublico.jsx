@@ -701,7 +701,7 @@ export default function EspacioPublico() {
   });
 
   return (
-    <div className="min-h-screen pb-20" style={{ backgroundColor: brand.bg }}>
+    <div className="min-h-screen pb-28" style={{ backgroundColor: brand.bg }}>
       {/* Modals */}
       {showAuth && <AuthModal brand={brand} onClose={() => setShowAuth(false)} onSuccess={handleAuthSuccess} />}
       {booking && (
@@ -892,20 +892,23 @@ export default function EspacioPublico() {
         const footerStrong = contrastText(brand.primary);
         return (
           <div
-            className="fixed bottom-0 left-0 right-0 z-40 py-2.5 text-xs flex flex-col items-center gap-1.5"
+            className="fixed bottom-0 left-0 right-0 z-40 py-4 text-sm flex flex-col items-center gap-2"
             style={{
               backgroundColor: brand.primary,
               color: footerText,
             }}
           >
-            <SocialIconsRow redesSociales={espacio.redesSociales} size={20} />
-            <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-0.5">
-              <span>Powered by <span className="font-semibold" style={{ color: footerStrong }}>Antológico</span></span>
-              <span className="opacity-25">·</span>
-              <a href="/" className="hover:underline opacity-60 hover:opacity-90 transition-opacity">
-                ¿Querés tu propio espacio? →
+            <SocialIconsRow redesSociales={espacio.redesSociales} size={22} />
+            <span>
+              Obtén tu propio espacio{' '}
+              <a
+                href="/"
+                className="font-semibold underline underline-offset-2 hover:opacity-100 transition-opacity"
+                style={{ color: footerStrong }}
+              >
+                Antológico
               </a>
-            </div>
+            </span>
           </div>
         );
       })()}
