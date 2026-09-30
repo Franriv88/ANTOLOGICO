@@ -805,8 +805,6 @@ function TabEspacio({ espacio, refresh }) {
         </div>
       </div>
 
-      {/* ── Redes Sociales ── */}
-      <RedesSocialesSection espacio={espacio} refresh={refresh} />
     </div>
   );
 }
@@ -951,6 +949,7 @@ function TabIdentidad({ espacio, refresh }) {
   const selectedFontColor = complementaryColor(effectivePrimary);
 
   return (
+    <>
     <form onSubmit={handleSave} className="flex flex-col gap-6">
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_280px] gap-8 items-start">
 
@@ -1097,25 +1096,13 @@ function TabIdentidad({ espacio, refresh }) {
             <section className="flex flex-col gap-3">
               <div>
                 <h3 className="text-sm font-semibold text-ink mb-0.5">Roles de color</h3>
-                <p className="text-xs text-ink-muted">Asigná cada color de tu paleta a un rol en tu página pública. La preview se actualiza en tiempo real.</p>
+                <p className="text-xs text-ink-muted">¿Qué hace cada color de tu paleta? Asignalo a cada función.</p>
               </div>
-              <div className="flex flex-col bg-surface-100 border border-border rounded-xl overflow-hidden" style={{ backgroundColor: '#FBF8F2', borderColor: '#D2C4A8', color: '#2B241A' }}>
-                {COLOR_ROLES.map((role, roleIdx) => (
-                  <div key={role.key} className="px-4 py-3.5" style={roleIdx > 0 ? { borderTop: '1px solid #E8DFD0' } : {}}>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        {isValidColor(roles[role.key]) && (
-                          <span className="w-3 h-3 rounded-full inline-block border border-white shadow-sm" style={{ backgroundColor: roles[role.key] }} />
-                        )}
-                        <span className="text-xs font-medium text-ink">{role.label}</span>
-                        <span className="text-xs text-ink-muted">— {role.hint}</span>
-                      </div>
-                      {roles[role.key] && (
-                        <button type="button" onClick={() => setRoles(r => ({ ...r, [role.key]: '' }))}
-                          className="text-xs text-ink-muted hover:text-danger transition-colors">quitar</button>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1.5 flex-wrap">
+              <div className="flex flex-col divide-y divide-[#E8DFD0] border border-[#D2C4A8] rounded-xl overflow-hidden bg-[#FBF8F2]">
+                {COLOR_ROLES.map((role) => (
+                  <div key={role.key} className="flex items-center gap-3 px-4 py-2.5">
+                    <span className="w-[7.5rem] shrink-0 text-xs font-medium text-ink" title={role.hint}>{role.label}</span>
+                    <div className="flex items-center gap-1.5 flex-1 flex-wrap">
                       {validPalette.map((c, i) => {
                         const chipId   = `${role.key}-${i}`;
                         const selected = roles[role.key] === c;
@@ -1124,18 +1111,30 @@ function TabIdentidad({ espacio, refresh }) {
                           <button key={i} type="button"
                             onClick={() => setRoles(r => ({ ...r, [role.key]: c }))}
                             title={c}
-                            className={`w-7 h-7 rounded-md border-2 ${selected ? 'border-ink shadow-md' : 'border-transparent'}`}
+                            className="w-6 h-6 rounded-full border-2 transition-all"
                             style={{
                               backgroundColor: c,
-                              transform: selected ? 'scale(1.1)' : hovered ? 'translateY(-5px) rotate(-6deg) scale(1.12)' : 'none',
-                              transition: 'transform 0.18s ease, box-shadow 0.18s ease',
+                              borderColor: selected ? '#1A1611' : 'transparent',
+                              transform: selected ? 'scale(1.18)' : hovered ? 'scale(1.12)' : 'scale(1)',
+                              boxShadow: selected ? '0 0 0 1px rgba(0,0,0,0.15)' : 'none',
                             }}
                             onMouseEnter={() => { if (!selected) setHoveredChip(chipId); }}
                             onMouseLeave={() => setHoveredChip(null)}
                           />
                         );
                       })}
+                      {!roles[role.key] && (
+                        <span className="text-xs text-ink-muted italic opacity-50">sin asignar</span>
+                      )}
                     </div>
+                    {roles[role.key] && (
+                      <button type="button" onClick={() => setRoles(r => ({ ...r, [role.key]: '' }))}
+                        className="text-ink-muted hover:text-danger transition-colors shrink-0 leading-none" title="Quitar">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -1213,6 +1212,11 @@ function TabIdentidad({ espacio, refresh }) {
         {saved && <span className="text-xs text-green-600 font-medium">¡Guardado!</span>}
       </div>
     </form>
+
+    <div className="mt-2">
+      <RedesSocialesSection espacio={espacio} refresh={refresh} />
+    </div>
+    </>
   );
 }
 
