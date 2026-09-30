@@ -888,14 +888,13 @@ export default function EspacioPublico() {
 
       {/* Footer */}
       {(() => {
-        const footerText = contrastText(brand.bg) === '#ffffff' ? 'rgba(255,255,255,0.6)' : '#6B5F4C';
-        const footerStrong = contrastText(brand.bg) === '#ffffff' ? 'rgba(255,255,255,0.85)' : '#2B241A';
+        const footerText = contrastText(brand.primary) === '#ffffff' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.5)';
+        const footerStrong = contrastText(brand.primary);
         return (
           <div
             className="fixed bottom-0 left-0 right-0 z-40 py-2.5 text-xs flex flex-col items-center gap-1.5"
             style={{
-              backgroundColor: brand.bg,
-              boxShadow: '0 -1px 0 0 rgba(0,0,0,0.10)',
+              backgroundColor: brand.primary,
               color: footerText,
             }}
           >
