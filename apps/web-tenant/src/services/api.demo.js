@@ -146,7 +146,25 @@ export const espacios = {
 
   updateIdentidad:      async (id, payload)       => espacios.update(id, payload),
   updateRedes:          async (id, redesSociales) => espacios.update(id, { redesSociales }),
-  updatePlan:           async (id, planId, plan)   => espacios.update(id, { planId, plan: plan ?? null }),
+  updatePlan: async (id, planId, plan, periodo = 'mensual') => {
+    const base = plan?.precioMensual ?? 0;
+    const dto  = periodo === 'trimestral' ? (plan?.descuentoTrimestral ?? 0)
+               : periodo === 'anual'      ? (plan?.descuentoAnual      ?? 0) : 0;
+    const precioActual = Math.round(base * (1 - dto / 100));
+    const d = new Date();
+    const renovacion = periodo === 'trimestral'
+      ? new Date(d.getFullYear(), d.getMonth() + 3, d.getDate())
+      : periodo === 'anual'
+      ? new Date(d.getFullYear() + 1, d.getMonth(), d.getDate())
+      : new Date(d.getFullYear(), d.getMonth() + 1, d.getDate());
+    return espacios.update(id, {
+      planId,
+      plan: plan ?? null,
+      periodoFacturacion: periodo,
+      precioActual,
+      proximaRenovacion: renovacion.toISOString(),
+    });
+  },
   solicitarCancelacion: async (id)                => espacios.update(id, { cancelacionPendiente: true }),
   reactivarSuscripcion: async (id)                => espacios.update(id, { cancelacionPendiente: false }),
   eliminar:             async (id)                => espacios.update(id, { estado: 'BAJA' }),

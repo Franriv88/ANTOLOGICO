@@ -7,7 +7,7 @@ import { useEspacio } from '../context/EspacioContext';
 import { espacios as espacioApi, rubros as rubrosApi } from '../services/api';
 import { SOCIAL_NETWORKS, SocialIcon } from '../components/SocialIcons';
 import { IconAntologico } from '../components/LogoAntologico';
-import { usePlanes } from '../hooks/usePlanes';
+import { usePlanes, precioConPeriodo, proximaRenovacion, formatFechaLarga } from '../hooks/usePlanes';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -1316,21 +1316,33 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [agregarOpen,  setAgregarOpen]  = useState(false);
   const [error,        setError]        = useState('');
+  const [periodo,      setPeriodo]      = useState('mensual'); // para el selector de activación
 
   const pendiente      = espacio.cancelacionPendiente;
   const isEstudio      = espacio.planId === 'estudio';
 
   // Precio siempre desde demo_planes (fuente de verdad), con fallback al objeto guardado
-  const planActivo     = planesDB?.find(p => p.id === espacio.planId) ?? espacio.plan ?? null;
-  const otrosEspacios  = espacios.filter(e => e.id !== espacio.id);
-  const precioBase     = planActivo?.precioMensual ?? 0;
+  const planActivo      = planesDB?.find(p => p.id === espacio.planId) ?? espacio.plan ?? null;
+  const periodoActivo   = espacio.periodoFacturacion ?? 'mensual';
+  const otrosEspacios   = espacios.filter(e => e.id !== espacio.id);
+
+  // Precio con período y descuento aplicado
+  const precioBase      = precioConPeriodo(planActivo, periodoActivo);
   const precioAdicional = Math.round(precioBase * 0.5);
-  const totalMensual   = precioBase + otrosEspacios.length * precioAdicional;
+  const totalMensual    = precioBase + otrosEspacios.length * precioAdicional;
+
+  // Detecta cambio de precio por modificación del Super Admin
+  const precioActualGuardado  = espacio.precioActual ?? precioBase;
+  const nuevoPrecioCalculado  = precioConPeriodo(planActivo, periodoActivo);
+  const hayCambioPrecio       = planActivo && precioActualGuardado !== nuevoPrecioCalculado;
+  const fechaRenovacion       = espacio.proximaRenovacion
+    ? new Date(espacio.proximaRenovacion)
+    : proximaRenovacion(periodoActivo);
 
   async function handleActivarPlan(plan) {
     setLoading(true); setError('');
     try {
-      await espacioApi.updatePlan(espacio.id, plan.id, plan);
+      await espacioApi.updatePlan(espacio.id, plan.id, plan, periodo);
       await refresh();
     } catch (e) { setError(e.message || 'Ocurrió un error.'); }
     finally { setLoading(false); }
@@ -1373,36 +1385,58 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
         <div className="bg-surface-100 border border-border rounded-xl p-5">
           <p className="text-xs text-ink-muted mb-0.5">Plan actual</p>
           <p className="text-xl font-display text-ink mb-1">Sin plan (modo prueba)</p>
-          <p className="text-sm text-ink-muted mb-4">Elegí un plan para activar tu suscripción.</p>
-          <div className="flex flex-col gap-3">
-            {(planesDB ?? []).map(plan => (
-              <div key={plan.id} className={`flex items-center gap-4 p-4 rounded-lg border transition-colors ${plan.id === 'estudio' ? 'border-primary/40 bg-primary/5' : 'border-border bg-white'}`}>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <p className="text-sm font-semibold text-ink">{plan.nombre}</p>
-                    {plan.id === 'estudio' && <span className="text-xs px-1.5 py-0.5 bg-primary/10 text-primary rounded font-medium">Multi-espacio</span>}
-                  </div>
-                  <ul className="flex flex-col gap-0.5 mt-1">
-                    {(plan.features ?? []).slice(0, 3).map((f, i) => (
-                      <li key={i} className="text-xs text-ink-muted flex items-center gap-1">
-                        <span className="text-primary">✓</span> {f}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="shrink-0 text-right">
-                  <p className="font-mono text-sm font-semibold text-ink">${plan.precioMensual?.toLocaleString('es-AR')}</p>
-                  <p className="text-xs text-ink-muted">/mes</p>
-                </div>
-                <button
-                  onClick={() => handleActivarPlan(plan)}
-                  disabled={loading}
-                  className="shrink-0 px-3 py-1.5 text-xs font-semibold bg-primary text-white rounded-md hover:bg-primary/90 disabled:opacity-50"
-                >
-                  Activar
-                </button>
-              </div>
+          <p className="text-sm text-ink-muted mb-4">Elegí un plan y período de facturación.</p>
+
+          {/* Toggle de período */}
+          <div className="flex gap-1 p-1 bg-surface-200 rounded-lg mb-4 w-fit">
+            {[
+              { id: 'mensual',    label: 'Mensual' },
+              { id: 'trimestral', label: 'Trimestral' },
+              { id: 'anual',      label: 'Anual' },
+            ].map(op => (
+              <button key={op.id} onClick={() => setPeriodo(op.id)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${periodo === op.id ? 'bg-white shadow-sm text-ink' : 'text-ink-muted hover:text-ink'}`}>
+                {op.label}
+              </button>
             ))}
+          </div>
+
+          <div className="flex flex-col gap-3">
+            {(planesDB ?? []).map(plan => {
+              const precioPlan = precioConPeriodo(plan, periodo);
+              const dto = periodo === 'trimestral' ? plan.descuentoTrimestral : periodo === 'anual' ? plan.descuentoAnual : 0;
+              return (
+                <div key={plan.id} className={`flex items-center gap-4 p-4 rounded-lg border transition-colors ${plan.id === 'estudio' ? 'border-primary/40 bg-primary/5' : 'border-border bg-white'}`}>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                      <p className="text-sm font-semibold text-ink">{plan.nombre}</p>
+                      {plan.id === 'estudio' && <span className="text-xs px-1.5 py-0.5 bg-primary/10 text-primary rounded font-medium">Multi-espacio</span>}
+                      {dto > 0 && <span className="text-xs px-1.5 py-0.5 bg-success/10 text-success rounded font-medium">−{dto}%</span>}
+                    </div>
+                    <ul className="flex flex-col gap-0.5 mt-1">
+                      {(plan.features ?? []).slice(0, 3).map((f, i) => (
+                        <li key={i} className="text-xs text-ink-muted flex items-center gap-1">
+                          <span className="text-primary">✓</span> {f}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="font-mono text-sm font-semibold text-ink">${precioPlan.toLocaleString('es-AR')}</p>
+                    <p className="text-xs text-ink-muted">/mes{dto > 0 ? ' equiv.' : ''}</p>
+                    {periodo === 'trimestral' && <p className="text-xs text-ink-muted">${(precioPlan * 3).toLocaleString('es-AR')} c/3m</p>}
+                    {periodo === 'anual'      && <p className="text-xs text-ink-muted">${(precioPlan * 12).toLocaleString('es-AR')} c/año</p>}
+                  </div>
+                  <button
+                    onClick={() => handleActivarPlan(plan)}
+                    disabled={loading}
+                    className="shrink-0 px-3 py-1.5 text-xs font-semibold bg-primary text-white rounded-md hover:bg-primary/90 disabled:opacity-50"
+                  >
+                    Activar
+                  </button>
+                </div>
+              );
+            })}
           </div>
           {error && <p className="mt-3 text-xs text-danger">{error}</p>}
         </div>
@@ -1411,41 +1445,73 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
       {/* ── Resumen de facturación (cuando hay plan activo) ── */}
       {planActivo && (
       <div className="bg-surface-100 border border-border rounded-xl p-5">
-        <p className="text-xs text-ink-muted mb-0.5">Plan actual</p>
-        <p className="text-xl font-display text-ink">{planActivo?.nombre ?? 'Sin plan (modo prueba)'}</p>
+        <div className="flex items-baseline justify-between gap-3 mb-1">
+          <div>
+            <p className="text-xs text-ink-muted mb-0.5">Plan actual</p>
+            <p className="text-xl font-display text-ink">{planActivo.nombre}</p>
+          </div>
+          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+            periodoActivo === 'anual'      ? 'bg-success/10 text-success' :
+            periodoActivo === 'trimestral' ? 'bg-primary/10 text-primary' :
+            'bg-surface-200 text-ink-muted'
+          }`}>
+            {periodoActivo === 'mensual' ? 'Mensual' : periodoActivo === 'trimestral' ? 'Trimestral' : 'Anual'}
+          </span>
+        </div>
 
-        {planActivo && otrosEspacios.length > 0 ? (
-          <div className="mt-4 flex flex-col gap-2">
-            {/* Espacio principal */}
+        {/* Aviso de cambio de precio por Super Admin */}
+        {hayCambioPrecio && (
+          <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-3 mb-3">
+            <span className="text-amber-600 shrink-0 text-sm">ℹ</span>
+            <p className="text-xs text-amber-700">
+              Tu tarifa actual es <strong>${precioActualGuardado.toLocaleString('es-AR')}/mes</strong> hasta el <strong>{formatFechaLarga(fechaRenovacion)}</strong>. A partir de esa fecha pasará a <strong>${nuevoPrecioCalculado.toLocaleString('es-AR')}/mes</strong>.
+            </p>
+          </div>
+        )}
+
+        {otrosEspacios.length > 0 ? (
+          <div className="mt-3 flex flex-col gap-2">
             <div className="flex items-center gap-3">
               <EspacioLogoThumb esp={espacio} />
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-ink truncate">{espacio.nombre}</p>
-                <p className="text-xs text-ink-muted">Plan Estudio · 100%</p>
+                <p className="text-xs text-ink-muted">{planActivo.nombre} · 100%</p>
               </div>
               <span className="font-mono text-sm text-ink shrink-0">${precioBase.toLocaleString('es-AR')}/mes</span>
             </div>
-            {/* Espacios adicionales */}
             {otrosEspacios.map(esp => (
               <div key={esp.id} className="flex items-center gap-3">
                 <EspacioLogoThumb esp={esp} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-ink truncate">{esp.nombre}</p>
-                  <p className="text-xs text-ink-muted">Plan Estudio · 50%</p>
+                  <p className="text-xs text-ink-muted">{planActivo.nombre} · 50%</p>
                 </div>
                 <span className="font-mono text-sm text-ink shrink-0">${precioAdicional.toLocaleString('es-AR')}/mes</span>
               </div>
             ))}
             <div className="border-t border-border pt-3 flex items-center justify-between">
-              <span className="text-sm font-semibold text-ink">Total mensual</span>
+              <div>
+                <span className="text-sm font-semibold text-ink">Total</span>
+                {periodoActivo !== 'mensual' && (
+                  <p className="text-xs text-ink-muted">
+                    ${(totalMensual * (periodoActivo === 'trimestral' ? 3 : 12)).toLocaleString('es-AR')} cada {periodoActivo === 'trimestral' ? '3 meses' : 'año'}
+                  </p>
+                )}
+              </div>
               <span className="font-mono text-base font-semibold text-ink">${totalMensual.toLocaleString('es-AR')}/mes</span>
             </div>
           </div>
-        ) : espacio.plan ? (
-          <p className="text-xs text-ink-muted mt-1 font-mono">
-            ${precioBase.toLocaleString('es-AR')} / mes
-          </p>
-        ) : null}
+        ) : (
+          <div className="mt-2">
+            <p className="text-xs text-ink-muted font-mono">
+              ${precioBase.toLocaleString('es-AR')}/mes equiv.
+              {periodoActivo !== 'mensual' && (
+                <span className="ml-2">· ${(precioBase * (periodoActivo === 'trimestral' ? 3 : 12)).toLocaleString('es-AR')} cada {periodoActivo === 'trimestral' ? '3 meses' : 'año'}</span>
+              )}
+            </p>
+            <p className="text-xs text-ink-muted mt-0.5">Próxima renovación: {formatFechaLarga(fechaRenovacion)}</p>
+          </div>
+        )}
       </div>
       )}
 

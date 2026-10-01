@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import Swal from 'sweetalert2';
 import { planes as planesApi } from '../services/adminApi';
 
-const EMPTY = { nombre: '', precioMensual: '', maxWorkshops: '', features: '', highlight: false };
+const EMPTY = { nombre: '', precioMensual: '', descuentoTrimestral: '10', descuentoAnual: '20', maxWorkshops: '', features: '', highlight: false };
 
 const INPUT_CLS = 'w-full px-3 py-2 bg-white border border-border rounded-md text-sm text-ink focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary';
 const LABEL_CLS = 'block text-xs font-medium text-ink-muted mb-1';
@@ -27,11 +27,13 @@ function PlanForm({ initial, onSave, onCancel, saving }) {
     e.preventDefault();
     if (!form.nombre.trim()) return;
     const payload = {
-      nombre:       form.nombre.trim(),
-      precioMensual: Number(form.precioMensual) || 0,
-      maxWorkshops:  form.maxWorkshops ? Number(form.maxWorkshops) : null,
-      features:      textToFeatures(form.features),
-      highlight:     form.highlight,
+      nombre:              form.nombre.trim(),
+      precioMensual:       Number(form.precioMensual) || 0,
+      descuentoTrimestral: Number(form.descuentoTrimestral) || 0,
+      descuentoAnual:      Number(form.descuentoAnual)      || 0,
+      maxWorkshops:        form.maxWorkshops ? Number(form.maxWorkshops) : null,
+      features:            textToFeatures(form.features),
+      highlight:           form.highlight,
     };
     onSave(payload);
   }
@@ -52,6 +54,16 @@ function PlanForm({ initial, onSave, onCancel, saving }) {
           <label className={LABEL_CLS}>Precio mensual (ARS)</label>
           <input type="number" value={form.precioMensual} onChange={e => set('precioMensual', e.target.value)}
             placeholder="12900" min="0" className={INPUT_CLS} />
+        </div>
+        <div>
+          <label className={LABEL_CLS}>Descuento trimestral (%)</label>
+          <input type="number" value={form.descuentoTrimestral} onChange={e => set('descuentoTrimestral', e.target.value)}
+            placeholder="10" min="0" max="100" className={INPUT_CLS} />
+        </div>
+        <div>
+          <label className={LABEL_CLS}>Descuento anual (%)</label>
+          <input type="number" value={form.descuentoAnual} onChange={e => set('descuentoAnual', e.target.value)}
+            placeholder="20" min="0" max="100" className={INPUT_CLS} />
         </div>
         <div>
           <label className={LABEL_CLS}>Máx. talleres simultáneos <span className="font-normal">(vacío = ilimitado)</span></label>
@@ -167,11 +179,13 @@ export default function Plans() {
             <PlanForm
               key={plan.id}
               initial={{
-                nombre:       plan.nombre,
-                precioMensual: String(plan.precioMensual ?? ''),
-                maxWorkshops:  plan.maxWorkshops ? String(plan.maxWorkshops) : '',
-                features:      featuresToText(plan.features),
-                highlight:     plan.highlight ?? false,
+                nombre:              plan.nombre,
+                precioMensual:       String(plan.precioMensual ?? ''),
+                descuentoTrimestral: String(plan.descuentoTrimestral ?? '10'),
+                descuentoAnual:      String(plan.descuentoAnual ?? '20'),
+                maxWorkshops:        plan.maxWorkshops ? String(plan.maxWorkshops) : '',
+                features:            featuresToText(plan.features),
+                highlight:           plan.highlight ?? false,
               }}
               onSave={(payload) => handleUpdate(plan.id, payload)}
               onCancel={() => setEditing(null)}
@@ -215,10 +229,20 @@ function PlanCard({ plan, onEdit, onDelete }) {
             </span>
           )}
         </div>
-        <div className="flex items-center gap-3 mb-2">
+        <div className="flex items-center gap-3 mb-2 flex-wrap">
           <span className="font-mono text-sm text-ink-muted">
             {plan.precioMensual ? formatPrecio(plan.precioMensual) + '/mes' : 'Gratis'}
           </span>
+          {plan.descuentoTrimestral > 0 && (
+            <span className="text-xs bg-surface-200 text-ink-muted px-2 py-0.5 rounded-full">
+              Trim. −{plan.descuentoTrimestral}%
+            </span>
+          )}
+          {plan.descuentoAnual > 0 && (
+            <span className="text-xs bg-surface-200 text-ink-muted px-2 py-0.5 rounded-full">
+              Anual −{plan.descuentoAnual}%
+            </span>
+          )}
           <span className="text-xs text-ink-muted">
             {plan.maxWorkshops ? `Hasta ${plan.maxWorkshops} talleres` : 'Talleres ilimitados'}
           </span>
