@@ -7,3 +7,33 @@
     @apply bg-surface-0 text-ink font-sans;
   }
 }
+
+/* ── Scrollbar oculta (Onboarding) ─────────────────────────────────────────── */
+.scrollbar-hidden {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Scrollbar de marca (Dashboard) ────────────────────────────────────────── */
+.scrollbar-brand {
+  scrollbar-width: thin;
+  scrollbar-color: #D2B8A0 #EFE7D8;
+}
+.scrollbar-brand::-webkit-scrollbar {
+  width: 5px;
+}
+.scrollbar-brand::-webkit-scrollbar-track {
+  background: #EFE7D8;
+  border-radius: 999px;
+}
+.scrollbar-brand::-webkit-scrollbar-thumb {
+  background: #D2B8A0;
+  border-radius: 999px;
+  transition: background 0.2s;
+}
+.scrollbar-brand::-webkit-scrollbar-thumb:hover {
+  background: #E85D4A;
+}

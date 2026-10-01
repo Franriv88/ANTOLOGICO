@@ -250,7 +250,7 @@ export default function Layout({ children }) {
         ) : null}
 
         {/* Navegación */}
-        <nav className="flex-1 min-h-0 overflow-y-auto py-4 flex flex-col gap-0.5 px-3">
+        <nav className="flex-1 min-h-0 overflow-y-auto scrollbar-brand py-4 flex flex-col gap-0.5 px-3">
           {NAV.map(({ to, label, disabled }) =>
             disabled ? (
               <span
@@ -321,7 +321,7 @@ export default function Layout({ children }) {
         </header>
 
         <TrialBanner espacio={activeEspacio} />
-        <main id="dashboard-main" className="flex-1 overflow-y-auto p-8">{children}</main>
+        <main id="dashboard-main" className="flex-1 overflow-y-auto scrollbar-brand p-8">{children}</main>
       </div>
     </div>
   );

@@ -46,7 +46,7 @@ export default function Onboarding() {
   }
 
   return (
-    <div className="min-h-screen bg-surface-0 flex flex-col items-center justify-center px-4 py-12">
+    <div className="h-screen overflow-y-auto scrollbar-hidden bg-surface-0 flex flex-col items-center justify-center px-4 py-12">
       {/* Cabecera */}
       <div className="mb-8 text-center">
         <span className="font-display text-2xl text-ink">Antológico</span>
