@@ -1320,6 +1320,13 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
   const pendiente      = espacio.cancelacionPendiente;
   const isEstudio      = espacio.planId === 'estudio';
 
+  // Precio siempre desde demo_planes (fuente de verdad), con fallback al objeto guardado
+  const planActivo     = planesDB?.find(p => p.id === espacio.planId) ?? espacio.plan ?? null;
+  const otrosEspacios  = espacios.filter(e => e.id !== espacio.id);
+  const precioBase     = planActivo?.precioMensual ?? 0;
+  const precioAdicional = Math.round(precioBase * 0.5);
+  const totalMensual   = precioBase + otrosEspacios.length * precioAdicional;
+
   async function handleActivarPlan(plan) {
     setLoading(true); setError('');
     try {
@@ -1328,10 +1335,6 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
     } catch (e) { setError(e.message || 'Ocurrió un error.'); }
     finally { setLoading(false); }
   }
-  const otrosEspacios  = espacios.filter(e => e.id !== espacio.id);
-  const precioBase     = espacio.plan?.precioMensual ?? 0;
-  const precioAdicional = Math.round(precioBase * 0.5);
-  const totalMensual   = precioBase + otrosEspacios.length * precioAdicional;
 
   async function handleCancelar() {
     setLoading(true); setError('');
@@ -1366,7 +1369,7 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
     <div className="max-w-lg flex flex-col gap-6">
 
       {/* ── Selector de plan (cuando no hay plan activo) ── */}
-      {!espacio.plan && (
+      {!planActivo && (
         <div className="bg-surface-100 border border-border rounded-xl p-5">
           <p className="text-xs text-ink-muted mb-0.5">Plan actual</p>
           <p className="text-xl font-display text-ink mb-1">Sin plan (modo prueba)</p>
@@ -1406,12 +1409,12 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
       )}
 
       {/* ── Resumen de facturación (cuando hay plan activo) ── */}
-      {espacio.plan && (
+      {planActivo && (
       <div className="bg-surface-100 border border-border rounded-xl p-5">
         <p className="text-xs text-ink-muted mb-0.5">Plan actual</p>
-        <p className="text-xl font-display text-ink">{espacio.plan?.nombre ?? 'Sin plan (modo prueba)'}</p>
+        <p className="text-xl font-display text-ink">{planActivo?.nombre ?? 'Sin plan (modo prueba)'}</p>
 
-        {espacio.plan && otrosEspacios.length > 0 ? (
+        {planActivo && otrosEspacios.length > 0 ? (
           <div className="mt-4 flex flex-col gap-2">
             {/* Espacio principal */}
             <div className="flex items-center gap-3">
@@ -1485,7 +1488,7 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
       )}
 
       {/* ── Estado de la suscripción (solo con plan activo) ── */}
-      {espacio.plan && <div className="bg-surface-100 border border-border rounded-xl p-5">
+      {planActivo && <div className="bg-surface-100 border border-border rounded-xl p-5">
         <h2 className="font-semibold text-sm text-ink mb-3">Estado de la suscripción</h2>
         {pendiente ? (
           <div className="flex flex-col gap-4">
