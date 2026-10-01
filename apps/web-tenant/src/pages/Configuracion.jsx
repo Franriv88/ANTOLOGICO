@@ -1388,23 +1388,42 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
           <p className="text-sm text-ink-muted mb-4">Elegí un plan y período de facturación.</p>
 
           {/* Toggle de período */}
-          <div className="flex gap-1 p-1 bg-surface-200 rounded-lg mb-4 w-fit">
-            {[
-              { id: 'mensual',    label: 'Mensual' },
-              { id: 'trimestral', label: 'Trimestral' },
-              { id: 'anual',      label: 'Anual' },
-            ].map(op => (
-              <button key={op.id} onClick={() => setPeriodo(op.id)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${periodo === op.id ? 'bg-white shadow-sm text-ink' : 'text-ink-muted hover:text-ink'}`}>
-                {op.label}
-              </button>
-            ))}
+          <div className="flex flex-col gap-2 mb-4">
+            <div className="flex gap-1 p-1 bg-surface-200 rounded-lg w-fit">
+              {[
+                { id: 'mensual',    label: 'Mensual' },
+                { id: 'trimestral', label: 'Trimestral' },
+                { id: 'anual',      label: 'Anual' },
+              ].map(op => (
+                <button key={op.id} onClick={() => setPeriodo(op.id)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${periodo === op.id ? 'bg-white shadow-sm text-ink' : 'text-ink-muted hover:text-ink'}`}>
+                  {op.label}
+                  {op.id !== 'mensual' && (planesDB ?? [])[0] && (
+                    <span className="ml-1 text-success font-semibold">
+                      −{op.id === 'trimestral' ? ((planesDB ?? [])[0].descuentoTrimestral ?? 0) : ((planesDB ?? [])[0].descuentoAnual ?? 0)}%
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+            {periodo !== 'mensual' && (planesDB ?? []).length > 0 && (() => {
+              const meses     = periodo === 'trimestral' ? 3 : 12;
+              const maxAhorro = Math.max(...(planesDB ?? []).map(p => (p.precioMensual - precioConPeriodo(p, periodo)) * meses));
+              const label     = periodo === 'trimestral' ? 'cada 3 meses' : 'por año';
+              return (
+                <p className="text-xs text-success font-medium">
+                  ✓ Ahorrás hasta ${maxAhorro.toLocaleString('es-AR')} {label} comparado con el plan mensual
+                </p>
+              );
+            })()}
           </div>
 
           <div className="flex flex-col gap-3">
             {(planesDB ?? []).map(plan => {
               const precioPlan = precioConPeriodo(plan, periodo);
-              const dto = periodo === 'trimestral' ? plan.descuentoTrimestral : periodo === 'anual' ? plan.descuentoAnual : 0;
+              const dto    = periodo === 'trimestral' ? (plan.descuentoTrimestral ?? 0) : periodo === 'anual' ? (plan.descuentoAnual ?? 0) : 0;
+              const meses  = periodo === 'trimestral' ? 3 : periodo === 'anual' ? 12 : 0;
+              const ahorro = dto > 0 ? (plan.precioMensual - precioPlan) * meses : 0;
               return (
                 <div key={plan.id} className={`flex items-center gap-4 p-4 rounded-lg border transition-colors ${plan.id === 'estudio' ? 'border-primary/40 bg-primary/5' : 'border-border bg-white'}`}>
                   <div className="flex-1 min-w-0">
@@ -1422,10 +1441,9 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
                     </ul>
                   </div>
                   <div className="shrink-0 text-right">
-                    <p className="font-mono text-sm font-semibold text-ink">${precioPlan.toLocaleString('es-AR')}</p>
-                    <p className="text-xs text-ink-muted">/mes{dto > 0 ? ' equiv.' : ''}</p>
-                    {periodo === 'trimestral' && <p className="text-xs text-ink-muted">${(precioPlan * 3).toLocaleString('es-AR')} c/3m</p>}
-                    {periodo === 'anual'      && <p className="text-xs text-ink-muted">${(precioPlan * 12).toLocaleString('es-AR')} c/año</p>}
+                    <p className="font-mono text-sm font-semibold text-ink">${precioPlan.toLocaleString('es-AR')}/mes</p>
+                    {ahorro > 0 && <p className="text-xs text-success font-medium">Ahorrás ${ahorro.toLocaleString('es-AR')}</p>}
+                    {meses > 0 && <p className="text-xs text-ink-muted">${(precioPlan * meses).toLocaleString('es-AR')} c/{meses === 3 ? '3m' : 'año'}</p>}
                   </div>
                   <button
                     onClick={() => handleActivarPlan(plan)}

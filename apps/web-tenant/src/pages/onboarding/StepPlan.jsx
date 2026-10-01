@@ -38,18 +38,32 @@ export default function StepPlan({ onFinish, onBack }) {
       </div>
 
       {/* Toggle de período */}
-      <div className="flex gap-1 p-1 bg-surface-200 rounded-lg w-fit">
-        {PERIODOS.map(op => (
-          <button key={op.id} type="button" onClick={() => setPeriodo(op.id)}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${periodo === op.id ? 'bg-white shadow-sm text-ink' : 'text-ink-muted hover:text-ink'}`}>
-            {op.label}
-            {op.id !== 'mensual' && list[0] && (
-              <span className="ml-1 text-success font-semibold">
-                −{op.id === 'trimestral' ? (list[0].descuentoTrimestral ?? 0) : (list[0].descuentoAnual ?? 0)}%
-              </span>
-            )}
-          </button>
-        ))}
+      <div className="flex flex-col gap-2">
+        <div className="flex gap-1 p-1 bg-surface-200 rounded-lg w-fit">
+          {PERIODOS.map(op => (
+            <button key={op.id} type="button" onClick={() => setPeriodo(op.id)}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${periodo === op.id ? 'bg-white shadow-sm text-ink' : 'text-ink-muted hover:text-ink'}`}>
+              {op.label}
+              {op.id !== 'mensual' && list[0] && (
+                <span className="ml-1 text-success font-semibold">
+                  −{op.id === 'trimestral' ? (list[0].descuentoTrimestral ?? 0) : (list[0].descuentoAnual ?? 0)}%
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+        {periodo !== 'mensual' && list.length > 0 && (() => {
+          const maxAhorro = Math.max(...list.map(p => {
+            const meses = periodo === 'trimestral' ? 3 : 12;
+            return (p.precioMensual - precioConPeriodo(p, periodo)) * meses;
+          }));
+          const label = periodo === 'trimestral' ? 'cada 3 meses' : 'por año';
+          return (
+            <p className="text-xs text-success font-medium">
+              ✓ Ahorrás hasta {formatPrecio(maxAhorro)} {label} comparado con el plan mensual
+            </p>
+          );
+        })()}
       </div>
 
       {/* Cards de planes */}
@@ -115,14 +129,16 @@ function PlanCard({ plan, precio, descuento, periodo, features, selected, onSele
         <span className="font-semibold text-sm text-ink">{plan.nombre}</span>
         <div className="text-right shrink-0">
           <p className="text-xs font-mono text-ink font-semibold">{formatPrecio(precio)}/mes</p>
-          {descuento > 0 && (
-            <p className="text-xs text-success font-medium">−{descuento}%</p>
-          )}
-          {periodo !== 'mensual' && (
-            <p className="text-xs text-ink-muted">
-              {formatPrecio(precio * (periodo === 'trimestral' ? 3 : 12))} c/{periodo === 'trimestral' ? '3m' : 'año'}
-            </p>
-          )}
+          {descuento > 0 && (() => {
+            const meses  = periodo === 'trimestral' ? 3 : 12;
+            const ahorro = (plan.precioMensual - precio) * meses;
+            return (
+              <>
+                <p className="text-xs text-success font-medium">Ahorrás {formatPrecio(ahorro)}</p>
+                <p className="text-xs text-ink-muted">{formatPrecio(precio * meses)} c/{periodo === 'trimestral' ? '3m' : 'año'}</p>
+              </>
+            );
+          })()}
         </div>
       </div>
       <p className="text-xs text-primary font-medium mb-2">14 días gratis</p>
