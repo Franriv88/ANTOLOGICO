@@ -281,7 +281,7 @@ function CancelSubscriptionModal({ nombre, loading, error, onConfirm, onClose })
 
 // ── Modal: eliminar espacio adicional ────────────────────────────────────────
 
-function DeleteEspacioModal({ espacio, loading, error, onConfirm, onClose }) {
+function DeleteEspacioModal({ espacio, espacioQueQueda, loading, error, onConfirm, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => !loading && onClose()}>
       <div className="absolute inset-0 bg-ink/20 backdrop-blur-[2px]" />
@@ -291,7 +291,7 @@ function DeleteEspacioModal({ espacio, loading, error, onConfirm, onClose }) {
           Se darán de baja todos los talleres y reservas asociados a este espacio. Esta acción no se puede deshacer.
         </p>
         <p className="text-sm text-ink-muted mb-5">
-          Tu facturación volverá al <strong className="text-ink">100% del plan Estudio</strong> a partir del <strong className="text-ink">{firstDayOfNextMonth()}</strong>.
+          Tu facturación volverá al <strong className="text-ink">100% del plan Estudio</strong> para tu espacio <strong className="text-ink">{espacioQueQueda?.nombre}</strong> a partir del <strong className="text-ink">{firstDayOfNextMonth()}</strong>.
         </p>
         {error && <p className="mb-4 text-xs text-danger">{error}</p>}
         <div className="flex justify-end gap-3">
@@ -1527,6 +1527,7 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
       {deleteTarget && (
         <DeleteEspacioModal
           espacio={deleteTarget}
+          espacioQueQueda={espacio}
           loading={loading}
           error={error}
           onConfirm={handleEliminarEspacio}
