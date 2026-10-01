@@ -146,7 +146,7 @@ export const espacios = {
 
   updateIdentidad:      async (id, payload)       => espacios.update(id, payload),
   updateRedes:          async (id, redesSociales) => espacios.update(id, { redesSociales }),
-  updatePlan:           async (id, planId)        => espacios.update(id, { planId }),
+  updatePlan:           async (id, planId, plan)   => espacios.update(id, { planId, plan: plan ?? null }),
   solicitarCancelacion: async (id)                => espacios.update(id, { cancelacionPendiente: true }),
   reactivarSuscripcion: async (id)                => espacios.update(id, { cancelacionPendiente: false }),
   eliminar:             async (id)                => espacios.update(id, { estado: 'BAJA' }),

@@ -1307,6 +1307,12 @@ function EspacioLogoThumb({ esp }) {
   );
 }
 
+const PLANES = [
+  { id: 'esencial',    nombre: 'Esencial',    precioMensual: 3500,  descripcion: 'Hasta 10 talleres activos. Color de cabecera personalizado.' },
+  { id: 'profesional', nombre: 'Profesional', precioMensual: 7000,  descripcion: 'Talleres ilimitados. Imagen de cabecera. Dominio personalizado.' },
+  { id: 'estudio',     nombre: 'Estudio',     precioMensual: 12000, descripcion: 'Todo Profesional + múltiples espacios. Estadísticas avanzadas.' },
+];
+
 function TabSuscripcion({ espacio, espacios, refresh }) {
   const { user } = useAuth();
   const [loading,      setLoading]      = useState(false);
@@ -1317,6 +1323,15 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
 
   const pendiente      = espacio.cancelacionPendiente;
   const isEstudio      = espacio.plan?.nombre === 'Estudio';
+
+  async function handleActivarPlan(plan) {
+    setLoading(true); setError('');
+    try {
+      await espacioApi.updatePlan(espacio.id, plan.id, plan);
+      await refresh();
+    } catch (e) { setError(e.message || 'Ocurrió un error.'); }
+    finally { setLoading(false); }
+  }
   const otrosEspacios  = espacios.filter(e => e.id !== espacio.id);
   const precioBase     = espacio.plan?.precioMensual ?? 0;
   const precioAdicional = Math.round(precioBase * 0.5);
@@ -1354,7 +1369,42 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
   return (
     <div className="max-w-lg flex flex-col gap-6">
 
-      {/* ── Resumen de facturación ── */}
+      {/* ── Selector de plan (cuando no hay plan activo) ── */}
+      {!espacio.plan && (
+        <div className="bg-surface-100 border border-border rounded-xl p-5">
+          <p className="text-xs text-ink-muted mb-0.5">Plan actual</p>
+          <p className="text-xl font-display text-ink mb-1">Sin plan (modo prueba)</p>
+          <p className="text-sm text-ink-muted mb-4">Elegí un plan para activar tu suscripción.</p>
+          <div className="flex flex-col gap-3">
+            {PLANES.map(plan => (
+              <div key={plan.id} className={`flex items-center gap-4 p-4 rounded-lg border cursor-pointer transition-colors ${plan.nombre === 'Estudio' ? 'border-primary/40 bg-primary/5' : 'border-border bg-white'}`}>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <p className="text-sm font-semibold text-ink">{plan.nombre}</p>
+                    {plan.nombre === 'Estudio' && <span className="text-xs px-1.5 py-0.5 bg-primary/10 text-primary rounded font-medium">Multi-espacio</span>}
+                  </div>
+                  <p className="text-xs text-ink-muted">{plan.descripcion}</p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="font-mono text-sm font-semibold text-ink">${plan.precioMensual.toLocaleString('es-AR')}</p>
+                  <p className="text-xs text-ink-muted">/mes</p>
+                </div>
+                <button
+                  onClick={() => handleActivarPlan(plan)}
+                  disabled={loading}
+                  className="shrink-0 px-3 py-1.5 text-xs font-semibold bg-primary text-white rounded-md hover:bg-primary/90 disabled:opacity-50"
+                >
+                  Activar
+                </button>
+              </div>
+            ))}
+          </div>
+          {error && <p className="mt-3 text-xs text-danger">{error}</p>}
+        </div>
+      )}
+
+      {/* ── Resumen de facturación (cuando hay plan activo) ── */}
+      {espacio.plan && (
       <div className="bg-surface-100 border border-border rounded-xl p-5">
         <p className="text-xs text-ink-muted mb-0.5">Plan actual</p>
         <p className="text-xl font-display text-ink">{espacio.plan?.nombre ?? 'Sin plan (modo prueba)'}</p>
@@ -1392,6 +1442,7 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
           </p>
         ) : null}
       </div>
+      )}
 
       {/* ── Espacios adicionales (solo plan Estudio) ── */}
       {isEstudio && (
@@ -1431,8 +1482,8 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
         </div>
       )}
 
-      {/* ── Estado de la suscripción ── */}
-      <div className="bg-surface-100 border border-border rounded-xl p-5">
+      {/* ── Estado de la suscripción (solo con plan activo) ── */}
+      {espacio.plan && <div className="bg-surface-100 border border-border rounded-xl p-5">
         <h2 className="font-semibold text-sm text-ink mb-3">Estado de la suscripción</h2>
         {pendiente ? (
           <div className="flex flex-col gap-4">
@@ -1460,7 +1511,7 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
           </div>
         )}
         {error && <p className="mt-3 text-xs text-danger">{error}</p>}
-      </div>
+      </div>}
 
       {cancelOpen && (
         <CancelSubscriptionModal
