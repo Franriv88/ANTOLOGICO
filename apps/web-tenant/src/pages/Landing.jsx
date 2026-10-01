@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useRef, useState, useCallback } from 'react';
 import { IconAntologico, LogoAntologico } from '../components/LogoAntologico';
+import { usePlanes } from '../hooks/usePlanes';
 
 // ── Red Q como fondo (solo nodos + punteado, sin íconos) ──────────────────
 const EDGES = [
@@ -86,32 +87,17 @@ const FEATURES = [
   },
 ];
 
-const PLANS = [
-  {
-    nombre: 'Esencial',
-    precio: '$4.999',
-    features: ['Hasta 5 talleres activos', 'Dominio personalizado', 'Encabezado de color'],
-    highlight: false,
-  },
-  {
-    nombre: 'Profesional',
-    precio: '$9.999',
-    features: ['Talleres ilimitados', 'Dominio personalizado', 'Encabezado con imagen', 'Reportes exportables'],
-    highlight: true,
-  },
-  {
-    nombre: 'Estudio',
-    precio: '$19.999',
-    features: ['Talleres ilimitados', 'Múltiples espacios', 'Encabezado con imagen', 'Reportes', 'Auditoría'],
-    highlight: false,
-  },
-];
 
 // ── Componente principal ──────────────────────────────────────────────────
+function formatPrecio(n) {
+  return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
+}
+
 export default function Landing() {
-  const heroRef = useRef(null);
-  const rafRef  = useRef(null);
+  const heroRef  = useRef(null);
+  const rafRef   = useRef(null);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
+  const planes   = usePlanes();
 
   const handleMouseMove = useCallback((e) => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
@@ -238,9 +224,9 @@ export default function Landing() {
             Precios en ARS por mes, IVA incluido
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {PLANS.map(({ nombre, precio, features, highlight }) => (
+            {(planes ?? []).map(({ id, nombre, precioMensual, features = [], highlight }) => (
               <div
-                key={nombre}
+                key={id}
                 className={`rounded-xl border p-6 flex flex-col ${
                   highlight
                     ? 'border-primary bg-primary/5 shadow-md'
@@ -253,7 +239,7 @@ export default function Landing() {
                   </span>
                 )}
                 <h3 className="font-semibold text-ink mb-1">{nombre}</h3>
-                <p className="font-mono text-2xl text-ink font-semibold mb-4">{precio}</p>
+                <p className="font-mono text-2xl text-ink font-semibold mb-4">{formatPrecio(precioMensual)}<span className="text-sm font-normal text-ink-muted">/mes</span></p>
                 <ul className="flex flex-col gap-1.5 flex-1">
                   {features.map((f) => (
                     <li key={f} className="text-xs text-ink-muted flex items-center gap-1.5">

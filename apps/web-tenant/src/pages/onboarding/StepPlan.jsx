@@ -1,47 +1,16 @@
-import { useEffect, useState } from 'react';
-import { collection, getDocs, orderBy, query } from 'firebase/firestore';
-import { DEMO_MODE } from '../../lib/demo';
-import { firestore } from '../../lib/firebase';
-import { listPlanes } from '../../dataconnect-generated';
-
-const FEATURES_FALLBACK = {
-  Esencial:     ['Hasta 5 talleres activos', 'Dominio personalizado', 'Encabezado de color'],
-  Profesional:  ['Talleres ilimitados', 'Dominio personalizado', 'Encabezado con imagen', 'Reportes'],
-  Estudio:      ['Talleres ilimitados', 'Múltiples espacios', 'Encabezado con imagen', 'Reportes', 'Auditoría'],
-};
-
-const PLANES_DEMO = [
-  { id: 'esencial',    nombre: 'Esencial',    precioMensual: 5900,  features: FEATURES_FALLBACK.Esencial,    highlight: false },
-  { id: 'profesional', nombre: 'Profesional', precioMensual: 12900, features: FEATURES_FALLBACK.Profesional, highlight: true  },
-  { id: 'estudio',     nombre: 'Estudio',     precioMensual: 24900, features: FEATURES_FALLBACK.Estudio,     highlight: false },
-];
+import { useState } from 'react';
+import { usePlanes, PLANES_FALLBACK } from '../../hooks/usePlanes';
 
 function formatPrecio(n) {
   return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
 }
 
 export default function StepPlan({ onFinish, onBack }) {
-  const [planes, setPlanes]       = useState(null);
+  const planesDB = usePlanes();
   const [selected, setSelected]   = useState(null);
   const [loading, setLoading]     = useState(false);
 
-  useEffect(() => {
-    if (DEMO_MODE) {
-      // Leer planes de Firestore (gestionados por Super Admin), con fallback a hardcoded
-      getDocs(query(collection(firestore, 'demo_planes'), orderBy('order')))
-        .then(snap => {
-          const fromDB = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-          setPlanes(fromDB.length > 0 ? fromDB : PLANES_DEMO);
-        })
-        .catch(() => setPlanes(PLANES_DEMO));
-      return;
-    }
-    listPlanes()
-      .then(({ data }) => setPlanes(data?.planes ?? []))
-      .catch(() => setPlanes([]));
-  }, []);
-
-  const list = planes ?? [];
+  const list = planesDB ?? [];
 
   async function handleFinish() {
     setLoading(true);
@@ -68,7 +37,7 @@ export default function StepPlan({ onFinish, onBack }) {
             key={plan.id}
             nombre={plan.nombre}
             precioMensual={plan.precioMensual}
-            features={Array.isArray(plan.features) ? plan.features : FEATURES_FALLBACK[plan.nombre] ?? []}
+            features={Array.isArray(plan.features) ? plan.features : (PLANES_FALLBACK.find(p => p.id === plan.id)?.features ?? [])}
             highlight={plan.highlight}
             selected={selected === plan.id}
             onSelect={() => setSelected(plan.id)}

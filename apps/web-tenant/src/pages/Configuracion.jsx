@@ -7,6 +7,7 @@ import { useEspacio } from '../context/EspacioContext';
 import { espacios as espacioApi, rubros as rubrosApi } from '../services/api';
 import { SOCIAL_NETWORKS, SocialIcon } from '../components/SocialIcons';
 import { IconAntologico } from '../components/LogoAntologico';
+import { usePlanes } from '../hooks/usePlanes';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -1307,14 +1308,9 @@ function EspacioLogoThumb({ esp }) {
   );
 }
 
-const PLANES = [
-  { id: 'esencial',    nombre: 'Esencial',    precioMensual: 3500,  descripcion: 'Hasta 10 talleres activos. Color de cabecera personalizado.' },
-  { id: 'profesional', nombre: 'Profesional', precioMensual: 7000,  descripcion: 'Talleres ilimitados. Imagen de cabecera. Dominio personalizado.' },
-  { id: 'estudio',     nombre: 'Estudio',     precioMensual: 12000, descripcion: 'Todo Profesional + múltiples espacios. Estadísticas avanzadas.' },
-];
-
 function TabSuscripcion({ espacio, espacios, refresh }) {
   const { user } = useAuth();
+  const planesDB = usePlanes();
   const [loading,      setLoading]      = useState(false);
   const [cancelOpen,   setCancelOpen]   = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -1322,7 +1318,7 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
   const [error,        setError]        = useState('');
 
   const pendiente      = espacio.cancelacionPendiente;
-  const isEstudio      = espacio.plan?.nombre === 'Estudio';
+  const isEstudio      = espacio.planId === 'estudio';
 
   async function handleActivarPlan(plan) {
     setLoading(true); setError('');
@@ -1376,17 +1372,23 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
           <p className="text-xl font-display text-ink mb-1">Sin plan (modo prueba)</p>
           <p className="text-sm text-ink-muted mb-4">Elegí un plan para activar tu suscripción.</p>
           <div className="flex flex-col gap-3">
-            {PLANES.map(plan => (
-              <div key={plan.id} className={`flex items-center gap-4 p-4 rounded-lg border cursor-pointer transition-colors ${plan.nombre === 'Estudio' ? 'border-primary/40 bg-primary/5' : 'border-border bg-white'}`}>
+            {(planesDB ?? []).map(plan => (
+              <div key={plan.id} className={`flex items-center gap-4 p-4 rounded-lg border transition-colors ${plan.id === 'estudio' ? 'border-primary/40 bg-primary/5' : 'border-border bg-white'}`}>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
                     <p className="text-sm font-semibold text-ink">{plan.nombre}</p>
-                    {plan.nombre === 'Estudio' && <span className="text-xs px-1.5 py-0.5 bg-primary/10 text-primary rounded font-medium">Multi-espacio</span>}
+                    {plan.id === 'estudio' && <span className="text-xs px-1.5 py-0.5 bg-primary/10 text-primary rounded font-medium">Multi-espacio</span>}
                   </div>
-                  <p className="text-xs text-ink-muted">{plan.descripcion}</p>
+                  <ul className="flex flex-col gap-0.5 mt-1">
+                    {(plan.features ?? []).slice(0, 3).map((f, i) => (
+                      <li key={i} className="text-xs text-ink-muted flex items-center gap-1">
+                        <span className="text-primary">✓</span> {f}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
                 <div className="shrink-0 text-right">
-                  <p className="font-mono text-sm font-semibold text-ink">${plan.precioMensual.toLocaleString('es-AR')}</p>
+                  <p className="font-mono text-sm font-semibold text-ink">${plan.precioMensual?.toLocaleString('es-AR')}</p>
                   <p className="text-xs text-ink-muted">/mes</p>
                 </div>
                 <button
