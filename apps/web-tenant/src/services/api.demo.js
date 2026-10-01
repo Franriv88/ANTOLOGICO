@@ -112,7 +112,7 @@ export const espacios = {
       }
     }
 
-    return list;
+    return list.filter(e => e.estado !== 'BAJA');
   },
 
   get: async (id) => {
@@ -149,6 +149,7 @@ export const espacios = {
   updatePlan:           async (id, planId)        => espacios.update(id, { planId }),
   solicitarCancelacion: async (id)                => espacios.update(id, { cancelacionPendiente: true }),
   reactivarSuscripcion: async (id)                => espacios.update(id, { cancelacionPendiente: false }),
+  eliminar:             async (id)                => espacios.update(id, { estado: 'BAJA' }),
 };
 
 export const rubros = {

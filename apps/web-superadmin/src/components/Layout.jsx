@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { IconAntologico } from './LogoAntologico';
 
 const NAV = [
   { to: '/tenants',  label: 'Tenants' },
@@ -23,11 +24,18 @@ export default function Layout({ children }) {
       {/* Sidebar oscuro */}
       <aside className="w-52 shrink-0 flex flex-col h-screen" style={{ backgroundColor: '#1A1611' }}>
         {/* Logo */}
-        <div className="px-5 py-5 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-          <span className="font-display text-lg" style={{ color: '#EFE7D8' }}>Antológico</span>
-          <div className="mt-1.5 inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold"
-            style={{ backgroundColor: '#B98527', color: '#1A1611' }}>
-            Super Admin
+        <div className="px-4 py-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+          <div className="flex items-center gap-3">
+            <IconAntologico size={36} variant="bare" />
+            <div>
+              <div className="font-display text-base leading-tight" style={{ color: '#EFE7D8' }}>Antológico</div>
+              <div
+                className="mt-1 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold leading-none"
+                style={{ backgroundColor: '#B98527', color: '#1A1611' }}
+              >
+                Super Admin
+              </div>
+            </div>
           </div>
         </div>
 

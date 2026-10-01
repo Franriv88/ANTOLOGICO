@@ -199,6 +199,12 @@ export default function Login() {
 // ─── Componente de login/registro de producción ──────────────────────────────
 function TenantLoginPage() {
   const navigate = useNavigate();
+  const { user }  = useAuth();
+
+  // Navegar en cuanto onAuthStateChanged confirme el usuario
+  useEffect(() => {
+    if (user) navigate('/workshops', { replace: true });
+  }, [user, navigate]);
 
   // Tabs: 'login' | 'register'
   const [tab, setTab] = useState('login');
@@ -232,10 +238,9 @@ function TenantLoginPage() {
     setLoading(true);
     try {
       await signInWithPopup(auth, provider);
-      navigate('/workshops');
+      // La navegación la maneja el useEffect que observa `user`
     } catch (err) {
       if (err.code !== 'auth/popup-closed-by-user') setError(authErrorMsg(err.code));
-    } finally {
       setLoading(false);
     }
   }
@@ -248,10 +253,9 @@ function TenantLoginPage() {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, loginEmail, loginPass);
-      navigate('/workshops');
+      // La navegación la maneja el useEffect que observa `user`
     } catch (err) {
       setError(authErrorMsg(err.code));
-    } finally {
       setLoading(false);
     }
   }

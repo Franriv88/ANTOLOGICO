@@ -2,9 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import Swal from 'sweetalert2';
 import Layout from '../components/Layout';
+import { useAuth } from '../context/AuthContext';
 import { useEspacio } from '../context/EspacioContext';
 import { espacios as espacioApi, rubros as rubrosApi } from '../services/api';
 import { SOCIAL_NETWORKS, SocialIcon } from '../components/SocialIcons';
+import { IconAntologico } from '../components/LogoAntologico';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -276,6 +278,90 @@ function CancelSubscriptionModal({ nombre, loading, error, onConfirm, onClose })
   );
 }
 
+// ── Modal: eliminar espacio adicional ────────────────────────────────────────
+
+function DeleteEspacioModal({ espacio, loading, error, onConfirm, onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => !loading && onClose()}>
+      <div className="absolute inset-0 bg-ink/20 backdrop-blur-[2px]" />
+      <div className="relative bg-surface-0 border border-border rounded-xl shadow-2xl p-6 max-w-md w-full" onClick={e => e.stopPropagation()}>
+        <h3 className="font-display text-lg text-ink mb-2">¿Eliminar el espacio <em>{espacio?.nombre}</em>?</h3>
+        <p className="text-sm text-ink-muted mb-1.5">
+          Se darán de baja todos los talleres y reservas asociados a este espacio. Esta acción no se puede deshacer.
+        </p>
+        <p className="text-sm text-ink-muted mb-5">
+          Tu facturación volverá al <strong className="text-ink">100% del plan Estudio</strong> a partir del <strong className="text-ink">{firstDayOfNextMonth()}</strong>.
+        </p>
+        {error && <p className="mb-4 text-xs text-danger">{error}</p>}
+        <div className="flex justify-end gap-3">
+          <button onClick={onClose} disabled={loading} className="px-4 py-2 text-sm font-medium text-ink hover:bg-surface-200 rounded-md border border-border disabled:opacity-50">Cancelar</button>
+          <button onClick={onConfirm} disabled={loading} className="px-4 py-2 text-sm font-semibold text-white bg-danger hover:bg-danger/90 rounded-md disabled:opacity-50">
+            {loading ? 'Eliminando…' : 'Eliminar espacio'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Modal: agregar espacio adicional ─────────────────────────────────────────
+
+function AgregarEspacioModal({ userId, plan, onSuccess, onClose }) {
+  const [nombre,  setNombre]  = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error,   setError]   = useState('');
+  const precioAdicional = Math.round((plan?.precioMensual ?? 0) * 0.5);
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    if (!nombre.trim()) return;
+    setLoading(true); setError('');
+    try {
+      await espacioApi.create({
+        userId,
+        nombre: nombre.trim(),
+        plan,
+        estado: 'ACTIVO',
+        cancelacionPendiente: false,
+      });
+      onSuccess();
+    } catch (err) { setError(err.message || 'Ocurrió un error.'); }
+    finally { setLoading(false); }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => !loading && onClose()}>
+      <div className="absolute inset-0 bg-ink/20 backdrop-blur-[2px]" />
+      <div className="relative bg-surface-0 border border-border rounded-xl shadow-2xl p-6 max-w-md w-full" onClick={e => e.stopPropagation()}>
+        <h3 className="font-display text-lg text-ink mb-2">Agregar espacio adicional</h3>
+        <p className="text-sm text-ink-muted mb-5">
+          Se facturará al <strong className="text-ink">50% del plan Estudio</strong> — ${precioAdicional.toLocaleString('es-AR')}/mes adicionales.
+        </p>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div>
+            <label className="text-xs font-medium text-ink mb-1.5 block">Nombre del espacio</label>
+            <input
+              value={nombre}
+              onChange={e => setNombre(e.target.value)}
+              placeholder="Ej: Studio Norte, Espacio Palermo…"
+              className="w-full px-3 py-2 border border-border rounded-md text-sm text-ink bg-white focus:outline-none focus:border-primary"
+              required
+              autoFocus
+            />
+          </div>
+          {error && <p className="text-xs text-danger">{error}</p>}
+          <div className="flex justify-end gap-3 mt-1">
+            <button type="button" onClick={onClose} disabled={loading} className="px-4 py-2 text-sm font-medium text-ink hover:bg-surface-200 rounded-md border border-border disabled:opacity-50">Cancelar</button>
+            <button type="submit" disabled={loading || !nombre.trim()} className="px-4 py-2 text-sm font-semibold bg-primary text-white rounded-md hover:bg-primary/90 disabled:opacity-50">
+              {loading ? 'Creando…' : 'Crear espacio'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 // ── Compartir espacio ────────────────────────────────────────────────────────
 
 function CompartirEspacio({ espacio }) {
@@ -391,22 +477,7 @@ function normalize(s) { return (s ?? '').toLowerCase().trim().replace(/\s+/g, ' 
 
 // ── Redes Sociales ────────────────────────────────────────────────────────────
 
-function RedesSocialesSection({ espacio, refresh }) {
-  const parseRedes = () => {
-    const rs = espacio.redesSociales;
-    if (!rs) return { style: 'brand', minimalColor: '', links: {}, visible: {} };
-    return { style: rs.style ?? 'brand', minimalColor: rs.minimalColor ?? '', links: rs.links ?? {}, visible: rs.visible ?? {} };
-  };
-
-  const init = parseRedes();
-  const [links,        setLinks]        = useState(init.links);
-  const [style,        setStyle]        = useState(init.style);
-  const [minimalColor, setMinimalColor] = useState(init.minimalColor);
-  const [visible,      setVisible]      = useState(init.visible);
-  const [saving,       setSaving]       = useState(false);
-  const [saved,        setSaved]        = useState(false);
-  const [error,        setError]        = useState('');
-
+function RedesSocialesSection({ espacio, links, setLinks, style, setStyle, minimalColor, setMinimalColor, visible, setVisible }) {
   // Paleta de la identidad del espacio
   const palette = (() => {
     const bc = espacio.brandColors;
@@ -417,28 +488,6 @@ function RedesSocialesSection({ espacio, refresh }) {
 
   // Si el color minimal no está elegido, usamos el primero de la paleta o primary
   const effectiveMinimalColor = minimalColor || palette[0] || '#E85D4A';
-
-  async function handleSave() {
-    setSaving(true); setError(''); setSaved(false);
-    try {
-      const cleanLinks = Object.fromEntries(
-        Object.entries(links).filter(([, v]) => v?.trim())
-      );
-      await espacioApi.updateRedes(espacio.id, {
-        style,
-        minimalColor: style === 'minimal' ? effectiveMinimalColor : null,
-        links: cleanLinks,
-        visible,
-      });
-      await refresh();
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2500);
-    } catch (e) {
-      setError(e.message || 'Error al guardar.');
-    } finally {
-      setSaving(false);
-    }
-  }
 
   const iconColor = (net) => style === 'brand' ? net.color : effectiveMinimalColor;
 
@@ -530,19 +579,6 @@ function RedesSocialesSection({ espacio, refresh }) {
         ))}
       </div>
 
-      {error && <p className="text-xs text-danger mb-3">{error}</p>}
-
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={saving}
-          className="px-5 py-2 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary-strong transition-colors disabled:opacity-50"
-        >
-          {saving ? 'Guardando…' : 'Guardar redes'}
-        </button>
-        {saved && <span className="text-xs text-green-600 font-medium">¡Guardado!</span>}
-      </div>
     </div>
   );
 }
@@ -815,6 +851,17 @@ function TabIdentidad({ espacio, refresh }) {
   const planNombre = espacio.plan?.nombre ?? '';
   const isEstudio  = planNombre === 'Estudio';
 
+  const parseRedes = () => {
+    const rs = espacio.redesSociales;
+    if (!rs) return { style: 'brand', minimalColor: '', links: {}, visible: {} };
+    return { style: rs.style ?? 'brand', minimalColor: rs.minimalColor ?? '', links: rs.links ?? {}, visible: rs.visible ?? {} };
+  };
+  const initRedes = parseRedes();
+  const [redesLinks,        setRedesLinks]        = useState(initRedes.links);
+  const [redesStyle,        setRedesStyle]        = useState(initRedes.style);
+  const [redesMinimalColor, setRedesMinimalColor] = useState(initRedes.minimalColor);
+  const [redesVisible,      setRedesVisible]      = useState(initRedes.visible);
+
   const parseBrandColors = () => {
     const raw = espacio.brandColors;
     const emptyRoles = { primary: '', secondary: '', button: '', bg: '', card: '', textHeading: '', textCard: '' };
@@ -923,7 +970,7 @@ function TabIdentidad({ espacio, refresh }) {
 
   // ── Save ──────────────────────────────────────────────────────────────────
   async function handleSave(e) {
-    e.preventDefault();
+    e?.preventDefault();
     setSaving(true); setError(''); setSaved(false);
     const validColors = colors.filter(c => isValidColor(c));
     try {
@@ -933,6 +980,16 @@ function TabIdentidad({ espacio, refresh }) {
         logoScale,
         brandColors: { palette: validColors, roles },
         brandFont:   fontPair?.key ?? null,
+      });
+      const cleanLinks = Object.fromEntries(
+        Object.entries(redesLinks).filter(([, v]) => v?.trim())
+      );
+      const effectiveMinColor = redesMinimalColor || validColors[0] || '#E85D4A';
+      await espacioApi.updateRedes(espacio.id, {
+        style: redesStyle,
+        minimalColor: redesStyle === 'minimal' ? effectiveMinColor : null,
+        links: cleanLinks,
+        visible: redesVisible,
       });
       await refresh();
       setSaved(true);
@@ -950,7 +1007,7 @@ function TabIdentidad({ espacio, refresh }) {
 
   return (
     <>
-    <form onSubmit={handleSave} className="flex flex-col gap-6">
+    <form onSubmit={handleSave} className="flex flex-col gap-6" id="form-identidad">
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_280px] gap-8 items-start">
 
         {/* ── Left: config ────────────────────────────────────────────── */}
@@ -1202,19 +1259,30 @@ function TabIdentidad({ espacio, refresh }) {
         </div>
       </div>
 
-      {error && <p className="text-xs text-danger">{error}</p>}
-
-      <div className="flex items-center gap-3 pb-4">
-        <button type="submit" disabled={saving || removingBg}
-          className="px-5 py-2 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary-strong transition-colors disabled:opacity-50">
-          {saving ? 'Guardando…' : 'Guardar identidad'}
-        </button>
-        {saved && <span className="text-xs text-green-600 font-medium">¡Guardado!</span>}
-      </div>
     </form>
 
     <div className="mt-2">
-      <RedesSocialesSection espacio={espacio} refresh={refresh} />
+      <RedesSocialesSection
+        espacio={espacio}
+        links={redesLinks}        setLinks={setRedesLinks}
+        style={redesStyle}        setStyle={setRedesStyle}
+        minimalColor={redesMinimalColor} setMinimalColor={setRedesMinimalColor}
+        visible={redesVisible}    setVisible={setRedesVisible}
+      />
+    </div>
+
+    {error && <p className="text-xs text-danger mt-4">{error}</p>}
+
+    <div className="flex items-center gap-3 py-6">
+      <button
+        type="submit"
+        form="form-identidad"
+        disabled={saving || removingBg}
+        className="px-5 py-2 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary-strong transition-colors disabled:opacity-50"
+      >
+        {saving ? 'Guardando…' : 'Guardar identidad'}
+      </button>
+      {saved && <span className="text-xs text-green-600 font-medium">¡Guardado!</span>}
     </div>
     </>
   );
@@ -1222,18 +1290,44 @@ function TabIdentidad({ espacio, refresh }) {
 
 // ── Tab: Suscripción ──────────────────────────────────────────────────────────
 
-function TabSuscripcion({ espacio, refresh }) {
-  const [loading,     setLoading]     = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [error,       setError]       = useState('');
-  const pendiente = espacio.cancelacionPendiente;
+function EspacioLogoThumb({ esp }) {
+  if (esp.logoUrl) {
+    return (
+      <div className={`w-8 h-8 overflow-hidden shrink-0 ${
+        esp.logoShape === 'round' ? 'rounded-full' : esp.logoShape === 'square' ? 'rounded-none' : 'rounded-lg'
+      }`}>
+        <img src={esp.logoUrl} alt={esp.nombre} className="w-full h-full object-contain" />
+      </div>
+    );
+  }
+  return (
+    <div className="w-8 h-8 shrink-0 rounded-lg bg-surface-200 flex items-center justify-center">
+      <IconAntologico size={20} />
+    </div>
+  );
+}
+
+function TabSuscripcion({ espacio, espacios, refresh }) {
+  const { user } = useAuth();
+  const [loading,      setLoading]      = useState(false);
+  const [cancelOpen,   setCancelOpen]   = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [agregarOpen,  setAgregarOpen]  = useState(false);
+  const [error,        setError]        = useState('');
+
+  const pendiente      = espacio.cancelacionPendiente;
+  const isEstudio      = espacio.plan?.nombre === 'Estudio';
+  const otrosEspacios  = espacios.filter(e => e.id !== espacio.id);
+  const precioBase     = espacio.plan?.precioMensual ?? 0;
+  const precioAdicional = Math.round(precioBase * 0.5);
+  const totalMensual   = precioBase + otrosEspacios.length * precioAdicional;
 
   async function handleCancelar() {
     setLoading(true); setError('');
     try {
       await espacioApi.solicitarCancelacion(espacio.id);
       await refresh();
-      setConfirmOpen(false);
+      setCancelOpen(false);
     } catch (e) { setError(e.message || 'Ocurrió un error.'); }
     finally { setLoading(false); }
   }
@@ -1247,17 +1341,97 @@ function TabSuscripcion({ espacio, refresh }) {
     finally { setLoading(false); }
   }
 
+  async function handleEliminarEspacio() {
+    setLoading(true); setError('');
+    try {
+      await espacioApi.eliminar(deleteTarget.id);
+      await refresh();
+      setDeleteTarget(null);
+    } catch (e) { setError(e.message || 'Ocurrió un error.'); }
+    finally { setLoading(false); }
+  }
+
   return (
     <div className="max-w-lg flex flex-col gap-6">
+
+      {/* ── Resumen de facturación ── */}
       <div className="bg-surface-100 border border-border rounded-xl p-5">
         <p className="text-xs text-ink-muted mb-0.5">Plan actual</p>
         <p className="text-xl font-display text-ink">{espacio.plan?.nombre ?? 'Sin plan (modo prueba)'}</p>
-        {espacio.plan && (
+
+        {espacio.plan && otrosEspacios.length > 0 ? (
+          <div className="mt-4 flex flex-col gap-2">
+            {/* Espacio principal */}
+            <div className="flex items-center gap-3">
+              <EspacioLogoThumb esp={espacio} />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm text-ink truncate">{espacio.nombre}</p>
+                <p className="text-xs text-ink-muted">Plan Estudio · 100%</p>
+              </div>
+              <span className="font-mono text-sm text-ink shrink-0">${precioBase.toLocaleString('es-AR')}/mes</span>
+            </div>
+            {/* Espacios adicionales */}
+            {otrosEspacios.map(esp => (
+              <div key={esp.id} className="flex items-center gap-3">
+                <EspacioLogoThumb esp={esp} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-ink truncate">{esp.nombre}</p>
+                  <p className="text-xs text-ink-muted">Plan Estudio · 50%</p>
+                </div>
+                <span className="font-mono text-sm text-ink shrink-0">${precioAdicional.toLocaleString('es-AR')}/mes</span>
+              </div>
+            ))}
+            <div className="border-t border-border pt-3 flex items-center justify-between">
+              <span className="text-sm font-semibold text-ink">Total mensual</span>
+              <span className="font-mono text-base font-semibold text-ink">${totalMensual.toLocaleString('es-AR')}/mes</span>
+            </div>
+          </div>
+        ) : espacio.plan ? (
           <p className="text-xs text-ink-muted mt-1 font-mono">
-            ${espacio.plan.precioMensual?.toLocaleString('es-AR')} / mes
+            ${precioBase.toLocaleString('es-AR')} / mes
           </p>
-        )}
+        ) : null}
       </div>
+
+      {/* ── Espacios adicionales (solo plan Estudio) ── */}
+      {isEstudio && (
+        <div className="bg-surface-100 border border-border rounded-xl p-5">
+          <h2 className="font-semibold text-sm text-ink mb-3">Espacios adicionales</h2>
+          {otrosEspacios.length > 0 ? (
+            <div className="flex flex-col gap-3">
+              {otrosEspacios.map(esp => (
+                <div key={esp.id} className="flex items-center gap-3 p-3 bg-white border border-border rounded-lg">
+                  <EspacioLogoThumb esp={esp} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-ink truncate">{esp.nombre}</p>
+                    <p className="text-xs font-mono text-ink-muted">${precioAdicional.toLocaleString('es-AR')}/mes · 50% del plan</p>
+                  </div>
+                  <button
+                    onClick={() => { setDeleteTarget(esp); setError(''); }}
+                    className="shrink-0 text-xs text-danger hover:underline"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              <p className="text-sm text-ink-muted">
+                Podés agregar un espacio adicional por el 50% del plan Estudio — ${precioAdicional.toLocaleString('es-AR')}/mes.
+              </p>
+              <button
+                onClick={() => setAgregarOpen(true)}
+                className="self-start px-4 py-2 text-sm font-semibold bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+              >
+                + Agregar espacio
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Estado de la suscripción ── */}
       <div className="bg-surface-100 border border-border rounded-xl p-5">
         <h2 className="font-semibold text-sm text-ink mb-3">Estado de la suscripción</h2>
         {pendiente ? (
@@ -1279,7 +1453,7 @@ function TabSuscripcion({ espacio, refresh }) {
         ) : (
           <div className="flex flex-col gap-3">
             <p className="text-sm text-ink-muted">Tu suscripción está activa. Podés cancelarla en cualquier momento.</p>
-            <button onClick={() => setConfirmOpen(true)}
+            <button onClick={() => setCancelOpen(true)}
               className="self-start px-4 py-2 text-sm font-medium text-danger border border-danger/30 rounded-md hover:bg-danger/5 transition-colors">
               Cancelar suscripción
             </button>
@@ -1287,13 +1461,31 @@ function TabSuscripcion({ espacio, refresh }) {
         )}
         {error && <p className="mt-3 text-xs text-danger">{error}</p>}
       </div>
-      {confirmOpen && (
+
+      {cancelOpen && (
         <CancelSubscriptionModal
           nombre={espacio.nombre}
           loading={loading}
           error={error}
           onConfirm={handleCancelar}
-          onClose={() => { setConfirmOpen(false); setError(''); }}
+          onClose={() => { setCancelOpen(false); setError(''); }}
+        />
+      )}
+      {deleteTarget && (
+        <DeleteEspacioModal
+          espacio={deleteTarget}
+          loading={loading}
+          error={error}
+          onConfirm={handleEliminarEspacio}
+          onClose={() => { setDeleteTarget(null); setError(''); }}
+        />
+      )}
+      {agregarOpen && (
+        <AgregarEspacioModal
+          userId={user?.uid}
+          plan={espacio.plan}
+          onSuccess={async () => { await refresh(); setAgregarOpen(false); }}
+          onClose={() => setAgregarOpen(false)}
         />
       )}
     </div>
@@ -1303,7 +1495,7 @@ function TabSuscripcion({ espacio, refresh }) {
 // ── Root ──────────────────────────────────────────────────────────────────────
 
 export default function Configuracion() {
-  const { activeEspacio, refresh } = useEspacio();
+  const { activeEspacio, espacios, refresh } = useEspacio();
   const [tab, setTab] = useState(() => sessionStorage.getItem('config_tab') || 'espacio');
 
   function handleSetTab(t) {
@@ -1340,7 +1532,7 @@ export default function Configuracion() {
 
         {tab === 'espacio'     && <TabEspacio     espacio={activeEspacio} refresh={refresh} />}
         {tab === 'identidad'   && <TabIdentidad   espacio={activeEspacio} refresh={refresh} />}
-        {tab === 'suscripcion' && <TabSuscripcion espacio={activeEspacio} refresh={refresh} />}
+        {tab === 'suscripcion' && <TabSuscripcion espacio={activeEspacio} espacios={espacios} refresh={refresh} />}
       </div>
     </Layout>
   );
