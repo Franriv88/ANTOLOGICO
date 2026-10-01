@@ -27,16 +27,16 @@ export default function Onboarding() {
     setStep((s) => Math.max(0, s - 1));
   }
 
-  async function finish(planId) {
+  async function finish({ planId, periodo = 'mensual' } = {}) {
     if (planId && data.espacioId) {
       try {
-        // UUID real → API de plan; nombre demo → guardamos como selectedPlan
-        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(planId);
-        if (isUUID) {
-          await espacioApi.updatePlan(data.espacioId, planId);
-        } else {
-          await espacioApi.update(data.espacioId, { selectedPlan: planId });
-        }
+        const planesSnap = await import('firebase/firestore').then(({ getDoc, doc }) =>
+          import('../../lib/firebase').then(({ firestore }) =>
+            getDoc(doc(firestore, 'demo_planes', planId))
+          )
+        );
+        const plan = planesSnap.exists() ? { id: planesSnap.id, ...planesSnap.data() } : null;
+        await espacioApi.updatePlan(data.espacioId, planId, plan, periodo);
       } catch (e) {
         console.error('Error al guardar el plan:', e);
       }
