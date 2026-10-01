@@ -2,6 +2,8 @@ import {
   collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc,
   query, orderBy, writeBatch,
 } from 'firebase/firestore';
+
+const C_PROMO = 'demo_promo';
 import { firestore } from '../lib/firebase';
 
 const C_ADMINS   = 'sa_admins';
@@ -73,6 +75,24 @@ async function ensurePlanesSeeded() {
       batch.set(doc(firestore, C_PLANES, id), { ...data, createdAt: new Date().toISOString() });
     });
     await batch.commit();
+  } else {
+    // Parchar planes existentes que no tengan campos de descuento
+    const batch = writeBatch(firestore);
+    let changed = false;
+    snap.docs.forEach(d => {
+      const data = d.data();
+      const seed = SEED_PLANES.find(p => p.id === d.id);
+      const patch = {};
+      if (data.descuentoTrimestral == null && seed?.descuentoTrimestral != null)
+        patch.descuentoTrimestral = seed.descuentoTrimestral;
+      if (data.descuentoAnual == null && seed?.descuentoAnual != null)
+        patch.descuentoAnual = seed.descuentoAnual;
+      if (Object.keys(patch).length > 0) {
+        batch.update(doc(firestore, C_PLANES, d.id), patch);
+        changed = true;
+      }
+    });
+    if (changed) await batch.commit();
   }
   _planesSeeded = true;
 }
@@ -117,6 +137,33 @@ export const planes = {
 
   remove: async (id) => {
     await deleteDoc(doc(firestore, C_PLANES, id));
+  },
+};
+
+// ─── Promoción global ─────────────────────────────────────────────────────────
+export const promoApi = {
+  get: async () => {
+    const snap = await getDoc(doc(firestore, C_PROMO, 'current'));
+    return snap.exists() ? snap.data() : null;
+  },
+  save: async (payload) => {
+    await setDoc(doc(firestore, C_PROMO, 'current'), {
+      ...payload,
+      updatedAt: new Date().toISOString(),
+    });
+    const snap = await getDoc(doc(firestore, C_PROMO, 'current'));
+    return snap.exists() ? snap.data() : null;
+  },
+  toggle: async (activo) => {
+    const ref = doc(firestore, C_PROMO, 'current');
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+      await updateDoc(ref, { activo, updatedAt: new Date().toISOString() });
+    } else {
+      await setDoc(ref, { activo, descuento: 10, tipo: 'manual', inicio: null, fin: null, label: 'Promoción', updatedAt: new Date().toISOString() });
+    }
+    const updated = await getDoc(ref);
+    return updated.exists() ? updated.data() : null;
   },
 };
 

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { usePlanes, PLANES_FALLBACK, precioConPeriodo } from '../../hooks/usePlanes';
+import { usePromo, isPromoActiva, precioConPromoYPeriodo } from '../../hooks/usePromo';
 
 function formatPrecio(n) {
   return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
@@ -13,11 +14,13 @@ const PERIODOS = [
 
 export default function StepPlan({ onFinish, onBack }) {
   const planesDB = usePlanes();
+  const promo    = usePromo();
   const [selected, setSelected] = useState(null);   // planId
   const [periodo,  setPeriodo]  = useState('mensual');
   const [loading,  setLoading]  = useState(false);
 
-  const list = planesDB ?? [];
+  const list        = planesDB ?? [];
+  const promoActiva = isPromoActiva(promo);
 
   async function handleFinish() {
     setLoading(true);
@@ -37,6 +40,13 @@ export default function StepPlan({ onFinish, onBack }) {
         </p>
       </div>
 
+      {/* Promo banner */}
+      {promoActiva && (
+        <div className="flex items-center gap-2 bg-primary/8 text-primary text-xs font-semibold px-3 py-2 rounded-lg">
+          🎉 {promo.label} — {promo.descuento}% de descuento en todos los planes
+        </div>
+      )}
+
       {/* Toggle de período */}
       <div className="flex flex-col gap-2">
         <div className="flex gap-1 p-1 bg-surface-200 rounded-lg w-fit">
@@ -44,7 +54,7 @@ export default function StepPlan({ onFinish, onBack }) {
             <button key={op.id} type="button" onClick={() => setPeriodo(op.id)}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${periodo === op.id ? 'bg-white shadow-sm text-ink' : 'text-ink-muted hover:text-ink'}`}>
               {op.label}
-              {op.id !== 'mensual' && list[0] && (
+              {op.id !== 'mensual' && list[0] && (list[0].descuentoTrimestral ?? 0) + (list[0].descuentoAnual ?? 0) > 0 && (
                 <span className="ml-1 text-success font-semibold">
                   −{op.id === 'trimestral' ? (list[0].descuentoTrimestral ?? 0) : (list[0].descuentoAnual ?? 0)}%
                 </span>
@@ -55,7 +65,7 @@ export default function StepPlan({ onFinish, onBack }) {
         {periodo !== 'mensual' && list.length > 0 && (() => {
           const maxAhorro = Math.max(...list.map(p => {
             const meses = periodo === 'trimestral' ? 3 : 12;
-            return (p.precioMensual - precioConPeriodo(p, periodo)) * meses;
+            return (p.precioMensual - precioConPromoYPeriodo(p, periodo, promo)) * meses;
           }));
           const label = periodo === 'trimestral' ? 'cada 3 meses' : 'por año';
           return (
@@ -69,7 +79,7 @@ export default function StepPlan({ onFinish, onBack }) {
       {/* Cards de planes */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {list.map((plan) => {
-          const precio = precioConPeriodo(plan, periodo);
+          const precio = precioConPromoYPeriodo(plan, periodo, promo);
           const dto    = periodo === 'trimestral' ? (plan.descuentoTrimestral ?? 0)
                        : periodo === 'anual'      ? (plan.descuentoAnual      ?? 0) : 0;
           const features = Array.isArray(plan.features)
@@ -129,13 +139,13 @@ function PlanCard({ plan, precio, descuento, periodo, features, selected, onSele
         <span className="font-semibold text-sm text-ink">{plan.nombre}</span>
         <div className="text-right shrink-0">
           <p className="text-xs font-mono text-ink font-semibold">{formatPrecio(precio)}/mes</p>
-          {descuento > 0 && (() => {
+          {precio < plan.precioMensual && (() => {
             const meses  = periodo === 'trimestral' ? 3 : 12;
             const ahorro = (plan.precioMensual - precio) * meses;
             return (
               <>
                 <p className="text-xs text-success font-medium">Ahorrás {formatPrecio(ahorro)}</p>
-                <p className="text-xs text-ink-muted">{formatPrecio(precio * meses)} c/{periodo === 'trimestral' ? '3m' : 'año'}</p>
+                {descuento > 0 && <p className="text-xs text-ink-muted">{formatPrecio(precio * meses)} c/{periodo === 'trimestral' ? '3m' : 'año'}</p>}
               </>
             );
           })()}

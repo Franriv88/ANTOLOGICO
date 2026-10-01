@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
 import { useRef, useState, useCallback } from 'react';
 import { IconAntologico, LogoAntologico } from '../components/LogoAntologico';
-import { usePlanes } from '../hooks/usePlanes';
+import { usePlanes, precioConPeriodo } from '../hooks/usePlanes';
+import { usePromo, isPromoActiva, precioConPromoYPeriodo } from '../hooks/usePromo';
 
 // ── Red Q como fondo (solo nodos + punteado, sin íconos) ──────────────────
 const EDGES = [
@@ -93,11 +94,20 @@ function formatPrecio(n) {
   return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
 }
 
+const PERIODOS = [
+  { id: 'mensual',    label: 'Mensual' },
+  { id: 'trimestral', label: 'Trimestral' },
+  { id: 'anual',      label: 'Anual' },
+];
+
 export default function Landing() {
   const heroRef  = useRef(null);
   const rafRef   = useRef(null);
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const planes   = usePlanes();
+  const [offset,  setOffset]  = useState({ x: 0, y: 0 });
+  const [periodo, setPeriodo] = useState('mensual');
+  const planes = usePlanes();
+  const promo  = usePromo();
+  const promoActiva = isPromoActiva(promo);
 
   const handleMouseMove = useCallback((e) => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
@@ -220,45 +230,115 @@ export default function Landing() {
       <section id="planes" className="bg-surface-100 py-20 px-4 sm:px-6">
         <div className="max-w-5xl mx-auto">
           <h2 className="font-display text-3xl text-center text-ink mb-2">Planes</h2>
-          <p className="text-center text-ink-muted text-sm mb-12">
+          <p className="text-center text-ink-muted text-sm mb-8">
             Precios en ARS por mes, IVA incluido
           </p>
+
+          {/* Promo banner */}
+          {promoActiva && (
+            <div className="mb-6 text-center">
+              <span className="inline-flex items-center gap-2 bg-primary/10 text-primary text-sm font-semibold px-4 py-2 rounded-full">
+                🎉 {promo.label} — {promo.descuento}% de descuento en todos los planes
+              </span>
+            </div>
+          )}
+
+          {/* Toggle de período */}
+          <div className="flex flex-col items-center gap-2 mb-8">
+            <div className="flex gap-1 p-1 bg-surface-200 rounded-lg">
+              {PERIODOS.map(op => {
+                const plan0 = (planes ?? [])[0];
+                const dto = op.id === 'trimestral' ? (plan0?.descuentoTrimestral ?? 0)
+                          : op.id === 'anual'      ? (plan0?.descuentoAnual      ?? 0) : 0;
+                return (
+                  <button key={op.id} type="button" onClick={() => setPeriodo(op.id)}
+                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                      periodo === op.id ? 'bg-white shadow-sm text-ink' : 'text-ink-muted hover:text-ink'
+                    }`}>
+                    {op.label}
+                    {op.id !== 'mensual' && dto > 0 && (
+                      <span className="ml-1.5 text-xs text-success font-semibold">−{dto}%</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            {periodo !== 'mensual' && (planes ?? []).length > 0 && (() => {
+              const maxAhorro = Math.max(...(planes ?? []).map(p => {
+                const meses = periodo === 'trimestral' ? 3 : 12;
+                const precioBase   = promoActiva ? Math.round(p.precioMensual * (1 - (promo.descuento ?? 0) / 100)) : p.precioMensual;
+                const precioCon    = precioConPromoYPeriodo(p, periodo, promo);
+                return (precioBase - precioCon) * meses;
+              }));
+              const label = periodo === 'trimestral' ? 'cada 3 meses' : 'por año';
+              return (
+                <p className="text-xs text-success font-medium">
+                  ✓ Ahorrás hasta {formatPrecio(maxAhorro)} {label} comparado con el plan mensual
+                </p>
+              );
+            })()}
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {(planes ?? []).map(({ id, nombre, precioMensual, features = [], highlight }) => (
-              <div
-                key={id}
-                className={`rounded-xl border p-6 flex flex-col ${
-                  highlight
-                    ? 'border-primary bg-primary/5 shadow-md'
-                    : 'border-border bg-surface-0'
-                }`}
-              >
-                {highlight && (
-                  <span className="text-xs font-semibold text-primary mb-2 uppercase tracking-wide">
-                    Más popular
-                  </span>
-                )}
-                <h3 className="font-semibold text-ink mb-1">{nombre}</h3>
-                <p className="font-mono text-2xl text-ink font-semibold mb-4">{formatPrecio(precioMensual)}<span className="text-sm font-normal text-ink-muted">/mes</span></p>
-                <ul className="flex flex-col gap-1.5 flex-1">
-                  {features.map((f) => (
-                    <li key={f} className="text-xs text-ink-muted flex items-center gap-1.5">
-                      <span className="text-primary font-bold">✓</span> {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  to="/login"
-                  className={`mt-6 py-2.5 text-center rounded-md text-sm font-semibold transition-colors ${
+            {(planes ?? []).map((plan) => {
+              const precio       = precioConPromoYPeriodo(plan, periodo, promo);
+              const precioBase   = promoActiva ? Math.round(plan.precioMensual * (1 - (promo.descuento ?? 0) / 100)) : plan.precioMensual;
+              const dto          = periodo === 'trimestral' ? (plan.descuentoTrimestral ?? 0)
+                                 : periodo === 'anual'      ? (plan.descuentoAnual      ?? 0) : 0;
+              const meses        = periodo === 'trimestral' ? 3 : 12;
+              const { id, nombre, features = [], highlight } = plan;
+              return (
+                <div
+                  key={id}
+                  className={`rounded-xl border p-6 flex flex-col ${
                     highlight
-                      ? 'bg-primary text-white hover:bg-primary-strong'
-                      : 'border border-border text-ink hover:bg-surface-200'
+                      ? 'border-primary bg-primary/5 shadow-md'
+                      : 'border-border bg-surface-0'
                   }`}
                 >
-                  Empezar
-                </Link>
-              </div>
-            ))}
+                  {highlight && (
+                    <span className="text-xs font-semibold text-primary mb-2 uppercase tracking-wide">
+                      Más popular
+                    </span>
+                  )}
+                  <h3 className="font-semibold text-ink mb-1">{nombre}</h3>
+                  <div className="mb-1">
+                    <span className="font-mono text-2xl text-ink font-semibold">{formatPrecio(precio)}</span>
+                    <span className="text-sm font-normal text-ink-muted">/mes</span>
+                    {(promoActiva || dto > 0) && precio < plan.precioMensual && (
+                      <span className="ml-2 text-xs text-ink-muted line-through">{formatPrecio(plan.precioMensual)}</span>
+                    )}
+                  </div>
+                  {dto > 0 && (
+                    <p className="text-xs text-success font-medium mb-1">
+                      Ahorrás {formatPrecio((precioBase - precio) * meses)} {periodo === 'trimestral' ? 'c/3m' : 'por año'}
+                    </p>
+                  )}
+                  {promoActiva && periodo === 'mensual' && (
+                    <p className="text-xs text-success font-medium mb-1">
+                      Ahorrás {formatPrecio(plan.precioMensual - precio)}/mes con la promo
+                    </p>
+                  )}
+                  <ul className="flex flex-col gap-1.5 flex-1 mt-3">
+                    {features.map((f) => (
+                      <li key={f} className="text-xs text-ink-muted flex items-center gap-1.5">
+                        <span className="text-primary font-bold">✓</span> {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    to="/login"
+                    className={`mt-6 py-2.5 text-center rounded-md text-sm font-semibold transition-colors ${
+                      highlight
+                        ? 'bg-primary text-white hover:bg-primary-strong'
+                        : 'border border-border text-ink hover:bg-surface-200'
+                    }`}
+                  >
+                    Empezar
+                  </Link>
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
