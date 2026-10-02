@@ -182,12 +182,13 @@ export default function Landing() {
             >
               Empezar gratis →
             </Link>
-            <a
-              href="#planes"
+            <button
+              type="button"
+              onClick={() => document.getElementById('planes')?.scrollIntoView({ behavior: 'smooth' })}
               className="px-7 py-3.5 border border-white/35 text-white text-sm font-medium rounded-lg hover:bg-white/10 transition-colors"
             >
               Ver planes
-            </a>
+            </button>
           </div>
         </div>
 
