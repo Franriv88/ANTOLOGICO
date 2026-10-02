@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import Swal from 'sweetalert2';
 import { useEspacio } from '../context/EspacioContext';
 import * as api from '../services/api';
 import Layout from '../components/Layout';
@@ -118,20 +119,24 @@ export default function Reservas() {
   const [loading,   setLoading]     = useState(true);
   const [filterWs,  setFilterWs]    = useState('');
   const [search,    setSearch]      = useState('');
-  const [cancelTarget,  setCancelTarget]  = useState(null);
-  const [markingPaid,   setMarkingPaid]   = useState(null);
+  const [cancelTarget,   setCancelTarget]  = useState(null);
+  const [markingPaid,    setMarkingPaid]   = useState(null);
+  const [blockingEmail,  setBlockingEmail] = useState(null);
+  const [bloqueados,     setBloqueados]    = useState([]);
 
   useEffect(() => {
     if (!activeEspacio?.id) return;
     (async () => {
       setLoading(true);
       try {
-        const [ws, rv] = await Promise.all([
+        const [ws, rv, bl] = await Promise.all([
           api.workshops.list(activeEspacio.id),
           api.reservas.listByEspacio(activeEspacio.id),
+          api.espacios.getUsuariosBloqueados(activeEspacio.id).catch(() => []),
         ]);
         setWorkshops(ws);
         setReservas(rv);
+        setBloqueados(bl);
       } finally {
         setLoading(false);
       }
@@ -183,6 +188,35 @@ export default function Reservas() {
       prev.map(r => r.id === cancelTarget.id ? { ...r, estado: 'CANCELADA' } : r),
     );
     setCancelTarget(null);
+  }
+
+  async function handleBlockUser(email) {
+    if (!activeEspacio?.id || !email) return;
+    const isBloqueado = bloqueados.includes(email.toLowerCase());
+    const result = await Swal.fire({
+      title: isBloqueado ? `¿Desbloquear a ${email}?` : `¿Bloquear a ${email}?`,
+      text: isBloqueado
+        ? 'El usuario podrá volver a reservar en este espacio.'
+        : 'El usuario no podrá realizar nuevas reservas en este espacio.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: isBloqueado ? 'Desbloquear' : 'Bloquear',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#E85D4A',
+    });
+    if (!result.isConfirmed) return;
+    setBlockingEmail(email);
+    try {
+      if (isBloqueado) {
+        await api.espacios.unblockUser(activeEspacio.id, email);
+        setBloqueados(prev => prev.filter(e => e !== email.toLowerCase()));
+      } else {
+        await api.espacios.blockUser(activeEspacio.id, email);
+        setBloqueados(prev => [...prev, email.toLowerCase()]);
+      }
+    } finally {
+      setBlockingEmail(null);
+    }
   }
 
   const cancelReserva = cancelTarget ? reservas.find(r => r.id === cancelTarget.id) : null;
@@ -278,11 +312,20 @@ export default function Reservas() {
                     className={`hover:bg-surface-200/30 transition-colors ${!isLast ? 'border-b border-border/60' : ''}`}
                   >
                     <td className="px-4 py-3">
-                      <p className="font-medium text-ink">{r.nombre}</p>
-                      <p className="text-xs text-ink-muted">{r.email}</p>
-                      {r.telefono && (
-                        <p className="text-xs text-ink-muted font-mono">{r.telefono}</p>
-                      )}
+                      <div className="flex items-start gap-2">
+                        <div>
+                          <p className="font-medium text-ink">{r.nombre}</p>
+                          <p className="text-xs text-ink-muted">{r.email}</p>
+                          {r.telefono && (
+                            <p className="text-xs text-ink-muted font-mono">{r.telefono}</p>
+                          )}
+                        </div>
+                        {bloqueados.includes(r.email?.toLowerCase()) && (
+                          <span className="text-[10px] font-bold bg-danger/10 text-danger border border-danger/20 rounded px-1.5 py-0.5 mt-0.5 shrink-0 leading-tight">
+                            bloqueado
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3">
                       <p className="text-ink truncate max-w-[220px]">{ws?.nombre ?? '—'}</p>
@@ -300,23 +343,39 @@ export default function Reservas() {
                       <PagoBadge metodoPago={r.metodoPago} estadoPago={r.estadoPago} />
                     </td>
                     <td className="px-4 py-3 text-right whitespace-nowrap">
-                      {r.estado === 'CONFIRMADA' && r.metodoPago === 'EFECTIVO' && r.estadoPago === 'PENDIENTE' && (
-                        <button
-                          onClick={() => handleMarkPaid(r.id)}
-                          disabled={markingPaid === r.id}
-                          className="text-xs text-primary hover:opacity-70 transition-opacity disabled:opacity-40 mr-3"
-                        >
-                          {markingPaid === r.id ? '…' : 'Marcar pagado'}
-                        </button>
-                      )}
-                      {r.estado === 'CONFIRMADA' && (
-                        <button
-                          onClick={() => setCancelTarget({ id: r.id, nombre: r.nombre, workshopId: r.workshopId })}
-                          className="text-xs text-ink-muted hover:text-danger transition-colors"
-                        >
-                          Cancelar
-                        </button>
-                      )}
+                      <div className="flex items-center justify-end gap-2">
+                        {r.estado === 'CONFIRMADA' && r.metodoPago === 'EFECTIVO' && r.estadoPago === 'PENDIENTE' && (
+                          <button
+                            onClick={() => handleMarkPaid(r.id)}
+                            disabled={markingPaid === r.id}
+                            className="text-xs text-primary hover:opacity-70 transition-opacity disabled:opacity-40"
+                          >
+                            {markingPaid === r.id ? '…' : 'Marcar pagado'}
+                          </button>
+                        )}
+                        {r.estado === 'CONFIRMADA' && (
+                          <button
+                            onClick={() => setCancelTarget({ id: r.id, nombre: r.nombre, workshopId: r.workshopId })}
+                            className="text-xs text-ink-muted hover:text-danger transition-colors"
+                          >
+                            Cancelar
+                          </button>
+                        )}
+                        {r.email && (
+                          <button
+                            onClick={() => handleBlockUser(r.email)}
+                            disabled={blockingEmail === r.email}
+                            title={bloqueados.includes(r.email?.toLowerCase()) ? 'Desbloquear usuario' : 'Bloquear usuario'}
+                            className={`text-xs px-2 py-0.5 rounded border transition-colors disabled:opacity-40 ${
+                              bloqueados.includes(r.email?.toLowerCase())
+                                ? 'border-emerald-300 text-emerald-700 hover:bg-emerald-50'
+                                : 'border-danger/20 text-danger/70 hover:text-danger hover:bg-danger/5'
+                            }`}
+                          >
+                            {blockingEmail === r.email ? '…' : bloqueados.includes(r.email?.toLowerCase()) ? 'Desbloquear' : 'Bloquear'}
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );

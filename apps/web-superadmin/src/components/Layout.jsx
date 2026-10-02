@@ -3,10 +3,9 @@ import { useAuth } from '../context/AuthContext';
 import { IconAntologico } from './LogoAntologico';
 
 const NAV = [
-  { to: '/tenants',   label: 'Tenants' },
-  { to: '/planes',    label: 'Planes' },
-  { to: '/promocion', label: 'Promoción' },
-  { to: '/reportes',  label: 'Reportes' },
+  { to: '/tenants',  label: 'Tenants' },
+  { to: '/planes',   label: 'Planes' },
+  { to: '/reportes', label: 'Reportes' },
 ];
 
 const IconLogout = () => (

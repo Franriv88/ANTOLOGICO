@@ -2,9 +2,10 @@ import {
   collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc,
   query, orderBy, writeBatch,
 } from 'firebase/firestore';
+import { sendPasswordResetEmail } from 'firebase/auth';
 
 const C_PROMO = 'demo_promo';
-import { firestore } from '../lib/firebase';
+import { firestore, auth } from '../lib/firebase';
 
 const C_ADMINS   = 'sa_admins';
 const C_PLANES   = 'demo_planes';
@@ -165,6 +166,11 @@ export const promoApi = {
     const updated = await getDoc(ref);
     return updated.exists() ? updated.data() : null;
   },
+};
+
+// ─── User management ─────────────────────────────────────────────────────────
+export const userManagement = {
+  sendPasswordReset: (email) => sendPasswordResetEmail(auth, email),
 };
 
 // ─── Tenants (espacios) ───────────────────────────────────────────────────────

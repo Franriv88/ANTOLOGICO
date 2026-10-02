@@ -168,6 +168,28 @@ export const espacios = {
   solicitarCancelacion: async (id)                => espacios.update(id, { cancelacionPendiente: true }),
   reactivarSuscripcion: async (id)                => espacios.update(id, { cancelacionPendiente: false }),
   eliminar:             async (id)                => espacios.update(id, { estado: 'BAJA' }),
+
+  blockUser: async (espacioId, email) => {
+    const ref  = doc(firestore, C_ESPACIOS, espacioId);
+    const snap = await getDoc(ref);
+    const prev = snap.data()?.usuariosBloqueados ?? [];
+    const normalized = email.toLowerCase();
+    if (!prev.includes(normalized)) {
+      await updateDoc(ref, { usuariosBloqueados: [...prev, normalized] });
+    }
+  },
+
+  unblockUser: async (espacioId, email) => {
+    const ref  = doc(firestore, C_ESPACIOS, espacioId);
+    const snap = await getDoc(ref);
+    const prev = snap.data()?.usuariosBloqueados ?? [];
+    await updateDoc(ref, { usuariosBloqueados: prev.filter(e => e !== email.toLowerCase()) });
+  },
+
+  getUsuariosBloqueados: async (espacioId) => {
+    const snap = await getDoc(doc(firestore, C_ESPACIOS, espacioId));
+    return snap.data()?.usuariosBloqueados ?? [];
+  },
 };
 
 export const rubros = {
@@ -247,6 +269,19 @@ export const reservas = {
 
   create: async (workshopId, { nombre, email, telefono, metodoPago = 'MERCADO_PAGO' }) => {
     await ensureSeeded();
+
+    // Verificar si el usuario está bloqueado en este espacio
+    const wsCheckSnap = await getDoc(doc(firestore, C_WORKSHOPS, workshopId));
+    if (wsCheckSnap.exists()) {
+      const espCheckSnap = await getDoc(doc(firestore, C_ESPACIOS, wsCheckSnap.data().espacioId));
+      if (espCheckSnap.exists()) {
+        const bloqueados = espCheckSnap.data().usuariosBloqueados ?? [];
+        if (bloqueados.includes(email.toLowerCase())) {
+          throw new Error('No podés reservar en este espacio.');
+        }
+      }
+    }
+
     const id     = uid();
     const reserva = {
       workshopId, nombre, email, telefono: telefono ?? '',
