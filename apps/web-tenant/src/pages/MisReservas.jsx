@@ -601,15 +601,14 @@ export default function MisReservas() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowScanner(true)}
-              title="Escanear QR de un espacio"
-              className="p-2 rounded-xl border border-white/30 hover:bg-white/10 transition-colors text-white">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-                <rect x="3" y="14" width="7" height="7"/>
-                <line x1="14" y1="14" x2="14" y2="14"/><line x1="18" y1="14" x2="18" y2="14"/>
-                <line x1="14" y1="18" x2="14" y2="18"/><line x1="21" y1="18" x2="21" y2="18"/>
-                <line x1="18" y1="21" x2="18" y2="21"/><line x1="14" y1="21" x2="21" y2="21"/>
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/30 hover:bg-white/10 transition-colors text-white text-xs font-semibold">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+                <rect x="3" y="14" width="7" height="7" rx="1"/>
+                <rect x="14" y="14" width="3" height="3"/><rect x="18" y="18" width="3" height="3"/>
+                <rect x="14" y="18" width="3" height="3"/><rect x="18" y="14" width="3" height="3"/>
               </svg>
+              Escanear QR
             </button>
             {currentUser && (
               <button onClick={handleLogout}

@@ -167,6 +167,14 @@ export default function Tenants() {
   const sorted   = [...(list ?? [])].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
   const filtered = sorted.filter(t => matchSearch(t, search));
 
+  // Mapa userId → todos sus espacios (para mostrar espacios adicionales)
+  const userSpacesMap = {};
+  sorted.forEach(t => {
+    if (!t.userId) return;
+    if (!userSpacesMap[t.userId]) userSpacesMap[t.userId] = [];
+    userSpacesMap[t.userId].push(t);
+  });
+
   return (
     <>
       {/* Modal bloquear / desbloquear */}
@@ -230,7 +238,13 @@ export default function Tenants() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map(t => (
+                {filtered.map(t => {
+                  const otrosEspacios = t.userId
+                    ? (userSpacesMap[t.userId] ?? []).filter(e => e.id !== t.id)
+                    : [];
+                  const logoShape = t.logoShape === 'square' ? 'rounded-lg' : 'rounded-full';
+
+                  return (
                   <tr
                     key={t.id}
                     className={`border-b border-border/50 transition-colors hover:bg-surface-200/30 ${
@@ -239,22 +253,55 @@ export default function Tenants() {
                   >
                     {/* Espacio */}
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-medium text-ink">{t.nombre || '—'}</p>
-                        {t.bloqueado && (
-                          <span className="text-[10px] font-bold bg-danger text-white rounded px-1.5 py-0.5 leading-tight shrink-0">
-                            BLOQUEADO
-                          </span>
-                        )}
-                        {t.estado === 'SUSPENDIDO' && !t.bloqueado && (
-                          <span className="text-[10px] font-bold bg-danger/10 text-danger border border-danger/20 rounded px-1.5 py-0.5 leading-tight shrink-0">
-                            SUSPENDIDO
-                          </span>
-                        )}
+                      <div className="flex items-start gap-3">
+                        {/* Logo */}
+                        <div className={`shrink-0 w-9 h-9 ${logoShape} overflow-hidden bg-surface-200 border border-border flex items-center justify-center`}>
+                          {t.logoUrl
+                            ? <img src={t.logoUrl} alt="" className="w-full h-full object-cover" />
+                            : <span className="text-sm font-bold text-ink-muted select-none">
+                                {(t.nombre?.[0] ?? '?').toUpperCase()}
+                              </span>
+                          }
+                        </div>
+
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <p className="font-medium text-ink leading-tight">{t.nombre || '—'}</p>
+                            {t.bloqueado && (
+                              <span className="text-[10px] font-bold bg-danger text-white rounded px-1.5 py-0.5 leading-tight shrink-0">
+                                BLOQUEADO
+                              </span>
+                            )}
+                            {t.estado === 'SUSPENDIDO' && !t.bloqueado && (
+                              <span className="text-[10px] font-bold bg-danger/10 text-danger border border-danger/20 rounded px-1.5 py-0.5 leading-tight shrink-0">
+                                SUSPENDIDO
+                              </span>
+                            )}
+                          </div>
+                          {t.usuario?.email && (
+                            <p className="text-xs text-ink-muted font-mono mt-0.5">{t.usuario.email}</p>
+                          )}
+                          {/* Espacios adicionales del mismo usuario */}
+                          {otrosEspacios.length > 0 && (
+                            <div className="flex flex-col gap-0.5 mt-1.5">
+                              {otrosEspacios.map(e => {
+                                const eShape = e.logoShape === 'square' ? 'rounded' : 'rounded-full';
+                                return (
+                                  <div key={e.id} className="flex items-center gap-1.5">
+                                    <div className={`w-4 h-4 ${eShape} overflow-hidden bg-surface-200 border border-border shrink-0 flex items-center justify-center`}>
+                                      {e.logoUrl
+                                        ? <img src={e.logoUrl} alt="" className="w-full h-full object-cover" />
+                                        : <span className="text-[8px] font-bold text-ink-muted">{(e.nombre?.[0] ?? '?').toUpperCase()}</span>
+                                      }
+                                    </div>
+                                    <span className="text-[11px] text-ink-muted truncate max-w-[120px]">{e.nombre}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      {t.usuario?.email && (
-                        <p className="text-xs text-ink-muted font-mono">{t.usuario.email}</p>
-                      )}
                     </td>
 
                     {/* Rubro */}
@@ -305,21 +352,21 @@ export default function Tenants() {
                       {formatFecha(t.createdAt)}
                     </td>
 
-                    {/* Acciones */}
-                    <td className="px-4 py-3 text-right">
+                    {/* Acciones — ancho fijo para que no se mueva */}
+                    <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => setResetTarget(t)}
                           disabled={saving === t.id}
                           title="Enviar reset de contraseña"
-                          className="text-xs px-2 py-1 border border-border rounded text-ink-muted hover:text-ink hover:bg-surface-200 transition-colors disabled:opacity-30"
+                          className="w-16 text-center text-xs py-1 border border-border rounded text-ink-muted hover:text-ink hover:bg-surface-200 transition-colors disabled:opacity-30"
                         >
                           ↺ Reset
                         </button>
                         <button
                           onClick={() => setBlockTarget(t)}
                           disabled={saving === t.id}
-                          className={`text-xs px-2 py-1 rounded border transition-colors disabled:opacity-30 ${
+                          className={`w-24 text-center text-xs py-1 rounded border transition-colors disabled:opacity-30 ${
                             t.bloqueado
                               ? 'border-emerald-300 text-emerald-700 hover:bg-emerald-50'
                               : 'border-danger/20 text-danger hover:bg-danger/5'
@@ -330,7 +377,8 @@ export default function Tenants() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
