@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import Swal from 'sweetalert2';
 import { planes as planesApi, promoApi } from '../services/adminApi';
+import ConfirmModal from '../components/ConfirmModal';
 
 const EMPTY = { nombre: '', precioMensual: '', descuentoTrimestral: '10', descuentoAnual: '20', maxWorkshops: '', features: '', highlight: false };
 const EMPTY_PROMO = { label: 'Oferta especial', descuento: '10', tipo: 'manual', inicio: '', fin: '' };
@@ -172,11 +172,12 @@ function PlanCard({ plan, onEdit, onDelete }) {
 // ── Plans page ────────────────────────────────────────────────────────────────
 
 export default function Plans() {
-  const [list,    setList]    = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [showNew, setShowNew] = useState(false);
-  const [editing, setEditing] = useState(null);
-  const [saving,  setSaving]  = useState(false);
+  const [list,         setList]         = useState(null);
+  const [loading,      setLoading]      = useState(true);
+  const [showNew,      setShowNew]      = useState(false);
+  const [editing,      setEditing]      = useState(null);
+  const [saving,       setSaving]       = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null); // { id, nombre }
 
   const [promo,       setPromo]       = useState(null);
   const [promoForm,   setPromoForm]   = useState(EMPTY_PROMO);
@@ -214,19 +215,15 @@ export default function Plans() {
     setSaving(false);
   }
 
-  async function handleDelete(id, nombre) {
-    const result = await Swal.fire({
-      title: `¿Eliminar "${nombre}"?`,
-      text: 'Los tenants que tengan este plan asignado quedarán sin plan.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#E85D4A',
-    });
-    if (!result.isConfirmed) return;
-    await planesApi.remove(id);
-    setList(prev => prev.filter(p => p.id !== id));
+  function handleDelete(id, nombre) {
+    setDeleteTarget({ id, nombre });
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    await planesApi.remove(deleteTarget.id);
+    setList(prev => prev.filter(p => p.id !== deleteTarget.id));
+    setDeleteTarget(null);
   }
 
   async function handlePromoSave(e) {
@@ -264,6 +261,17 @@ export default function Plans() {
   if (loading) return <p className="text-sm text-ink-muted">Cargando planes…</p>;
 
   return (
+    <>
+    {deleteTarget && (
+      <ConfirmModal
+        title={`¿Eliminar "${deleteTarget.nombre}"?`}
+        text="Los tenants que tengan este plan asignado quedarán sin plan."
+        confirmText="Sí, eliminar"
+        danger
+        onConfirm={confirmDelete}
+        onClose={() => setDeleteTarget(null)}
+      />
+    )}
     <div className="max-w-5xl">
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -398,5 +406,6 @@ export default function Plans() {
         </form>
       </div>
     </div>
+    </>
   );
 }

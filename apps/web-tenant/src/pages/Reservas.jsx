@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from 'react';
-import Swal from 'sweetalert2';
 import { useEspacio } from '../context/EspacioContext';
 import * as api from '../services/api';
 import Layout from '../components/Layout';
@@ -81,6 +80,43 @@ function EmptyState({ hasReservas }) {
   );
 }
 
+function BlockModal({ email, isBloqueado, onConfirm, onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="relative bg-[#FAF8F4] border border-[#D2C4A8] rounded-2xl p-6 w-full max-w-sm shadow-xl">
+        <h3 className="font-display text-lg text-ink mb-1">
+          {isBloqueado ? '¿Desbloquear usuario?' : '¿Bloquear usuario?'}
+        </h3>
+        <p className="text-sm text-ink-muted mb-1 font-mono">{email}</p>
+        <p className="text-sm text-ink-muted mb-6">
+          {isBloqueado
+            ? 'El usuario podrá volver a realizar reservas en tu espacio.'
+            : 'El usuario no podrá realizar nuevas reservas en tu espacio.'}
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2 border border-[#D2C4A8] rounded-xl text-sm text-ink hover:bg-[#F2EDE3] transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirm}
+            className={`flex-1 px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
+              isBloqueado
+                ? 'bg-[#10B981] text-white hover:opacity-90'
+                : 'bg-danger text-white hover:opacity-90'
+            }`}
+          >
+            {isBloqueado ? 'Desbloquear' : 'Bloquear'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function CancelModal({ reserva, workshopNombre, onConfirm, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -121,6 +157,7 @@ export default function Reservas() {
   const [search,    setSearch]      = useState('');
   const [cancelTarget,   setCancelTarget]  = useState(null);
   const [markingPaid,    setMarkingPaid]   = useState(null);
+  const [blockTarget,    setBlockTarget]   = useState(null); // { email, isBloqueado }
   const [blockingEmail,  setBlockingEmail] = useState(null);
   const [bloqueados,     setBloqueados]    = useState([]);
 
@@ -190,21 +227,16 @@ export default function Reservas() {
     setCancelTarget(null);
   }
 
-  async function handleBlockUser(email) {
+  function handleBlockUser(email) {
     if (!activeEspacio?.id || !email) return;
     const isBloqueado = bloqueados.includes(email.toLowerCase());
-    const result = await Swal.fire({
-      title: isBloqueado ? `¿Desbloquear a ${email}?` : `¿Bloquear a ${email}?`,
-      text: isBloqueado
-        ? 'El usuario podrá volver a reservar en este espacio.'
-        : 'El usuario no podrá realizar nuevas reservas en este espacio.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: isBloqueado ? 'Desbloquear' : 'Bloquear',
-      cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#E85D4A',
-    });
-    if (!result.isConfirmed) return;
+    setBlockTarget({ email, isBloqueado });
+  }
+
+  async function confirmBlockUser() {
+    if (!blockTarget) return;
+    const { email, isBloqueado } = blockTarget;
+    setBlockTarget(null);
     setBlockingEmail(email);
     try {
       if (isBloqueado) {
@@ -392,6 +424,16 @@ export default function Reservas() {
           workshopNombre={cancelWsNombre}
           onConfirm={handleCancel}
           onClose={() => setCancelTarget(null)}
+        />
+      )}
+
+      {/* Block/unblock modal */}
+      {blockTarget && (
+        <BlockModal
+          email={blockTarget.email}
+          isBloqueado={blockTarget.isBloqueado}
+          onConfirm={confirmBlockUser}
+          onClose={() => setBlockTarget(null)}
         />
       )}
     </div>
