@@ -1,7 +1,21 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import jsQR from 'jsqr';
 import { reservas as reservasApi, workshops as workshopsApi, espacios as espaciosApi } from '../services/api';
 import { loginGoogle, loginEmail, register, logout, subscribeAuth, authErrorMsg, sendPasswordReset, checkRedirectResult } from '../services/userAuth';
+
+// ── Espacios seguidos (localStorage) ─────────────────────────────────────────
+const LS_KEY = 'ant_espacios_seguidos';
+function getFollowed() {
+  try { return JSON.parse(localStorage.getItem(LS_KEY) ?? '[]'); } catch { return []; }
+}
+function addFollowed(id) {
+  const prev = getFollowed();
+  if (!prev.includes(id)) localStorage.setItem(LS_KEY, JSON.stringify([...prev, id]));
+}
+function removeFollowed(id) {
+  localStorage.setItem(LS_KEY, JSON.stringify(getFollowed().filter(x => x !== id)));
+}
 
 function contrastText(hex) {
   if (!hex?.startsWith('#') || hex.length < 7) return '#ffffff';
@@ -155,6 +169,250 @@ function AuthPanel({ onSuccess }) {
   );
 }
 
+// ── QRScannerModal ────────────────────────────────────────────────────────────
+
+function QRScannerModal({ onClose }) {
+  const navigate    = useNavigate();
+  const videoRef    = useRef(null);
+  const canvasRef   = useRef(null);
+  const streamRef   = useRef(null);
+  const rafRef      = useRef(null);
+  const [phase,     setPhase]     = useState('starting'); // 'starting'|'scanning'|'found'|'error'
+  const [errMsg,    setErrMsg]    = useState('');
+  const [found,     setFound]     = useState(null);       // { url, espacioId, nombre }
+  const [followed,  setFollowed]  = useState(false);
+
+  function stopCamera() {
+    cancelAnimationFrame(rafRef.current);
+    streamRef.current?.getTracks().forEach(t => t.stop());
+  }
+
+  function handleClose() { stopCamera(); onClose(); }
+
+  useEffect(() => {
+    navigator.mediaDevices
+      .getUserMedia({ video: { facingMode: { ideal: 'environment' } } })
+      .then(stream => {
+        streamRef.current = stream;
+        if (videoRef.current) videoRef.current.srcObject = stream;
+        setPhase('scanning');
+      })
+      .catch(() => { setErrMsg('No se pudo acceder a la cámara. Revisá los permisos.'); setPhase('error'); });
+    return stopCamera;
+  }, []);
+
+  const tick = useCallback(() => {
+    const video  = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas || video.readyState < video.HAVE_ENOUGH_DATA) {
+      rafRef.current = requestAnimationFrame(tick);
+      return;
+    }
+    canvas.width  = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(video, 0, 0);
+    const img  = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' });
+    if (code?.data) {
+      handleQRData(code.data);
+      return;
+    }
+    rafRef.current = requestAnimationFrame(tick);
+  }, []); // eslint-disable-line
+
+  useEffect(() => {
+    if (phase !== 'scanning') return;
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [phase, tick]);
+
+  async function handleQRData(raw) {
+    try {
+      const url = new URL(raw);
+      const match = url.pathname.match(/^\/p\/(.+)$/);
+      if (!match) { setErrMsg('Este QR no corresponde a un espacio de Antológico.'); setPhase('error'); return; }
+      stopCamera();
+      const espacioId = match[1];
+      const alreadyFollowed = getFollowed().includes(espacioId);
+      let nombre = '';
+      try {
+        const esp = await espaciosApi.get(espacioId);
+        nombre = esp?.nombre ?? '';
+      } catch { /* silent */ }
+      setFound({ url: raw, espacioId, nombre });
+      setFollowed(alreadyFollowed);
+      setPhase('found');
+    } catch {
+      setErrMsg('El QR escaneado no contiene una URL válida.'); setPhase('error');
+    }
+  }
+
+  function handleFollow() {
+    if (!found) return;
+    addFollowed(found.espacioId);
+    setFollowed(true);
+  }
+
+  function handleUnfollow() {
+    if (!found) return;
+    removeFollowed(found.espacioId);
+    setFollowed(false);
+  }
+
+  function handleGo() {
+    if (!found) return;
+    if (!followed) addFollowed(found.espacioId);
+    handleClose();
+    navigate(`/p/${found.espacioId}`);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="absolute inset-0 bg-black/70" onClick={handleClose} />
+      <div className="relative bg-[#FAF8F4] rounded-t-3xl sm:rounded-2xl w-full sm:max-w-sm overflow-hidden">
+        {/* Handle */}
+        <div className="flex justify-center pt-3 pb-1 sm:hidden">
+          <div className="w-10 h-1 rounded-full bg-[#D2C4A8]" />
+        </div>
+
+        <div className="px-5 pb-6 pt-2 sm:pt-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-display text-lg text-[#1A1611]">Escanear QR</h3>
+            <button onClick={handleClose} className="p-1 rounded-lg text-[#9B9083] hover:text-[#1A1611] hover:bg-[#F0EAE0] transition-colors">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </div>
+
+          {phase === 'starting' && (
+            <div className="flex flex-col items-center justify-center py-10 gap-3">
+              <div className="w-8 h-8 rounded-full border-2 border-[#E85D4A] border-t-transparent animate-spin" />
+              <p className="text-sm text-[#6B5F4C]">Activando cámara…</p>
+            </div>
+          )}
+
+          {phase === 'error' && (
+            <div className="py-6 text-center">
+              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4">{errMsg}</p>
+              <button onClick={handleClose}
+                className="px-4 py-2 rounded-xl text-sm font-semibold bg-[#E85D4A] text-white hover:bg-[#c94a38] transition-colors">
+                Cerrar
+              </button>
+            </div>
+          )}
+
+          {(phase === 'scanning' || phase === 'starting') && (
+            <div className="relative rounded-2xl overflow-hidden bg-black aspect-square">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full h-full object-cover"
+              />
+              {/* Viewfinder */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="w-48 h-48 relative">
+                  {['tl','tr','bl','br'].map(corner => (
+                    <div key={corner} className={`absolute w-8 h-8 border-white/80 border-2
+                      ${corner === 'tl' ? 'top-0 left-0 border-r-0 border-b-0 rounded-tl-lg' : ''}
+                      ${corner === 'tr' ? 'top-0 right-0 border-l-0 border-b-0 rounded-tr-lg' : ''}
+                      ${corner === 'bl' ? 'bottom-0 left-0 border-r-0 border-t-0 rounded-bl-lg' : ''}
+                      ${corner === 'br' ? 'bottom-0 right-0 border-l-0 border-t-0 rounded-br-lg' : ''}
+                    `} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {phase === 'found' && found && (
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col items-center py-4 gap-2">
+                <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12"/>
+                  </svg>
+                </div>
+                <p className="text-sm font-semibold text-[#1A1611]">¡QR detectado!</p>
+                {found.nombre && (
+                  <p className="text-xs text-[#6B5F4C]">{found.nombre}</p>
+                )}
+              </div>
+
+              <button
+                onClick={handleGo}
+                className="w-full py-2.5 rounded-xl text-sm font-bold bg-[#E85D4A] text-white hover:bg-[#c94a38] transition-colors">
+                Ver espacio
+              </button>
+
+              <button
+                onClick={followed ? handleUnfollow : handleFollow}
+                className={`w-full py-2.5 rounded-xl text-sm font-semibold border transition-colors ${
+                  followed
+                    ? 'border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                    : 'border-[#D2C4A8] text-[#2B241A] hover:bg-[#F0EAE0]'
+                }`}>
+                {followed ? '✓ Siguiendo' : '+ Seguir espacio'}
+              </button>
+            </div>
+          )}
+
+          <canvas ref={canvasRef} className="hidden" />
+          <p className="text-center text-xs text-[#9B9083] mt-4">
+            {phase === 'scanning' ? 'Apuntá la cámara al código QR del espacio' : ''}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── EspaciosSeguidos ──────────────────────────────────────────────────────────
+
+function EspaciosSeguidos() {
+  const [items,   setItems]   = useState(null); // null = loading
+  const [refresh, setRefresh] = useState(0);
+
+  useEffect(() => {
+    const ids = getFollowed();
+    if (ids.length === 0) { setItems([]); return; }
+    Promise.all(ids.map(id => espaciosApi.get(id).catch(() => null)))
+      .then(list => setItems(list.filter(Boolean)));
+  }, [refresh]);
+
+  function handleUnfollow(id) {
+    removeFollowed(id);
+    setRefresh(r => r + 1);
+  }
+
+  if (items === null || items.length === 0) return null;
+
+  return (
+    <section className="mb-8">
+      <h2 className="text-xs font-semibold text-[#9B9083] uppercase tracking-wide mb-3">Espacios seguidos</h2>
+      <div className="flex flex-col gap-2">
+        {items.map(esp => (
+          <div key={esp.id} className="flex items-center justify-between gap-3 bg-white border border-[#EDE8DE] rounded-xl px-4 py-3">
+            <Link to={`/p/${esp.id}`} className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-[#E85D4A] hover:underline truncate">{esp.nombre}</p>
+              {esp.rubro?.nombre && <p className="text-xs text-[#9B9083] truncate">{esp.rubro.nombre}</p>}
+            </Link>
+            <button
+              onClick={() => handleUnfollow(esp.id)}
+              title="Dejar de seguir"
+              className="shrink-0 text-xs text-[#9B9083] hover:text-red-500 border border-[#D2C4A8] hover:border-red-300 rounded-lg px-2.5 py-1 transition-colors">
+              Dejar
+            </button>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 // ── ReservaCard ───────────────────────────────────────────────────────────────
 
 function ReservaCard({ reserva, onCancel }) {
@@ -228,9 +486,10 @@ function ReservaCard({ reserva, onCancel }) {
 // ── MisReservas ───────────────────────────────────────────────────────────────
 
 export default function MisReservas() {
-  const [currentUser, setCurrentUser] = useState(undefined); // undefined = loading
-  const [reservas,    setReservas]    = useState([]);
-  const [loadingR,    setLoadingR]    = useState(false);
+  const [currentUser,  setCurrentUser]  = useState(undefined); // undefined = loading
+  const [reservas,     setReservas]     = useState([]);
+  const [loadingR,     setLoadingR]     = useState(false);
+  const [showScanner,  setShowScanner]  = useState(false);
 
   useEffect(() => {
     checkRedirectResult().then(result => {
@@ -306,6 +565,8 @@ export default function MisReservas() {
 
   return (
     <div className="min-h-screen bg-[#FAF8F4]">
+      {showScanner && <QRScannerModal onClose={() => setShowScanner(false)} />}
+
       {/* Header */}
       <div className="w-full bg-[#E85D4A] px-4 pt-6 pb-8">
         <div className="max-w-lg mx-auto flex items-center justify-between">
@@ -313,18 +574,37 @@ export default function MisReservas() {
             <p className="font-display text-white/70 text-xs mb-0.5">Antológico</p>
             <h1 className="font-display text-2xl font-bold text-white">Mis reservas</h1>
           </div>
-          {currentUser && (
-            <button onClick={handleLogout}
-              className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-white/30 hover:bg-white/10 transition-colors text-white">
-              Salir
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowScanner(true)}
+              title="Escanear QR de un espacio"
+              className="p-2 rounded-xl border border-white/30 hover:bg-white/10 transition-colors text-white">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                <rect x="3" y="14" width="7" height="7"/>
+                <line x1="14" y1="14" x2="14" y2="14"/><line x1="18" y1="14" x2="18" y2="14"/>
+                <line x1="14" y1="18" x2="14" y2="18"/><line x1="21" y1="18" x2="21" y2="18"/>
+                <line x1="18" y1="21" x2="18" y2="21"/><line x1="14" y1="21" x2="21" y2="21"/>
+              </svg>
             </button>
-          )}
+            {currentUser && (
+              <button onClick={handleLogout}
+                className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-white/30 hover:bg-white/10 transition-colors text-white">
+                Salir
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
       <div className="max-w-lg mx-auto px-4 py-8">
         {/* Not authenticated */}
-        {currentUser === null && <AuthPanel onSuccess={({ user, profile }) => { setCurrentUser({ user, profile: profile ?? {} }); loadReservas(user.email ?? profile?.email ?? ''); }} />}
+        {currentUser === null && (
+          <>
+            <EspaciosSeguidos />
+            <AuthPanel onSuccess={({ user, profile }) => { setCurrentUser({ user, profile: profile ?? {} }); loadReservas(user.email ?? profile?.email ?? ''); }} />
+          </>
+        )}
 
         {/* Loading auth */}
         {currentUser === undefined && (
@@ -339,6 +619,8 @@ export default function MisReservas() {
             <p className="text-sm text-[#6B5F4C] mb-6">
               Hola, <span className="font-semibold text-[#2B241A]">{currentUser.profile?.nombre?.split(' ')[0] ?? currentUser.user?.email}</span>
             </p>
+
+            <EspaciosSeguidos />
 
             {loadingR && (
               <div className="flex items-center justify-center py-12">
