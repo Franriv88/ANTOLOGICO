@@ -296,15 +296,20 @@ export default function Tenants() {
                               )}
                             </div>
 
-                            {/* Nombre y apellido */}
-                            {(group.usuario?.nombre || group.usuario?.apellido) && (
-                              <p className="text-xs text-ink-muted mt-0.5">
-                                {[group.usuario.nombre, group.usuario.apellido].filter(Boolean).join(' ')}
-                              </p>
-                            )}
-                            {/* Email */}
-                            {group.usuario?.email && (
-                              <p className="text-xs text-ink-muted font-mono mt-0.5">{group.usuario.email}</p>
+                            {/* Nombre, apellido y email */}
+                            {group.usuario ? (
+                              <>
+                                {(group.usuario.nombre || group.usuario.apellido) && (
+                                  <p className="text-xs text-ink-muted mt-0.5">
+                                    {[group.usuario.nombre, group.usuario.apellido].filter(Boolean).join(' ')}
+                                  </p>
+                                )}
+                                {group.usuario.email && (
+                                  <p className="text-xs text-ink-muted font-mono mt-0.5">{group.usuario.email}</p>
+                                )}
+                              </>
+                            ) : (
+                              <p className="text-[11px] text-ink-muted/60 mt-0.5 italic">Sin perfil de usuario</p>
                             )}
 
                             {/* Espacios adicionales */}
