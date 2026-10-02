@@ -56,7 +56,7 @@ export default function Login({ mode = 'login' }) {
     }
     if (!DEMO_MODE && isDev) handleDevLogin();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [mode]);
 
   if (DEMO_MODE) {
     async function handleDemoLogin(e) {
