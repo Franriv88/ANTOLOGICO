@@ -77,13 +77,15 @@ async function ensurePlanesSeeded() {
     });
     await batch.commit();
   } else {
-    // Parchar planes existentes que no tengan campos de descuento
+    // Parchar planes existentes que no tengan order ni campos de descuento
     const batch = writeBatch(firestore);
     let changed = false;
-    snap.docs.forEach(d => {
+    snap.docs.forEach((d, i) => {
       const data = d.data();
       const seed = SEED_PLANES.find(p => p.id === d.id);
       const patch = {};
+      // Patch order si falta (causa del orderBy vacío)
+      if (data.order == null) patch.order = seed?.order ?? (i + 1);
       if (data.descuentoTrimestral == null && seed?.descuentoTrimestral != null)
         patch.descuentoTrimestral = seed.descuentoTrimestral;
       if (data.descuentoAnual == null && seed?.descuentoAnual != null)
@@ -116,8 +118,8 @@ export const admins = {
 export const planes = {
   list: async () => {
     await ensurePlanesSeeded();
-    const snap = await getDocs(query(collection(firestore, C_PLANES), orderBy('order')));
-    return snapToList(snap);
+    const snap = await getDocs(collection(firestore, C_PLANES));
+    return snapToList(snap).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   },
 
   create: async (payload) => {

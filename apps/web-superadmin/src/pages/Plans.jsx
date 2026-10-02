@@ -184,9 +184,15 @@ export default function Plans() {
   const [promoSaving, setPromoSaving] = useState(null);
 
   useEffect(() => {
-    Promise.all([planesApi.list(), promoApi.get()]).then(([ps, p]) => {
-      setList(ps);
-      if (p) {
+    // Carga independiente: un fallo en promo no bloquea la lista de planes
+    planesApi.list()
+      .then(setList)
+      .catch(() => setList([]))
+      .finally(() => setLoading(false));
+
+    promoApi.get()
+      .then(p => {
+        if (!p) return;
         setPromo(p);
         setPromoForm({
           label:    p.label    ?? 'Oferta especial',
@@ -195,8 +201,8 @@ export default function Plans() {
           inicio:   p.inicio   ? p.inicio.slice(0, 16) : '',
           fin:      p.fin      ? p.fin.slice(0, 16)    : '',
         });
-      }
-    }).finally(() => setLoading(false));
+      })
+      .catch(() => {});
   }, []);
 
   async function handleCreate(payload) {
