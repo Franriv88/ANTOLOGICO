@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { profesionales as profesionalesApi } from '../../services/api';
+import { updateUserProfile } from '../../services/userAuth';
 
 const INPUT_CLS =
   'w-full px-3 py-2 bg-white border border-border rounded-md text-sm text-ink ' +
@@ -25,6 +26,17 @@ export default function StepPerfil({ onNext }) {
       await profesionalesApi.upsert({ nombre: nombre.trim(), email: email.trim() });
     } catch {
       // Firebase no disponible (demo mode u otro entorno sin backend)
+    }
+    if (user?.uid) {
+      try {
+        await updateUserProfile(user.uid, {
+          nombre:   nombre.trim(),
+          email:    email.trim(),
+          telefono: telefono.trim(),
+        });
+      } catch {
+        // non-blocking — perfil en super admin es informativo
+      }
     }
     onNext({ nombre: nombre.trim(), telefono: telefono.trim() });
     setLoading(false);
