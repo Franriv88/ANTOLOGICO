@@ -2,13 +2,20 @@ import { useEffect, useState } from 'react';
 import { tenants as tenantsApi, planes as planesApi, userManagement } from '../services/adminApi';
 import ConfirmModal from '../components/ConfirmModal';
 
-const ESTADO_COLORS = {
-  ACTIVO:    'bg-emerald-100 text-emerald-700 border-emerald-200',
-  INACTIVO:  'bg-surface-200 text-ink-muted border-border',
-  SUSPENDIDO:'bg-danger/10 text-danger border-danger/20',
-};
-
 const INPUT_CLS = 'w-full px-3 py-2 bg-white border border-border rounded-md text-sm text-ink focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary';
+
+function EstadoBadge({ bloqueado, trialStartedAt, planId, selectedPlan }) {
+  if (bloqueado) {
+    return <span className="text-xs font-medium bg-danger/10 text-danger border border-danger/20 rounded-full px-2.5 py-0.5 whitespace-nowrap">Bloqueado</span>;
+  }
+  if (trialStartedAt && !planId && !selectedPlan) {
+    const elapsed = Math.floor((Date.now() - new Date(trialStartedAt)) / 86_400_000);
+    if (elapsed >= 14) {
+      return <span className="text-xs font-medium bg-amber-100 text-amber-700 border border-amber-200 rounded-full px-2.5 py-0.5 whitespace-nowrap">Falto de pago</span>;
+    }
+  }
+  return <span className="text-xs font-medium bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-full px-2.5 py-0.5 whitespace-nowrap">Activo</span>;
+}
 const LABEL_CLS = 'block text-xs font-medium text-ink-muted mb-1';
 
 function formatFecha(iso) {
@@ -163,20 +170,6 @@ export default function Tenants() {
       .finally(() => setLoading(false));
   }, []);
 
-  async function handleEstado(espacioId, estado) {
-    setSaving(espacioId);
-    await tenantsApi.update(espacioId, { estado });
-    setList(prev => prev.map(t => t.id === espacioId ? { ...t, estado } : t));
-    setSaving(null);
-  }
-
-  async function handlePlan(espacioId, selectedPlan) {
-    setSaving(espacioId);
-    await tenantsApi.update(espacioId, { selectedPlan });
-    setList(prev => prev.map(t => t.id === espacioId ? { ...t, selectedPlan } : t));
-    setSaving(null);
-  }
-
   async function confirmBloqueado() {
     if (!blockTarget) return;
     const { key, espacios, bloqueado } = blockTarget;
@@ -289,11 +282,6 @@ export default function Tenants() {
                                   BLOQUEADO
                                 </span>
                               )}
-                              {primary.estado === 'SUSPENDIDO' && !bloqueado && (
-                                <span className="text-[10px] font-bold bg-danger/10 text-danger border border-danger/20 rounded px-1.5 py-0.5 leading-tight shrink-0">
-                                  SUSPENDIDO
-                                </span>
-                              )}
                             </div>
 
                             {/* Nombre, apellido y email */}
@@ -344,17 +332,13 @@ export default function Tenants() {
 
                       {/* ── Plan (del espacio principal) ── */}
                       <td className="px-4 py-3">
-                        <select
-                          value={primary.selectedPlan || primary.planId || ''}
-                          onChange={e => handlePlan(primary.id, e.target.value || null)}
-                          disabled={saving === primary.id}
-                          className="text-xs border border-border rounded px-2 py-1 bg-white text-ink focus:outline-none focus:border-primary"
-                        >
-                          <option value="">Sin plan</option>
-                          {planes.map(p => (
-                            <option key={p.id} value={p.id}>{p.nombre}</option>
-                          ))}
-                        </select>
+                        {(() => {
+                          const pid = primary.selectedPlan || primary.planId;
+                          const nombre = pid ? (planes.find(p => p.id === pid)?.nombre ?? pid) : null;
+                          return nombre
+                            ? <span className="text-xs font-medium text-ink">{nombre}</span>
+                            : <span className="text-xs text-ink-muted">Sin plan</span>;
+                        })()}
                       </td>
 
                       {/* ── Prueba ── */}
@@ -362,20 +346,14 @@ export default function Tenants() {
                         <TrialDays trialStartedAt={group.trialStartedAt} />
                       </td>
 
-                      {/* ── Estado (del espacio principal) ── */}
+                      {/* ── Estado ── */}
                       <td className="px-4 py-3">
-                        <select
-                          value={primary.estado || 'ACTIVO'}
-                          onChange={e => handleEstado(primary.id, e.target.value)}
-                          disabled={saving === primary.id}
-                          className={`text-xs border rounded px-2 py-1 focus:outline-none focus:border-primary font-medium bg-transparent ${
-                            ESTADO_COLORS[primary.estado] || ESTADO_COLORS.ACTIVO
-                          }`}
-                        >
-                          <option value="ACTIVO">Activo</option>
-                          <option value="INACTIVO">Inactivo</option>
-                          <option value="SUSPENDIDO">Suspendido</option>
-                        </select>
+                        <EstadoBadge
+                          bloqueado={bloqueado}
+                          trialStartedAt={group.trialStartedAt}
+                          planId={primary.planId}
+                          selectedPlan={primary.selectedPlan}
+                        />
                       </td>
 
                       {/* ── Registro (fecha más antigua del tenant) ── */}
