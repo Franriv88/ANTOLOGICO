@@ -4,7 +4,8 @@ import {
 } from 'firebase/firestore';
 import { sendPasswordResetEmail } from 'firebase/auth';
 
-const C_PROMO = 'demo_promo';
+const C_PROMO       = 'demo_promo';
+const C_PROMO_CODES = 'demo_promo_codes';
 import { firestore, auth } from '../lib/firebase';
 
 const C_ADMINS   = 'sa_admins';
@@ -167,6 +168,35 @@ export const promoApi = {
     }
     const updated = await getDoc(ref);
     return updated.exists() ? updated.data() : null;
+  },
+};
+
+// ─── Códigos de descuento ─────────────────────────────────────────────────────
+export const promoCodes = {
+  list: async () => {
+    const snap = await getDocs(query(collection(firestore, C_PROMO_CODES), orderBy('createdAt', 'desc')));
+    return snapToList(snap);
+  },
+  create: async ({ code, descuento, maxUsos }) => {
+    const id   = uid();
+    const data = {
+      code:     code.trim().toUpperCase(),
+      descuento: Number(descuento),
+      activo:   true,
+      usos:     0,
+      maxUsos:  maxUsos ? Number(maxUsos) : null,
+      createdAt: new Date().toISOString(),
+    };
+    await setDoc(doc(firestore, C_PROMO_CODES, id), data);
+    return { id, ...data };
+  },
+  toggle: async (id, activo) => {
+    await updateDoc(doc(firestore, C_PROMO_CODES, id), { activo });
+    const snap = await getDoc(doc(firestore, C_PROMO_CODES, id));
+    return docToObj(snap);
+  },
+  remove: async (id) => {
+    await deleteDoc(doc(firestore, C_PROMO_CODES, id));
   },
 };
 
