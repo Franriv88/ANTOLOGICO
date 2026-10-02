@@ -56,7 +56,8 @@ function buildGroups(list) {
       extras:         espacios.slice(1), // el resto
       espacios,
       bloqueado:      espacios.some(e => e.bloqueado),
-      trialStartedAt: espacios[0]?.trialStartedAt,
+      // Si no hay trialStartedAt (espacios viejos), usar createdAt como inicio de prueba
+      trialStartedAt: espacios[0]?.trialStartedAt ?? espacios[0]?.createdAt,
       // fecha de ingreso = registro más antiguo
       createdAt:      espacios[0]?.createdAt,
     });
@@ -333,8 +334,9 @@ export default function Tenants() {
                       {/* ── Plan (del espacio principal) ── */}
                       <td className="px-4 py-3">
                         {(() => {
-                          const pid = primary.selectedPlan || primary.planId;
-                          const nombre = pid ? (planes.find(p => p.id === pid)?.nombre ?? pid) : null;
+                          const raw = primary.selectedPlan || primary.planId;
+                          const pid = (raw === 'null' || raw === 'undefined' || !raw) ? null : raw;
+                          const nombre = pid ? (planes.find(p => p.id === pid)?.nombre ?? null) : null;
                           return nombre
                             ? <span className="text-xs font-medium text-ink">{nombre}</span>
                             : <span className="text-xs text-ink-muted">Sin plan</span>;
