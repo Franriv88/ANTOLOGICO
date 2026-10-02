@@ -103,8 +103,9 @@ const PERIODOS = [
 export default function Landing() {
   const heroRef  = useRef(null);
   const rafRef   = useRef(null);
-  const [offset,  setOffset]  = useState({ x: 0, y: 0 });
-  const [periodo, setPeriodo] = useState('mensual');
+  const [offset,       setOffset]       = useState({ x: 0, y: 0 });
+  const [periodo,      setPeriodo]      = useState('mensual');
+  const [selectedPlan, setSelectedPlan] = useState(null);
   const planes = usePlanes();
   const promo  = usePromo();
   const promoActiva = isPromoActiva(promo);
@@ -288,13 +289,16 @@ export default function Landing() {
                                  : periodo === 'anual'      ? (plan.descuentoAnual      ?? 0) : 0;
               const meses        = periodo === 'trimestral' ? 3 : 12;
               const { id, nombre, features = [], highlight } = plan;
+              const isSelected = selectedPlan === id;
+              const isActive   = highlight || isSelected;
               return (
                 <div
                   key={id}
-                  className={`rounded-xl border p-6 flex flex-col ${
-                    highlight
+                  onClick={() => setSelectedPlan(id)}
+                  className={`rounded-xl border p-6 flex flex-col cursor-pointer transition-all duration-200 ${
+                    isActive
                       ? 'border-primary bg-primary/5 shadow-md'
-                      : 'border-border bg-surface-0'
+                      : 'border-border bg-surface-0 hover:border-primary/40 hover:shadow-sm'
                   }`}
                 >
                   {highlight && (
@@ -329,8 +333,9 @@ export default function Landing() {
                   </ul>
                   <Link
                     to="/registro"
+                    onClick={(e) => e.stopPropagation()}
                     className={`mt-6 py-2.5 text-center rounded-md text-sm font-semibold transition-colors ${
-                      highlight
+                      isActive
                         ? 'bg-primary text-white hover:bg-primary-strong'
                         : 'border border-border text-ink hover:bg-surface-200'
                     }`}
