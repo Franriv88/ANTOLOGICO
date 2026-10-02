@@ -10,6 +10,7 @@ const LABEL_CLS = 'block text-xs font-medium text-ink-muted mb-1';
 export default function StepPerfil({ onNext }) {
   const { user } = useAuth();
   const [nombre,   setNombre]   = useState(user?.displayName ?? '');
+  const [email,    setEmail]    = useState(user?.email ?? '');
   const [telefono, setTelefono] = useState('');
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState('');
@@ -21,7 +22,7 @@ export default function StepPerfil({ onNext }) {
     setLoading(true);
     setError('');
     try {
-      await profesionalesApi.upsert({ nombre: nombre.trim(), email: user.email });
+      await profesionalesApi.upsert({ nombre: nombre.trim(), email: email.trim() });
     } catch {
       // Firebase no disponible (demo mode u otro entorno sin backend)
     }
@@ -55,9 +56,10 @@ export default function StepPerfil({ onNext }) {
         <label className={LABEL_CLS}>Email</label>
         <input
           type="email"
-          value={user?.email ?? ''}
-          disabled
-          className={INPUT_CLS + ' bg-surface-100 text-ink-muted cursor-not-allowed'}
+          value={email}
+          onChange={(e) => { setEmail(e.target.value); setError(''); }}
+          placeholder="tu@email.com"
+          className={INPUT_CLS}
         />
       </div>
 

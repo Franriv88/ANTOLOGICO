@@ -21,6 +21,15 @@ export function saveDemoSession() {
 export function clearDemoSession() {
   localStorage.removeItem(SESSION_KEY);
 }
+export function createNewDemoSession() {
+  const newUser = {
+    uid:         `demo-new-${Date.now()}`,
+    email:       '',
+    displayName: '',
+  };
+  localStorage.setItem(SESSION_KEY, JSON.stringify(newUser));
+  return newUser;
+}
 
 // ─── Datos iniciales (se usan para sembrar Firestore una sola vez) ────────────
 

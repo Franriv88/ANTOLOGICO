@@ -10,7 +10,7 @@ import {
   GoogleAuthProvider,
 } from 'firebase/auth';
 import { auth } from '../lib/firebase';
-import { DEMO_MODE, DEMO_EMAIL, DEMO_PASSWORD } from '../lib/demo';
+import { DEMO_MODE, DEMO_EMAIL, DEMO_PASSWORD, createNewDemoSession } from '../lib/demo';
 import { useAuth } from '../context/AuthContext';
 import { authErrorMsg } from '../services/userAuth';
 
@@ -67,17 +67,10 @@ export default function Login() {
       }
     }
 
-    async function handleNewUser() {
-      setError('');
-      setLoading(true);
-      try {
-        localStorage.removeItem('ant_demo_data');
-        await loginDemo(DEMO_EMAIL, DEMO_PASSWORD);
-        window.location.href = '/workshops';
-      } catch (err) {
-        setError(err.message);
-        setLoading(false);
-      }
+    function handleNewUser() {
+      localStorage.removeItem('ant_demo_data');
+      createNewDemoSession();
+      window.location.href = '/onboarding';
     }
 
     return (
