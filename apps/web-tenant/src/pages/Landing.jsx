@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
 import { IconAntologico, LogoAntologico } from '../components/LogoAntologico';
 import { usePlanes, precioConPeriodo } from '../hooks/usePlanes';
 import { usePromo, isPromoActiva, precioConPromoYPeriodo } from '../hooks/usePromo';
@@ -109,6 +109,13 @@ export default function Landing() {
   const planes = usePlanes();
   const promo  = usePromo();
   const promoActiva = isPromoActiva(promo);
+
+  useEffect(() => {
+    if (planes && selectedPlan === null) {
+      const highlighted = planes.find(p => p.highlight);
+      if (highlighted) setSelectedPlan(highlighted.id);
+    }
+  }, [planes]);
 
   const handleMouseMove = useCallback((e) => {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
@@ -290,7 +297,7 @@ export default function Landing() {
               const meses        = periodo === 'trimestral' ? 3 : 12;
               const { id, nombre, features = [], highlight } = plan;
               const isSelected = selectedPlan === id;
-              const isActive   = highlight || isSelected;
+              const isActive   = isSelected;
               return (
                 <div
                   key={id}
