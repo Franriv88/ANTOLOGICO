@@ -307,11 +307,10 @@ function DeleteEspacioModal({ espacio, espacioQueQueda, loading, error, onConfir
 
 // ── Modal: agregar espacio adicional ─────────────────────────────────────────
 
-function AgregarEspacioModal({ userId, plan, onSuccess, onClose }) {
+function AgregarEspacioModal({ userId, onSuccess, onClose }) {
   const [nombre,  setNombre]  = useState('');
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState('');
-  const precioAdicional = Math.round((plan?.precioMensual ?? 0) * 0.5);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -321,7 +320,6 @@ function AgregarEspacioModal({ userId, plan, onSuccess, onClose }) {
       await espacioApi.create({
         userId,
         nombre: nombre.trim(),
-        plan,
         estado: 'ACTIVO',
         cancelacionPendiente: false,
       });
@@ -336,7 +334,7 @@ function AgregarEspacioModal({ userId, plan, onSuccess, onClose }) {
       <div className="relative bg-surface-0 border border-border rounded-xl shadow-2xl p-6 max-w-md w-full" onClick={e => e.stopPropagation()}>
         <h3 className="font-display text-lg text-ink mb-2">Agregar espacio adicional</h3>
         <p className="text-sm text-ink-muted mb-5">
-          Se facturará al <strong className="text-ink">50% del plan Estudio</strong> — ${precioAdicional.toLocaleString('es-AR')}/mes adicionales.
+          Incluido en tu plan Estudio sin costo adicional.
         </p>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
@@ -1321,15 +1319,20 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
   const pendiente      = espacio.cancelacionPendiente;
   const isEstudio      = espacio.planId === 'estudio';
 
+  // Trial activo: menos de 14 días desde trialStartedAt (o createdAt como fallback)
+  const trialRef    = espacio.trialStartedAt ?? espacio.createdAt;
+  const trialActivo = trialRef
+    ? Math.floor((Date.now() - new Date(trialRef)) / 86_400_000) < 14
+    : false;
+
   // Precio siempre desde demo_planes (fuente de verdad), con fallback al objeto guardado
   const planActivo      = planesDB?.find(p => p.id === espacio.planId) ?? espacio.plan ?? null;
   const periodoActivo   = espacio.periodoFacturacion ?? 'mensual';
   const otrosEspacios   = espacios.filter(e => e.id !== espacio.id);
 
-  // Precio con período y descuento aplicado
-  const precioBase      = precioConPeriodo(planActivo, periodoActivo);
-  const precioAdicional = Math.round(precioBase * 0.5);
-  const totalMensual    = precioBase + otrosEspacios.length * precioAdicional;
+  // Precio plano: espacios adicionales incluidos en el plan Estudio, sin recargo
+  const precioBase   = precioConPeriodo(planActivo, periodoActivo);
+  const totalMensual = precioBase;
 
   // Detecta cambio de precio por modificación del Super Admin
   const precioActualGuardado  = espacio.precioActual ?? precioBase;
@@ -1487,64 +1490,33 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
           </div>
         )}
 
-        {otrosEspacios.length > 0 ? (
-          <div className="mt-3 flex flex-col gap-2">
-            <div className="flex items-center gap-3">
-              <EspacioLogoThumb esp={espacio} />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-ink truncate">{espacio.nombre}</p>
-                <p className="text-xs text-ink-muted">{planActivo.nombre} · 100%</p>
-              </div>
-              <span className="font-mono text-sm text-ink shrink-0">${precioBase.toLocaleString('es-AR')}/mes</span>
-            </div>
-            {otrosEspacios.map(esp => (
-              <div key={esp.id} className="flex items-center gap-3">
-                <EspacioLogoThumb esp={esp} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-ink truncate">{esp.nombre}</p>
-                  <p className="text-xs text-ink-muted">{planActivo.nombre} · 50%</p>
-                </div>
-                <span className="font-mono text-sm text-ink shrink-0">${precioAdicional.toLocaleString('es-AR')}/mes</span>
-              </div>
-            ))}
-            <div className="border-t border-border pt-3 flex items-center justify-between">
-              <div>
-                <span className="text-sm font-semibold text-ink">Total</span>
-                {periodoActivo !== 'mensual' && (
-                  <p className="text-xs text-ink-muted">
-                    ${(totalMensual * (periodoActivo === 'trimestral' ? 3 : 12)).toLocaleString('es-AR')} cada {periodoActivo === 'trimestral' ? '3 meses' : 'año'}
-                  </p>
-                )}
-              </div>
-              <span className="font-mono text-base font-semibold text-ink">${totalMensual.toLocaleString('es-AR')}/mes</span>
-            </div>
-          </div>
-        ) : (
-          <div className="mt-2">
-            <p className="text-xs text-ink-muted font-mono">
-              ${precioBase.toLocaleString('es-AR')}/mes equiv.
-              {periodoActivo !== 'mensual' && (
-                <span className="ml-2">· ${(precioBase * (periodoActivo === 'trimestral' ? 3 : 12)).toLocaleString('es-AR')} cada {periodoActivo === 'trimestral' ? '3 meses' : 'año'}</span>
-              )}
-            </p>
-            <p className="text-xs text-ink-muted mt-0.5">Próxima renovación: {formatFechaLarga(fechaRenovacion)}</p>
-          </div>
-        )}
+        <div className="mt-2">
+          <p className="text-xs text-ink-muted font-mono">
+            ${precioBase.toLocaleString('es-AR')}/mes equiv.
+            {periodoActivo !== 'mensual' && (
+              <span className="ml-2">· ${(precioBase * (periodoActivo === 'trimestral' ? 3 : 12)).toLocaleString('es-AR')} cada {periodoActivo === 'trimestral' ? '3 meses' : 'año'}</span>
+            )}
+          </p>
+          <p className="text-xs text-ink-muted mt-0.5">Próxima renovación: {formatFechaLarga(fechaRenovacion)}</p>
+        </div>
       </div>
       )}
 
-      {/* ── Espacios adicionales (solo plan Estudio) ── */}
-      {isEstudio && (
+      {/* ── Espacios adicionales (solo plan Estudio, fuera del trial) ── */}
+      {isEstudio && !trialActivo && (
         <div className="bg-surface-100 border border-border rounded-xl p-5">
-          <h2 className="font-semibold text-sm text-ink mb-3">Espacios adicionales</h2>
-          {otrosEspacios.length > 0 ? (
-            <div className="flex flex-col gap-3">
+          <h2 className="font-semibold text-sm text-ink mb-1">Espacios adicionales</h2>
+          <p className="text-xs text-ink-muted mb-3">
+            El plan Estudio incluye hasta 2 espacios adicionales sin costo extra.
+          </p>
+          {otrosEspacios.length > 0 && (
+            <div className="flex flex-col gap-3 mb-3">
               {otrosEspacios.map(esp => (
                 <div key={esp.id} className="flex items-center gap-3 p-3 bg-white border border-border rounded-lg">
                   <EspacioLogoThumb esp={esp} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-ink truncate">{esp.nombre}</p>
-                    <p className="text-xs font-mono text-ink-muted">${precioAdicional.toLocaleString('es-AR')}/mes · 50% del plan</p>
+                    <p className="text-xs text-ink-muted">Incluido en el plan Estudio</p>
                   </div>
                   <button
                     onClick={() => { setDeleteTarget(esp); setError(''); }}
@@ -1555,18 +1527,16 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
                 </div>
               ))}
             </div>
+          )}
+          {otrosEspacios.length < 2 ? (
+            <button
+              onClick={() => setAgregarOpen(true)}
+              className="self-start px-4 py-2 text-sm font-semibold bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
+            >
+              + Agregar espacio
+            </button>
           ) : (
-            <div className="flex flex-col gap-3">
-              <p className="text-sm text-ink-muted">
-                Podés agregar un espacio adicional por el 50% del plan Estudio — ${precioAdicional.toLocaleString('es-AR')}/mes.
-              </p>
-              <button
-                onClick={() => setAgregarOpen(true)}
-                className="self-start px-4 py-2 text-sm font-semibold bg-primary text-white rounded-md hover:bg-primary/90 transition-colors"
-              >
-                + Agregar espacio
-              </button>
-            </div>
+            <p className="text-xs text-ink-muted italic">Alcanzaste el máximo de espacios adicionales del plan Estudio.</p>
           )}
         </div>
       )}
@@ -1637,7 +1607,6 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
       {agregarOpen && (
         <AgregarEspacioModal
           userId={user?.uid}
-          plan={espacio.plan}
           onSuccess={async () => { await refresh(); setAgregarOpen(false); }}
           onClose={() => setAgregarOpen(false)}
         />
