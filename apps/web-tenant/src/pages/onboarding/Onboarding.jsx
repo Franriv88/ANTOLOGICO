@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useEspacio } from '../../context/EspacioContext';
 import { espacios as espacioApi } from '../../services/api';
@@ -86,6 +86,13 @@ export default function Onboarding() {
         {step === 1 && <StepEspacio onNext={next} onBack={back} accumulated={data} />}
         {step === 2 && <StepPlan    onFinish={finish} onBack={back} />}
       </div>
+
+      <p className="mt-6 text-xs text-ink-muted">
+        ¿Ya tenés cuenta?{' '}
+        <Link to="/login" className="text-primary hover:underline font-medium">
+          Ingresar →
+        </Link>
+      </p>
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import {
   signInWithPopup,
   signInWithEmailAndPassword,
@@ -37,7 +37,7 @@ function GoogleIcon() {
   );
 }
 
-export default function Login() {
+export default function Login({ mode = 'login' }) {
   const [error, setError]     = useState('');
   const [loading, setLoading] = useState(false);
   const navigate  = useNavigate();
@@ -48,6 +48,12 @@ export default function Login() {
   const [demoPassword, setDemoPassword] = useState(DEMO_PASSWORD);
 
   useEffect(() => {
+    if (DEMO_MODE && mode === 'register') {
+      localStorage.removeItem('ant_demo_data');
+      createNewDemoSession();
+      window.location.href = '/onboarding';
+      return;
+    }
     if (!DEMO_MODE && isDev) handleDevLogin();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -118,16 +124,13 @@ export default function Login() {
             </button>
           </form>
 
-          <div className="mt-4 pt-4 border-t border-border">
-            <p className="text-xs text-ink-muted text-center mb-3">¿Querés ver el flujo de registro completo?</p>
-            <button
-              type="button"
-              onClick={handleNewUser}
-              disabled={loading}
-              className="w-full py-2 border border-border rounded-md text-xs font-medium text-ink-muted hover:text-ink hover:bg-surface-200 transition-colors disabled:opacity-50"
-            >
-              Empezar como usuario nuevo →
-            </button>
+          <div className="mt-4 pt-4 border-t border-border text-center">
+            <p className="text-xs text-ink-muted">
+              ¿No tenés cuenta?{' '}
+              <Link to="/registro" className="text-primary hover:underline font-medium">
+                Crear cuenta →
+              </Link>
+            </p>
           </div>
         </div>
       </div>
@@ -186,11 +189,11 @@ export default function Login() {
   }
 
   // ─── Producción — login/registro formal ─────────────────────────────────────
-  return <TenantLoginPage />;
+  return <TenantLoginPage initialTab={mode === 'register' ? 'register' : 'login'} />;
 }
 
 // ─── Componente de login/registro de producción ──────────────────────────────
-function TenantLoginPage() {
+function TenantLoginPage({ initialTab = 'login' }) {
   const navigate = useNavigate();
   const { user }  = useAuth();
 
@@ -200,7 +203,7 @@ function TenantLoginPage() {
   }, [user, navigate]);
 
   // Tabs: 'login' | 'register'
-  const [tab, setTab] = useState('login');
+  const [tab, setTab] = useState(initialTab);
 
   // Login
   const [loginEmail, setLoginEmail]       = useState('');
@@ -479,6 +482,12 @@ function TenantLoginPage() {
             >
               {loading ? 'Ingresando…' : 'Ingresar →'}
             </button>
+            <p className="text-xs text-ink-muted text-center">
+              ¿No tenés cuenta?{' '}
+              <button type="button" onClick={() => { setTab('register'); setError(''); }} className="text-primary hover:underline font-medium">
+                Crear cuenta →
+              </button>
+            </p>
           </form>
         )}
 
@@ -532,6 +541,12 @@ function TenantLoginPage() {
               Al crear tu cuenta aceptás nuestros{' '}
               <span className="text-ink">Términos de uso</span> y{' '}
               <span className="text-ink">Política de privacidad</span>.
+            </p>
+            <p className="text-xs text-ink-muted text-center">
+              ¿Ya tenés cuenta?{' '}
+              <button type="button" onClick={() => { setTab('login'); setError(''); }} className="text-primary hover:underline font-medium">
+                Ingresar →
+              </button>
             </p>
           </form>
         )}

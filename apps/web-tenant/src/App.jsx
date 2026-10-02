@@ -57,7 +57,8 @@ export default function App() {
           <Routes>
             {/* Rutas públicas */}
             <Route path="/" element={<Landing />} />
-            <Route path="/login" element={<DevLogin />} />
+            <Route path="/login"    element={<DevLogin />} />
+            <Route path="/registro" element={<DevLogin mode="register" />} />
             <Route path="/p/:espacioId" element={<EspacioPublico />} />
             <Route path="/mis-reservas" element={<MisReservas />} />
             <Route path="/mis-datos"    element={<MisDatos />} />

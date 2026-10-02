@@ -176,7 +176,7 @@ export default function Landing() {
           {/* CTAs */}
           <div className="mt-10 flex flex-col sm:flex-row items-center gap-3">
             <Link
-              to="/login"
+              to="/registro"
               className="px-7 py-3.5 bg-white font-semibold text-sm rounded-lg hover:bg-white/92 transition-colors shadow-lg"
               style={{ color: '#C4412F' }}
             >
@@ -327,7 +327,7 @@ export default function Landing() {
                     ))}
                   </ul>
                   <Link
-                    to="/login"
+                    to="/registro"
                     className={`mt-6 py-2.5 text-center rounded-md text-sm font-semibold transition-colors ${
                       highlight
                         ? 'bg-primary text-white hover:bg-primary-strong'
