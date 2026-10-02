@@ -29,30 +29,33 @@ function TrialDays({ trialStartedAt }) {
 }
 
 // Agrupa la lista plana de espacios por userId
+// El espacio "principal" es el más antiguo (primer registro)
 function buildGroups(list) {
   const groups = [];
   const seen   = new Set();
-  list.forEach(esp => {
+  // Iterar en orden cronológico ascendente para que el primero de cada userId sea el más antiguo
+  const asc = [...list].sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+  asc.forEach(esp => {
     const key = esp.userId ?? `__anon__${esp.id}`;
     if (seen.has(key)) return;
     seen.add(key);
-    const espacios = list.filter(e => (e.userId ?? `__anon__${e.id}`) === key);
-    // Fecha de registro = espacio más antiguo
-    const createdAt = espacios.reduce(
-      (min, e) => (!min || (e.createdAt && e.createdAt < min)) ? e.createdAt : min,
-      null
-    );
+    // Todos los espacios de este userId, el primero (index 0) es el principal
+    const espacios = asc.filter(e => (e.userId ?? `__anon__${e.id}`) === key);
     groups.push({
       key,
       userId:         esp.userId,
       usuario:        esp.usuario,
+      primary:        espacios[0],       // espacio más antiguo = principal
+      extras:         espacios.slice(1), // el resto
       espacios,
       bloqueado:      espacios.some(e => e.bloqueado),
       trialStartedAt: espacios[0]?.trialStartedAt,
-      createdAt,
+      // fecha de ingreso = registro más antiguo
+      createdAt:      espacios[0]?.createdAt,
     });
   });
-  return groups;
+  // Devolver grupos ordenados por registro más reciente (desc) para el display
+  return groups.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 }
 
 function matchGroup(group, q) {
@@ -74,7 +77,7 @@ function matchGroup(group, q) {
 // ── Modal de reset de contraseña ──────────────────────────────────────────────
 
 function ResetModal({ group, onClose }) {
-  const email0 = group?.usuario?.email ?? group?.espacios?.[0]?.email ?? '';
+  const email0 = group?.usuario?.email ?? '';
   const [email,  setEmail]  = useState(email0);
   const [phase,  setPhase]  = useState('confirm');
   const [errMsg, setErrMsg] = useState('');
@@ -108,27 +111,18 @@ function ResetModal({ group, onClose }) {
                 El enlace de recuperación fue enviado a<br />
                 <span className="font-semibold text-ink">{email}</span>
               </p>
-              <button onClick={onClose}
-                className="w-full py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-strong transition-colors">
+              <button onClick={onClose} className="w-full py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-strong transition-colors">
                 Cerrar
               </button>
             </>
           ) : (
             <>
               <h3 className="font-display text-lg text-ink mb-1">Reset de contraseña</h3>
-              <p className="text-sm text-ink-muted mb-4">
-                Se enviará un enlace de recuperación al email del tenant.
-              </p>
+              <p className="text-sm text-ink-muted mb-4">Se enviará un enlace de recuperación al email del tenant.</p>
               <div className="mb-5">
                 <label className={LABEL_CLS}>Email *</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="email@tenant.com"
-                  autoFocus
-                  className={INPUT_CLS}
-                />
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                  placeholder="email@tenant.com" autoFocus className={INPUT_CLS} />
                 {phase === 'error' && (
                   <p className="mt-2 text-xs text-danger bg-danger/5 border border-danger/20 rounded-lg px-3 py-2">{errMsg}</p>
                 )}
@@ -157,10 +151,10 @@ export default function Tenants() {
   const [list,        setList]        = useState(null);
   const [planes,      setPlanes]      = useState([]);
   const [loading,     setLoading]     = useState(true);
-  const [saving,      setSaving]      = useState(null); // userId o id
+  const [saving,      setSaving]      = useState(null);
   const [search,      setSearch]      = useState('');
-  const [blockTarget, setBlockTarget] = useState(null); // group
-  const [resetTarget, setResetTarget] = useState(null); // group
+  const [blockTarget, setBlockTarget] = useState(null);
+  const [resetTarget, setResetTarget] = useState(null);
 
   useEffect(() => {
     Promise.all([tenantsApi.list(), planesApi.list()])
@@ -197,17 +191,15 @@ export default function Tenants() {
 
   if (loading) return <p className="text-sm text-ink-muted">Cargando tenants…</p>;
 
-  const sorted   = [...(list ?? [])].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
-  const groups   = buildGroups(sorted);
+  const flat     = list ?? [];
+  const groups   = buildGroups(flat);
   const filtered = groups.filter(g => matchGroup(g, search));
 
   return (
     <>
       {blockTarget && (
         <ConfirmModal
-          title={blockTarget.bloqueado
-            ? `¿Desbloquear a este tenant?`
-            : `¿Bloquear a este tenant?`}
+          title={blockTarget.bloqueado ? '¿Desbloquear este tenant?' : '¿Bloquear este tenant?'}
           text={blockTarget.bloqueado
             ? 'El tenant podrá volver a acceder a la plataforma y todos sus espacios.'
             : `Se bloquearán todos sus espacios (${blockTarget.espacios.length}). No podrá iniciar sesión.`}
@@ -227,8 +219,7 @@ export default function Tenants() {
           <div>
             <h1 className="font-display text-2xl text-ink">Tenants</h1>
             <p className="text-sm text-ink-muted mt-0.5">
-              {filtered.length}{search ? ` de ${groups.length}` : ''} tenants
-              {' · '}{sorted.length} espacios
+              {filtered.length}{search ? ` de ${groups.length}` : ''} tenants · {flat.length} espacios
             </p>
           </div>
         </div>
@@ -250,136 +241,166 @@ export default function Tenants() {
             </p>
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
-            {filtered.map(group => {
-              const isSaving    = saving === group.key;
-              const userInitial = (group.usuario?.nombre ?? group.espacios[0]?.nombre ?? '?')[0].toUpperCase();
+          <div className="bg-surface-100 border border-border rounded-xl overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-surface-200/50">
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-ink-muted uppercase tracking-wide">Espacio</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-ink-muted uppercase tracking-wide">Rubro</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-ink-muted uppercase tracking-wide">Plan</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-ink-muted uppercase tracking-wide">Prueba</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-ink-muted uppercase tracking-wide">Estado</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-ink-muted uppercase tracking-wide">Registro</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-ink-muted uppercase tracking-wide text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map(group => {
+                  const { primary, extras, bloqueado } = group;
+                  const isSaving  = saving === group.key || saving === primary.id;
+                  const logoShape = primary.logoShape === 'square' ? 'rounded-lg' : 'rounded-full';
 
-              return (
-                <div
-                  key={group.key}
-                  className={`bg-surface-100 border rounded-xl overflow-hidden transition-opacity ${
-                    group.bloqueado ? 'border-danger/30 bg-danger/5' : 'border-border'
-                  } ${isSaving ? 'opacity-50' : ''}`}
-                >
-                  {/* ── Fila del tenant (usuario) ── */}
-                  <div className="flex items-center gap-4 px-4 py-3 border-b border-border/50">
-                    {/* Avatar del usuario */}
-                    <div className="shrink-0 w-9 h-9 rounded-full bg-surface-200 border border-border flex items-center justify-center text-sm font-bold text-ink-muted select-none">
-                      {userInitial}
-                    </div>
+                  return (
+                    <tr
+                      key={group.key}
+                      className={`border-b border-border/50 hover:bg-surface-200/20 transition-colors ${
+                        isSaving ? 'opacity-50' : ''
+                      } ${bloqueado ? 'bg-danger/[0.03]' : ''}`}
+                    >
+                      {/* ── Espacio ── */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-start gap-3">
+                          {/* Logo principal */}
+                          <div className={`shrink-0 w-10 h-10 ${logoShape} overflow-hidden bg-surface-200 border border-border flex items-center justify-center`}>
+                            {primary.logoUrl
+                              ? <img src={primary.logoUrl} alt="" className="w-full h-full object-cover" />
+                              : <span className="text-sm font-bold text-ink-muted select-none">
+                                  {(primary.nombre?.[0] ?? '?').toUpperCase()}
+                                </span>
+                            }
+                          </div>
 
-                    {/* Info del usuario */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <p className="text-sm font-semibold text-ink">
-                          {group.usuario?.nombre ?? group.usuario?.email ?? '—'}
-                        </p>
-                        {group.bloqueado && (
-                          <span className="text-[10px] font-bold bg-danger text-white rounded px-1.5 py-0.5 leading-tight">
-                            BLOQUEADO
-                          </span>
-                        )}
-                      </div>
-                      {group.usuario?.email && (
-                        <p className="text-xs font-mono text-ink-muted">{group.usuario.email}</p>
-                      )}
-                    </div>
+                          <div className="min-w-0">
+                            {/* Nombre del espacio principal + badges */}
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <p className="font-medium text-ink leading-tight">{primary.nombre || '—'}</p>
+                              {bloqueado && (
+                                <span className="text-[10px] font-bold bg-danger text-white rounded px-1.5 py-0.5 leading-tight shrink-0">
+                                  BLOQUEADO
+                                </span>
+                              )}
+                              {primary.estado === 'SUSPENDIDO' && !bloqueado && (
+                                <span className="text-[10px] font-bold bg-danger/10 text-danger border border-danger/20 rounded px-1.5 py-0.5 leading-tight shrink-0">
+                                  SUSPENDIDO
+                                </span>
+                              )}
+                            </div>
 
-                    {/* Trial */}
-                    <div className="shrink-0 hidden sm:block">
-                      <TrialDays trialStartedAt={group.trialStartedAt} />
-                    </div>
+                            {/* Email del usuario */}
+                            {group.usuario?.email && (
+                              <p className="text-xs text-ink-muted font-mono mt-0.5">{group.usuario.email}</p>
+                            )}
 
-                    {/* Registro */}
-                    <p className="shrink-0 text-xs text-ink-muted whitespace-nowrap hidden md:block">
-                      {formatFecha(group.createdAt)}
-                    </p>
-
-                    {/* Acciones — ancho fijo */}
-                    <div className="shrink-0 flex items-center gap-2">
-                      <button
-                        onClick={() => setResetTarget(group)}
-                        disabled={isSaving}
-                        title="Enviar reset de contraseña"
-                        className="w-16 text-center text-xs py-1 border border-border rounded text-ink-muted hover:text-ink hover:bg-surface-200 transition-colors disabled:opacity-30"
-                      >
-                        ↺ Reset
-                      </button>
-                      <button
-                        onClick={() => setBlockTarget(group)}
-                        disabled={isSaving}
-                        className={`w-24 text-center text-xs py-1 rounded border transition-colors disabled:opacity-30 ${
-                          group.bloqueado
-                            ? 'border-emerald-300 text-emerald-700 hover:bg-emerald-50'
-                            : 'border-danger/20 text-danger hover:bg-danger/5'
-                        }`}
-                      >
-                        {group.bloqueado ? 'Desbloquear' : 'Bloquear'}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* ── Filas de espacios ── */}
-                  {group.espacios.map((esp, i) => {
-                    const logoShape = esp.logoShape === 'square' ? 'rounded-lg' : 'rounded-full';
-                    return (
-                      <div
-                        key={esp.id}
-                        className={`flex items-center gap-3 px-4 py-2.5 ${
-                          i < group.espacios.length - 1 ? 'border-b border-border/30' : ''
-                        } bg-surface-100/50`}
-                      >
-                        {/* Logo del espacio */}
-                        <div className={`shrink-0 w-8 h-8 ${logoShape} overflow-hidden bg-surface-200 border border-border flex items-center justify-center`}>
-                          {esp.logoUrl
-                            ? <img src={esp.logoUrl} alt="" className="w-full h-full object-cover" />
-                            : <span className="text-xs font-bold text-ink-muted select-none">
-                                {(esp.nombre?.[0] ?? '?').toUpperCase()}
-                              </span>
-                          }
+                            {/* Espacios adicionales */}
+                            {extras.length > 0 && (
+                              <div className="flex flex-col gap-1 mt-2">
+                                {extras.map(e => {
+                                  const eShape = e.logoShape === 'square' ? 'rounded' : 'rounded-full';
+                                  return (
+                                    <div key={e.id} className="flex items-center gap-1.5">
+                                      <div className={`shrink-0 w-4 h-4 ${eShape} overflow-hidden bg-surface-200 border border-border flex items-center justify-center`}>
+                                        {e.logoUrl
+                                          ? <img src={e.logoUrl} alt="" className="w-full h-full object-cover" />
+                                          : <span className="text-[8px] font-bold text-ink-muted leading-none">{(e.nombre?.[0] ?? '?').toUpperCase()}</span>
+                                        }
+                                      </div>
+                                      <span className="text-[11px] text-ink-muted truncate max-w-[140px]">{e.nombre}</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
                         </div>
+                      </td>
 
-                        {/* Nombre + rubro */}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-ink truncate">{esp.nombre || '—'}</p>
-                          <p className="text-xs text-ink-muted truncate">
-                            {esp.rubroPersonalizado || esp.rubro?.nombre || '—'}
-                          </p>
-                        </div>
+                      {/* ── Rubro (del espacio principal) ── */}
+                      <td className="px-4 py-3">
+                        <span className="text-xs text-ink-muted">
+                          {primary.rubroPersonalizado || primary.rubro?.nombre || '—'}
+                        </span>
+                      </td>
 
-                        {/* Plan */}
+                      {/* ── Plan (del espacio principal) ── */}
+                      <td className="px-4 py-3">
                         <select
-                          value={esp.selectedPlan || esp.planId || ''}
-                          onChange={e => handlePlan(esp.id, e.target.value || null)}
-                          disabled={saving === esp.id}
-                          className="text-xs border border-border rounded px-2 py-1 bg-white text-ink focus:outline-none focus:border-primary shrink-0"
+                          value={primary.selectedPlan || primary.planId || ''}
+                          onChange={e => handlePlan(primary.id, e.target.value || null)}
+                          disabled={saving === primary.id}
+                          className="text-xs border border-border rounded px-2 py-1 bg-white text-ink focus:outline-none focus:border-primary"
                         >
                           <option value="">Sin plan</option>
                           {planes.map(p => (
                             <option key={p.id} value={p.id}>{p.nombre}</option>
                           ))}
                         </select>
+                      </td>
 
-                        {/* Estado */}
+                      {/* ── Prueba ── */}
+                      <td className="px-4 py-3">
+                        <TrialDays trialStartedAt={group.trialStartedAt} />
+                      </td>
+
+                      {/* ── Estado (del espacio principal) ── */}
+                      <td className="px-4 py-3">
                         <select
-                          value={esp.estado || 'ACTIVO'}
-                          onChange={e => handleEstado(esp.id, e.target.value)}
-                          disabled={saving === esp.id}
-                          className={`text-xs border rounded px-2 py-1 focus:outline-none focus:border-primary font-medium shrink-0 ${
-                            ESTADO_COLORS[esp.estado] || ESTADO_COLORS.ACTIVO
-                          } bg-transparent`}
+                          value={primary.estado || 'ACTIVO'}
+                          onChange={e => handleEstado(primary.id, e.target.value)}
+                          disabled={saving === primary.id}
+                          className={`text-xs border rounded px-2 py-1 focus:outline-none focus:border-primary font-medium bg-transparent ${
+                            ESTADO_COLORS[primary.estado] || ESTADO_COLORS.ACTIVO
+                          }`}
                         >
                           <option value="ACTIVO">Activo</option>
                           <option value="INACTIVO">Inactivo</option>
                           <option value="SUSPENDIDO">Suspendido</option>
                         </select>
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })}
+                      </td>
+
+                      {/* ── Registro (fecha más antigua del tenant) ── */}
+                      <td className="px-4 py-3 text-xs text-ink-muted whitespace-nowrap">
+                        {formatFecha(group.createdAt)}
+                      </td>
+
+                      {/* ── Acciones — ancho fijo ── */}
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => setResetTarget(group)}
+                            disabled={isSaving}
+                            title="Enviar reset de contraseña"
+                            className="w-16 text-center text-xs py-1 border border-border rounded text-ink-muted hover:text-ink hover:bg-surface-200 transition-colors disabled:opacity-30"
+                          >
+                            ↺ Reset
+                          </button>
+                          <button
+                            onClick={() => setBlockTarget(group)}
+                            disabled={isSaving}
+                            className={`w-24 text-center text-xs py-1 rounded border transition-colors disabled:opacity-30 ${
+                              bloqueado
+                                ? 'border-emerald-300 text-emerald-700 hover:bg-emerald-50'
+                                : 'border-danger/20 text-danger hover:bg-danger/5'
+                            }`}
+                          >
+                            {bloqueado ? 'Desbloquear' : 'Bloquear'}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
