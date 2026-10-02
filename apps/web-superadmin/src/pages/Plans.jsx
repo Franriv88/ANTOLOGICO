@@ -109,54 +109,60 @@ function PlanForm({ initial, onSave, onCancel, saving }) {
   );
 }
 
-// ── PlanCard (compact horizontal) ─────────────────────────────────────────────
+// ── PlanCard (horizontal row) ─────────────────────────────────────────────────
 
 function PlanCard({ plan, onEdit, onDelete }) {
   return (
-    <div className={`min-w-[176px] w-44 shrink-0 bg-surface-100 border rounded-xl p-4 flex flex-col gap-2 ${
+    <div className={`min-w-[220px] w-[220px] shrink-0 bg-surface-100 border rounded-xl p-5 flex flex-col gap-3 ${
       plan.highlight ? 'border-primary/30' : 'border-border'
     }`}>
-      <div className="flex items-start justify-between gap-1 min-h-[40px]">
-        <span className="font-semibold text-sm text-ink leading-tight">{plan.nombre}</span>
+      <div className="flex items-start justify-between gap-2">
+        <span className="font-semibold text-sm text-ink leading-snug">{plan.nombre}</span>
         {plan.highlight && (
-          <span className="text-[10px] font-bold bg-primary text-white rounded-full px-1.5 py-0.5 shrink-0 leading-tight">
-            ★
+          <span className="text-[10px] font-semibold bg-primary text-white rounded-full px-2 py-0.5 shrink-0 whitespace-nowrap">
+            Recomendado
           </span>
         )}
       </div>
-      <span className="font-mono text-sm text-ink font-semibold">
-        {plan.precioMensual ? formatPrecio(plan.precioMensual) + '/mes' : 'Gratis'}
-      </span>
-      <div className="flex flex-col gap-0.5">
-        {(plan.descuentoTrimestral ?? 0) > 0 && (
-          <span className="text-[11px] text-ink-muted">Trim. −{plan.descuentoTrimestral}%</span>
-        )}
-        {(plan.descuentoAnual ?? 0) > 0 && (
-          <span className="text-[11px] text-ink-muted">Anual −{plan.descuentoAnual}%</span>
-        )}
-        <span className="text-[11px] text-ink-muted">
-          {plan.maxWorkshops ? `Hasta ${plan.maxWorkshops} talleres` : 'Ilimitado'}
-        </span>
+
+      <div>
+        <p className="font-mono text-base font-semibold text-ink">
+          {plan.precioMensual ? formatPrecio(plan.precioMensual) + '/mes' : 'Gratis'}
+        </p>
+        <div className="flex flex-wrap gap-1.5 mt-1">
+          {(plan.descuentoTrimestral ?? 0) > 0 && (
+            <span className="text-[11px] bg-surface-200 text-ink-muted px-2 py-0.5 rounded-full">
+              Trim. −{plan.descuentoTrimestral}%
+            </span>
+          )}
+          {(plan.descuentoAnual ?? 0) > 0 && (
+            <span className="text-[11px] bg-surface-200 text-ink-muted px-2 py-0.5 rounded-full">
+              Anual −{plan.descuentoAnual}%
+            </span>
+          )}
+          <span className="text-[11px] text-ink-muted">
+            {plan.maxWorkshops ? `Hasta ${plan.maxWorkshops} talleres` : 'Talleres ilimitados'}
+          </span>
+        </div>
       </div>
-      <ul className="flex flex-col gap-0.5 flex-1">
-        {(plan.features ?? []).slice(0, 3).map((f, i) => (
-          <li key={i} className="text-[11px] text-ink-muted flex items-start gap-1">
-            <span className="text-success shrink-0 mt-0.5">✓</span>
-            <span className="leading-tight">{f}</span>
+
+      <ul className="flex flex-col gap-1 flex-1">
+        {(plan.features ?? []).map((f, i) => (
+          <li key={i} className="text-xs text-ink-muted flex items-start gap-1.5">
+            <span className="text-success shrink-0">✓</span>
+            <span>{f}</span>
           </li>
         ))}
-        {(plan.features ?? []).length > 3 && (
-          <li className="text-[10px] text-ink-muted">+{plan.features.length - 3} más…</li>
-        )}
       </ul>
-      <div className="flex gap-1 pt-2 border-t border-border/60">
+
+      <div className="flex gap-2 pt-2 border-t border-border/60">
         <button onClick={onEdit}
           className="flex-1 py-1.5 text-xs border border-border rounded-md text-ink hover:bg-surface-200 transition-colors">
           Editar
         </button>
         <button onClick={onDelete}
-          className="px-2.5 py-1.5 text-xs border border-danger/20 rounded-md text-danger hover:bg-danger/5 transition-colors">
-          ×
+          className="px-3 py-1.5 text-xs border border-danger/20 rounded-md text-danger hover:bg-danger/5 transition-colors">
+          Eliminar
         </button>
       </div>
     </div>
@@ -259,13 +265,23 @@ export default function Plans() {
 
   return (
     <div className="max-w-5xl">
-      <div className="mb-6">
-        <h1 className="font-display text-2xl text-ink">Planes</h1>
-        <p className="text-sm text-ink-muted mt-0.5">{(list ?? []).length} planes configurados</p>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="font-display text-2xl text-ink">Planes</h1>
+          <p className="text-sm text-ink-muted mt-0.5">{(list ?? []).length} planes configurados</p>
+        </div>
+        {!showNew && !editing && (
+          <button
+            onClick={() => setShowNew(true)}
+            className="px-4 py-2 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary-strong transition-colors"
+          >
+            + Nuevo plan
+          </button>
+        )}
       </div>
 
       {/* ── Fila horizontal de cards ── */}
-      <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-brand">
+      <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-brand">
         {(list ?? []).map(plan => (
           <PlanCard
             key={plan.id}
@@ -277,9 +293,9 @@ export default function Plans() {
         {!showNew && (
           <button
             onClick={() => { setEditing(null); setShowNew(true); }}
-            className="min-w-[120px] shrink-0 border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center gap-2 text-ink-muted hover:border-primary hover:text-primary transition-colors py-8 px-4"
+            className="min-w-[220px] w-[220px] shrink-0 border-2 border-dashed border-border rounded-xl flex flex-col items-center justify-center gap-2 text-ink-muted hover:border-primary hover:text-primary transition-colors"
           >
-            <span className="text-3xl font-light leading-none">+</span>
+            <span className="text-4xl font-thin leading-none">+</span>
             <span className="text-xs font-medium">Nuevo plan</span>
           </button>
         )}
