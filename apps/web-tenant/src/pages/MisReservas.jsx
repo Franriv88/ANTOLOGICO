@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import jsQR from 'jsqr';
 import { reservas as reservasApi, workshops as workshopsApi, espacios as espaciosApi } from '../services/api';
-import { loginGoogle, loginEmail, register, logout, subscribeAuth, authErrorMsg, sendPasswordReset, checkRedirectResult } from '../services/userAuth';
+import { loginGoogle, loginEmail, register, logout, subscribeAuth, authErrorMsg, sendPasswordReset, checkRedirectResult, followEspacio, unfollowEspacio, getEspaciosSeguidos, syncFollowedToFirestore } from '../services/userAuth';
 
 // ── Espacios seguidos (localStorage) ─────────────────────────────────────────
 const LS_KEY = 'ant_espacios_seguidos';
@@ -171,7 +171,7 @@ function AuthPanel({ onSuccess }) {
 
 // ── QRScannerModal ────────────────────────────────────────────────────────────
 
-function QRScannerModal({ onClose }) {
+function QRScannerModal({ onClose, userId }) {
   const navigate    = useNavigate();
   const videoRef    = useRef(null);
   const canvasRef   = useRef(null);
@@ -248,21 +248,35 @@ function QRScannerModal({ onClose }) {
     }
   }
 
-  function handleFollow() {
+  async function handleFollow() {
     if (!found) return;
-    addFollowed(found.espacioId);
+    if (userId) {
+      await followEspacio(userId, found.espacioId).catch(() => {});
+    } else {
+      addFollowed(found.espacioId);
+    }
     setFollowed(true);
   }
 
-  function handleUnfollow() {
+  async function handleUnfollow() {
     if (!found) return;
-    removeFollowed(found.espacioId);
+    if (userId) {
+      await unfollowEspacio(userId, found.espacioId).catch(() => {});
+    } else {
+      removeFollowed(found.espacioId);
+    }
     setFollowed(false);
   }
 
-  function handleGo() {
+  async function handleGo() {
     if (!found) return;
-    if (!followed) addFollowed(found.espacioId);
+    if (!followed) {
+      if (userId) {
+        await followEspacio(userId, found.espacioId).catch(() => {});
+      } else {
+        addFollowed(found.espacioId);
+      }
+    }
     handleClose();
     navigate(`/p/${found.espacioId}`);
   }
@@ -372,19 +386,29 @@ function QRScannerModal({ onClose }) {
 
 // ── EspaciosSeguidos ──────────────────────────────────────────────────────────
 
-function EspaciosSeguidos() {
-  const [items,   setItems]   = useState(null); // null = loading
+function EspaciosSeguidos({ userId, onUnfollow }) {
+  const [items,   setItems]   = useState(null);
   const [refresh, setRefresh] = useState(0);
 
   useEffect(() => {
-    const ids = getFollowed();
-    if (ids.length === 0) { setItems([]); return; }
-    Promise.all(ids.map(id => espaciosApi.get(id).catch(() => null)))
-      .then(list => setItems(list.filter(Boolean)));
-  }, [refresh]);
+    async function load() {
+      const ids = userId
+        ? await getEspaciosSeguidos(userId).catch(() => getFollowed())
+        : getFollowed();
+      if (ids.length === 0) { setItems([]); return; }
+      const list = await Promise.all(ids.map(id => espaciosApi.get(id).catch(() => null)));
+      setItems(list.filter(Boolean));
+    }
+    load();
+  }, [userId, refresh]);
 
-  function handleUnfollow(id) {
-    removeFollowed(id);
+  async function handleUnfollow(id) {
+    if (userId) {
+      await unfollowEspacio(userId, id).catch(() => {});
+    } else {
+      removeFollowed(id);
+    }
+    onUnfollow?.();
     setRefresh(r => r + 1);
   }
 
@@ -565,7 +589,7 @@ export default function MisReservas() {
 
   return (
     <div className="min-h-screen bg-[#FAF8F4]">
-      {showScanner && <QRScannerModal onClose={() => setShowScanner(false)} />}
+      {showScanner && <QRScannerModal onClose={() => setShowScanner(false)} userId={currentUser?.user?.uid} />}
 
       {/* Header */}
       <div className="w-full bg-[#E85D4A] px-4 pt-6 pb-8">
@@ -602,7 +626,11 @@ export default function MisReservas() {
         {currentUser === null && (
           <>
             <EspaciosSeguidos />
-            <AuthPanel onSuccess={({ user, profile }) => { setCurrentUser({ user, profile: profile ?? {} }); loadReservas(user.email ?? profile?.email ?? ''); }} />
+            <AuthPanel onSuccess={({ user, profile }) => {
+              setCurrentUser({ user, profile: profile ?? {} });
+              loadReservas(user.email ?? profile?.email ?? '');
+              syncFollowedToFirestore(user.uid).catch(() => {});
+            }} />
           </>
         )}
 
@@ -620,7 +648,7 @@ export default function MisReservas() {
               Hola, <span className="font-semibold text-[#2B241A]">{currentUser.profile?.nombre?.split(' ')[0] ?? currentUser.user?.email}</span>
             </p>
 
-            <EspaciosSeguidos />
+            <EspaciosSeguidos userId={currentUser.user?.uid} />
 
             {loadingR && (
               <div className="flex items-center justify-center py-12">

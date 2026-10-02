@@ -97,6 +97,40 @@ export async function updateUserProfile(uid, data) {
   await saveProfile(uid, data);
 }
 
+export async function getEspaciosSeguidos(uid) {
+  const profile = await fetchProfile(uid);
+  return profile.espaciosSeguidos ?? [];
+}
+
+export async function followEspacio(uid, espacioId) {
+  const prev = await getEspaciosSeguidos(uid);
+  if (!prev.includes(espacioId)) {
+    await saveProfile(uid, { espaciosSeguidos: [...prev, espacioId] });
+  }
+}
+
+export async function unfollowEspacio(uid, espacioId) {
+  const prev = await getEspaciosSeguidos(uid);
+  await saveProfile(uid, { espaciosSeguidos: prev.filter(id => id !== espacioId) });
+}
+
+// Mueve los espacios seguidos del localStorage al perfil Firestore del usuario
+export async function syncFollowedToFirestore(uid) {
+  const local = getLocalFollowed();
+  if (local.length === 0) return;
+  const prev = await getEspaciosSeguidos(uid);
+  const merged = [...new Set([...prev, ...local])];
+  await saveProfile(uid, { espaciosSeguidos: merged });
+  clearLocalFollowed();
+}
+
+function getLocalFollowed() {
+  try { return JSON.parse(localStorage.getItem('ant_espacios_seguidos') ?? '[]'); } catch { return []; }
+}
+function clearLocalFollowed() {
+  localStorage.removeItem('ant_espacios_seguidos');
+}
+
 export function authErrorMsg(code) {
   return (
     code === 'auth/wrong-password'       ? 'Contraseña incorrecta' :
