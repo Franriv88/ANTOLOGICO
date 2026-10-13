@@ -18,7 +18,7 @@ export const auth      = getAuth(app);
 export const dc        = getDataConnect(app, connectorConfig);
 export const firestore = getFirestore(app);
 
-if (import.meta.env.DEV) {
+if (import.meta.env.DEV && import.meta.env.MODE !== 'demo') {
   connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
   connectDataConnectEmulator(dc, '127.0.0.1', 9399);
   connectFirestoreEmulator(firestore, '127.0.0.1', 8080);

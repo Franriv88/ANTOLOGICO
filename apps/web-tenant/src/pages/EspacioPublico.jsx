@@ -5,6 +5,14 @@ import { getSlotStatus } from '../lib/slotStatus';
 import { loginGoogle, loginEmail, register, logout, subscribeAuth, authErrorMsg, sendPasswordReset, checkRedirectResult } from '../services/userAuth';
 import mpLogo from '../assets/Mercado_Pago.png';
 import { SocialIconsRow } from '../components/SocialIcons';
+import { initMercadoPago, CardPayment } from '@mercadopago/sdk-react';
+
+if (!window.__mpInitialized) {
+  initMercadoPago('APP_USR-1aadb258-7d8b-4126-8e7d-2dbad6270be7', { locale: 'es-AR' });
+  window.__mpInitialized = true;
+}
+
+const MP_WORKER_URL = 'https://antologico-mp.franriv2388.workers.dev';
 // SlotBadge no se usa aquí — reemplazado por PublicSlotBadge con fondo sólido
 
 // Badge con fondo sólido para legibilidad sobre cualquier imagen o color
@@ -275,6 +283,7 @@ function BookingModal({ workshop, brand, prefill, onConfirm, onClose }) {
   const [telefono, setTelefono] = useState(prefill?.telefono ?? '');
   const [loading,  setLoading]  = useState(false);
   const [error,    setError]    = useState('');
+  const [mpStep,   setMpStep]   = useState(null); // null | 'card'
 
   const INPUT = 'w-full px-3 py-2 bg-white border border-[#D2C4A8] rounded-lg text-sm text-[#2B241A] focus:outline-none focus:ring-2 focus:ring-offset-1';
   const LABEL = 'block text-xs font-medium text-[#6B5F4C] mb-1';
@@ -282,18 +291,18 @@ function BookingModal({ workshop, brand, prefill, onConfirm, onClose }) {
   const headerBg  = workshop.headerType === 'COLOR' && workshop.headerValue ? workshop.headerValue : brand.primary;
   const headerImg = workshop.headerType === 'IMAGE' && workshop.headerValue ? workshop.headerValue : null;
 
-  async function handleSubmit(metodoPago) {
+  async function handleSubmitEfectivo() {
     if (!nombre.trim())                        { setError('El nombre es requerido'); return; }
     if (!email.trim() || !email.includes('@')) { setError('Email inválido'); return; }
     if (!telefono.trim())                      { setError('El teléfono es requerido'); return; }
-    setLoading(metodoPago);
+    setLoading('EFECTIVO');
     setError('');
     try {
       const reserva = await reservasApi.create(workshop.id, {
         nombre:   nombre.trim(),
         email:    email.trim(),
         telefono: telefono.trim(),
-        metodoPago,
+        metodoPago: 'EFECTIVO',
       });
       onConfirm(reserva);
     } catch (err) {
@@ -303,9 +312,59 @@ function BookingModal({ workshop, brand, prefill, onConfirm, onClose }) {
     }
   }
 
+  function handleGoToMP() {
+    if (!nombre.trim())                        { setError('El nombre es requerido'); return; }
+    if (!email.trim() || !email.includes('@')) { setError('Email inválido'); return; }
+    if (!telefono.trim())                      { setError('El teléfono es requerido'); return; }
+    setError('');
+    setMpStep('card');
+  }
+
+  async function handleMPPayment(formData) {
+    setLoading('MERCADO_PAGO');
+    setError('');
+    try {
+      const res = await fetch(MP_WORKER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token:             formData.token,
+          paymentMethodId:   formData.payment_method_id,
+          issuerId:          formData.issuer_id,
+          installments:      formData.installments,
+          transactionAmount: workshop.precio,
+          description:       workshop.nombre,
+          payer: {
+            email:          email.trim(),
+            identification: formData.payer?.identification,
+          },
+        }),
+      });
+      const payment = await res.json();
+      if (payment.status === 'approved') {
+        const reserva = await reservasApi.create(workshop.id, {
+          nombre:      nombre.trim(),
+          email:       email.trim(),
+          telefono:    telefono.trim(),
+          metodoPago:  'MERCADO_PAGO',
+          mpPaymentId: String(payment.id),
+        });
+        onConfirm(reserva);
+      } else {
+        setError(`Pago rechazado: ${payment.status_detail ?? payment.status}`);
+        setMpStep(null);
+      }
+    } catch (err) {
+      setError('Error al procesar el pago. Intentá de nuevo.');
+      setMpStep(null);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/55" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/55" onClick={mpStep ? undefined : onClose} />
       <div className="relative bg-[#FAF8F4] border border-[#D2C4A8] rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
         {/* Mini header del taller */}
         <div
@@ -330,80 +389,104 @@ function BookingModal({ workshop, brand, prefill, onConfirm, onClose }) {
             {formatFecha(workshop.fecha)} · {formatHora(workshop.fecha)}
           </p>
 
-          <form onSubmit={e => e.preventDefault()} className="flex flex-col gap-3">
+          {mpStep === 'card' ? (
             <div>
-              <label className={LABEL}>Nombre completo *</label>
-              <input
-                type="text"
-                value={nombre}
-                onChange={e => { setNombre(e.target.value); setError(''); }}
-                placeholder="Tu nombre"
-                autoFocus
-                className={INPUT}
-                style={{ '--tw-ring-color': brand.primary }}
-              />
-            </div>
-            <div>
-              <label className={LABEL}>Email *</label>
-              <input
-                type="email"
-                value={email}
-                onChange={e => { setEmail(e.target.value); setError(''); }}
-                placeholder="tu@email.com"
-                className={INPUT}
-                style={{ '--tw-ring-color': brand.primary }}
-              />
-            </div>
-            <div>
-              <label className={LABEL}>Teléfono *</label>
-              <input
-                type="tel"
-                value={telefono}
-                onChange={e => { setTelefono(e.target.value); setError(''); }}
-                placeholder="+54 9 11 1234-5678"
-                className={INPUT}
-                style={{ '--tw-ring-color': brand.primary }}
-              />
-            </div>
-            {error && (
-              <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
-            )}
-            <div className="flex gap-2 mt-1">
+              <div className="mb-4 p-3 bg-[#F2EDE3] border border-[#D2C4A8] rounded-xl text-xs text-[#6B5F4C]">
+                <span className="font-medium text-[#2B241A]">{nombre}</span> · {email}
+              </div>
+              {loading === 'MERCADO_PAGO' ? (
+                <div className="py-10 text-center text-sm text-[#6B5F4C]">Procesando pago…</div>
+              ) : (
+                <CardPayment
+                  initialization={{ amount: workshop.precio }}
+                  onSubmit={handleMPPayment}
+                  onError={() => { setError('Error en el formulario de pago'); setMpStep(null); }}
+                  customization={{ paymentMethods: { minInstallments: 1, maxInstallments: 1 } }}
+                />
+              )}
+              {error && (
+                <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mt-3">{error}</p>
+              )}
               <button
                 type="button"
-                onClick={() => handleSubmit('EFECTIVO')}
-                disabled={!!loading}
-                className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-[#D2C4A8] text-[#2B241A] hover:bg-[#F2EDE3] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                onClick={() => { setMpStep(null); setError(''); }}
+                className="w-full text-xs text-[#6B5F4C] hover:text-[#2B241A] text-center py-2 mt-2 transition-colors"
               >
-                {loading === 'EFECTIVO' ? 'Confirmando…' : (
-                  <>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="2" y="6" width="20" height="12" rx="2"/>
-                      <circle cx="12" cy="12" r="2.5"/>
-                      <path d="M6 12h.01M18 12h.01"/>
-                    </svg>
-                    Efectivo
-                  </>
-                )}
+                ← Volver
               </button>
-              <button
-                type="button"
-                onClick={() => handleSubmit('MERCADO_PAGO')}
-                disabled={!!loading}
-                className="flex-1 rounded-xl transition-opacity disabled:opacity-50 overflow-hidden"
-                style={{ backgroundColor: '#fee600', color: '#1B1464', height: '44px', padding: '4px 8px' }}
-              >
-                {loading === 'MERCADO_PAGO' ? (
-                  <span className="text-sm font-semibold">Confirmando…</span>
-                ) : (
+            </div>
+          ) : (
+            <form onSubmit={e => e.preventDefault()} className="flex flex-col gap-3">
+              <div>
+                <label className={LABEL}>Nombre completo *</label>
+                <input
+                  type="text"
+                  value={nombre}
+                  onChange={e => { setNombre(e.target.value); setError(''); }}
+                  placeholder="Tu nombre"
+                  autoFocus
+                  className={INPUT}
+                  style={{ '--tw-ring-color': brand.primary }}
+                />
+              </div>
+              <div>
+                <label className={LABEL}>Email *</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => { setEmail(e.target.value); setError(''); }}
+                  placeholder="tu@email.com"
+                  className={INPUT}
+                  style={{ '--tw-ring-color': brand.primary }}
+                />
+              </div>
+              <div>
+                <label className={LABEL}>Teléfono *</label>
+                <input
+                  type="tel"
+                  value={telefono}
+                  onChange={e => { setTelefono(e.target.value); setError(''); }}
+                  placeholder="+54 9 11 1234-5678"
+                  className={INPUT}
+                  style={{ '--tw-ring-color': brand.primary }}
+                />
+              </div>
+              {error && (
+                <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
+              )}
+              <div className="flex gap-2 mt-1">
+                <button
+                  type="button"
+                  onClick={handleSubmitEfectivo}
+                  disabled={!!loading}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-[#D2C4A8] text-[#2B241A] hover:bg-[#F2EDE3] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {loading === 'EFECTIVO' ? 'Confirmando…' : (
+                    <>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="6" width="20" height="12" rx="2"/>
+                        <circle cx="12" cy="12" r="2.5"/>
+                        <path d="M6 12h.01M18 12h.01"/>
+                      </svg>
+                      Efectivo
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleGoToMP}
+                  disabled={!!loading}
+                  className="flex-1 rounded-xl transition-opacity disabled:opacity-50 overflow-hidden"
+                  style={{ backgroundColor: '#fee600', color: '#1B1464', height: '44px', padding: '4px 8px' }}
+                >
                   <img src={mpLogo} alt="Mercado Pago" style={{ height: '100%', width: '100%', objectFit: 'contain' }} />
-                )}
+                </button>
+              </div>
+              <button type="button" onClick={onClose} className="text-xs text-[#6B5F4C] hover:text-[#2B241A] text-center py-1 transition-colors">
+                Cancelar
               </button>
-            </div>
-            <button type="button" onClick={onClose} className="text-xs text-[#6B5F4C] hover:text-[#2B241A] text-center py-1 transition-colors">
-              Cancelar
-            </button>
-          </form>
+            </form>
+          )}
         </div>
       </div>
     </div>

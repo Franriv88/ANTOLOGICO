@@ -13,6 +13,7 @@
     "@antologico/dataconnect": "file:src/dataconnect-generated",
     "@antologico/design-tokens": "workspace:*",
     "@imgly/background-removal": "^1.7.0",
+    "@mercadopago/sdk-react": "^1.0.7",
     "firebase": "^12.11.0",
     "jsqr": "^1.4.0",
     "qrcode.react": "^4.2.0",
