@@ -205,6 +205,14 @@ export const userManagement = {
   sendPasswordReset: (email) => sendPasswordResetEmail(auth, email),
 };
 
+// ─── Usuarios finales (reservantes) ──────────────────────────────────────────
+export const usuarios = {
+  count: async () => {
+    const snap = await getDocs(collection(firestore, C_USUARIOS));
+    return snap.size;
+  },
+};
+
 // ─── Tenants (espacios) ───────────────────────────────────────────────────────
 export const tenants = {
   list: async () => {

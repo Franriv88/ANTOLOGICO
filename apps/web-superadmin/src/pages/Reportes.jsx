@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
-import { planes as planesApi, tenants as tenantsApi } from '../services/adminApi';
+import { planes as planesApi, tenants as tenantsApi, usuarios as usuariosApi } from '../services/adminApi';
 
 const CORAL  = '#E85D4A';
 const OCRE   = '#B98527';
@@ -49,8 +49,8 @@ export default function Reportes() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([tenantsApi.list(), planesApi.list()])
-      .then(([tenantsList, planesList]) => {
+    Promise.all([tenantsApi.list(), planesApi.list(), usuariosApi.count()])
+      .then(([tenantsList, planesList, totalUsuarios]) => {
         const planesByKey = {};
         planesList.forEach(p => {
           planesByKey[p.id]     = p;
@@ -96,14 +96,14 @@ export default function Reportes() {
         });
         const porMes = Object.values(monthsMap);
 
-        setData({ mrr, trialing, activos, total: tenantsList.length, distPlanes, porMes });
+        setData({ mrr, trialing, activos, total: tenantsList.length, totalUsuarios, distPlanes, porMes });
       })
       .finally(() => setLoading(false));
   }, []);
 
   if (loading) return <p className="text-sm text-ink-muted">Calculando métricas…</p>;
 
-  const { mrr, trialing, activos, total, distPlanes, porMes } = data;
+  const { mrr, trialing, activos, total, totalUsuarios, distPlanes, porMes } = data;
 
   return (
     <div className="max-w-4xl flex flex-col gap-8">
@@ -113,11 +113,12 @@ export default function Reportes() {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         <StatCard label="MRR estimado" value={formatARS(mrr)} sub="Ingresos mensuales recurrentes" color="text-primary" />
+        <StatCard label="MRR anualizado" value={formatARS(mrr * 12)} sub="ARR proyectado" color="text-success" />
         <StatCard label="Tenants totales" value={total} sub={`${activos} activos`} />
         <StatCard label="En período de prueba" value={trialing} sub="14 días gratis" color="text-[#B98527]" />
-        <StatCard label="MRR anualizado" value={formatARS(mrr * 12)} sub="ARR proyectado" color="text-success" />
+        <StatCard label="Usuarios registrados" value={totalUsuarios} sub="Cuentas de usuario finales" color="text-[#B98527]" />
       </div>
 
       {/* Nuevos tenants por mes */}
