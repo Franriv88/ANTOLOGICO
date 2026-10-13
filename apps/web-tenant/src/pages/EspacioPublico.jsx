@@ -703,13 +703,14 @@ export default function EspacioPublico() {
   const [workshops, setWorkshops] = useState([]);
   const [loading,   setLoading]   = useState(true);
   const [notFound,  setNotFound]  = useState(false);
-  const [booking,      setBooking]      = useState(null);
-  const [confirmed,    setConfirmed]    = useState(null);
-  const [bookedIds,    setBookedIds]    = useState([]);
-  const [currentUser,  setCurrentUser]  = useState(undefined); // undefined = loading, null = guest
-  const [showAuth,     setShowAuth]     = useState(false);
-  const [userReservas, setUserReservas] = useState([]);
-  const [menuOpen,     setMenuOpen]     = useState(false);
+  const [booking,        setBooking]        = useState(null);
+  const [confirmed,      setConfirmed]      = useState(null);
+  const [bookedIds,      setBookedIds]      = useState([]);
+  const [currentUser,    setCurrentUser]    = useState(undefined); // undefined = loading, null = guest
+  const [showAuth,       setShowAuth]       = useState(false);
+  const [pendingWorkshop, setPendingWorkshop] = useState(null);
+  const [userReservas,   setUserReservas]   = useState([]);
+  const [menuOpen,       setMenuOpen]       = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -768,10 +769,23 @@ export default function EspacioPublico() {
     });
   }
 
+  function handleReservar(w) {
+    if (currentUser === null) {
+      setPendingWorkshop(w);
+      setShowAuth(true);
+    } else if (currentUser) {
+      setBooking(w);
+    }
+  }
+
   function handleAuthSuccess({ user, profile }) {
     setCurrentUser({ user, profile: profile ?? {} });
     setShowAuth(false);
     loadUserReservas(user.email ?? profile?.email ?? '');
+    if (pendingWorkshop) {
+      setBooking(pendingWorkshop);
+      setPendingWorkshop(null);
+    }
   }
 
   function handleLogout() {
@@ -959,7 +973,7 @@ export default function EspacioPublico() {
             <h2 className="font-display text-xl text-[#1A1611] mb-5">Talleres disponibles</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {upcoming.map(w => (
-                <WorkshopCard key={w.id} w={w} brand={brand} onReservar={setBooking} isBooked={bookedIds.includes(w.id)} direcciones={espacio.direcciones ?? []} />
+                <WorkshopCard key={w.id} w={w} brand={brand} onReservar={handleReservar} isBooked={bookedIds.includes(w.id)} direcciones={espacio.direcciones ?? []} />
               ))}
             </div>
           </>
