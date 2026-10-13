@@ -5,7 +5,7 @@ import { getSlotStatus } from '../lib/slotStatus';
 import { loginGoogle, loginEmail, register, logout, subscribeAuth, authErrorMsg, sendPasswordReset, checkRedirectResult } from '../services/userAuth';
 import mpLogo from '../assets/Mercado_Pago.png';
 import { SocialIconsRow } from '../components/SocialIcons';
-import { initMercadoPago, CardPayment } from '@mercadopago/sdk-react';
+import { initMercadoPago, Payment } from '@mercadopago/sdk-react';
 
 if (!window.__mpInitialized) {
   initMercadoPago('APP_USR-1aadb258-7d8b-4126-8e7d-2dbad6270be7', { locale: 'es-AR' });
@@ -282,8 +282,10 @@ function BookingModal({ workshop, brand, prefill, onConfirm, onClose }) {
   const [email,    setEmail]    = useState(prefill?.email    ?? '');
   const [telefono, setTelefono] = useState(prefill?.telefono ?? '');
   const [loading,  setLoading]  = useState(false);
-  const [error,    setError]    = useState('');
-  const [mpStep,   setMpStep]   = useState(null); // null | 'card'
+  const [error,       setError]       = useState('');
+  const [mpStep,      setMpStep]      = useState(null); // null | 'card'
+  const [preferenceId, setPreferenceId] = useState(null);
+  const [loadingPref,  setLoadingPref]  = useState(false);
 
   const INPUT = 'w-full px-3 py-2 bg-white border border-[#D2C4A8] rounded-lg text-sm text-[#2B241A] focus:outline-none focus:ring-2 focus:ring-offset-1';
   const LABEL = 'block text-xs font-medium text-[#6B5F4C] mb-1';
@@ -317,14 +319,34 @@ function BookingModal({ workshop, brand, prefill, onConfirm, onClose }) {
     if (!email.trim() || !email.includes('@')) { setError('Email inválido'); return; }
     if (!telefono.trim())                      { setError('El teléfono es requerido'); return; }
     setError('');
+    setPreferenceId(null);
     setMpStep('card');
   }
+
+  useEffect(() => {
+    if (mpStep !== 'card') return;
+    setLoadingPref(true);
+    fetch(`${MP_WORKER_URL}/crear-preferencia`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amount:     workshop.precio,
+        description: workshop.nombre,
+        payerEmail: email.trim(),
+      }),
+    })
+      .then(r => r.json())
+      .then(d => setPreferenceId(d.preferenceId ?? null))
+      .catch(() => { setError('No se pudo inicializar el pago. Intentá de nuevo.'); setMpStep(null); })
+      .finally(() => setLoadingPref(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mpStep]);
 
   async function handleMPPayment(formData) {
     setLoading('MERCADO_PAGO');
     setError('');
     try {
-      const res = await fetch(MP_WORKER_URL, {
+      const res = await fetch(`${MP_WORKER_URL}/procesar-pago`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -396,12 +418,22 @@ function BookingModal({ workshop, brand, prefill, onConfirm, onClose }) {
               </div>
               {loading === 'MERCADO_PAGO' ? (
                 <div className="py-10 text-center text-sm text-[#6B5F4C]">Procesando pago…</div>
+              ) : loadingPref || !preferenceId ? (
+                <div className="py-10 text-center text-sm text-[#6B5F4C]">Cargando métodos de pago…</div>
               ) : (
-                <CardPayment
-                  initialization={{ amount: workshop.precio }}
+                <Payment
+                  initialization={{ amount: workshop.precio, preferenceId }}
                   onSubmit={handleMPPayment}
                   onError={() => { setError('Error en el formulario de pago'); setMpStep(null); }}
-                  customization={{ paymentMethods: { minInstallments: 1, maxInstallments: 1 } }}
+                  customization={{
+                    paymentMethods: {
+                      creditCard: 'all',
+                      debitCard:  'all',
+                      mercadoPago: ['account_money'],
+                      minInstallments: 1,
+                      maxInstallments: 1,
+                    },
+                  }}
                 />
               )}
               {error && (
