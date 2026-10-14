@@ -61,7 +61,8 @@ async function oauthCallback(request, env) {
   const tokenData = await tokenRes.json();
   if (!tokenRes.ok || !tokenData.access_token) {
     console.error('OAuth token exchange failed', JSON.stringify(tokenData));
-    return Response.redirect(errorUrl, 302);
+    const detail = encodeURIComponent(tokenData.message || tokenData.error || tokenData.error_description || JSON.stringify(tokenData));
+    return Response.redirect(`${errorUrl}&detail=${detail}`, 302);
   }
 
   await env.MP_TENANTS.put(`tenant:${tenantId}`, JSON.stringify({

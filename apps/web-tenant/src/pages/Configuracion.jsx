@@ -1353,7 +1353,10 @@ function TabCobros({ espacio, refresh }) {
       if (mpStatus === 'connected') {
         Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Mercado Pago conectado', timer: 3000, showConfirmButton: false });
       } else if (mpStatus === 'error') {
-        Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Error al conectar Mercado Pago. Intentá de nuevo.', timer: 4000, showConfirmButton: false });
+        const detail = params.get('detail');
+        url.searchParams.delete('detail');
+        window.history.replaceState({}, '', url);
+        Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Error al conectar Mercado Pago', text: detail ? decodeURIComponent(detail) : 'Intentá de nuevo.', timer: 6000, showConfirmButton: false });
       }
     }
     fetch(`${MP_WORKER_URL}/tenant-mp-config?tenantId=${espacio.id}`)
