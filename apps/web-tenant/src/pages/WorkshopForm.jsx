@@ -193,6 +193,7 @@ const EMPTY = {
   headerValue:         '#E85D4A',      // hex para COLOR, URL para IMAGE
   headerImagePosition: { x: 50, y: 50 },
   direccionId:         null,
+  metodosPago:         [],             // IDs: 'efectivo' | 'mercadopago' | 'link-{uuid}'
 };
 
 function deriveEstadoAction(w) {
@@ -510,6 +511,7 @@ export default function WorkshopForm() {
           headerValue:         w.headerValue         ?? '#E85D4A',
           headerImagePosition: w.headerImagePosition ?? { x: 50, y: 50 },
           direccionId:         w.direccionId         ?? null,
+          metodosPago:         w.metodosPago          ?? [],
         });
       })
       .catch((e) => alert(e.message))
@@ -631,6 +633,7 @@ export default function WorkshopForm() {
         headerValue:         form.headerValue         || null,
         headerImagePosition: form.headerImagePosition ?? { x: 50, y: 50 },
         direccionId:         form.direccionId         || null,
+        metodosPago:         form.metodosPago.length  ? form.metodosPago : null,
       };
 
       if (isEdit) {
@@ -844,6 +847,39 @@ export default function WorkshopForm() {
                   />
                 </div>
               )}
+
+              {/* ── Métodos de pago ── */}
+              {(() => {
+                const cobros = activeEspacio?.cobros;
+                if (!cobros) return null;
+                const options = [];
+                if (cobros.efectivo)    options.push({ id: 'efectivo',    label: 'Efectivo' });
+                if (cobros.mercadoPago) options.push({ id: 'mercadopago', label: 'Mercado Pago' });
+                if (cobros.linksDePago) (cobros.links ?? []).forEach(l => options.push({ id: `link-${l.id}`, label: l.nombre }));
+                if (!options.length) return null;
+                function toggleMetodo(id) {
+                  set('metodosPago', form.metodosPago.includes(id) ? form.metodosPago.filter(x => x !== id) : [...form.metodosPago, id]);
+                }
+                return (
+                  <div>
+                    <label className={LABEL_CLS}>Métodos de pago</label>
+                    <p className="text-[11px] text-ink-muted mb-2">Elegí qué métodos acepta este taller. Configurás más opciones en <strong>Configuración → Mis Cobros</strong>.</p>
+                    <div className="flex flex-col gap-2">
+                      {options.map(opt => (
+                        <label key={opt.id} className="flex items-center gap-2.5 cursor-pointer group">
+                          <input
+                            type="checkbox"
+                            checked={form.metodosPago.includes(opt.id)}
+                            onChange={() => toggleMetodo(opt.id)}
+                            className="w-4 h-4 accent-primary cursor-pointer rounded"
+                          />
+                          <span className="text-sm text-ink group-hover:text-primary transition-colors">{opt.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
 
             </div>
 

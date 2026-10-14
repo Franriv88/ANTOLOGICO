@@ -64,6 +64,7 @@ type Espacio @table(name: "espacios", singular: "espacio", plural: "espacios")
   brandColors:            Any        # JSON: array de hex strings, ej. ["#E85D4A","#3B82F6"]
   brandFont:              String     @col(dataType: "varchar(100)")  # Google Font name
   redesSociales:          Any        # JSON: { style, minimalColor, links: { instagram, … } }
+  cobros:                 Any        # JSON: { efectivo, mercadoPago, linksDePago, links: [{id,nombre,url}] }
   estado:                 EstadoEspacio! @default(value: ACTIVO)
   cancelacionPendiente:   Boolean!   @default(value: false)
   createdAt:          Timestamp! @default(expr: "request.time")
@@ -102,6 +103,7 @@ type Workshop @table(name: "workshops")
   scheduleData:      Any
   headerType:        HeaderType!    @default(value: COLOR)
   headerValue:       String         @col(dataType: "varchar(500)")
+  metodosPago:       Any            # JSON: array de IDs, ej. ["efectivo","mercadopago","link-uuid"]
   estado:            EstadoWorkshop! @default(value: BORRADOR)
   createdAt:        Timestamp! @default(expr: "request.time")
   updatedAt:        Timestamp! @default(expr: "request.time")

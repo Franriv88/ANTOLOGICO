@@ -6,6 +6,7 @@ import {
   updateEspacioPlanId,
   updateEspacioIdentidad,
   updateEspacioRedes,
+  updateEspacioCobros,
   solicitarCancelacionEspacio,
   reactivarSuscripcionEspacio,
   listRubros,
@@ -60,6 +61,10 @@ export const espacios = {
   },
   updateRedes: async (id, redesSociales) => {
     const { data } = await updateEspacioRedes({ id, redesSociales });
+    return data.espacio_update;
+  },
+  updateCobros: async (id, cobros) => {
+    const { data } = await updateEspacioCobros({ id, cobros });
     return data.espacio_update;
   },
   updatePlan: async (id, planId) => {

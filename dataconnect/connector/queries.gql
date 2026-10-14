@@ -39,7 +39,7 @@ query ListMyEspacios @auth(level: USER) {
     orderBy: [{ createdAt: ASC }]
   ) {
     id nombre estado cancelacionPendiente createdAt
-    logoUrl logoShape logoScale brandColors brandFont redesSociales
+    logoUrl logoShape logoScale brandColors brandFont redesSociales cobros
     rubro { id nombre }
     rubroPersonalizado
     plan { id nombre precioMensual precioAnual features }
@@ -56,7 +56,7 @@ query GetMyEspacio($id: UUID!) @auth(level: USER) {
     limit: 1
   ) {
     id nombre estado cancelacionPendiente createdAt updatedAt
-    logoUrl logoShape logoScale brandColors brandFont redesSociales
+    logoUrl logoShape logoScale brandColors brandFont redesSociales cobros
     rubro { id nombre }
     rubroPersonalizado
     plan { id nombre precioMensual precioAnual features }
@@ -77,7 +77,7 @@ query ListMyWorkshops($espacioId: UUID!) @auth(level: USER, insecureReason: "El 
     id nombre tipo descripcion
     cuposTotales cuposDisponibles precio fecha
     duracionHoras duracionMinutos experienciaPrevia scheduleData
-    headerType headerValue estado createdAt
+    headerType headerValue metodosPago estado createdAt
   }
 }
 
@@ -92,7 +92,7 @@ query ListMyWorkshopsByEstado($espacioId: UUID!, $estado: EstadoWorkshop!) @auth
     id nombre tipo descripcion
     cuposTotales cuposDisponibles precio fecha
     duracionHoras duracionMinutos experienciaPrevia scheduleData
-    headerType headerValue estado createdAt
+    headerType headerValue metodosPago estado createdAt
   }
 }
 
@@ -108,7 +108,7 @@ query SearchMyWorkshops($espacioId: UUID!, $q: String!) @auth(level: USER, insec
     id nombre tipo descripcion
     cuposTotales cuposDisponibles precio fecha
     duracionHoras duracionMinutos experienciaPrevia scheduleData
-    headerType headerValue estado createdAt
+    headerType headerValue metodosPago estado createdAt
   }
 }
 
@@ -123,7 +123,7 @@ query GetMyWorkshop($id: UUID!) @auth(level: USER) {
     id nombre tipo descripcion
     cuposTotales cuposDisponibles precio fecha
     duracionHoras duracionMinutos experienciaPrevia scheduleData
-    headerType headerValue estado createdAt updatedAt
+    headerType headerValue metodosPago estado createdAt updatedAt
     espacio { id nombre }
   }
 }

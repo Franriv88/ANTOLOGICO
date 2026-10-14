@@ -190,6 +190,7 @@ const COLOR_ROLES = [
 const TABS = [
   { key: 'espacio',     label: 'Mi espacio' },
   { key: 'identidad',   label: 'Identidad' },
+  { key: 'cobros',      label: 'Mis Cobros' },
   { key: 'suscripcion', label: 'Suscripción' },
 ];
 
@@ -1289,6 +1290,324 @@ function TabIdentidad({ espacio, refresh }) {
   );
 }
 
+// ── Tab: Mis Cobros ───────────────────────────────────────────────────────────
+
+function Toggle({ checked, onChange, disabled }) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => !disabled && onChange(!checked)}
+      disabled={disabled}
+      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none disabled:opacity-40 ${
+        checked ? 'bg-primary' : 'bg-surface-300'
+      }`}
+    >
+      <span className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-sm transform transition-transform duration-200 ${
+        checked ? 'translate-x-4' : 'translate-x-0'
+      }`} />
+    </button>
+  );
+}
+
+function TabCobros({ espacio, refresh }) {
+  const parseCobros = () => {
+    const c = espacio.cobros;
+    if (!c) return { efectivo: true, mercadoPago: false, linksDePago: false, links: [] };
+    return {
+      efectivo:    c.efectivo    ?? true,
+      mercadoPago: c.mercadoPago ?? false,
+      linksDePago: c.linksDePago ?? false,
+      links:       c.links       ?? [],
+    };
+  };
+
+  const init = parseCobros();
+  const [efectivo,    setEfectivo]    = useState(init.efectivo);
+  const [mercadoPago, setMercadoPago] = useState(init.mercadoPago);
+  const [linksDePago, setLinksDePago] = useState(init.linksDePago);
+  const [links,       setLinks]       = useState(init.links);
+  const [saving,      setSaving]      = useState(false);
+  const [saved,       setSaved]       = useState(false);
+  const [saveError,   setSaveError]   = useState('');
+
+  // MP connection state
+  const [mpConnected,     setMpConnected]     = useState(null);
+  const [mpDisconnecting, setMpDisconnecting] = useState(false);
+
+  // New link form
+  const [showAddLink, setShowAddLink] = useState(false);
+  const [newLinkNombre, setNewLinkNombre] = useState('');
+  const [newLinkUrl,    setNewLinkUrl]    = useState('');
+  const [linkError,     setLinkError]     = useState('');
+
+  useEffect(() => {
+    // Handle OAuth redirect params
+    const params = new URLSearchParams(window.location.search);
+    const mpStatus = params.get('mp');
+    if (mpStatus) {
+      const url = new URL(window.location);
+      url.searchParams.delete('mp');
+      window.history.replaceState({}, '', url);
+      if (mpStatus === 'connected') {
+        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Mercado Pago conectado', timer: 3000, showConfirmButton: false });
+      } else if (mpStatus === 'error') {
+        Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Error al conectar Mercado Pago. Intentá de nuevo.', timer: 4000, showConfirmButton: false });
+      }
+    }
+    fetch(`${MP_WORKER_URL}/tenant-mp-config?tenantId=${espacio.id}`)
+      .then(r => r.json())
+      .then(d => setMpConnected(d.connected))
+      .catch(() => setMpConnected(false));
+  }, [espacio.id]);
+
+  async function handleSave(e) {
+    e?.preventDefault();
+    setSaving(true); setSaveError(''); setSaved(false);
+    try {
+      await espacioApi.updateCobros(espacio.id, { efectivo, mercadoPago, linksDePago, links });
+      await refresh();
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    } catch (err) {
+      setSaveError(err.message || 'Error al guardar.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleAddLink() {
+    if (!newLinkNombre.trim()) { setLinkError('El nombre es obligatorio.'); return; }
+    if (!newLinkUrl.trim())    { setLinkError('La URL es obligatoria.'); return; }
+    setLinkError('');
+    const entry = { id: crypto.randomUUID(), nombre: newLinkNombre.trim(), url: newLinkUrl.trim() };
+    const updated = [...links, entry];
+    setLinks(updated);
+    setNewLinkNombre(''); setNewLinkUrl(''); setShowAddLink(false);
+    await espacioApi.updateCobros(espacio.id, { efectivo, mercadoPago, linksDePago, links: updated });
+    await refresh();
+  }
+
+  async function handleRemoveLink(id) {
+    const updated = links.filter(l => l.id !== id);
+    setLinks(updated);
+    await espacioApi.updateCobros(espacio.id, { efectivo, mercadoPago, linksDePago, links: updated });
+    await refresh();
+  }
+
+  async function handleMpDisconnect() {
+    const result = await Swal.fire({
+      title: '¿Desconectar Mercado Pago?',
+      text: 'Los talleres que usen este método ya no podrán procesar pagos online hasta que vuelvas a conectar.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Desconectar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#DC2626',
+    });
+    if (!result.isConfirmed) return;
+    setMpDisconnecting(true);
+    try {
+      await fetch(`${MP_WORKER_URL}/tenant-mp-disconnect`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tenantId: espacio.id }),
+      });
+      setMpConnected(false);
+    } catch {
+      Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Error al desconectar', timer: 3000, showConfirmButton: false });
+    } finally {
+      setMpDisconnecting(false);
+    }
+  }
+
+  return (
+    <div className="max-w-lg flex flex-col gap-5">
+      <div>
+        <p className="text-sm text-ink-muted">
+          Habilitá los métodos de cobro que querés ofrecer a tus clientes. Podrás elegir cuáles aplican a cada taller al crearlo o editarlo.
+        </p>
+      </div>
+
+      {/* ── Efectivo ── */}
+      <div className={`border rounded-xl p-5 transition-colors ${efectivo ? 'border-primary/30 bg-primary/3' : 'border-border bg-surface-100'}`}>
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="text-ink-muted shrink-0">
+                <rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/>
+              </svg>
+              <p className="text-sm font-semibold text-ink">Efectivo</p>
+            </div>
+            <p className="text-xs text-ink-muted">Los clientes reservan online y pagan al llegar al taller.</p>
+          </div>
+          <Toggle checked={efectivo} onChange={setEfectivo} />
+        </div>
+      </div>
+
+      {/* ── Mercado Pago ── */}
+      <div className={`border rounded-xl p-5 transition-colors ${mercadoPago ? 'border-primary/30 bg-primary/3' : 'border-border bg-surface-100'}`}>
+        <div className="flex items-start justify-between gap-4 mb-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="text-ink-muted shrink-0">
+                <rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+              </svg>
+              <p className="text-sm font-semibold text-ink">Mercado Pago</p>
+            </div>
+            <p className="text-xs text-ink-muted">Cobros con tarjeta online. Requiere conectar tu cuenta de Mercado Pago.</p>
+          </div>
+          <Toggle checked={mercadoPago} onChange={setMercadoPago} />
+        </div>
+
+        {mercadoPago && (
+          <div className="border-t border-border/60 pt-4 mt-1">
+            {mpConnected === null && <p className="text-xs text-ink-muted">Verificando conexión…</p>}
+            {mpConnected === true && (
+              <div className="flex items-center gap-2 mb-3">
+                <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
+                <span className="text-xs text-green-700 font-medium">Cuenta conectada</span>
+              </div>
+            )}
+            {mpConnected === false && (
+              <div className="flex items-center gap-2 mb-3">
+                <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
+                <span className="text-xs text-ink-muted">No conectado — los talleres con este método no aceptarán pagos online hasta que conectes tu cuenta</span>
+              </div>
+            )}
+            <div className="flex flex-wrap gap-2">
+              <a
+                href={`${MP_WORKER_URL}/oauth/connect?tenantId=${espacio.id}`}
+                className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold bg-[#009EE3] text-white rounded-md hover:bg-[#008CC9] transition-colors"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                </svg>
+                {mpConnected ? 'Reconectar cuenta' : 'Conectar con Mercado Pago'}
+              </a>
+              {mpConnected && (
+                <button
+                  onClick={handleMpDisconnect}
+                  disabled={mpDisconnecting}
+                  className="px-3 py-1.5 text-xs font-medium text-danger border border-danger/30 rounded-md hover:bg-danger/5 transition-colors disabled:opacity-50"
+                >
+                  {mpDisconnecting ? 'Desconectando…' : 'Desconectar'}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Links de pago ── */}
+      <div className={`border rounded-xl p-5 transition-colors ${linksDePago ? 'border-primary/30 bg-primary/3' : 'border-border bg-surface-100'}`}>
+        <div className="flex items-start justify-between gap-4 mb-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="text-ink-muted shrink-0">
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+              </svg>
+              <p className="text-sm font-semibold text-ink">Links de pago</p>
+            </div>
+            <p className="text-xs text-ink-muted">Agregá links de pago de Mercado Pago, Cafecito, Uala u otros. Tus clientes son redirigidos al link al reservar.</p>
+          </div>
+          <Toggle checked={linksDePago} onChange={setLinksDePago} />
+        </div>
+
+        {linksDePago && (
+          <div className="border-t border-border/60 pt-4 mt-1 flex flex-col gap-3">
+            {links.length > 0 && (
+              <div className="flex flex-col gap-2">
+                {links.map(link => (
+                  <div key={link.id} className="flex items-center gap-3 bg-white border border-border rounded-lg px-3 py-2.5">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-ink truncate">{link.nombre}</p>
+                      <p className="text-[10px] text-ink-muted font-mono truncate">{link.url}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveLink(link.id)}
+                      className="text-ink-muted hover:text-danger transition-colors shrink-0"
+                    >
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {showAddLink ? (
+              <div className="bg-white border border-border rounded-xl p-4 flex flex-col gap-3">
+                <div>
+                  <label className={LABEL_CLS}>Nombre del link *</label>
+                  <input
+                    type="text"
+                    autoFocus
+                    value={newLinkNombre}
+                    onChange={e => { setNewLinkNombre(e.target.value); setLinkError(''); }}
+                    placeholder="Ej: Pago básico, Cuota mensual…"
+                    className={INPUT_CLS}
+                  />
+                </div>
+                <div>
+                  <label className={LABEL_CLS}>URL del link *</label>
+                  <input
+                    type="url"
+                    value={newLinkUrl}
+                    onChange={e => { setNewLinkUrl(e.target.value); setLinkError(''); }}
+                    placeholder="https://mpago.la/xxx"
+                    className={INPUT_CLS}
+                  />
+                </div>
+                {linkError && <p className="text-xs text-danger">{linkError}</p>}
+                <div className="flex gap-2">
+                  <button type="button" onClick={handleAddLink}
+                    className="px-4 py-1.5 bg-primary text-white text-xs font-semibold rounded-md hover:bg-primary-strong transition-colors">
+                    Agregar
+                  </button>
+                  <button type="button" onClick={() => { setShowAddLink(false); setNewLinkNombre(''); setNewLinkUrl(''); setLinkError(''); }}
+                    className="px-4 py-1.5 border border-border text-ink-muted text-xs rounded-md hover:text-ink transition-colors">
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowAddLink(true)}
+                className="flex items-center gap-2 text-sm text-primary font-semibold hover:text-primary-strong transition-colors self-start"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Agregar link
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {saveError && <p className="text-xs text-danger">{saveError}</p>}
+      <div className="flex items-center gap-3 pt-2">
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={saving}
+          className="px-5 py-2 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary-strong transition-colors disabled:opacity-50"
+        >
+          {saving ? 'Guardando…' : 'Guardar cambios'}
+        </button>
+        {saved && <span className="text-xs text-green-600 font-medium">¡Guardado!</span>}
+      </div>
+    </div>
+  );
+}
+
 // ── Tab: Suscripción ──────────────────────────────────────────────────────────
 
 function EspacioLogoThumb({ esp }) {
@@ -1317,29 +1636,6 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
   const [agregarOpen,  setAgregarOpen]  = useState(false);
   const [error,        setError]        = useState('');
   const [periodo,      setPeriodo]      = useState('mensual'); // para el selector de activación
-  const [mpConnected,  setMpConnected]  = useState(null); // null=loading, true/false
-  const [mpDisconnecting, setMpDisconnecting] = useState(false);
-
-  useEffect(() => {
-    // Handle OAuth redirect params
-    const params = new URLSearchParams(window.location.search);
-    const mpStatus = params.get('mp');
-    if (mpStatus) {
-      const url = new URL(window.location);
-      url.searchParams.delete('mp');
-      window.history.replaceState({}, '', url);
-      if (mpStatus === 'connected') {
-        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Mercado Pago conectado', timer: 3000, showConfirmButton: false });
-      } else if (mpStatus === 'error') {
-        Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Error al conectar Mercado Pago. Intentá de nuevo.', timer: 4000, showConfirmButton: false });
-      }
-    }
-    // Fetch current connection status
-    fetch(`${MP_WORKER_URL}/tenant-mp-config?tenantId=${espacio.id}`)
-      .then(r => r.json())
-      .then(d => setMpConnected(d.connected))
-      .catch(() => setMpConnected(false));
-  }, [espacio.id]);
 
   const pendiente      = espacio.cancelacionPendiente;
   const isEstudio      = espacio.planId === 'estudio';
@@ -1610,78 +1906,6 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
         {error && <p className="mt-3 text-xs text-danger">{error}</p>}
       </div>}
 
-      {/* ── Mercado Pago Connect ── */}
-      <div className="bg-surface-100 border border-border rounded-xl p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <h2 className="font-semibold text-sm text-ink mb-1">Mercado Pago</h2>
-            <p className="text-xs text-ink-muted mb-3">
-              Conectá tu cuenta de Mercado Pago para habilitar los pagos online en tu página. Sin esta conexión, tus clientes solo pueden reservar por efectivo.
-            </p>
-            {mpConnected === null && (
-              <span className="text-xs text-ink-muted">Verificando conexión…</span>
-            )}
-            {mpConnected === true && (
-              <div className="flex items-center gap-2 mb-3">
-                <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
-                <span className="text-xs text-green-700 font-medium">Cuenta conectada</span>
-              </div>
-            )}
-            {mpConnected === false && (
-              <div className="flex items-center gap-2 mb-3">
-                <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
-                <span className="text-xs text-ink-muted">No conectado — este espacio aún no acepta pagos online</span>
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <a
-            href={`${MP_WORKER_URL}/oauth/connect?tenantId=${espacio.id}`}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-[#009EE3] text-white rounded-md hover:bg-[#008CC9] transition-colors"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
-              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
-            </svg>
-            {mpConnected ? 'Reconectar cuenta' : 'Conectar con Mercado Pago'}
-          </a>
-          {mpConnected && (
-            <button
-              onClick={async () => {
-                const result = await Swal.fire({
-                  title: '¿Desconectar Mercado Pago?',
-                  text: 'Los pagos de tus talleres volverán a procesarse por la cuenta de Antológico.',
-                  icon: 'warning',
-                  showCancelButton: true,
-                  confirmButtonText: 'Desconectar',
-                  cancelButtonText: 'Cancelar',
-                  confirmButtonColor: '#DC2626',
-                });
-                if (!result.isConfirmed) return;
-                setMpDisconnecting(true);
-                try {
-                  await fetch(`${MP_WORKER_URL}/tenant-mp-disconnect`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ tenantId: espacio.id }),
-                  });
-                  setMpConnected(false);
-                } catch {
-                  Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Error al desconectar', timer: 3000, showConfirmButton: false });
-                } finally {
-                  setMpDisconnecting(false);
-                }
-              }}
-              disabled={mpDisconnecting}
-              className="px-4 py-2 text-sm font-medium text-danger border border-danger/30 rounded-md hover:bg-danger/5 transition-colors disabled:opacity-50"
-            >
-              {mpDisconnecting ? 'Desconectando…' : 'Desconectar'}
-            </button>
-          )}
-        </div>
-      </div>
-
       {cancelOpen && (
         <CancelSubscriptionModal
           nombre={espacio.nombre}
@@ -1718,7 +1942,7 @@ export default function Configuracion() {
   const { activeEspacio, espacios, refresh } = useEspacio();
   const [tab, setTab] = useState(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('mp')) return 'suscripcion';
+    if (params.get('mp')) return 'cobros';
     return sessionStorage.getItem('config_tab') || 'espacio';
   });
 
@@ -1756,6 +1980,7 @@ export default function Configuracion() {
 
         {tab === 'espacio'     && <TabEspacio     espacio={activeEspacio} refresh={refresh} />}
         {tab === 'identidad'   && <TabIdentidad   espacio={activeEspacio} refresh={refresh} />}
+        {tab === 'cobros'      && <TabCobros      espacio={activeEspacio} refresh={refresh} />}
         {tab === 'suscripcion' && <TabSuscripcion espacio={activeEspacio} espacios={espacios} refresh={refresh} />}
       </div>
     </Layout>

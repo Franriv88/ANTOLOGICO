@@ -62,6 +62,24 @@ mutation UpdateEspacioIdentidad(
   )
 }
 
+mutation UpdateEspacioCobros(
+  $id:     UUID!
+  $cobros: Any
+) @auth(level: USER) {
+  espacio_update(
+    first: {
+      where: {
+        id: { eq: $id }
+        profesionalUid: { eq_expr: "auth.uid" }
+      }
+    }
+    data: {
+      cobros:         $cobros
+      updatedAt_expr: "request.time"
+    }
+  )
+}
+
 mutation UpdateEspacioRedes(
   $id:           UUID!
   $redesSociales: Any
@@ -120,6 +138,7 @@ mutation CreateWorkshop(
   $scheduleData:      Any
   $headerType:        HeaderType
   $headerValue:       String
+  $metodosPago:       Any
   $estado:            EstadoWorkshop
 ) @auth(level: USER) @transaction {
   query @redact {
@@ -144,6 +163,7 @@ mutation CreateWorkshop(
     scheduleData:      $scheduleData
     headerType:        $headerType
     headerValue:       $headerValue
+    metodosPago:       $metodosPago
     estado:            $estado
     createdAt_expr:    "request.time"
     updatedAt_expr:    "request.time"
@@ -167,6 +187,7 @@ mutation UpdateWorkshop(
   $scheduleData:     Any
   $headerType:       HeaderType
   $headerValue:      String
+  $metodosPago:      Any
   $estado:           EstadoWorkshop
 ) @auth(level: USER) @transaction {
   query @redact {
@@ -192,6 +213,7 @@ mutation UpdateWorkshop(
       scheduleData:      $scheduleData
       headerType:        $headerType
       headerValue:       $headerValue
+      metodosPago:       $metodosPago
       estado:            $estado
       updatedAt_expr:    "request.time"
     }

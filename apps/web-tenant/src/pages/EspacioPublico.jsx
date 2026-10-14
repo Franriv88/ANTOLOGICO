@@ -274,7 +274,7 @@ function AuthModal({ brand, onClose, onSuccess }) {
 
 // ── BookingModal ──────────────────────────────────────────────────────────────
 
-function BookingModal({ workshop, brand, prefill, tenantId, onConfirm, onClose }) {
+function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, onConfirm, onClose }) {
   const [nombre,   setNombre]   = useState(prefill?.nombre   ?? '');
   const [email,    setEmail]    = useState(prefill?.email    ?? '');
   const [telefono, setTelefono] = useState(prefill?.telefono ?? '');
@@ -506,40 +506,77 @@ function BookingModal({ workshop, brand, prefill, tenantId, onConfirm, onClose }
               {error && (
                 <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
               )}
-              <div className="flex gap-2 mt-1">
-                <button
-                  type="button"
-                  onClick={handleSubmitEfectivo}
-                  disabled={!!loading}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-[#D2C4A8] text-[#2B241A] hover:bg-[#F2EDE3] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {loading === 'EFECTIVO' ? 'Confirmando…' : (
-                    <>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="2" y="6" width="20" height="12" rx="2"/>
-                        <circle cx="12" cy="12" r="2.5"/>
-                        <path d="M6 12h.01M18 12h.01"/>
-                      </svg>
-                      Efectivo
-                    </>
-                  )}
-                </button>
-                {tenantMpReady && mpKey ? (
-                  <button
-                    type="button"
-                    onClick={handleGoToMP}
-                    disabled={!!loading}
-                    className="flex-1 rounded-xl transition-opacity disabled:opacity-50 overflow-hidden"
-                    style={{ backgroundColor: '#fee600', color: '#1B1464', height: '44px', padding: '4px 8px' }}
-                  >
-                    <img src={mpLogo} alt="Mercado Pago" style={{ height: '100%', width: '100%', objectFit: 'contain' }} />
-                  </button>
-                ) : tenantMpReady && !mpKey ? (
-                  <div className="flex-1 rounded-xl border border-[#D2C4A8] bg-[#F2EDE3] flex items-center justify-center px-2 text-center" style={{ height: '44px' }}>
-                    <span className="text-[10px] text-[#6B5F4C] leading-tight">Pagos online<br/>no disponibles</span>
+              {(() => {
+                // Determine which methods to show based on workshop.metodosPago
+                // If null/empty, show all available (backward compat)
+                const mp = Array.isArray(workshop.metodosPago) && workshop.metodosPago.length > 0
+                  ? workshop.metodosPago
+                  : null; // null = show all
+
+                const showEfectivo    = !mp || mp.includes('efectivo');
+                const showMercadoPago = !mp || mp.includes('mercadopago');
+                const linkIds         = mp ? mp.filter(id => id.startsWith('link-')) : [];
+
+                // cobrosLinks comes from the espacio.cobros.links loaded by the page
+                const links = cobrosLinks ?? [];
+
+                return (
+                  <div className="flex flex-col gap-2 mt-1">
+                    <div className="flex gap-2">
+                      {showEfectivo && (
+                        <button
+                          type="button"
+                          onClick={handleSubmitEfectivo}
+                          disabled={!!loading}
+                          className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-[#D2C4A8] text-[#2B241A] hover:bg-[#F2EDE3] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                          {loading === 'EFECTIVO' ? 'Confirmando…' : (
+                            <>
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="2" y="6" width="20" height="12" rx="2"/>
+                                <circle cx="12" cy="12" r="2.5"/>
+                                <path d="M6 12h.01M18 12h.01"/>
+                              </svg>
+                              Efectivo
+                            </>
+                          )}
+                        </button>
+                      )}
+                      {showMercadoPago && tenantMpReady && mpKey && (
+                        <button
+                          type="button"
+                          onClick={handleGoToMP}
+                          disabled={!!loading}
+                          className="flex-1 rounded-xl transition-opacity disabled:opacity-50 overflow-hidden"
+                          style={{ backgroundColor: '#fee600', color: '#1B1464', height: '44px', padding: '4px 8px' }}
+                        >
+                          <img src={mpLogo} alt="Mercado Pago" style={{ height: '100%', width: '100%', objectFit: 'contain' }} />
+                        </button>
+                      )}
+                    </div>
+                    {linkIds.map(linkId => {
+                      const rawId = linkId.replace('link-', '');
+                      const link = links.find(l => l.id === rawId);
+                      if (!link) return null;
+                      return (
+                        <a
+                          key={linkId}
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full py-2.5 rounded-xl text-sm font-semibold border border-[#D2C4A8] text-[#2B241A] hover:bg-[#F2EDE3] transition-colors flex items-center justify-center gap-2"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                          </svg>
+                          {link.nombre}
+                        </a>
+                      );
+                    })}
                   </div>
-                ) : null}
-              </div>
+                );
+              })()}
               <button type="button" onClick={onClose} className="text-xs text-[#6B5F4C] hover:text-[#2B241A] text-center py-1 transition-colors">
                 Cancelar
               </button>
@@ -902,6 +939,7 @@ export default function EspacioPublico() {
           workshop={booking}
           brand={brand}
           tenantId={espacioId}
+          cobrosLinks={espacio?.cobros?.links ?? []}
           prefill={currentUser ? { nombre: currentUser.profile?.nombre ?? '', email: currentUser.user?.email ?? '', telefono: currentUser.profile?.telefono ?? '' } : undefined}
           onConfirm={handleConfirm}
           onClose={() => setBooking(null)}
