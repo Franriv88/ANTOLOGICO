@@ -1300,8 +1300,8 @@ function Toggle({ checked, onChange, disabled }) {
       aria-checked={checked}
       onClick={() => !disabled && onChange(!checked)}
       disabled={disabled}
-      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none disabled:opacity-40 ${
-        checked ? 'bg-primary' : 'bg-surface-300'
+      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 transition-colors duration-200 focus:outline-none disabled:opacity-40 ${
+        checked ? 'bg-primary border-primary' : 'bg-surface-200 border-surface-200'
       }`}
     >
       <span className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-sm transform transition-transform duration-200 ${
