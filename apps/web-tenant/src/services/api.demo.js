@@ -146,6 +146,7 @@ export const espacios = {
 
   updateIdentidad:      async (id, payload)       => espacios.update(id, payload),
   updateRedes:          async (id, redesSociales) => espacios.update(id, { redesSociales }),
+  updateCobros:         async (id, cobros)        => espacios.update(id, { cobros }),
   updatePlan: async (id, planId, plan, periodo = 'mensual') => {
     const base = plan?.precioMensual ?? 0;
     const dto  = periodo === 'trimestral' ? (plan?.descuentoTrimestral ?? 0)
