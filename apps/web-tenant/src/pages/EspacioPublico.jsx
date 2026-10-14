@@ -380,7 +380,7 @@ function BookingModal({ workshop, brand, prefill, onConfirm, onClose }) {
         });
         onConfirm(reserva);
       } else {
-        setError(`Pago rechazado: ${payment.status_detail ?? payment.status}`);
+        setError(`Pago rechazado: ${payment.status_detail ?? payment.message ?? payment.status}`);
         setMpStep(null);
       }
     } catch (err) {
