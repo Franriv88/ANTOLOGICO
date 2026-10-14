@@ -1,3 +1,11 @@
 name = "antologico-mp"
 main = "worker.js"
 compatibility_date = "2024-01-01"
+
+[vars]
+MP_APP_ID = "800142779798220"
+TENANT_APP_URL = "https://antologico-web-tenant.vercel.app"
+
+[[kv_namespaces]]
+binding = "MP_TENANTS"
+id = "23f31b3909d04776b64a3b500e55a86d"

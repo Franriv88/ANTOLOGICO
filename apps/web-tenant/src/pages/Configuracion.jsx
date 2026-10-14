@@ -193,6 +193,8 @@ const TABS = [
   { key: 'suscripcion', label: 'Suscripción' },
 ];
 
+const MP_WORKER_URL = 'https://antologico-mp.franriv2388.workers.dev';
+
 // ── Brand Preview ─────────────────────────────────────────────────────────────
 
 function BrandPreview({ palette, roles, fontPair, logoData, logoShape, logoScale, espacioName }) {
@@ -1315,6 +1317,29 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
   const [agregarOpen,  setAgregarOpen]  = useState(false);
   const [error,        setError]        = useState('');
   const [periodo,      setPeriodo]      = useState('mensual'); // para el selector de activación
+  const [mpConnected,  setMpConnected]  = useState(null); // null=loading, true/false
+  const [mpDisconnecting, setMpDisconnecting] = useState(false);
+
+  useEffect(() => {
+    // Handle OAuth redirect params
+    const params = new URLSearchParams(window.location.search);
+    const mpStatus = params.get('mp');
+    if (mpStatus) {
+      const url = new URL(window.location);
+      url.searchParams.delete('mp');
+      window.history.replaceState({}, '', url);
+      if (mpStatus === 'connected') {
+        Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Mercado Pago conectado', timer: 3000, showConfirmButton: false });
+      } else if (mpStatus === 'error') {
+        Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Error al conectar Mercado Pago. Intentá de nuevo.', timer: 4000, showConfirmButton: false });
+      }
+    }
+    // Fetch current connection status
+    fetch(`${MP_WORKER_URL}/tenant-mp-config?tenantId=${espacio.id}`)
+      .then(r => r.json())
+      .then(d => setMpConnected(d.connected))
+      .catch(() => setMpConnected(false));
+  }, [espacio.id]);
 
   const pendiente      = espacio.cancelacionPendiente;
   const isEstudio      = espacio.planId === 'estudio';
@@ -1585,6 +1610,78 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
         {error && <p className="mt-3 text-xs text-danger">{error}</p>}
       </div>}
 
+      {/* ── Mercado Pago Connect ── */}
+      <div className="bg-surface-100 border border-border rounded-xl p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <h2 className="font-semibold text-sm text-ink mb-1">Mercado Pago</h2>
+            <p className="text-xs text-ink-muted mb-3">
+              Conectá tu cuenta de Mercado Pago para recibir los pagos de tus talleres directamente en tu cuenta.
+            </p>
+            {mpConnected === null && (
+              <span className="text-xs text-ink-muted">Verificando conexión…</span>
+            )}
+            {mpConnected === true && (
+              <div className="flex items-center gap-2 mb-3">
+                <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" />
+                <span className="text-xs text-green-700 font-medium">Cuenta conectada</span>
+              </div>
+            )}
+            {mpConnected === false && (
+              <div className="flex items-center gap-2 mb-3">
+                <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
+                <span className="text-xs text-ink-muted">No conectado — los pagos van a la cuenta de Antológico</span>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <a
+            href={`${MP_WORKER_URL}/oauth/connect?tenantId=${espacio.id}`}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold bg-[#009EE3] text-white rounded-md hover:bg-[#008CC9] transition-colors"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+            </svg>
+            {mpConnected ? 'Reconectar cuenta' : 'Conectar con Mercado Pago'}
+          </a>
+          {mpConnected && (
+            <button
+              onClick={async () => {
+                const result = await Swal.fire({
+                  title: '¿Desconectar Mercado Pago?',
+                  text: 'Los pagos de tus talleres volverán a procesarse por la cuenta de Antológico.',
+                  icon: 'warning',
+                  showCancelButton: true,
+                  confirmButtonText: 'Desconectar',
+                  cancelButtonText: 'Cancelar',
+                  confirmButtonColor: '#DC2626',
+                });
+                if (!result.isConfirmed) return;
+                setMpDisconnecting(true);
+                try {
+                  await fetch(`${MP_WORKER_URL}/tenant-mp-disconnect`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tenantId: espacio.id }),
+                  });
+                  setMpConnected(false);
+                } catch {
+                  Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Error al desconectar', timer: 3000, showConfirmButton: false });
+                } finally {
+                  setMpDisconnecting(false);
+                }
+              }}
+              disabled={mpDisconnecting}
+              className="px-4 py-2 text-sm font-medium text-danger border border-danger/30 rounded-md hover:bg-danger/5 transition-colors disabled:opacity-50"
+            >
+              {mpDisconnecting ? 'Desconectando…' : 'Desconectar'}
+            </button>
+          )}
+        </div>
+      </div>
+
       {cancelOpen && (
         <CancelSubscriptionModal
           nombre={espacio.nombre}
@@ -1619,7 +1716,11 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
 
 export default function Configuracion() {
   const { activeEspacio, espacios, refresh } = useEspacio();
-  const [tab, setTab] = useState(() => sessionStorage.getItem('config_tab') || 'espacio');
+  const [tab, setTab] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('mp')) return 'suscripcion';
+    return sessionStorage.getItem('config_tab') || 'espacio';
+  });
 
   function handleSetTab(t) {
     setTab(t);

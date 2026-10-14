@@ -7,10 +7,7 @@ import mpLogo from '../assets/Mercado_Pago.png';
 import { SocialIconsRow } from '../components/SocialIcons';
 import { initMercadoPago, Payment } from '@mercadopago/sdk-react';
 
-if (!window.__mpInitialized) {
-  initMercadoPago('APP_USR-1aadb258-7d8b-4126-8e7d-2dbad6270be7', { locale: 'es-AR' });
-  window.__mpInitialized = true;
-}
+const MP_PLATFORM_KEY = 'APP_USR-1aadb258-7d8b-4126-8e7d-2dbad6270be7';
 
 const MP_WORKER_URL = 'https://antologico-mp.franriv2388.workers.dev';
 // SlotBadge no se usa aquí — reemplazado por PublicSlotBadge con fondo sólido
@@ -277,7 +274,7 @@ function AuthModal({ brand, onClose, onSuccess }) {
 
 // ── BookingModal ──────────────────────────────────────────────────────────────
 
-function BookingModal({ workshop, brand, prefill, onConfirm, onClose }) {
+function BookingModal({ workshop, brand, prefill, tenantId, onConfirm, onClose }) {
   const [nombre,   setNombre]   = useState(prefill?.nombre   ?? '');
   const [email,    setEmail]    = useState(prefill?.email    ?? '');
   const [telefono, setTelefono] = useState(prefill?.telefono ?? '');
@@ -286,6 +283,21 @@ function BookingModal({ workshop, brand, prefill, onConfirm, onClose }) {
   const [mpStep,      setMpStep]      = useState(null); // null | 'card'
   const [preferenceId, setPreferenceId] = useState(null);
   const [loadingPref,  setLoadingPref]  = useState(false);
+  const [mpKey,        setMpKey]        = useState(null);
+
+  useEffect(() => {
+    fetch(`${MP_WORKER_URL}/tenant-mp-config?tenantId=${tenantId}`)
+      .then(r => r.json())
+      .then(d => {
+        const key = d.publicKey || MP_PLATFORM_KEY;
+        initMercadoPago(key, { locale: 'es-AR' });
+        setMpKey(key);
+      })
+      .catch(() => {
+        initMercadoPago(MP_PLATFORM_KEY, { locale: 'es-AR' });
+        setMpKey(MP_PLATFORM_KEY);
+      });
+  }, [tenantId]);
 
   const INPUT = 'w-full px-3 py-2 bg-white border border-[#D2C4A8] rounded-lg text-sm text-[#2B241A] focus:outline-none focus:ring-2 focus:ring-offset-1';
   const LABEL = 'block text-xs font-medium text-[#6B5F4C] mb-1';
@@ -333,6 +345,7 @@ function BookingModal({ workshop, brand, prefill, onConfirm, onClose }) {
         amount:     workshop.precio,
         description: workshop.nombre,
         payerEmail: email.trim(),
+        tenantId,
       }),
     })
       .then(r => r.json())
@@ -363,6 +376,7 @@ function BookingModal({ workshop, brand, prefill, onConfirm, onClose }) {
           installments:      pd.installments,
           transactionAmount: workshop.precio,
           description:       workshop.nombre,
+          tenantId,
           payer: {
             email:          email.trim(),
             identification: pd.payer?.identification,
@@ -425,7 +439,7 @@ function BookingModal({ workshop, brand, prefill, onConfirm, onClose }) {
               </div>
               {loading === 'MERCADO_PAGO' ? (
                 <div className="py-10 text-center text-sm text-[#6B5F4C]">Procesando pago…</div>
-              ) : loadingPref || !preferenceId ? (
+              ) : loadingPref || !preferenceId || !mpKey ? (
                 <div className="py-10 text-center text-sm text-[#6B5F4C]">Cargando métodos de pago…</div>
               ) : (
                 <Payment
@@ -881,6 +895,7 @@ export default function EspacioPublico() {
         <BookingModal
           workshop={booking}
           brand={brand}
+          tenantId={espacioId}
           prefill={currentUser ? { nombre: currentUser.profile?.nombre ?? '', email: currentUser.user?.email ?? '', telefono: currentUser.profile?.telefono ?? '' } : undefined}
           onConfirm={handleConfirm}
           onClose={() => setBooking(null)}
