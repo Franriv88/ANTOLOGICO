@@ -42,7 +42,7 @@ async function oauthCallback(request, env) {
   const { searchParams } = new URL(request.url);
   const code     = searchParams.get('code');
   const tenantId = searchParams.get('state');
-  const errorUrl = `${env.TENANT_APP_URL}/configuracion?mp=error`;
+  const errorUrl = `${env.TENANT_APP_URL}/config?mp=error`;
 
   if (!code || !tenantId) return Response.redirect(errorUrl, 302);
 
@@ -71,7 +71,7 @@ async function oauthCallback(request, env) {
     connectedAt: new Date().toISOString(),
   }));
 
-  return Response.redirect(`${env.TENANT_APP_URL}/configuracion?mp=connected`, 302);
+  return Response.redirect(`${env.TENANT_APP_URL}/config?mp=connected`, 302);
 }
 
 async function getTenantMpConfig(request, env) {

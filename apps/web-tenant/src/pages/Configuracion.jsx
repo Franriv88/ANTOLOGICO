@@ -1380,8 +1380,11 @@ function TabCobros({ espacio, refresh }) {
   async function handleAddLink() {
     if (!newLinkNombre.trim()) { setLinkError('El nombre es obligatorio.'); return; }
     if (!newLinkUrl.trim())    { setLinkError('La URL es obligatoria.'); return; }
+    let rawUrl = newLinkUrl.trim();
+    if (!/^https?:\/\//i.test(rawUrl)) rawUrl = 'https://' + rawUrl;
+    try { new URL(rawUrl); } catch { setLinkError('La URL no es válida.'); return; }
     setLinkError('');
-    const entry = { id: crypto.randomUUID(), nombre: newLinkNombre.trim(), url: newLinkUrl.trim() };
+    const entry = { id: crypto.randomUUID(), nombre: newLinkNombre.trim(), url: rawUrl };
     const updated = [...links, entry];
     setLinks(updated);
     setNewLinkNombre(''); setNewLinkUrl(''); setShowAddLink(false);
