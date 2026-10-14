@@ -394,7 +394,7 @@ function BookingModal({ workshop, brand, prefill, onConfirm, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/55" onClick={mpStep ? undefined : onClose} />
-      <div className="relative bg-[#FAF8F4] border border-[#D2C4A8] rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+      <div className="relative bg-[#FAF8F4] border border-[#D2C4A8] rounded-2xl shadow-2xl w-full max-w-sm overflow-y-auto max-h-[92vh]">
         {/* Mini header del taller */}
         <div
           className="h-24 relative flex items-end p-4"
