@@ -44,20 +44,20 @@ function PagoBadge({ metodoPago, estadoPago }) {
   if (!metodoPago) return null;
   if (metodoPago === 'MERCADO_PAGO') {
     return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-600">
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-600 whitespace-nowrap">
         Mercado Pago
       </span>
     );
   }
   if (estadoPago === 'PAGADO') {
     return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[#10B981]/10 text-[#10B981]">
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[#10B981]/10 text-[#10B981] whitespace-nowrap">
         Efectivo · Pagado
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[#B98527]/10 text-[#B98527]">
+    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[#B98527]/10 text-[#B98527] whitespace-nowrap">
       Efectivo · Pendiente
     </span>
   );
@@ -313,7 +313,8 @@ export default function Reservas() {
         <EmptyState hasReservas={reservas.length > 0} />
       ) : (
         <div className="bg-surface-100 rounded-xl border border-border overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[780px]">
             <thead>
               <tr className="border-b border-border bg-surface-200/50">
                 <th className="text-left px-4 py-3 text-xs font-medium text-ink-muted uppercase tracking-wide">
@@ -414,6 +415,7 @@ export default function Reservas() {
               })}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
