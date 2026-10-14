@@ -336,7 +336,14 @@ function BookingModal({ workshop, brand, prefill, onConfirm, onClose }) {
       }),
     })
       .then(r => r.json())
-      .then(d => setPreferenceId(d.preferenceId ?? null))
+      .then(d => {
+        if (d.preferenceId) {
+          setPreferenceId(d.preferenceId);
+        } else {
+          setError(d.error ?? 'No se pudo inicializar el pago. Intentá de nuevo.');
+          setMpStep(null);
+        }
+      })
       .catch(() => { setError('No se pudo inicializar el pago. Intentá de nuevo.'); setMpStep(null); })
       .finally(() => setLoadingPref(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -429,7 +436,6 @@ function BookingModal({ workshop, brand, prefill, onConfirm, onClose }) {
                     paymentMethods: {
                       creditCard: 'all',
                       debitCard:  'all',
-                      mercadoPago: ['account_money'],
                       minInstallments: 1,
                       maxInstallments: 1,
                     },
