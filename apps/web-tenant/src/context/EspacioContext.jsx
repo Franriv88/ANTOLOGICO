@@ -6,12 +6,15 @@ import { espacios as espacioApi } from '../services/api';
 const EspacioContext = createContext(null);
 
 export function EspacioProvider({ children }) {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [espacios, setEspacios]       = useState([]);
   const [activeEspacio, setActive]    = useState(null);
   const [loading, setLoading]         = useState(true);
 
   useEffect(() => {
+    // Wait until Firebase Auth has resolved — avoids a race where loading=false
+    // before user rehydrates from IndexedDB (e.g. after an OAuth redirect).
+    if (authLoading) return;
     if (!user) {
       setEspacios([]);
       setActive(null);
@@ -29,7 +32,7 @@ export function EspacioProvider({ children }) {
       })
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [user]);
+  }, [user, authLoading]);
 
   async function refresh(fallback = null) {
     if (!user) return [];
