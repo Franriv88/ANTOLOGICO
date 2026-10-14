@@ -50,7 +50,7 @@ async function oauthCallback(request, env) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      client_secret: env.MP_ACCESS_TOKEN,
+      client_secret: env.MP_CLIENT_SECRET,
       client_id:     env.MP_APP_ID,
       grant_type:    'authorization_code',
       code,
