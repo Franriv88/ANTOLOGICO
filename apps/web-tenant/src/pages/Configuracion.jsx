@@ -1616,7 +1616,7 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
           <div className="flex-1 min-w-0">
             <h2 className="font-semibold text-sm text-ink mb-1">Mercado Pago</h2>
             <p className="text-xs text-ink-muted mb-3">
-              Conectá tu cuenta de Mercado Pago para recibir los pagos de tus talleres directamente en tu cuenta.
+              Conectá tu cuenta de Mercado Pago para habilitar los pagos online en tu página. Sin esta conexión, tus clientes solo pueden reservar por efectivo.
             </p>
             {mpConnected === null && (
               <span className="text-xs text-ink-muted">Verificando conexión…</span>
@@ -1630,7 +1630,7 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
             {mpConnected === false && (
               <div className="flex items-center gap-2 mb-3">
                 <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
-                <span className="text-xs text-ink-muted">No conectado — los pagos van a la cuenta de Antológico</span>
+                <span className="text-xs text-ink-muted">No conectado — este espacio aún no acepta pagos online</span>
               </div>
             )}
           </div>

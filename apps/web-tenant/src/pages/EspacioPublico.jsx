@@ -283,20 +283,20 @@ function BookingModal({ workshop, brand, prefill, tenantId, onConfirm, onClose }
   const [mpStep,      setMpStep]      = useState(null); // null | 'card'
   const [preferenceId, setPreferenceId] = useState(null);
   const [loadingPref,  setLoadingPref]  = useState(false);
-  const [mpKey,        setMpKey]        = useState(null);
+  const [mpKey,           setMpKey]           = useState(null);
+  const [tenantMpReady,   setTenantMpReady]   = useState(false); // false while fetching
 
   useEffect(() => {
     fetch(`${MP_WORKER_URL}/tenant-mp-config?tenantId=${tenantId}`)
       .then(r => r.json())
       .then(d => {
-        const key = d.publicKey || MP_PLATFORM_KEY;
-        initMercadoPago(key, { locale: 'es-AR' });
-        setMpKey(key);
+        if (d.connected && d.publicKey) {
+          initMercadoPago(d.publicKey, { locale: 'es-AR' });
+          setMpKey(d.publicKey);
+        }
+        setTenantMpReady(true);
       })
-      .catch(() => {
-        initMercadoPago(MP_PLATFORM_KEY, { locale: 'es-AR' });
-        setMpKey(MP_PLATFORM_KEY);
-      });
+      .catch(() => setTenantMpReady(true));
   }, [tenantId]);
 
   const INPUT = 'w-full px-3 py-2 bg-white border border-[#D2C4A8] rounded-lg text-sm text-[#2B241A] focus:outline-none focus:ring-2 focus:ring-offset-1';
@@ -524,15 +524,21 @@ function BookingModal({ workshop, brand, prefill, tenantId, onConfirm, onClose }
                     </>
                   )}
                 </button>
-                <button
-                  type="button"
-                  onClick={handleGoToMP}
-                  disabled={!!loading}
-                  className="flex-1 rounded-xl transition-opacity disabled:opacity-50 overflow-hidden"
-                  style={{ backgroundColor: '#fee600', color: '#1B1464', height: '44px', padding: '4px 8px' }}
-                >
-                  <img src={mpLogo} alt="Mercado Pago" style={{ height: '100%', width: '100%', objectFit: 'contain' }} />
-                </button>
+                {tenantMpReady && mpKey ? (
+                  <button
+                    type="button"
+                    onClick={handleGoToMP}
+                    disabled={!!loading}
+                    className="flex-1 rounded-xl transition-opacity disabled:opacity-50 overflow-hidden"
+                    style={{ backgroundColor: '#fee600', color: '#1B1464', height: '44px', padding: '4px 8px' }}
+                  >
+                    <img src={mpLogo} alt="Mercado Pago" style={{ height: '100%', width: '100%', objectFit: 'contain' }} />
+                  </button>
+                ) : tenantMpReady && !mpKey ? (
+                  <div className="flex-1 rounded-xl border border-[#D2C4A8] bg-[#F2EDE3] flex items-center justify-center px-2 text-center" style={{ height: '44px' }}>
+                    <span className="text-[10px] text-[#6B5F4C] leading-tight">Pagos online<br/>no disponibles</span>
+                  </div>
+                ) : null}
               </div>
               <button type="button" onClick={onClose} className="text-xs text-[#6B5F4C] hover:text-[#2B241A] text-center py-1 transition-colors">
                 Cancelar
