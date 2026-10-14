@@ -275,7 +275,8 @@ function AuthModal({ brand, onClose, onSuccess }) {
 // ── BookingModal ──────────────────────────────────────────────────────────────
 
 function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, onConfirm, onClose }) {
-  const [nombre,   setNombre]   = useState(prefill?.nombre   ?? '');
+  const [cantidad,  setCantidad]  = useState(1);
+  const [nombres,   setNombres]   = useState([prefill?.nombre ?? '']);
   const [email,    setEmail]    = useState(prefill?.email    ?? '');
   const [telefono, setTelefono] = useState(prefill?.telefono ?? '');
   const [loading,  setLoading]  = useState(false);
@@ -302,23 +303,45 @@ function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, onConfi
   const INPUT = 'w-full px-3 py-2 bg-white border border-[#D2C4A8] rounded-lg text-sm text-[#2B241A] focus:outline-none focus:ring-2 focus:ring-offset-1';
   const LABEL = 'block text-xs font-medium text-[#6B5F4C] mb-1';
 
+  function adjustCantidad(delta) {
+    const next = Math.max(1, Math.min(workshop.cuposDisponibles, cantidad + delta));
+    setCantidad(next);
+    setNombres(prev => {
+      const arr = [...prev];
+      while (arr.length < next) arr.push('');
+      return arr.slice(0, next);
+    });
+  }
+
+  function updateNombre(i, val) {
+    setNombres(prev => { const a = [...prev]; a[i] = val; return a; });
+    setError('');
+  }
+
+  function validateForm() {
+    if (nombres.some(n => !n.trim())) { setError(cantidad > 1 ? 'Todos los nombres son requeridos' : 'El nombre es requerido'); return false; }
+    if (!email.trim() || !email.includes('@')) { setError('Email inválido'); return false; }
+    if (!telefono.trim()) { setError('El teléfono es requerido'); return false; }
+    return true;
+  }
+
   const headerBg  = workshop.headerType === 'COLOR' && workshop.headerValue ? workshop.headerValue : brand.primary;
   const headerImg = workshop.headerType === 'IMAGE' && workshop.headerValue ? workshop.headerValue : null;
 
   async function handleSubmitEfectivo() {
-    if (!nombre.trim())                        { setError('El nombre es requerido'); return; }
-    if (!email.trim() || !email.includes('@')) { setError('Email inválido'); return; }
-    if (!telefono.trim())                      { setError('El teléfono es requerido'); return; }
+    if (!validateForm()) return;
     setLoading('EFECTIVO');
     setError('');
     try {
-      const reserva = await reservasApi.create(workshop.id, {
-        nombre:   nombre.trim(),
-        email:    email.trim(),
-        telefono: telefono.trim(),
-        metodoPago: 'EFECTIVO',
-      });
-      onConfirm(reserva);
+      const reservas = await Promise.all(
+        nombres.map(n => reservasApi.create(workshop.id, {
+          nombre:   n.trim(),
+          email:    email.trim(),
+          telefono: telefono.trim(),
+          metodoPago: 'EFECTIVO',
+        }))
+      );
+      onConfirm(reservas);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -327,9 +350,7 @@ function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, onConfi
   }
 
   function handleGoToMP() {
-    if (!nombre.trim())                        { setError('El nombre es requerido'); return; }
-    if (!email.trim() || !email.includes('@')) { setError('Email inválido'); return; }
-    if (!telefono.trim())                      { setError('El teléfono es requerido'); return; }
+    if (!validateForm()) return;
     setError('');
     setPreferenceId(null);
     setMpStep('card');
@@ -342,8 +363,8 @@ function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, onConfi
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        amount:     workshop.precio,
-        description: workshop.nombre,
+        amount:     workshop.precio * cantidad,
+        description: cantidad > 1 ? `${workshop.nombre} (${cantidad} cupos)` : workshop.nombre,
         payerEmail: email.trim(),
         tenantId,
       }),
@@ -374,8 +395,8 @@ function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, onConfi
           paymentMethodId:   pd.payment_method_id,
           issuerId:          pd.issuer_id,
           installments:      pd.installments,
-          transactionAmount: workshop.precio,
-          description:       workshop.nombre,
+          transactionAmount: workshop.precio * cantidad,
+          description:       cantidad > 1 ? `${workshop.nombre} (${cantidad} cupos)` : workshop.nombre,
           tenantId,
           payer: {
             email:          email.trim(),
@@ -385,14 +406,16 @@ function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, onConfi
       });
       const payment = await res.json();
       if (payment.status === 'approved') {
-        const reserva = await reservasApi.create(workshop.id, {
-          nombre:      nombre.trim(),
-          email:       email.trim(),
-          telefono:    telefono.trim(),
-          metodoPago:  'MERCADO_PAGO',
-          mpPaymentId: String(payment.id),
-        });
-        onConfirm(reserva);
+        const reservas = await Promise.all(
+          nombres.map(n => reservasApi.create(workshop.id, {
+            nombre:      n.trim(),
+            email:       email.trim(),
+            telefono:    telefono.trim(),
+            metodoPago:  'MERCADO_PAGO',
+            mpPaymentId: String(payment.id),
+          }))
+        );
+        onConfirm(reservas);
       } else {
         setError(`Pago rechazado: ${payment.status_detail ?? payment.message ?? payment.status}`);
         setMpStep(null);
@@ -435,7 +458,8 @@ function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, onConfi
           {mpStep === 'card' ? (
             <div>
               <div className="mb-4 p-3 bg-[#F2EDE3] border border-[#D2C4A8] rounded-xl text-xs text-[#6B5F4C]">
-                <span className="font-medium text-[#2B241A]">{nombre}</span> · {email}
+                <span className="font-medium text-[#2B241A]">{nombres.join(', ')}</span> · {email}
+                {cantidad > 1 && <span className="block mt-1 font-mono">{cantidad} cupos · {formatPrecio(workshop.precio * cantidad)}</span>}
               </div>
               {loading === 'MERCADO_PAGO' ? (
                 <div className="py-10 text-center text-sm text-[#6B5F4C]">Procesando pago…</div>
@@ -443,7 +467,7 @@ function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, onConfi
                 <div className="py-10 text-center text-sm text-[#6B5F4C]">Cargando métodos de pago…</div>
               ) : (
                 <Payment
-                  initialization={{ amount: workshop.precio, preferenceId }}
+                  initialization={{ amount: workshop.precio * cantidad, preferenceId }}
                   onSubmit={handleMPPayment}
                   onError={() => { setError('Error en el formulario de pago'); setMpStep(null); }}
                   customization={{
@@ -469,18 +493,33 @@ function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, onConfi
             </div>
           ) : (
             <form onSubmit={e => e.preventDefault()} className="flex flex-col gap-3">
-              <div>
-                <label className={LABEL}>Nombre completo *</label>
-                <input
-                  type="text"
-                  value={nombre}
-                  onChange={e => { setNombre(e.target.value); setError(''); }}
-                  placeholder="Tu nombre"
-                  autoFocus
-                  className={INPUT}
-                  style={{ '--tw-ring-color': brand.primary }}
-                />
-              </div>
+              {workshop.cuposDisponibles > 1 && (
+                <div>
+                  <label className={LABEL}>Cantidad de cupos</label>
+                  <div className="flex items-center gap-3">
+                    <button type="button" onClick={() => adjustCantidad(-1)} disabled={cantidad <= 1}
+                      className="w-8 h-8 rounded-full border border-[#D2C4A8] flex items-center justify-center text-[#2B241A] hover:bg-[#F2EDE3] disabled:opacity-30 transition-colors text-lg font-bold select-none">−</button>
+                    <span className="font-mono text-sm font-semibold text-[#2B241A] min-w-[2ch] text-center">{cantidad}</span>
+                    <button type="button" onClick={() => adjustCantidad(1)} disabled={cantidad >= workshop.cuposDisponibles}
+                      className="w-8 h-8 rounded-full border border-[#D2C4A8] flex items-center justify-center text-[#2B241A] hover:bg-[#F2EDE3] disabled:opacity-30 transition-colors text-lg font-bold select-none">+</button>
+                    <span className="text-xs text-[#6B5F4C]">cupo{cantidad !== 1 ? 's' : ''}</span>
+                  </div>
+                </div>
+              )}
+              {nombres.map((n, i) => (
+                <div key={i}>
+                  <label className={LABEL}>{cantidad > 1 ? `Participante ${i + 1} *` : 'Nombre completo *'}</label>
+                  <input
+                    type="text"
+                    value={n}
+                    onChange={e => updateNombre(i, e.target.value)}
+                    placeholder={i === 0 ? 'Tu nombre' : 'Nombre del participante'}
+                    autoFocus={i === 0}
+                    className={INPUT}
+                    style={{ '--tw-ring-color': brand.primary }}
+                  />
+                </div>
+              ))}
               <div>
                 <label className={LABEL}>Email *</label>
                 <input
@@ -561,7 +600,7 @@ function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, onConfi
                       return (
                         <a
                           key={linkId}
-                          href={link.url}
+                          href={/^https?:\/\//i.test(link.url) ? link.url : `https://${link.url}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="w-full py-2.5 rounded-xl text-sm font-semibold border border-[#D2C4A8] text-[#2B241A] hover:bg-[#F2EDE3] transition-colors flex items-center justify-center gap-2"
@@ -612,7 +651,9 @@ function googleCalendarUrl(workshop) {
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
 
-function ConfirmationView({ reserva, workshop, brand, onBack }) {
+function ConfirmationView({ reservas, workshop, brand, onBack }) {
+  const first  = reservas[0];
+  const isMulti = reservas.length > 1;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/55" onClick={onBack} />
@@ -627,17 +668,28 @@ function ConfirmationView({ reserva, workshop, brand, onBack }) {
           </svg>
         </div>
 
-        <h2 className="font-display text-xl text-[#1A1611] mb-1">¡Reserva confirmada!</h2>
+        <h2 className="font-display text-xl text-[#1A1611] mb-1">{isMulti ? '¡Reservas confirmadas!' : '¡Reserva confirmada!'}</h2>
         <p className="text-sm text-[#6B5F4C] mb-5">Te esperamos en el taller</p>
 
         <div className="bg-[#F2EDE3] border border-[#D2C4A8] rounded-xl p-4 text-left mb-5">
           <p className="font-semibold text-sm text-[#1A1611] mb-1">{workshop.nombre}</p>
           <p className="text-xs font-mono text-[#6B5F4C] capitalize">{formatFecha(workshop.fecha)} · {formatHora(workshop.fecha)}</p>
           <div className="mt-3 pt-3 border-t border-[#D2C4A8]">
-            <p className="text-xs text-[#6B5F4C]">A nombre de: <span className="font-semibold text-[#2B241A]">{reserva.nombre}</span></p>
-            <p className="text-xs text-[#6B5F4C]">{reserva.email}</p>
-            {reserva.telefono && <p className="text-xs text-[#6B5F4C]">{reserva.telefono}</p>}
-            <p className="text-xs font-mono text-[#9B9083] mt-1.5">Código: #{reserva.id.slice(-8).toUpperCase()}</p>
+            {isMulti ? (
+              <>
+                <p className="text-xs font-semibold text-[#2B241A] mb-1.5">{reservas.length} cupos reservados</p>
+                {reservas.map((r, i) => (
+                  <p key={r.id} className="text-xs text-[#6B5F4C]">
+                    Participante {i + 1}: <span className="font-semibold text-[#2B241A]">{r.nombre}</span>
+                  </p>
+                ))}
+              </>
+            ) : (
+              <p className="text-xs text-[#6B5F4C]">A nombre de: <span className="font-semibold text-[#2B241A]">{first.nombre}</span></p>
+            )}
+            <p className="text-xs text-[#6B5F4C] mt-1">{first.email}</p>
+            {first.telefono && <p className="text-xs text-[#6B5F4C]">{first.telefono}</p>}
+            <p className="text-xs font-mono text-[#9B9083] mt-1.5">Código: #{first.id.slice(-8).toUpperCase()}</p>
           </div>
         </div>
 
@@ -671,7 +723,8 @@ function ConfirmationView({ reserva, workshop, brand, onBack }) {
 
 // ── WorkshopCard ──────────────────────────────────────────────────────────────
 
-function WorkshopCard({ w, brand, onReservar, isBooked, direcciones }) {
+function WorkshopCard({ w, brand, onReservar, bookedCount, direcciones }) {
+  const isBooked   = bookedCount > 0;
   const slotStatus = getSlotStatus(w.cuposDisponibles, w.cuposTotales);
   const isAgotado  = w.cuposDisponibles === 0;
   const dir = direcciones?.find(d => d.id === w.direccionId);
@@ -706,27 +759,21 @@ function WorkshopCard({ w, brand, onReservar, isBooked, direcciones }) {
           }),
         }}
       >
-        {!isBooked && (
-          <div
-            className="absolute top-3 left-3 px-3 py-1.5 rounded-lg font-mono font-bold text-sm text-white shadow-md"
-            style={{ backgroundColor: 'rgba(0,0,0,0.52)', backdropFilter: 'blur(4px)' }}
-          >
-            {formatPrecio(w.precio)}
-          </div>
-        )}
-        {!isBooked && (
-          <div className="absolute top-3 right-3">
-            <PublicSlotBadge status={slotStatus} />
-          </div>
-        )}
+        <div
+          className="absolute top-3 left-3 px-3 py-1.5 rounded-lg font-mono font-bold text-sm text-white shadow-md"
+          style={{ backgroundColor: 'rgba(0,0,0,0.52)', backdropFilter: 'blur(4px)' }}
+        >
+          {formatPrecio(w.precio)}
+        </div>
+        <div className="absolute top-3 right-3">
+          <PublicSlotBadge status={slotStatus} />
+        </div>
         {isBooked && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2" style={{ backgroundColor: 'rgba(0,0,0,0.58)', backdropFilter: 'blur(2px)' }}>
-            <div className="w-11 h-11 rounded-full flex items-center justify-center" style={{ backgroundColor: 'rgba(255,255,255,0.18)' }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12"/>
-              </svg>
-            </div>
-            <p className="text-white text-sm font-bold tracking-wide drop-shadow">¡Ya tenés tu lugar!</p>
+          <div className="absolute bottom-3 left-3">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold text-white shadow-sm" style={{ backgroundColor: 'rgba(5,150,105,0.85)', backdropFilter: 'blur(4px)' }}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              {bookedCount === 1 ? 'Ya reservaste' : `${bookedCount} cupos`}
+            </span>
           </div>
         )}
       </div>
@@ -765,24 +812,17 @@ function WorkshopCard({ w, brand, onReservar, isBooked, direcciones }) {
             </p>
           )}
           <div className="flex items-center justify-end gap-3">
-            {isBooked ? (
-              <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold shrink-0 bg-emerald-100 text-emerald-700 border border-emerald-200">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                Reservaste
-              </span>
-            ) : (
-              <button
-                onClick={() => !isAgotado && onReservar(w)}
-                disabled={isAgotado}
-                className="px-5 py-2 rounded-xl text-sm font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0 hover:brightness-110 hover:scale-[1.03] active:scale-95 shadow-sm"
-                style={{
-                  backgroundColor: isAgotado ? '#D2C4A8' : brand.button,
-                  color: isAgotado ? '#6B5F4C' : contrastText(brand.button),
-                }}
-              >
-                {isAgotado ? 'Agotado' : 'Reservar'}
-              </button>
-            )}
+            <button
+              onClick={() => !isAgotado && onReservar(w)}
+              disabled={isAgotado}
+              className="px-5 py-2 rounded-xl text-sm font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed shrink-0 hover:brightness-110 hover:scale-[1.03] active:scale-95 shadow-sm"
+              style={{
+                backgroundColor: isAgotado ? '#D2C4A8' : brand.button,
+                color: isAgotado ? '#6B5F4C' : contrastText(brand.button),
+              }}
+            >
+              {isAgotado ? 'Agotado' : isBooked ? 'Reservar más' : 'Reservar'}
+            </button>
           </div>
         </div>
       </div>
@@ -800,7 +840,7 @@ export default function EspacioPublico() {
   const [notFound,  setNotFound]  = useState(false);
   const [booking,        setBooking]        = useState(null);
   const [confirmed,      setConfirmed]      = useState(null);
-  const [bookedIds,      setBookedIds]      = useState([]);
+  const [bookedCounts,   setBookedCounts]   = useState({}); // workshopId → count
   const [currentUser,    setCurrentUser]    = useState(undefined); // undefined = loading, null = guest
   const [showAuth,       setShowAuth]       = useState(false);
   const [pendingWorkshop, setPendingWorkshop] = useState(null);
@@ -834,7 +874,7 @@ export default function EspacioPublico() {
 
   useEffect(() => {
     return subscribeAuth((user, profile) => {
-      if (!user) { setCurrentUser(null); setUserReservas([]); return; }
+      if (!user) { setCurrentUser(null); setUserReservas([]); setBookedCounts({}); return; }
       setCurrentUser({ user, profile: profile ?? {} });
       loadUserReservas(user.email ?? profile?.email ?? '');
     });
@@ -851,6 +891,11 @@ export default function EspacioPublico() {
         if (ws) wsMap[id] = ws;
       }));
       setUserReservas(list.map(r => ({ ...r, workshop: wsMap[r.workshopId] ?? null })));
+      const counts = {};
+      list.filter(r => r.estado !== 'CANCELADA').forEach(r => {
+        counts[r.workshopId] = (counts[r.workshopId] ?? 0) + 1;
+      });
+      setBookedCounts(counts);
     } catch { /* silencioso */ }
   }
 
@@ -861,6 +906,12 @@ export default function EspacioPublico() {
       const res = userReservas.find(r => r.id === reservaId);
       if (!res) return prev;
       return prev.map(w => w.id === res.workshopId ? { ...w, cuposDisponibles: (w.cuposDisponibles ?? 0) + 1 } : w);
+    });
+    setBookedCounts(prev => {
+      const res = userReservas.find(r => r.id === reservaId);
+      if (!res) return prev;
+      const curr = prev[res.workshopId] ?? 0;
+      return { ...prev, [res.workshopId]: Math.max(0, curr - 1) };
     });
   }
 
@@ -887,15 +938,17 @@ export default function EspacioPublico() {
     logout();
     setCurrentUser(null);
     setUserReservas([]);
+    setBookedCounts({});
   }
 
-  function handleConfirm(reserva) {
+  function handleConfirm(reservas) {
+    const count = reservas.length;
     setWorkshops(prev =>
-      prev.map(w => w.id === booking.id ? { ...w, cuposDisponibles: Math.max(0, w.cuposDisponibles - 1) } : w)
+      prev.map(w => w.id === booking.id ? { ...w, cuposDisponibles: Math.max(0, w.cuposDisponibles - count) } : w)
     );
-    setBookedIds(prev => [...prev, booking.id]);
+    setBookedCounts(prev => ({ ...prev, [booking.id]: (prev[booking.id] ?? 0) + count }));
     if (currentUser) loadUserReservas(currentUser.user.email ?? currentUser.profile?.email ?? '');
-    setConfirmed({ reserva, workshop: booking });
+    setConfirmed({ reservas, workshop: booking });
     setBooking(null);
   }
 
@@ -947,7 +1000,7 @@ export default function EspacioPublico() {
       )}
       {confirmed && (
         <ConfirmationView
-          reserva={confirmed.reserva}
+          reservas={confirmed.reservas}
           workshop={confirmed.workshop}
           brand={brand}
           onBack={() => setConfirmed(null)}
@@ -1070,7 +1123,7 @@ export default function EspacioPublico() {
             <h2 className="font-display text-xl text-[#1A1611] mb-5">Talleres disponibles</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {upcoming.map(w => (
-                <WorkshopCard key={w.id} w={w} brand={brand} onReservar={handleReservar} isBooked={bookedIds.includes(w.id)} direcciones={espacio.direcciones ?? []} />
+                <WorkshopCard key={w.id} w={w} brand={brand} onReservar={handleReservar} bookedCount={bookedCounts[w.id] ?? 0} direcciones={espacio.direcciones ?? []} />
               ))}
             </div>
           </>
