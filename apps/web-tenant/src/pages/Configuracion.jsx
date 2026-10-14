@@ -1351,6 +1351,7 @@ function TabCobros({ espacio, refresh }) {
       url.searchParams.delete('mp');
       window.history.replaceState({}, '', url);
       if (mpStatus === 'connected') {
+        setMpConnected(true);
         Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Mercado Pago conectado', timer: 3000, showConfirmButton: false });
       } else if (mpStatus === 'error') {
         const detail = params.get('detail');
