@@ -349,7 +349,7 @@ function BookingModal({ workshop, brand, prefill, onConfirm, onClose }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mpStep]);
 
-  async function handleMPPayment(formData) {
+  async function handleMPPayment({ formData: pd }) {
     setLoading('MERCADO_PAGO');
     setError('');
     try {
@@ -357,15 +357,15 @@ function BookingModal({ workshop, brand, prefill, onConfirm, onClose }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          token:             formData.token,
-          paymentMethodId:   formData.payment_method_id,
-          issuerId:          formData.issuer_id,
-          installments:      formData.installments,
+          token:             pd.token,
+          paymentMethodId:   pd.payment_method_id,
+          issuerId:          pd.issuer_id,
+          installments:      pd.installments,
           transactionAmount: workshop.precio,
           description:       workshop.nombre,
           payer: {
             email:          email.trim(),
-            identification: formData.payer?.identification,
+            identification: pd.payer?.identification,
           },
         }),
       });
