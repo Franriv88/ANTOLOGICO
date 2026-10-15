@@ -313,7 +313,7 @@ export default function Reservas() {
         <EmptyState hasReservas={reservas.length > 0} />
       ) : (
         <div className="bg-surface-100 rounded-xl border border-border overflow-x-auto">
-          <table className="w-full text-sm min-w-[780px]">
+          <table className="w-full text-sm min-w-[640px]">
             <thead>
               <tr className="border-b border-border bg-surface-200/50">
                 <th className="text-left px-4 py-3 text-xs font-medium text-ink-muted uppercase tracking-wide">
@@ -359,8 +359,8 @@ export default function Reservas() {
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3">
-                      <p className="text-ink truncate max-w-[220px]">{ws?.nombre ?? '—'}</p>
+                    <td className="px-4 py-3 max-w-[180px]">
+                      <p className="text-ink truncate">{ws?.nombre ?? '—'}</p>
                       {ws && (
                         <p className="text-xs text-ink-muted capitalize">{ws.tipo?.toLowerCase()}</p>
                       )}
@@ -374,23 +374,30 @@ export default function Reservas() {
                     <td className="px-4 py-3">
                       <PagoBadge metodoPago={r.metodoPago} estadoPago={r.estadoPago} />
                     </td>
-                    <td className="px-4 py-3 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-2">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-1">
                         {r.estado === 'CONFIRMADA' && r.metodoPago === 'EFECTIVO' && r.estadoPago === 'PENDIENTE' && (
                           <button
                             onClick={() => handleMarkPaid(r.id)}
                             disabled={markingPaid === r.id}
-                            className="text-xs text-primary hover:opacity-70 transition-opacity disabled:opacity-40"
+                            title="Marcar como pagado"
+                            className="flex items-center gap-1 text-xs text-primary hover:opacity-70 transition-opacity disabled:opacity-40 px-2 py-1 rounded-lg hover:bg-primary/5 whitespace-nowrap"
                           >
-                            {markingPaid === r.id ? '…' : 'Marcar pagado'}
+                            {markingPaid === r.id ? '…' : (
+                              <>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                Pagado
+                              </>
+                            )}
                           </button>
                         )}
                         {r.estado === 'CONFIRMADA' && (
                           <button
                             onClick={() => setCancelTarget({ id: r.id, nombre: r.nombre, workshopId: r.workshopId })}
-                            className="text-xs text-ink-muted hover:text-danger transition-colors"
+                            title="Cancelar reserva"
+                            className="p-1.5 rounded-lg text-ink-muted hover:text-danger hover:bg-danger/5 transition-colors"
                           >
-                            Cancelar
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                           </button>
                         )}
                         {r.email && (
@@ -398,13 +405,19 @@ export default function Reservas() {
                             onClick={() => handleBlockUser(r.email)}
                             disabled={blockingEmail === r.email}
                             title={bloqueados.includes(r.email?.toLowerCase()) ? 'Desbloquear usuario' : 'Bloquear usuario'}
-                            className={`text-xs px-2 py-0.5 rounded border transition-colors disabled:opacity-40 ${
+                            className={`p-1.5 rounded-lg transition-colors disabled:opacity-40 ${
                               bloqueados.includes(r.email?.toLowerCase())
-                                ? 'border-emerald-300 text-emerald-700 hover:bg-emerald-50'
-                                : 'border-danger/20 text-danger/70 hover:text-danger hover:bg-danger/5'
+                                ? 'text-emerald-600 hover:bg-emerald-50'
+                                : 'text-ink-muted hover:text-danger hover:bg-danger/5'
                             }`}
                           >
-                            {blockingEmail === r.email ? '…' : bloqueados.includes(r.email?.toLowerCase()) ? 'Desbloquear' : 'Bloquear'}
+                            {blockingEmail === r.email ? (
+                              <span className="text-xs">…</span>
+                            ) : bloqueados.includes(r.email?.toLowerCase()) ? (
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+                            ) : (
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 14 0v4"/></svg>
+                            )}
                           </button>
                         )}
                       </div>
