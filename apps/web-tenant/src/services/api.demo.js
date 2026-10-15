@@ -1,6 +1,6 @@
 import {
   collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc,
-  query, where, writeBatch,
+  query, where, writeBatch, increment,
 } from 'firebase/firestore';
 import { firestore } from '../lib/firebase';
 import { BASE_ESPACIO, BASE_WORKSHOPS, BASE_RESERVAS } from '../lib/demo';
@@ -291,14 +291,10 @@ export const reservas = {
       metodoPago,
       estadoPago: metodoPago === 'MERCADO_PAGO' ? 'PAGADO' : 'PENDIENTE',
     };
-    const batch   = writeBatch(firestore);
+    const batch = writeBatch(firestore);
     batch.set(doc(firestore, C_RESERVAS, id), reserva);
-    // Descuenta cupo
-    const wsRef   = doc(firestore, C_WORKSHOPS, workshopId);
-    const wsSnap  = await getDoc(wsRef);
-    if (wsSnap.exists() && (wsSnap.data().cuposDisponibles ?? 0) > 0) {
-      batch.update(wsRef, { cuposDisponibles: wsSnap.data().cuposDisponibles - 1 });
-    }
+    // Descuenta 1 cupo atómicamente — seguro con Promise.all multi-persona
+    batch.update(doc(firestore, C_WORKSHOPS, workshopId), { cuposDisponibles: increment(-1) });
     await batch.commit();
     return { id, ...reserva };
   },
@@ -319,12 +315,8 @@ export const reservas = {
 
     const batch  = writeBatch(firestore);
     batch.update(ref, { estado: 'CANCELADA' });
-    // Restaura cupo
-    const wsRef  = doc(firestore, C_WORKSHOPS, snap.data().workshopId);
-    const wsSnap = await getDoc(wsRef);
-    if (wsSnap.exists()) {
-      batch.update(wsRef, { cuposDisponibles: (wsSnap.data().cuposDisponibles ?? 0) + 1 });
-    }
+    // Restaura 1 cupo atómicamente
+    batch.update(doc(firestore, C_WORKSHOPS, snap.data().workshopId), { cuposDisponibles: increment(1) });
     await batch.commit();
     const updated = await getDoc(ref);
     return docToObj(updated);
