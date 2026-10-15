@@ -11,6 +11,16 @@ import { usePlanes, precioConPeriodo, proximaRenovacion, formatFechaLarga } from
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+function phoneToWaLink(phone) {
+  const digits = phone.replace(/[^\d]/g, '');
+  return digits ? `https://wa.me/${digits}` : '';
+}
+
+function looksLikePhone(value) {
+  const v = value.trim();
+  return /^[+\d][\d\s\-().]{4,}$/.test(v) && !/^https?:\/\//i.test(v);
+}
+
 function isValidColor(str) {
   if (!str?.trim()) return false;
   const s = new Option().style;
@@ -558,28 +568,44 @@ function RedesSocialesSection({ espacio, livePalette, links, setLinks, style, se
 
       {/* Inputs por red social */}
       <div className="flex flex-col gap-3 mb-5">
-        {SOCIAL_NETWORKS.map(net => (
-          <div key={net.key} className="flex items-center gap-3">
-            <input
-              type="checkbox"
-              checked={visible[net.key] !== false}
-              onChange={e => setVisible(p => ({ ...p, [net.key]: e.target.checked }))}
-              className="w-4 h-4 accent-primary cursor-pointer shrink-0"
-              title="Mostrar en footer"
-            />
-            <div className="w-7 flex justify-center shrink-0">
-              <SocialIcon id={net.key} color={iconColor(net)} size={20} />
+        {SOCIAL_NETWORKS.map(net => {
+          const isWa = net.key === 'whatsapp';
+          const val  = links[net.key] ?? '';
+          return (
+            <div key={net.key} className="flex flex-col gap-1">
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={visible[net.key] !== false}
+                  onChange={e => setVisible(p => ({ ...p, [net.key]: e.target.checked }))}
+                  className="w-4 h-4 accent-primary cursor-pointer shrink-0"
+                  title="Mostrar en footer"
+                />
+                <div className="w-7 flex justify-center shrink-0">
+                  <SocialIcon id={net.key} color={iconColor(net)} size={20} />
+                </div>
+                <span className="w-20 text-xs font-medium text-ink shrink-0">{net.label}</span>
+                <input
+                  type={isWa ? 'text' : 'url'}
+                  value={val}
+                  onChange={e => setLinks(p => ({ ...p, [net.key]: e.target.value }))}
+                  onBlur={isWa ? () => {
+                    if (val && looksLikePhone(val)) {
+                      setLinks(p => ({ ...p, whatsapp: phoneToWaLink(val) }));
+                    }
+                  } : undefined}
+                  placeholder={isWa ? '+54 9 11 1234-5678 o wa.me/549...' : net.placeholder}
+                  className={INPUT_CLS + ' text-xs'}
+                />
+              </div>
+              {isWa && val && looksLikePhone(val) && (
+                <p className="text-[10px] text-ink-muted pl-[calc(1rem+1.75rem+5rem+0.75rem)]">
+                  Se convertirá en <span className="font-mono text-primary">wa.me/{val.replace(/[^\d]/g, '')}</span> al guardar
+                </p>
+              )}
             </div>
-            <span className="w-20 text-xs font-medium text-ink shrink-0">{net.label}</span>
-            <input
-              type="url"
-              value={links[net.key] ?? ''}
-              onChange={e => setLinks(p => ({ ...p, [net.key]: e.target.value }))}
-              placeholder={net.placeholder}
-              className={INPUT_CLS + ' text-xs'}
-            />
-          </div>
-        ))}
+          );
+        })}
       </div>
 
     </div>
@@ -856,8 +882,14 @@ function TabIdentidad({ espacio, refresh }) {
 
   const parseRedes = () => {
     const rs = espacio.redesSociales;
-    if (!rs) return { style: 'brand', minimalColor: '', links: {}, visible: {} };
-    return { style: rs.style ?? 'brand', minimalColor: rs.minimalColor ?? '', links: rs.links ?? {}, visible: rs.visible ?? {} };
+    const base = !rs
+      ? { style: 'brand', minimalColor: '', links: {}, visible: {} }
+      : { style: rs.style ?? 'brand', minimalColor: rs.minimalColor ?? '', links: rs.links ?? {}, visible: rs.visible ?? {} };
+    // Auto-populate WhatsApp from espacio.telefono if the field is empty
+    if (!base.links.whatsapp && espacio.telefono) {
+      base.links = { ...base.links, whatsapp: phoneToWaLink(espacio.telefono) };
+    }
+    return base;
   };
   const initRedes = parseRedes();
   const [redesLinks,        setRedesLinks]        = useState(initRedes.links);

@@ -24,7 +24,7 @@ const RUBROS = [
   'Yoga y bienestar',
 ];
 
-export default function StepEspacio({ onNext, onBack }) {
+export default function StepEspacio({ onNext, onBack, accumulated }) {
   const { user } = useAuth();
   const [nombre, setNombre]             = useState('');
   const [selectedRubro, setRubro]       = useState('');
@@ -49,6 +49,7 @@ export default function StepEspacio({ onNext, onBack }) {
         rubroId:           null,
         rubroPersonalizado: rubroFinal,
         userId:            user?.uid ?? null,
+        telefono:          accumulated?.telefono ?? '',
       });
       onNext({ espacioId: key.id, espacioNombre: nombre.trim() });
     } catch (err) {
