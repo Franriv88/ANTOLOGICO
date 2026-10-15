@@ -156,13 +156,14 @@ function ResetModal({ group, onClose }) {
 // ── Tenants page ──────────────────────────────────────────────────────────────
 
 export default function Tenants() {
-  const [list,        setList]        = useState(null);
-  const [planes,      setPlanes]      = useState([]);
-  const [loading,     setLoading]     = useState(true);
-  const [saving,      setSaving]      = useState(null);
-  const [search,      setSearch]      = useState('');
-  const [blockTarget, setBlockTarget] = useState(null);
-  const [resetTarget, setResetTarget] = useState(null);
+  const [list,         setList]         = useState(null);
+  const [planes,       setPlanes]       = useState([]);
+  const [loading,      setLoading]      = useState(true);
+  const [saving,       setSaving]       = useState(null);
+  const [search,       setSearch]       = useState('');
+  const [blockTarget,  setBlockTarget]  = useState(null);
+  const [resetTarget,  setResetTarget]  = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   useEffect(() => {
     Promise.all([tenantsApi.list(), planesApi.list()])
@@ -170,6 +171,16 @@ export default function Tenants() {
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    const { key, espacios, userId } = deleteTarget;
+    setSaving(key);
+    await tenantsApi.remove(espacios.map(e => e.id), userId);
+    setList(prev => prev.filter(t => (t.userId ?? `__anon__${t.id}`) !== key));
+    setSaving(null);
+    setDeleteTarget(null);
+  }
 
   async function confirmBloqueado() {
     if (!blockTarget) return;
@@ -206,6 +217,17 @@ export default function Tenants() {
 
       {resetTarget && (
         <ResetModal group={resetTarget} onClose={() => setResetTarget(null)} />
+      )}
+
+      {deleteTarget && (
+        <ConfirmModal
+          title="¿Eliminar este tenant?"
+          text={`Se eliminarán permanentemente todos sus espacios (${deleteTarget.espacios.length}), workshops, reservas y perfil de usuario. Esta acción no se puede deshacer.`}
+          confirmText="Sí, eliminar"
+          danger
+          onConfirm={confirmDelete}
+          onClose={() => setDeleteTarget(null)}
+        />
       )}
 
       <div className="max-w-6xl">
@@ -384,6 +406,16 @@ export default function Tenants() {
                             }`}
                           >
                             {bloqueado ? 'Desbloquear' : 'Bloquear'}
+                          </button>
+                          <button
+                            onClick={() => setDeleteTarget(group)}
+                            disabled={isSaving}
+                            title="Eliminar tenant"
+                            className="w-8 h-6 flex items-center justify-center rounded border border-danger/20 text-danger hover:bg-danger/5 transition-colors disabled:opacity-30"
+                          >
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                            </svg>
                           </button>
                         </div>
                       </td>

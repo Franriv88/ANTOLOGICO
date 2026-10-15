@@ -1,6 +1,6 @@
 import {
   collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc,
-  query, orderBy, writeBatch,
+  query, orderBy, where, writeBatch,
 } from 'firebase/firestore';
 import { sendPasswordResetEmail } from 'firebase/auth';
 
@@ -8,10 +8,12 @@ const C_PROMO       = 'demo_promo';
 const C_PROMO_CODES = 'demo_promo_codes';
 import { firestore, auth } from '../lib/firebase';
 
-const C_ADMINS   = 'sa_admins';
-const C_PLANES   = 'demo_planes';
-const C_ESPACIOS = 'demo_espacios';
-const C_USUARIOS = 'demo_usuarios';
+const C_ADMINS    = 'sa_admins';
+const C_PLANES    = 'demo_planes';
+const C_ESPACIOS  = 'demo_espacios';
+const C_WORKSHOPS = 'demo_workshops';
+const C_RESERVAS  = 'demo_reservas';
+const C_USUARIOS  = 'demo_usuarios';
 
 // Emails que pueden ser super admin (se auto-registran en sa_admins)
 const SEED_ADMIN_EMAILS = ['superadmin@antologico.app'];
@@ -236,5 +238,27 @@ export const tenants = {
     await updateDoc(ref, payload);
     const snap = await getDoc(ref);
     return docToObj(snap);
+  },
+
+  // Elimina todos los espacios del tenant + sus workshops y reservas en cascada
+  remove: async (espacioIds, userId) => {
+    const batch = writeBatch(firestore);
+
+    for (const espacioId of espacioIds) {
+      // Workshops de este espacio
+      const wsSnap = await getDocs(query(collection(firestore, C_WORKSHOPS), where('espacioId', '==', espacioId)));
+      for (const wsDoc of wsSnap.docs) {
+        // Reservas de cada workshop
+        const resSnap = await getDocs(query(collection(firestore, C_RESERVAS), where('workshopId', '==', wsDoc.id)));
+        resSnap.docs.forEach(r => batch.delete(r.ref));
+        batch.delete(wsDoc.ref);
+      }
+      batch.delete(doc(firestore, C_ESPACIOS, espacioId));
+    }
+
+    // Perfil de usuario
+    if (userId) batch.delete(doc(firestore, C_USUARIOS, userId));
+
+    await batch.commit();
   },
 };
