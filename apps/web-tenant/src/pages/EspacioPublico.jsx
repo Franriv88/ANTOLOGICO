@@ -859,6 +859,7 @@ export default function EspacioPublico() {
   const [userReservas,   setUserReservas]   = useState([]);
   const [menuOpen,       setMenuOpen]       = useState(false);
   const [showMisDatos,   setShowMisDatos]   = useState(false);
+  const [view,           setView]           = useState('talleres'); // 'talleres' | 'mis-reservas'
 
   useEffect(() => {
     async function load() {
@@ -1034,18 +1035,27 @@ export default function EspacioPublico() {
               </button>
             </div>
             <nav className="flex flex-col p-3">
-              <button
-                onClick={() => {
-                  setMenuOpen(false);
-                  document.getElementById('mis-reservas-section')?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm text-[#2B241A] hover:bg-[#FAF7F2] transition-colors w-full text-left"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E85D4A" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-                </svg>
-                Mis reservas
-              </button>
+              {view === 'talleres' ? (
+                <button
+                  onClick={() => { setMenuOpen(false); setView('mis-reservas'); }}
+                  className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm text-[#2B241A] hover:bg-[#FAF7F2] transition-colors w-full text-left"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E85D4A" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                  </svg>
+                  Mis reservas
+                </button>
+              ) : (
+                <button
+                  onClick={() => { setMenuOpen(false); setView('talleres'); }}
+                  className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm text-[#2B241A] hover:bg-[#FAF7F2] transition-colors w-full text-left"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E85D4A" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+                  </svg>
+                  Ver eventos
+                </button>
+              )}
               <button
                 onClick={() => { setMenuOpen(false); setShowMisDatos(true); }}
                 className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm text-[#2B241A] hover:bg-[#FAF7F2] transition-colors w-full text-left"
@@ -1126,62 +1136,81 @@ export default function EspacioPublico() {
         </div>
       </div>
 
-      {/* Workshops */}
-      <div className="max-w-2xl mx-auto px-4 py-10">
-        {upcoming.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-[#6B5F4C]">No hay talleres disponibles en este momento.</p>
-          </div>
-        ) : (
-          <>
-            <h2 className="font-display text-xl text-[#1A1611] mb-5">Talleres disponibles</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {upcoming.map(w => (
-                <WorkshopCard key={w.id} w={w} brand={brand} onReservar={handleReservar} bookedCount={bookedCounts[w.id] ?? 0} direcciones={espacio.direcciones ?? []} />
-              ))}
+      {/* Vista: Talleres */}
+      {view === 'talleres' && (
+        <div className="max-w-2xl mx-auto px-4 py-10">
+          {upcoming.length === 0 ? (
+            <div className="text-center py-16">
+              <p className="text-[#6B5F4C]">No hay talleres disponibles en este momento.</p>
             </div>
-          </>
-        )}
-      </div>
+          ) : (
+            <>
+              <h2 className="font-display text-xl text-[#1A1611] mb-5">Talleres disponibles</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {upcoming.map(w => (
+                  <WorkshopCard key={w.id} w={w} brand={brand} onReservar={handleReservar} bookedCount={bookedCounts[w.id] ?? 0} direcciones={espacio.direcciones ?? []} />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
-      {/* Mis reservas */}
-      {currentUser && userReservas.length > 0 && (
-        <div id="mis-reservas-section" className="max-w-2xl mx-auto px-4 pb-10">
+      {/* Vista: Mis reservas */}
+      {view === 'mis-reservas' && (
+        <div className="max-w-2xl mx-auto px-4 py-10">
           <h2 className="font-display text-xl text-[#1A1611] mb-4">Mis reservas</h2>
-          <div className="flex flex-col gap-3">
-            {userReservas.map(r => {
-              const ws    = r.workshop;
-              const hBg   = ws?.headerType === 'COLOR' && ws?.headerValue ? ws.headerValue : brand.primary;
-              const isCancelada = r.estado === 'CANCELADA';
-              return (
-                <div key={r.id} className="rounded-xl overflow-hidden border border-[#D2C4A8] bg-[#FAF8F4] flex">
-                  <div className="w-2 shrink-0" style={{ backgroundColor: hBg }} />
-                  <div className="flex-1 px-4 py-3 flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-[#1A1611] leading-snug">{ws?.nombre ?? '—'}</p>
-                      {ws?.fecha && (
-                        <p className="text-xs font-mono text-[#6B5F4C] mt-0.5 capitalize">
-                          {formatFecha(ws.fecha)} · {formatHora(ws.fecha)}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${isCancelada ? 'bg-[#F2EDE3] text-[#9B9083]' : 'bg-emerald-100 text-emerald-700'}`}>
-                        {isCancelada ? 'Cancelada' : 'Confirmada'}
-                      </span>
-                      {!isCancelada && (
-                        <button
-                          onClick={() => handleCancelReserva(r.id)}
-                          className="text-xs text-[#9B9083] hover:text-red-500 transition-colors border border-[#D2C4A8] rounded-lg px-2.5 py-1 hover:border-red-300">
-                          Cancelar
-                        </button>
-                      )}
+          {!currentUser ? (
+            <div className="text-center py-12">
+              <p className="text-[#6B5F4C] text-sm mb-4">Iniciá sesión para ver tus reservas.</p>
+              <button
+                onClick={() => setShowAuth(true)}
+                className="px-5 py-2.5 rounded-xl text-sm font-bold text-white"
+                style={{ backgroundColor: brand.button }}
+              >
+                Ingresar
+              </button>
+            </div>
+          ) : userReservas.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-[#6B5F4C] text-sm">Todavía no tenés reservas.</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {userReservas.map(r => {
+                const ws = r.workshop;
+                const hBg = ws?.headerType === 'COLOR' && ws?.headerValue ? ws.headerValue : brand.primary;
+                const isCancelada = r.estado === 'CANCELADA';
+                return (
+                  <div key={r.id} className="rounded-xl overflow-hidden border border-[#D2C4A8] bg-[#FAF8F4] flex">
+                    <div className="w-2 shrink-0" style={{ backgroundColor: hBg }} />
+                    <div className="flex-1 px-4 py-3 flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-[#1A1611] leading-snug">{ws?.nombre ?? '—'}</p>
+                        {ws?.fecha && (
+                          <p className="text-xs font-mono text-[#6B5F4C] mt-0.5 capitalize">
+                            {formatFecha(ws.fecha)} · {formatHora(ws.fecha)}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${isCancelada ? 'bg-[#F2EDE3] text-[#9B9083]' : 'bg-emerald-100 text-emerald-700'}`}>
+                          {isCancelada ? 'Cancelada' : 'Confirmada'}
+                        </span>
+                        {!isCancelada && (
+                          <button
+                            onClick={() => handleCancelReserva(r.id)}
+                            className="text-xs text-[#9B9083] hover:text-red-500 transition-colors border border-[#D2C4A8] rounded-lg px-2.5 py-1 hover:border-red-300">
+                            Cancelar
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
