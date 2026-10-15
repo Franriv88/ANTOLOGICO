@@ -13,13 +13,14 @@ const MP_WORKER_URL = 'https://antologico-mp.franriv2388.workers.dev';
 // SlotBadge no se usa aquí — reemplazado por PublicSlotBadge con fondo sólido
 
 // Badge con fondo sólido para legibilidad sobre cualquier imagen o color
+// Solo muestra Disponible/Agotado — nunca revela cantidad de cupos restantes
 const SLOT_SOLID = {
-  DISPONIBLE:    { label: 'Disponible',    bg: '#10B981', text: '#fff' },
-  ULTIMOS_CUPOS: { label: 'Últimos cupos', bg: '#B98527', text: '#fff' },
-  AGOTADO:       { label: 'Agotado',       bg: '#DC2626', text: '#fff' },
+  DISPONIBLE: { label: 'Disponible', bg: '#10B981', text: '#fff' },
+  AGOTADO:    { label: 'Agotado',    bg: '#DC2626', text: '#fff' },
 };
 function PublicSlotBadge({ status }) {
-  const cfg = SLOT_SOLID[status] ?? SLOT_SOLID.DISPONIBLE;
+  const key = status === 'AGOTADO' ? 'AGOTADO' : 'DISPONIBLE';
+  const cfg = SLOT_SOLID[key];
   return (
     <span className="inline-block px-2 py-0.5 rounded text-xs font-semibold shadow-sm" style={{ backgroundColor: cfg.bg, color: cfg.text }}>
       {cfg.label}
@@ -783,7 +784,7 @@ function WorkshopCard({ w, brand, onReservar, bookedCount, direcciones }) {
           <div className="absolute bottom-3 left-3">
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold text-white shadow-sm" style={{ backgroundColor: 'rgba(5,150,105,0.85)', backdropFilter: 'blur(4px)' }}>
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              {bookedCount === 1 ? 'Ya reservaste' : `${bookedCount} cupos`}
+              Ya reservaste
             </span>
           </div>
         )}
