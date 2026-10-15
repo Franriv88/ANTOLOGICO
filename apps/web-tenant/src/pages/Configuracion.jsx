@@ -4,7 +4,7 @@ import Swal from 'sweetalert2';
 import Layout from '../components/Layout';
 import { useAuth } from '../context/AuthContext';
 import { useEspacio } from '../context/EspacioContext';
-import { espacios as espacioApi, rubros as rubrosApi } from '../services/api';
+import { espacios as espacioApi, rubros as rubrosApi, reservas as reservasApi } from '../services/api';
 import { SOCIAL_NETWORKS, SocialIcon } from '../components/SocialIcons';
 import { IconAntologico } from '../components/LogoAntologico';
 import { usePlanes, precioConPeriodo, proximaRenovacion, formatFechaLarga } from '../hooks/usePlanes';
@@ -287,6 +287,78 @@ function CancelSubscriptionModal({ nombre, loading, error, onConfirm, onClose })
             {loading ? 'Procesando…' : 'Confirmar cancelación'}
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Modal: eliminar espacio (general, con aviso de reservas activas) ─────────
+
+function EliminarEspacioModal({ espacio, reservasActivas, phase, loading, error, onContinuar, onConfirm, onClose }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => !loading && onClose()}>
+      <div className="absolute inset-0 bg-ink/30 backdrop-blur-[2px]" />
+      <div className="relative bg-surface-0 border border-border rounded-xl shadow-2xl p-6 max-w-md w-full" onClick={e => e.stopPropagation()}>
+
+        {phase === 'warn' ? (
+          <>
+            {/* Ícono de advertencia */}
+            <div className="w-11 h-11 rounded-full bg-amber-100 flex items-center justify-center mb-4">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B45309" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </div>
+            <h3 className="font-display text-lg text-ink mb-2">
+              Este espacio tiene reservas activas
+            </h3>
+            <p className="text-sm text-ink-muted mb-1.5">
+              <strong className="text-ink">{reservasActivas} {reservasActivas === 1 ? 'reserva activa' : 'reservas activas'}</strong> se perderán al eliminar el espacio <em>{espacio?.nombre}</em>.
+            </p>
+            <p className="text-sm text-ink-muted mb-5">
+              Los usuarios con reservas confirmadas no recibirán aviso automático. Considerá cancelarlas y notificarlos antes de continuar.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button onClick={onClose} disabled={loading}
+                className="px-4 py-2 text-sm font-medium text-ink hover:bg-surface-200 rounded-md border border-border disabled:opacity-50">
+                Volver
+              </button>
+              <button onClick={onContinuar} disabled={loading}
+                className="px-4 py-2 text-sm font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-md disabled:opacity-50">
+                Entiendo, continuar
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Ícono de eliminar */}
+            <div className="w-11 h-11 rounded-full bg-danger/10 flex items-center justify-center mb-4">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                <path d="M10 11v6"/><path d="M14 11v6"/>
+                <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+              </svg>
+            </div>
+            <h3 className="font-display text-lg text-ink mb-2">
+              ¿Eliminar <em>{espacio?.nombre}</em>?
+            </h3>
+            <p className="text-sm text-ink-muted mb-5">
+              Se eliminarán permanentemente todos los talleres, reservas y la configuración de este espacio.
+              <strong className="text-ink block mt-1.5">Esta acción no se puede deshacer.</strong>
+            </p>
+            {error && <p className="mb-4 text-xs text-danger bg-danger/5 border border-danger/20 rounded-lg px-3 py-2">{error}</p>}
+            <div className="flex justify-end gap-3">
+              <button onClick={onClose} disabled={loading}
+                className="px-4 py-2 text-sm font-medium text-ink hover:bg-surface-200 rounded-md border border-border disabled:opacity-50">
+                Cancelar
+              </button>
+              <button onClick={onConfirm} disabled={loading}
+                className="px-4 py-2 text-sm font-semibold text-white bg-danger hover:bg-danger/90 rounded-md disabled:opacity-50">
+                {loading ? 'Eliminando…' : 'Sí, eliminar espacio'}
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -621,6 +693,31 @@ function TabEspacio({ espacio, refresh }) {
   const [saved, setSaved]                  = useState(false);
   const [error, setError]                  = useState('');
 
+  // ── Eliminar espacio ─────────────────────────────────────────────────────────
+  const [delPhase,    setDelPhase]    = useState(null); // null | 'warn' | 'confirm'
+  const [delReservas, setDelReservas] = useState(0);
+  const [delLoading,  setDelLoading]  = useState(false);
+  const [delError,    setDelError]    = useState('');
+
+  async function handleOpenDelete() {
+    setDelError(''); setDelLoading(true);
+    try {
+      const todas = await reservasApi.listByEspacio(espacio.id);
+      const activas = todas.filter(r => r.estado !== 'CANCELADA').length;
+      setDelReservas(activas);
+      setDelPhase(activas > 0 ? 'warn' : 'confirm');
+    } catch { setDelPhase('confirm'); }
+    finally { setDelLoading(false); }
+  }
+
+  async function handleConfirmDelete() {
+    setDelLoading(true); setDelError('');
+    try {
+      await espacioApi.eliminar(espacio.id);
+      await refresh();
+    } catch (e) { setDelError(e.message || 'Ocurrió un error.'); setDelLoading(false); }
+  }
+
   // ── Direcciones ──────────────────────────────────────────────────────────────
   const [direcciones, setDirecciones] = useState(espacio.direcciones ?? []);
   const [showAddDir,  setShowAddDir]  = useState(false);
@@ -869,6 +966,37 @@ function TabEspacio({ espacio, refresh }) {
           )}
         </div>
       </div>
+
+      {/* ── Zona de peligro ── */}
+      <div className="border border-danger/20 rounded-xl p-5 bg-danger/[0.03]">
+        <h3 className="text-sm font-semibold text-danger mb-1">Zona de peligro</h3>
+        <p className="text-xs text-ink-muted mb-4">
+          Al eliminar este espacio se borrarán permanentemente todos sus talleres, reservas y configuración.
+          Esta acción no se puede deshacer.
+        </p>
+        <button
+          type="button"
+          onClick={handleOpenDelete}
+          disabled={delLoading}
+          className="px-4 py-2 text-sm font-semibold text-danger border border-danger/30 rounded-lg hover:bg-danger hover:text-white transition-colors disabled:opacity-40"
+        >
+          {delLoading ? 'Verificando…' : 'Eliminar espacio'}
+        </button>
+      </div>
+
+      {/* Modal eliminación */}
+      {delPhase && (
+        <EliminarEspacioModal
+          espacio={espacio}
+          reservasActivas={delReservas}
+          phase={delPhase}
+          loading={delLoading}
+          error={delError}
+          onContinuar={() => setDelPhase('confirm')}
+          onConfirm={handleConfirmDelete}
+          onClose={() => { setDelPhase(null); setDelError(''); }}
+        />
+      )}
 
     </div>
   );

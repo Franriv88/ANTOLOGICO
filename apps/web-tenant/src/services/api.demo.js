@@ -168,7 +168,17 @@ export const espacios = {
   },
   solicitarCancelacion: async (id)                => espacios.update(id, { cancelacionPendiente: true }),
   reactivarSuscripcion: async (id)                => espacios.update(id, { cancelacionPendiente: false }),
-  eliminar:             async (id)                => espacios.update(id, { estado: 'BAJA' }),
+  eliminar: async (id) => {
+    const batch = writeBatch(firestore);
+    const wsSnap = await getDocs(query(collection(firestore, C_WORKSHOPS), where('espacioId', '==', id)));
+    for (const wsDoc of wsSnap.docs) {
+      const resSnap = await getDocs(query(collection(firestore, C_RESERVAS), where('workshopId', '==', wsDoc.id)));
+      resSnap.docs.forEach(r => batch.delete(r.ref));
+      batch.delete(wsDoc.ref);
+    }
+    batch.delete(doc(firestore, C_ESPACIOS, id));
+    await batch.commit();
+  },
 
   blockUser: async (espacioId, email) => {
     const ref  = doc(firestore, C_ESPACIOS, espacioId);
