@@ -479,9 +479,10 @@ function normalize(s) { return (s ?? '').toLowerCase().trim().replace(/\s+/g, ' 
 
 // ── Redes Sociales ────────────────────────────────────────────────────────────
 
-function RedesSocialesSection({ espacio, links, setLinks, style, setStyle, minimalColor, setMinimalColor, visible, setVisible }) {
-  // Paleta de la identidad del espacio
+function RedesSocialesSection({ espacio, livePalette, links, setLinks, style, setStyle, minimalColor, setMinimalColor, visible, setVisible }) {
+  // Preferir la paleta live (estado del formulario) sobre la guardada en DB
   const palette = (() => {
+    if (livePalette && livePalette.length > 0) return livePalette.filter(c => isValidColor(c));
     const bc = espacio.brandColors;
     if (!bc) return [];
     const arr = Array.isArray(bc) ? bc : (bc.palette ?? []);
@@ -1266,6 +1267,7 @@ function TabIdentidad({ espacio, refresh }) {
     <div className="mt-2">
       <RedesSocialesSection
         espacio={espacio}
+        livePalette={colors}
         links={redesLinks}        setLinks={setRedesLinks}
         style={redesStyle}        setStyle={setRedesStyle}
         minimalColor={redesMinimalColor} setMinimalColor={setRedesMinimalColor}
