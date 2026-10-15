@@ -1,8 +1,6 @@
 import {
   GoogleAuthProvider,
   signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updateProfile,
@@ -17,13 +15,6 @@ import { auth, firestore } from '../lib/firebase.js';
 const C_USUARIOS = 'demo_usuarios';
 const googleProvider = new GoogleAuthProvider();
 
-function isMobileOrPWA() {
-  return (
-    /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent) ||
-    window.matchMedia('(display-mode: standalone)').matches
-  );
-}
-
 async function saveProfile(uid, data) {
   await setDoc(doc(firestore, C_USUARIOS, uid), data, { merge: true });
 }
@@ -33,21 +24,16 @@ async function fetchProfile(uid) {
   return snap.exists() ? snap.data() : {};
 }
 
+// signInWithRedirect está roto en iOS Safari 14+ (ITP bloquea cookies de terceros).
+// signInWithPopup funciona en todos los navegadores cuando viene de un gesto del usuario.
 export async function loginGoogle() {
-  if (isMobileOrPWA()) {
-    await signInWithRedirect(auth, googleProvider);
-    return null; // la página se redirige; el resultado llega via checkRedirectResult
-  }
   const { user } = await signInWithPopup(auth, googleProvider);
   return ensureProfile(user);
 }
 
-// Llamar en el mount de cualquier página que use Google login.
-// Devuelve { user, profile } si había un redirect pendiente, null si no.
+// Mantenemos la función como no-op por compatibilidad con los useEffect existentes
 export async function checkRedirectResult() {
-  const result = await getRedirectResult(auth);
-  if (!result) return null;
-  return ensureProfile(result.user);
+  return null;
 }
 
 async function ensureProfile(user) {
@@ -139,6 +125,8 @@ export function authErrorMsg(code) {
     code === 'auth/weak-password'        ? 'La contraseña debe tener al menos 6 caracteres' :
     code === 'auth/invalid-email'        ? 'Email inválido' :
     code === 'auth/popup-closed-by-user' ? 'Cerraste la ventana de Google' :
+    code === 'auth/popup-blocked'        ? 'El navegador bloqueó la ventana. Permitir popups e intentar de nuevo.' :
+    code === 'auth/cancelled-popup-request' ? 'Cerraste la ventana de Google' :
     'Error al autenticar. Intentá de nuevo.'
   );
 }
