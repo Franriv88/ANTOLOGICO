@@ -312,8 +312,7 @@ export default function Reservas() {
       {filtered.length === 0 ? (
         <EmptyState hasReservas={reservas.length > 0} />
       ) : (
-        <div className="bg-surface-100 rounded-xl border border-border overflow-hidden">
-          <div className="overflow-x-auto">
+        <div className="bg-surface-100 rounded-xl border border-border overflow-x-auto">
           <table className="w-full text-sm min-w-[780px]">
             <thead>
               <tr className="border-b border-border bg-surface-200/50">
@@ -415,7 +414,6 @@ export default function Reservas() {
               })}
             </tbody>
           </table>
-          </div>
         </div>
       )}
 
