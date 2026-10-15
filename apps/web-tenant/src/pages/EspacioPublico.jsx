@@ -457,9 +457,18 @@ function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, onConfi
 
           {mpStep === 'card' ? (
             <div>
-              <div className="mb-4 p-3 bg-[#F2EDE3] border border-[#D2C4A8] rounded-xl text-xs text-[#6B5F4C]">
-                <span className="font-medium text-[#2B241A]">{nombres.join(', ')}</span> · {email}
-                {cantidad > 1 && <span className="block mt-1 font-mono">{cantidad} cupos · {formatPrecio(workshop.precio * cantidad)}</span>}
+              <div className="mb-4 p-3 bg-[#F2EDE3] border border-[#D2C4A8] rounded-xl flex items-start justify-between gap-3">
+                <div className="text-xs text-[#6B5F4C] min-w-0">
+                  <p className="font-medium text-[#2B241A] truncate">{nombres.join(', ')}</p>
+                  <p className="truncate">{email}</p>
+                  {cantidad > 1 && <p className="mt-0.5">{cantidad} cupos</p>}
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="font-mono font-bold text-lg text-[#1A1611] leading-tight">{formatPrecio(workshop.precio * cantidad)}</p>
+                  {cantidad > 1 && (
+                    <p className="text-[10px] text-[#9B9083] font-mono mt-0.5">{cantidad} × {formatPrecio(workshop.precio)}</p>
+                  )}
+                </div>
               </div>
               {loading === 'MERCADO_PAGO' ? (
                 <div className="py-10 text-center text-sm text-[#6B5F4C]">Procesando pago…</div>
