@@ -374,13 +374,12 @@ export default function Reservas() {
                     <td className="px-4 py-3">
                       <PagoBadge metodoPago={r.metodoPago} estadoPago={r.estadoPago} />
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-1">
+                    <td className="pl-1 pr-4 py-3">
+                      <div className="flex items-center justify-end gap-2">
                         {r.estado === 'CONFIRMADA' && r.metodoPago === 'EFECTIVO' && r.estadoPago === 'PENDIENTE' && (
                           <button
                             onClick={() => handleMarkPaid(r.id)}
                             disabled={markingPaid === r.id}
-                            title="Marcar como pagado"
                             className="flex items-center gap-1 text-xs text-primary hover:opacity-70 transition-opacity disabled:opacity-40 px-2 py-1 rounded-lg hover:bg-primary/5 whitespace-nowrap"
                           >
                             {markingPaid === r.id ? '…' : (
@@ -394,10 +393,10 @@ export default function Reservas() {
                         {r.estado === 'CONFIRMADA' && (
                           <button
                             onClick={() => setCancelTarget({ id: r.id, nombre: r.nombre, workshopId: r.workshopId })}
-                            title="Cancelar reserva"
-                            className="p-1.5 rounded-lg text-ink-muted hover:text-danger hover:bg-danger/5 transition-colors"
+                            className="flex items-center gap-1 text-xs text-ink-muted hover:text-danger transition-colors px-2 py-1 rounded-lg hover:bg-danger/5 whitespace-nowrap"
                           >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+                            Cancelar
                           </button>
                         )}
                         {r.email && (
