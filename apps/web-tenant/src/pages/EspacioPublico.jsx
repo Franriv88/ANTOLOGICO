@@ -85,8 +85,10 @@ function AuthModal({ brand, onClose, onSuccess }) {
 
   async function handleGoogle() {
     setLoading('google'); setError('');
-    try   { onSuccess(await loginGoogle()); }
-    catch (e) { setError(authErrorMsg(e.code)); setLoading(false); }
+    try {
+      const result = await loginGoogle();
+      if (result) onSuccess(result); // null = mobile redirect, page will reload
+    } catch (e) { setError(authErrorMsg(e.code)); setLoading(false); }
   }
 
   async function handleSubmit(e) {
@@ -855,6 +857,7 @@ export default function EspacioPublico() {
   const [pendingWorkshop, setPendingWorkshop] = useState(null);
   const [userReservas,   setUserReservas]   = useState([]);
   const [menuOpen,       setMenuOpen]       = useState(false);
+  const [showMisDatos,   setShowMisDatos]   = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -1030,26 +1033,27 @@ export default function EspacioPublico() {
               </button>
             </div>
             <nav className="flex flex-col p-3">
-              <Link
-                to="/mis-reservas"
-                onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm text-[#2B241A] hover:bg-[#FAF7F2] transition-colors"
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
+                  document.getElementById('mis-reservas-section')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm text-[#2B241A] hover:bg-[#FAF7F2] transition-colors w-full text-left"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E85D4A" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
                 </svg>
                 Mis reservas
-              </Link>
-              <Link
-                to="/mis-datos"
-                onClick={() => setMenuOpen(false)}
-                className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm text-[#2B241A] hover:bg-[#FAF7F2] transition-colors"
+              </button>
+              <button
+                onClick={() => { setMenuOpen(false); setShowMisDatos(true); }}
+                className="flex items-center gap-3 px-3 py-3 rounded-lg text-sm text-[#2B241A] hover:bg-[#FAF7F2] transition-colors w-full text-left"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E85D4A" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
                 </svg>
                 Mis datos
-              </Link>
+              </button>
             </nav>
           </div>
         </div>
@@ -1141,7 +1145,7 @@ export default function EspacioPublico() {
 
       {/* Mis reservas */}
       {currentUser && userReservas.length > 0 && (
-        <div className="max-w-2xl mx-auto px-4 pb-10">
+        <div id="mis-reservas-section" className="max-w-2xl mx-auto px-4 pb-10">
           <h2 className="font-display text-xl text-[#1A1611] mb-4">Mis reservas</h2>
           <div className="flex flex-col gap-3">
             {userReservas.map(r => {
@@ -1206,6 +1210,77 @@ export default function EspacioPublico() {
           </div>
         );
       })()}
+
+      {/* Modal Mis datos */}
+      {showMisDatos && currentUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[#EDE8DF]">
+              <h2 className="font-display text-lg text-[#1A1611]">Mis datos</h2>
+              <button
+                onClick={() => setShowMisDatos(false)}
+                className="text-[#9B9083] hover:text-[#2B241A] transition-colors"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+
+            {/* Contenido */}
+            <div className="px-5 py-5 flex flex-col gap-4">
+              {/* Avatar / inicial */}
+              <div className="flex items-center gap-3">
+                {currentUser.profile?.photoURL ? (
+                  <img src={currentUser.profile.photoURL} alt="" className="w-12 h-12 rounded-full object-cover" />
+                ) : (
+                  <div
+                    className="w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold text-lg"
+                    style={{ backgroundColor: brand.primary }}
+                  >
+                    {(currentUser.profile?.nombre || currentUser.user?.email || '?')[0].toUpperCase()}
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <p className="font-medium text-[#1A1611] text-sm truncate">
+                    {currentUser.profile?.nombre || '—'}
+                  </p>
+                  <p className="text-xs text-[#9B9083] truncate">{currentUser.user?.email}</p>
+                </div>
+              </div>
+
+              {/* Campos */}
+              <div className="flex flex-col gap-2 text-sm">
+                <div className="flex flex-col gap-0.5 p-3 bg-[#FAF8F4] rounded-xl">
+                  <span className="text-[10px] font-medium text-[#9B9083] uppercase tracking-wide">Nombre</span>
+                  <span className="text-[#2B241A]">{currentUser.profile?.nombre || '—'}</span>
+                </div>
+                <div className="flex flex-col gap-0.5 p-3 bg-[#FAF8F4] rounded-xl">
+                  <span className="text-[10px] font-medium text-[#9B9083] uppercase tracking-wide">Email</span>
+                  <span className="text-[#2B241A] break-all">{currentUser.user?.email}</span>
+                </div>
+                {currentUser.profile?.telefono && (
+                  <div className="flex flex-col gap-0.5 p-3 bg-[#FAF8F4] rounded-xl">
+                    <span className="text-[10px] font-medium text-[#9B9083] uppercase tracking-wide">Teléfono</span>
+                    <span className="text-[#2B241A]">{currentUser.profile.telefono}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="px-5 pb-5">
+              <button
+                onClick={() => { logout(); setShowMisDatos(false); }}
+                className="w-full py-2.5 border border-[#E0D8CC] text-sm font-medium text-[#6B5F4C] rounded-xl hover:bg-[#FAF8F4] transition-colors"
+              >
+                Cerrar sesión
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
