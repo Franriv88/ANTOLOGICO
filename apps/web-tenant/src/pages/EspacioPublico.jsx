@@ -294,13 +294,16 @@ function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, onConfi
     fetch(`${MP_WORKER_URL}/tenant-mp-config?tenantId=${tenantId}`)
       .then(r => r.json())
       .then(d => {
-        if (d.connected && d.publicKey) {
-          initMercadoPago(d.publicKey, { locale: 'es-AR' });
-          setMpKey(d.publicKey);
-        }
+        const key = (d.connected && d.publicKey) ? d.publicKey : MP_PLATFORM_KEY;
+        initMercadoPago(key, { locale: 'es-AR' });
+        setMpKey(key);
         setTenantMpReady(true);
       })
-      .catch(() => setTenantMpReady(true));
+      .catch(() => {
+        initMercadoPago(MP_PLATFORM_KEY, { locale: 'es-AR' });
+        setMpKey(MP_PLATFORM_KEY);
+        setTenantMpReady(true);
+      });
   }, [tenantId]);
 
   const INPUT = 'w-full px-3 py-2 bg-white border border-[#D2C4A8] rounded-lg text-sm text-[#2B241A] focus:outline-none focus:ring-2 focus:ring-offset-1';
