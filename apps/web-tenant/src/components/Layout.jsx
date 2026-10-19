@@ -2,6 +2,7 @@ import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useEspacio } from '../context/EspacioContext';
 import { IconAntologico } from './LogoAntologico';
+import Instructivo from './Instructivo';
 
 function TrialBanner({ espacio }) {
   if (!espacio?.trialStartedAt) return null;
@@ -323,6 +324,7 @@ export default function Layout({ children }) {
         <TrialBanner espacio={activeEspacio} />
         <main id="dashboard-main" className="flex-1 overflow-y-auto scrollbar-brand p-8">{children}</main>
       </div>
+      <Instructivo />
     </div>
   );
 }

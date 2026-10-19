@@ -1476,12 +1476,13 @@ function Toggle({ checked, onChange, disabled }) {
 function TabCobros({ espacio, refresh }) {
   const parseCobros = () => {
     const c = espacio.cobros;
-    if (!c) return { efectivo: true, mercadoPago: false, linksDePago: false, links: [] };
+    if (!c) return { efectivo: true, mercadoPago: false, linksDePago: false, links: [], horasCancelacion: 24 };
     return {
-      efectivo:    c.efectivo    ?? true,
-      mercadoPago: c.mercadoPago ?? false,
-      linksDePago: c.linksDePago ?? false,
-      links:       c.links       ?? [],
+      efectivo:         c.efectivo         ?? true,
+      mercadoPago:      c.mercadoPago      ?? false,
+      linksDePago:      c.linksDePago      ?? false,
+      links:            c.links            ?? [],
+      horasCancelacion: c.horasCancelacion ?? 24,
     };
   };
 
@@ -1489,8 +1490,9 @@ function TabCobros({ espacio, refresh }) {
   const [efectivo,    setEfectivo]    = useState(init.efectivo);
   const [mercadoPago, setMercadoPago] = useState(init.mercadoPago);
   const [linksDePago, setLinksDePago] = useState(init.linksDePago);
-  const [links,       setLinks]       = useState(init.links);
-  const [saving,      setSaving]      = useState(false);
+  const [links,              setLinks]              = useState(init.links);
+  const [horasCancelacion,   setHorasCancelacion]   = useState(init.horasCancelacion);
+  const [saving,             setSaving]             = useState(false);
   const [saved,       setSaved]       = useState(false);
   const [saveError,   setSaveError]   = useState('');
 
@@ -1532,7 +1534,7 @@ function TabCobros({ espacio, refresh }) {
     e?.preventDefault();
     setSaving(true); setSaveError(''); setSaved(false);
     try {
-      await espacioApi.updateCobros(espacio.id, { efectivo, mercadoPago, linksDePago, links });
+      await espacioApi.updateCobros(espacio.id, { efectivo, mercadoPago, linksDePago, links, horasCancelacion });
       await refresh();
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
@@ -1554,14 +1556,14 @@ function TabCobros({ espacio, refresh }) {
     const updated = [...links, entry];
     setLinks(updated);
     setNewLinkNombre(''); setNewLinkUrl(''); setShowAddLink(false);
-    await espacioApi.updateCobros(espacio.id, { efectivo, mercadoPago, linksDePago, links: updated });
+    await espacioApi.updateCobros(espacio.id, { efectivo, mercadoPago, linksDePago, links: updated, horasCancelacion });
     await refresh();
   }
 
   async function handleRemoveLink(id) {
     const updated = links.filter(l => l.id !== id);
     setLinks(updated);
-    await espacioApi.updateCobros(espacio.id, { efectivo, mercadoPago, linksDePago, links: updated });
+    await espacioApi.updateCobros(espacio.id, { efectivo, mercadoPago, linksDePago, links: updated, horasCancelacion });
     await refresh();
   }
 
@@ -1758,6 +1760,33 @@ function TabCobros({ espacio, refresh }) {
               </button>
             )}
           </div>
+        )}
+      </div>
+
+      {/* ── Política de cancelación ── */}
+      <div className="border border-border rounded-xl p-5">
+        <div className="flex items-center gap-2 mb-1">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" className="text-ink-muted shrink-0">
+            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <p className="text-sm font-semibold text-ink">Política de cancelación</p>
+        </div>
+        <p className="text-xs text-ink-muted mb-4">
+          Cuántas horas antes del inicio del taller un usuario puede cancelar su reserva. Poné 0 para no permitir cancelaciones.
+        </p>
+        <div className="flex items-center gap-3">
+          <input
+            type="number"
+            min="0"
+            max="720"
+            value={horasCancelacion}
+            onChange={e => setHorasCancelacion(Math.max(0, parseInt(e.target.value) || 0))}
+            className={INPUT_CLS + ' w-24 text-center font-mono'}
+          />
+          <span className="text-sm text-ink-muted">horas antes del inicio</span>
+        </div>
+        {horasCancelacion === 0 && (
+          <p className="text-xs text-amber-600 mt-2 font-medium">Los usuarios no podrán cancelar sus reservas.</p>
         )}
       </div>
 

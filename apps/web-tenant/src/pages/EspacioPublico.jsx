@@ -860,6 +860,7 @@ export default function EspacioPublico() {
   const [menuOpen,       setMenuOpen]       = useState(false);
   const [showMisDatos,   setShowMisDatos]   = useState(false);
   const [view,           setView]           = useState('talleres'); // 'talleres' | 'mis-reservas'
+  const [cancelConfirm,  setCancelConfirm]  = useState(null); // reservaId en espera de confirmación
 
   useEffect(() => {
     async function load() {
@@ -914,6 +915,7 @@ export default function EspacioPublico() {
   }
 
   async function handleCancelReserva(reservaId) {
+    setCancelConfirm(null);
     await reservasApi.cancel(reservaId);
     setUserReservas(prev => prev.map(r => r.id === reservaId ? { ...r, estado: 'CANCELADA' } : r));
     setWorkshops(prev => {
@@ -1197,13 +1199,44 @@ export default function EspacioPublico() {
                         <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${isCancelada ? 'bg-[#F2EDE3] text-[#9B9083]' : 'bg-emerald-100 text-emerald-700'}`}>
                           {isCancelada ? 'Cancelada' : 'Confirmada'}
                         </span>
-                        {!isCancelada && (
-                          <button
-                            onClick={() => handleCancelReserva(r.id)}
-                            className="text-xs text-[#9B9083] hover:text-red-500 transition-colors border border-[#D2C4A8] rounded-lg px-2.5 py-1 hover:border-red-300">
-                            Cancelar
-                          </button>
-                        )}
+                        {!isCancelada && (() => {
+                          const horasCancelacion = espacio?.cobros?.horasCancelacion ?? 24;
+                          const isPast    = ws?.fecha ? new Date(ws.fecha) < new Date() : false;
+                          const msUntil   = ws?.fecha ? new Date(ws.fecha) - Date.now() : 0;
+                          const canCancel = !isPast && horasCancelacion > 0 && msUntil > horasCancelacion * 3_600_000;
+                          const pastWindow = !isPast && horasCancelacion > 0 && msUntil <= horasCancelacion * 3_600_000;
+
+                          if (isPast || horasCancelacion === 0) return null;
+
+                          if (cancelConfirm === r.id) {
+                            return (
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-xs text-[#6B5F4C]">¿Seguro?</span>
+                                <button onClick={() => handleCancelReserva(r.id)} className="text-xs font-semibold text-red-500 hover:text-red-700 px-1.5 py-0.5 rounded transition-colors">Sí</button>
+                                <button onClick={() => setCancelConfirm(null)} className="text-xs text-[#9B9083] hover:text-[#2B241A] px-1.5 py-0.5 rounded transition-colors">No</button>
+                              </div>
+                            );
+                          }
+
+                          if (pastWindow) {
+                            return (
+                              <span className="text-xs text-[#9B9083] border border-[#D2C4A8] rounded-lg px-2.5 py-1" title={`El plazo de cancelación venció (${horasCancelacion}h antes del evento)`}>
+                                Plazo vencido
+                              </span>
+                            );
+                          }
+
+                          if (canCancel) {
+                            return (
+                              <button
+                                onClick={() => setCancelConfirm(r.id)}
+                                className="text-xs text-[#9B9083] hover:text-red-500 transition-colors border border-[#D2C4A8] rounded-lg px-2.5 py-1 hover:border-red-300">
+                                Cancelar
+                              </button>
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
                     </div>
                   </div>
