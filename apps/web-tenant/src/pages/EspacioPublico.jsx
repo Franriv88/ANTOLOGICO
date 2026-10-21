@@ -935,12 +935,8 @@ export default function EspacioPublico() {
   }
 
   function handleReservar(w) {
-    if (currentUser === null) {
-      setPendingWorkshop(w);
-      setShowAuth(true);
-    } else if (currentUser) {
-      setBooking(w);
-    }
+    if (currentUser === undefined) return; // still loading auth state
+    setBooking(w);
   }
 
   function handleAuthSuccess({ user, profile }) {
