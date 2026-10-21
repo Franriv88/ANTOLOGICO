@@ -5,7 +5,7 @@ import { getSlotStatus } from '../lib/slotStatus';
 import { loginGoogle, loginEmail, register, logout, subscribeAuth, authErrorMsg, sendPasswordReset, checkRedirectResult } from '../services/userAuth';
 import mpLogo from '../assets/Mercado_Pago.png';
 import { SocialIconsRow } from '../components/SocialIcons';
-import { initMercadoPago, Payment } from '@mercadopago/sdk-react';
+import { initMercadoPago, CardPayment } from '@mercadopago/sdk-react';
 
 const MP_PLATFORM_KEY = 'APP_USR-1aadb258-7d8b-4126-8e7d-2dbad6270be7';
 
@@ -285,8 +285,6 @@ function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, onConfi
   const [loading,  setLoading]  = useState(false);
   const [error,       setError]       = useState('');
   const [mpStep,      setMpStep]      = useState(null); // null | 'card'
-  const [preferenceId, setPreferenceId] = useState(null);
-  const [loadingPref,  setLoadingPref]  = useState(false);
   const [mpKey,           setMpKey]           = useState(null);
   const [tenantMpReady,   setTenantMpReady]   = useState(false); // false while fetching
 
@@ -358,36 +356,8 @@ function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, onConfi
   function handleGoToMP() {
     if (!validateForm()) return;
     setError('');
-    setPreferenceId(null);
     setMpStep('card');
   }
-
-  useEffect(() => {
-    if (mpStep !== 'card') return;
-    setLoadingPref(true);
-    fetch(`${MP_WORKER_URL}/crear-preferencia`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        amount:     workshop.precio * cantidad,
-        description: cantidad > 1 ? `${workshop.nombre} (${cantidad} cupos)` : workshop.nombre,
-        payerEmail: email.trim(),
-        tenantId,
-      }),
-    })
-      .then(r => r.json())
-      .then(d => {
-        if (d.preferenceId) {
-          setPreferenceId(d.preferenceId);
-        } else {
-          setError(d.error ?? 'No se pudo inicializar el pago. Intentá de nuevo.');
-          setMpStep(null);
-        }
-      })
-      .catch(() => { setError('No se pudo inicializar el pago. Intentá de nuevo.'); setMpStep(null); })
-      .finally(() => setLoadingPref(false));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mpStep]);
 
   async function handleMPPayment({ formData: pd }) {
     setLoading('MERCADO_PAGO');
@@ -478,20 +448,15 @@ function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, onConfi
               </div>
               {loading === 'MERCADO_PAGO' ? (
                 <div className="py-10 text-center text-sm text-[#6B5F4C]">Procesando pago…</div>
-              ) : loadingPref || !preferenceId || !mpKey ? (
-                <div className="py-10 text-center text-sm text-[#6B5F4C]">Cargando métodos de pago…</div>
+              ) : !mpKey ? (
+                <div className="py-10 text-center text-sm text-[#6B5F4C]">Cargando…</div>
               ) : (
-                <Payment
-                  initialization={{ amount: workshop.precio * cantidad, preferenceId }}
+                <CardPayment
+                  initialization={{ amount: workshop.precio * cantidad }}
                   onSubmit={handleMPPayment}
                   onError={() => { setError('Error en el formulario de pago'); setMpStep(null); }}
                   customization={{
-                    paymentMethods: {
-                      creditCard: 'all',
-                      debitCard:  'all',
-                      minInstallments: 1,
-                      maxInstallments: 1,
-                    },
+                    paymentMethods: { minInstallments: 1, maxInstallments: 1 },
                   }}
                 />
               )}
