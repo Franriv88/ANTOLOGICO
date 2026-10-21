@@ -359,7 +359,7 @@ function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, onConfi
     setMpStep('card');
   }
 
-  async function handleMPPayment({ formData: pd }) {
+  async function handleMPPayment(pd) {
     setLoading('MERCADO_PAGO');
     setError('');
     try {
