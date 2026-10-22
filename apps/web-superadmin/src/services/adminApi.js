@@ -202,6 +202,22 @@ export const promoCodes = {
   },
 };
 
+// ─── Configuración de plataforma ─────────────────────────────────────────────
+const C_CONFIG = 'demo_config';
+export const configApi = {
+  getTrial: async () => {
+    const snap = await getDoc(doc(firestore, C_CONFIG, 'trial'));
+    return snap.exists() ? snap.data() : { diasPrueba: 14 };
+  },
+  saveTrial: async (diasPrueba) => {
+    await setDoc(doc(firestore, C_CONFIG, 'trial'), {
+      diasPrueba: Number(diasPrueba),
+      updatedAt: new Date().toISOString(),
+    });
+    return { diasPrueba: Number(diasPrueba) };
+  },
+};
+
 // ─── User management ─────────────────────────────────────────────────────────
 export const userManagement = {
   sendPasswordReset: (email) => sendPasswordResetEmail(auth, email),

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { planes as planesApi, promoApi } from '../services/adminApi';
+import { planes as planesApi, promoApi, configApi } from '../services/adminApi';
 import ConfirmModal from '../components/ConfirmModal';
 
 const EMPTY = { nombre: '', precioMensual: '', descuentoTrimestral: '10', descuentoAnual: '20', maxWorkshops: '', features: '', highlight: false };
@@ -183,8 +183,11 @@ export default function Plans() {
   const [promoForm,   setPromoForm]   = useState(EMPTY_PROMO);
   const [promoSaving, setPromoSaving] = useState(null);
 
+  const [trialDays,       setTrialDays]       = useState(14);
+  const [trialDaysInput,  setTrialDaysInput]  = useState('14');
+  const [trialSaving,     setTrialSaving]     = useState(false);
+
   useEffect(() => {
-    // Carga independiente: un fallo en promo no bloquea la lista de planes
     planesApi.list()
       .then(setList)
       .catch(() => setList([]))
@@ -201,6 +204,14 @@ export default function Plans() {
           inicio:   p.inicio   ? p.inicio.slice(0, 16) : '',
           fin:      p.fin      ? p.fin.slice(0, 16)    : '',
         });
+      })
+      .catch(() => {});
+
+    configApi.getTrial()
+      .then(c => {
+        const d = c.diasPrueba ?? 14;
+        setTrialDays(d);
+        setTrialDaysInput(String(d));
       })
       .catch(() => {});
   }, []);
@@ -278,7 +289,7 @@ export default function Plans() {
         onClose={() => setDeleteTarget(null)}
       />
     )}
-    <div className="max-w-5xl">
+    <div className="w-full">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="font-display text-2xl text-ink">Planes</h1>
@@ -334,6 +345,49 @@ export default function Plans() {
           />
         </div>
       )}
+
+      {/* ── Período de prueba ── */}
+      <div className="mt-10 pt-8 border-t border-border">
+        <div className="mb-5">
+          <h2 className="font-display text-xl text-ink">Período de prueba</h2>
+          <p className="text-sm text-ink-muted mt-0.5">
+            Días de prueba gratuita que recibe cada nuevo tenant al registrarse.
+          </p>
+        </div>
+        <div className="bg-surface-100 border border-border rounded-xl p-6 flex items-end gap-4">
+          <div className="flex-1 max-w-[200px]">
+            <label className={LABEL_CLS}>Días de prueba</label>
+            <input
+              type="number"
+              value={trialDaysInput}
+              onChange={e => setTrialDaysInput(e.target.value)}
+              min="1"
+              max="90"
+              className={INPUT_CLS}
+            />
+          </div>
+          <button
+            onClick={async () => {
+              const val = Number(trialDaysInput);
+              if (!val || val < 1) return;
+              setTrialSaving(true);
+              try {
+                await configApi.saveTrial(val);
+                setTrialDays(val);
+              } finally {
+                setTrialSaving(false);
+              }
+            }}
+            disabled={trialSaving || Number(trialDaysInput) === trialDays}
+            className="px-5 py-2 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary-strong transition-colors disabled:opacity-50"
+          >
+            {trialSaving ? 'Guardando…' : 'Guardar'}
+          </button>
+          <p className="text-xs text-ink-muted pb-1">
+            Actual: <strong className="text-ink">{trialDays} días</strong>
+          </p>
+        </div>
+      </div>
 
       {/* ── Promoción global ── */}
       <div className="mt-10 pt-8 border-t border-border">

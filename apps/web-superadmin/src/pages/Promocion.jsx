@@ -158,7 +158,7 @@ export default function Promocion() {
   );
 
   return (
-    <div className="max-w-2xl flex flex-col gap-8">
+    <div className="max-w-3xl flex flex-col gap-8">
       <div>
         <h1 className="font-display text-2xl text-ink">Descuentos y promociones</h1>
         <p className="text-sm text-ink-muted mt-0.5">Promos globales, códigos y beneficios por tenant</p>

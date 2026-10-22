@@ -1,28 +1,33 @@
-import { NavLink, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { NavLink, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useEspacio } from '../context/EspacioContext';
-import { IconAntologico } from './LogoAntologico';
+import { IconAntologico, LogoAntologico } from './LogoAntologico';
 import Instructivo from './Instructivo';
+import { usePlanes, precioConPeriodo } from '../hooks/usePlanes';
+import { useTrialDays } from '../hooks/useTrialDays';
+import { espacios as espacioApi } from '../services/api';
 
-function TrialBanner({ espacio }) {
+const MP_WORKER_URL = 'https://antologico-mp.franriv2388.workers.dev';
+
+function TrialBanner({ espacio, trialDays }) {
   if (!espacio?.trialStartedAt) return null;
-  if (espacio?.planId) return null; // plan real activo
+  if (espacio?.planId) return null;
 
+  const maxDays = trialDays || 14;
   const daysElapsed = Math.floor((Date.now() - new Date(espacio.trialStartedAt)) / 86_400_000);
-  const daysLeft    = Math.max(0, 14 - daysElapsed);
+  const daysLeft    = Math.max(0, maxDays - daysElapsed);
 
-  const isExpired = daysLeft === 0;
+  if (daysLeft === 0) return null;
   const isUrgent  = daysLeft <= 3;
 
-  const bgCls     = isExpired || isUrgent ? 'bg-danger/8 border-danger/20'  : 'bg-amber-50 border-amber-200';
-  const textCls   = isExpired || isUrgent ? 'text-danger'                    : 'text-amber-700';
-  const btnCls    = isExpired || isUrgent
+  const bgCls     = isUrgent ? 'bg-danger/8 border-danger/20'  : 'bg-amber-50 border-amber-200';
+  const textCls   = isUrgent ? 'text-danger'                    : 'text-amber-700';
+  const btnCls    = isUrgent
     ? 'bg-danger text-white hover:bg-danger/90'
     : 'bg-amber-600 text-white hover:bg-amber-700';
 
-  const message = isExpired
-    ? 'Tu período de prueba ha vencido. Activá tu plan para seguir usando Antológico.'
-    : isUrgent
+  const message = isUrgent
     ? `¡Quedan solo ${daysLeft} día${daysLeft !== 1 ? 's' : ''} de prueba gratuita! Activá tu plan.`
     : `Prueba gratuita · Te quedan ${daysLeft} días`;
 
@@ -35,6 +40,187 @@ function TrialBanner({ espacio }) {
       >
         Activar plan
       </Link>
+    </div>
+  );
+}
+
+// ── Red neuronal SVG (misma que Landing hero) ──────────────────────────────
+const NET_EDGES = [
+  [256,108,392,128],[256,108,184,190],[256,108,315,198],[184,190,315,198],
+  [315,198,392,128],[392,128,522,190],[522,190,656,158],[184,190,140,238],
+  [315,198,268,240],[392,128,400,235],[522,190,548,238],[656,158,712,244],
+  [213,413,150,345],[213,413,365,445],[365,445,322,348],[365,445,446,392],
+  [446,392,430,348],[446,392,561,428],[561,428,598,350],[561,428,692,390],
+  [692,390,740,345],
+];
+const NET_NODES = [
+  [256,108,6,true],[446,392,6,true],
+  [392,128,29,false],[184,190,29,false],[315,198,29,false],[522,190,29,false],
+  [656,158,29,false],[213,413,29,false],[365,445,29,false],[561,428,29,false],
+  [692,390,29,false],
+];
+
+function NetworkSvg() {
+  return (
+    <svg viewBox="0 0 816 497" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg"
+      style={{ position: 'absolute', inset: 0, opacity: 0.5 }}>
+      <g stroke="rgba(255,255,255,0.18)" strokeWidth="2" strokeLinecap="round" strokeDasharray="0.1 7" fill="none">
+        {NET_EDGES.map(([x1,y1,x2,y2],i) => <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} />)}
+      </g>
+      {NET_NODES.map(([cx,cy,r,isHub],i) => (
+        <circle key={i} cx={cx} cy={cy} r={r}
+          fill={isHub ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.08)'}
+          stroke="rgba(255,255,255,0.22)" strokeWidth={isHub ? 1 : 1.5} />
+      ))}
+    </svg>
+  );
+}
+
+function formatPrecioLayout(n) {
+  return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
+}
+
+const PERIODOS_OVERLAY = [
+  { id: 'mensual',    label: 'Mensual' },
+  { id: 'trimestral', label: 'Trimestral' },
+  { id: 'anual',      label: 'Anual' },
+];
+
+function TrialExpiredOverlay({ espacio, trialDays, onSelectPlan }) {
+  const planes = usePlanes();
+  const [periodo, setPeriodo] = useState('mensual');
+  const [loadingPlan, setLoadingPlan] = useState(null);
+  const [error, setError] = useState('');
+
+  async function handlePay(plan) {
+    setLoadingPlan(plan.id);
+    setError('');
+    try {
+      const precio = precioConPeriodo(plan, periodo);
+      const meses = periodo === 'trimestral' ? 3 : periodo === 'anual' ? 12 : 1;
+      const total = precio * meses;
+
+      sessionStorage.setItem('mp_pending_sub', JSON.stringify({
+        espacioId: espacio.id,
+        planId: plan.id,
+        plan,
+        periodo,
+      }));
+
+      const backUrl = window.location.origin + '/workshops?mp_sub=back';
+      const res = await fetch(`${MP_WORKER_URL}/crear-suscripcion`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reason: `Plan ${plan.nombre} — ${periodo}`,
+          amount: total,
+          frequency: meses,
+          frequencyType: 'months',
+          payerEmail: espacio.email || 'tenant@antologico.app',
+          externalReference: `sub|${espacio.id}|${plan.id}|${periodo}`,
+          backUrl,
+        }),
+      });
+      const data = await res.json();
+      if (data.error) { setError(data.error); setLoadingPlan(null); return; }
+      if (data.initPoint) {
+        window.location.href = data.initPoint;
+      } else {
+        setError('No se pudo obtener el enlace de suscripción.');
+        setLoadingPlan(null);
+      }
+    } catch {
+      setError('Error al crear la suscripción.');
+      setLoadingPlan(null);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto">
+      {/* Fondo coral + red neuronal */}
+      <div className="absolute inset-0" style={{ background: 'linear-gradient(148deg, #E85D4A 0%, #C4412F 48%, #8C2E1F 100%)' }}>
+        <NetworkSvg />
+      </div>
+
+      {/* Modal */}
+      <div className="relative z-10 w-full max-w-lg mx-4 my-8 bg-surface-0 rounded-2xl shadow-2xl border border-border overflow-hidden">
+        {/* Header */}
+        <div className="px-6 pt-6 pb-4 text-center">
+          <div className="flex justify-center mb-3">
+            <LogoAntologico theme="light" width={220} />
+          </div>
+          <h2 className="font-display text-xl text-ink mb-1">
+            Tu período de prueba de {trialDays} días ha finalizado
+          </h2>
+          <p className="text-sm text-ink-muted">
+            Para seguir usando Antológico, elegí un plan y completá el pago.
+          </p>
+        </div>
+
+        {/* Selector de período */}
+        <div className="px-6 pb-3">
+          <div className="flex gap-1 p-1 bg-surface-200 rounded-lg w-fit mx-auto">
+            {PERIODOS_OVERLAY.map(op => (
+              <button key={op.id} onClick={() => setPeriodo(op.id)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${periodo === op.id ? 'bg-white shadow-sm text-ink' : 'text-ink-muted hover:text-ink'}`}>
+                {op.label}
+                {op.id !== 'mensual' && (planes ?? [])[0] && (
+                  <span className="ml-1 text-success font-semibold">
+                    −{op.id === 'trimestral' ? ((planes ?? [])[0].descuentoTrimestral ?? 0) : ((planes ?? [])[0].descuentoAnual ?? 0)}%
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Cards de planes */}
+        <div className="px-6 pb-6 flex flex-col gap-3">
+          {(planes ?? []).map(plan => {
+            const precio = precioConPeriodo(plan, periodo);
+            const dto = periodo === 'trimestral' ? (plan.descuentoTrimestral ?? 0) : periodo === 'anual' ? (plan.descuentoAnual ?? 0) : 0;
+            const meses = periodo === 'trimestral' ? 3 : periodo === 'anual' ? 12 : 1;
+            const total = precio * meses;
+            const ahorro = dto > 0 ? (plan.precioMensual - precio) * meses : 0;
+            return (
+              <div key={plan.id} className={`flex items-center gap-4 p-4 rounded-xl border transition-colors ${plan.highlight ? 'border-primary/40 bg-primary/5' : 'border-border bg-white'}`}>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                    <p className="text-sm font-semibold text-ink">{plan.nombre}</p>
+                    {plan.highlight && <span className="text-xs px-1.5 py-0.5 bg-primary/10 text-primary rounded font-medium">Recomendado</span>}
+                    {dto > 0 && <span className="text-xs px-1.5 py-0.5 bg-success/10 text-success rounded font-medium">−{dto}%</span>}
+                  </div>
+                  <ul className="flex flex-col gap-0.5 mt-1">
+                    {(plan.features ?? []).slice(0, 3).map((f, i) => (
+                      <li key={i} className="text-xs text-ink-muted flex items-center gap-1">
+                        <span className="text-primary">✓</span> {f}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="font-mono text-sm font-semibold text-ink">{formatPrecioLayout(precio)}/mes</p>
+                  {meses > 1 && <p className="text-xs text-ink-muted">{formatPrecioLayout(total)} total</p>}
+                  {ahorro > 0 && <p className="text-xs text-success font-medium">Ahorrás {formatPrecioLayout(ahorro)}</p>}
+                </div>
+                <button
+                  onClick={() => handlePay(plan)}
+                  disabled={!!loadingPlan}
+                  className="shrink-0 px-3 py-1.5 text-xs font-semibold bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+                >
+                  {loadingPlan === plan.id ? 'Redirigiendo…' : 'Pagar'}
+                </button>
+              </div>
+            );
+          })}
+
+          {error && <p className="text-xs text-center text-danger">{error}</p>}
+
+          <p className="text-xs text-center text-ink-muted mt-1">
+            Serás redirigido a Mercado Pago para activar tu suscripción recurrente. Se renovará automáticamente según el período elegido.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
@@ -188,10 +374,52 @@ const IconLogout = () => (
 
 export default function Layout({ children }) {
   const { user, logout } = useAuth();
-  const { espacios, activeEspacio, setActive } = useEspacio();
+  const { espacios, activeEspacio, setActive, refresh } = useEspacio();
+  const trialDays = useTrialDays();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const trialRef = activeEspacio?.trialStartedAt ?? activeEspacio?.createdAt;
+  const daysElapsed = trialRef ? Math.floor((Date.now() - new Date(trialRef)) / 86_400_000) : 0;
+  const trialExpired = trialRef && daysElapsed >= trialDays && !activeEspacio?.planId;
+
+  useEffect(() => {
+    const mpSub = searchParams.get('mp_sub');
+    const preapprovalId = searchParams.get('preapproval_id');
+    if (!mpSub && !preapprovalId) return;
+
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete('mp_sub');
+    newParams.delete('preapproval_id');
+    setSearchParams(newParams, { replace: true });
+
+    const pending = (() => { try { return JSON.parse(sessionStorage.getItem('mp_pending_sub')); } catch { return null; } })();
+    if (!pending) return;
+
+    if (preapprovalId) {
+      fetch(`${MP_WORKER_URL}/suscripcion-status?preapprovalId=${preapprovalId}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.status === 'authorized' || data.status === 'pending') {
+            sessionStorage.removeItem('mp_pending_sub');
+            espacioApi.updatePlan(pending.espacioId, pending.planId, pending.plan, pending.periodo, preapprovalId)
+              .then(() => refresh())
+              .catch(console.error);
+          }
+        })
+        .catch(console.error);
+    } else if (mpSub === 'back') {
+      sessionStorage.removeItem('mp_pending_sub');
+      espacioApi.updatePlan(pending.espacioId, pending.planId, pending.plan, pending.periodo)
+        .then(() => refresh())
+        .catch(console.error);
+    }
+  }, [searchParams]);
 
   return (
     <div className="flex h-screen overflow-hidden">
+
+      {/* Overlay bloqueante cuando la prueba venció */}
+      {trialExpired && <TrialExpiredOverlay espacio={activeEspacio} trialDays={trialDays} />}
 
       {/* ── Sidebar ── */}
       <aside className="w-56 shrink-0 bg-surface-100 border-r border-border flex flex-col h-screen">
@@ -321,7 +549,7 @@ export default function Layout({ children }) {
           </button>
         </header>
 
-        <TrialBanner espacio={activeEspacio} />
+        <TrialBanner espacio={activeEspacio} trialDays={trialDays} />
         <main id="dashboard-main" className="flex-1 overflow-y-auto scrollbar-brand p-8">{children}</main>
       </div>
       <Instructivo />

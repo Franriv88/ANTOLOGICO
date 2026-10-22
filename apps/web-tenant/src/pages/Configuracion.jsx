@@ -1526,7 +1526,10 @@ function TabCobros({ espacio, refresh }) {
     }
     fetch(`${MP_WORKER_URL}/tenant-mp-config?tenantId=${espacio.id}`)
       .then(r => r.json())
-      .then(d => setMpConnected(d.connected))
+      .then(d => {
+        setMpConnected(d.connected);
+        if (!d.connected) setMercadoPago(false);
+      })
       .catch(() => setMpConnected(false));
   }, [espacio.id]);
 
@@ -1586,11 +1589,37 @@ function TabCobros({ espacio, refresh }) {
         body: JSON.stringify({ tenantId: espacio.id }),
       });
       setMpConnected(false);
+      setMercadoPago(false);
     } catch {
       Swal.fire({ toast: true, position: 'top-end', icon: 'error', title: 'Error al desconectar', timer: 3000, showConfirmButton: false });
     } finally {
       setMpDisconnecting(false);
     }
+  }
+
+  function handleMpToggle(val) {
+    if (val && !mpConnected) {
+      Swal.fire({
+        title: 'Conectá tu cuenta de Mercado Pago',
+        html: '<p style="color:#6B5F4C;font-size:14px;margin:0">Para habilitar cobros con Mercado Pago, primero necesitás conectar tu cuenta.</p>',
+        iconHtml: '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#E85D4A" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>',
+        showCancelButton: true,
+        confirmButtonText: 'Conectar ahora',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#E85D4A',
+        cancelButtonColor: '#D2C4A8',
+        customClass: {
+          popup: 'swal-antologico',
+          icon: 'swal-antologico-icon',
+        },
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = `${MP_WORKER_URL}/oauth/connect?tenantId=${espacio.id}`;
+        }
+      });
+      return;
+    }
+    setMercadoPago(val);
   }
 
   return (
@@ -1629,11 +1658,10 @@ function TabCobros({ espacio, refresh }) {
             </div>
             <p className="text-xs text-ink-muted">Cobros con tarjeta online. Requiere conectar tu cuenta de Mercado Pago.</p>
           </div>
-          <Toggle checked={mercadoPago} onChange={setMercadoPago} />
+          <Toggle checked={mercadoPago} onChange={handleMpToggle} />
         </div>
 
-        {mercadoPago && (
-          <div className="border-t border-border/60 pt-4 mt-1">
+        <div className="border-t border-border/60 pt-4 mt-1">
             {mpConnected === null && <p className="text-xs text-ink-muted">Verificando conexión…</p>}
             {mpConnected === true && (
               <div className="flex items-center gap-2 mb-3">
@@ -1668,8 +1696,7 @@ function TabCobros({ espacio, refresh }) {
                 </button>
               )}
             </div>
-          </div>
-        )}
+        </div>
       </div>
 
       {/* ── Links de pago ── */}

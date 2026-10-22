@@ -5,9 +5,7 @@ import { getSlotStatus } from '../lib/slotStatus';
 import { loginGoogle, loginEmail, register, logout, subscribeAuth, authErrorMsg, sendPasswordReset, checkRedirectResult } from '../services/userAuth';
 import mpLogo from '../assets/Mercado_Pago.png';
 import { SocialIconsRow } from '../components/SocialIcons';
-import { initMercadoPago, CardPayment } from '@mercadopago/sdk-react';
-
-const MP_PLATFORM_KEY = 'APP_USR-1aadb258-7d8b-4126-8e7d-2dbad6270be7';
+// CardPayment Brick removed — using Checkout Pro (redirect) instead
 
 const MP_WORKER_URL = 'https://antologico-mp.franriv2388.workers.dev';
 // SlotBadge no se usa aquí — reemplazado por PublicSlotBadge con fondo sólido
@@ -284,24 +282,13 @@ function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, onConfi
   const [telefono, setTelefono] = useState(prefill?.telefono ?? '');
   const [loading,  setLoading]  = useState(false);
   const [error,       setError]       = useState('');
-  const [mpStep,      setMpStep]      = useState(null); // null | 'card'
-  const [mpKey,           setMpKey]           = useState(null);
-  const [tenantMpReady,   setTenantMpReady]   = useState(false); // false while fetching
+  const [tenantMpReady,   setTenantMpReady]   = useState(false);
 
   useEffect(() => {
     fetch(`${MP_WORKER_URL}/tenant-mp-config?tenantId=${tenantId}`)
       .then(r => r.json())
-      .then(d => {
-        const key = (d.connected && d.publicKey) ? d.publicKey : MP_PLATFORM_KEY;
-        initMercadoPago(key, { locale: 'es-AR' });
-        setMpKey(key);
-        setTenantMpReady(true);
-      })
-      .catch(() => {
-        initMercadoPago(MP_PLATFORM_KEY, { locale: 'es-AR' });
-        setMpKey(MP_PLATFORM_KEY);
-        setTenantMpReady(true);
-      });
+      .then(d => setTenantMpReady(!!d.connected))
+      .catch(() => setTenantMpReady(false));
   }, [tenantId]);
 
   const INPUT = 'w-full px-3 py-2 bg-white border border-[#D2C4A8] rounded-lg text-sm text-[#2B241A] focus:outline-none focus:ring-2 focus:ring-offset-1';
@@ -353,60 +340,49 @@ function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, onConfi
     }
   }
 
-  function handleGoToMP() {
+  async function handleGoToMP() {
     if (!validateForm()) return;
-    setError('');
-    setMpStep('card');
-  }
-
-  async function handleMPPayment(pd) {
     setLoading('MERCADO_PAGO');
     setError('');
     try {
-      const res = await fetch(`${MP_WORKER_URL}/procesar-pago`, {
+      const pendingData = { workshopId: workshop.id, nombres: nombres.map(n => n.trim()), email: email.trim(), telefono: telefono.trim(), cantidad };
+      sessionStorage.setItem('mp_pending_booking', JSON.stringify(pendingData));
+
+      const currentUrl = window.location.href.split('?')[0];
+      const res = await fetch(`${MP_WORKER_URL}/crear-preferencia`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          token:             pd.token,
-          paymentMethodId:   pd.payment_method_id,
-          issuerId:          pd.issuer_id,
-          installments:      pd.installments,
-          transactionAmount: workshop.precio * cantidad,
-          description:       cantidad > 1 ? `${workshop.nombre} (${cantidad} cupos)` : workshop.nombre,
+          amount:       workshop.precio * cantidad,
+          description:  cantidad > 1 ? `${workshop.nombre} (${cantidad} cupos)` : workshop.nombre,
+          payerEmail:   email.trim(),
           tenantId,
-          payer: {
-            email:          email.trim(),
-            identification: pd.payer?.identification,
+          externalReference: `${workshop.id}|${Date.now()}`,
+          backUrls: {
+            success: `${currentUrl}?mp_status=approved`,
+            failure: `${currentUrl}?mp_status=failure`,
+            pending: `${currentUrl}?mp_status=pending`,
           },
         }),
       });
-      const payment = await res.json();
-      if (payment.status === 'approved') {
-        const reservas = await Promise.all(
-          nombres.map(n => reservasApi.create(workshop.id, {
-            nombre:      n.trim(),
-            email:       email.trim(),
-            telefono:    telefono.trim(),
-            metodoPago:  'MERCADO_PAGO',
-            mpPaymentId: String(payment.id),
-          }))
-        );
-        onConfirm(reservas);
+      const data = await res.json();
+      if (data.error) { setError(data.error); setLoading(false); return; }
+      const checkoutUrl = data.initPoint || data.sandboxInitPoint;
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
       } else {
-        setError(`Pago rechazado: ${payment.status_detail ?? payment.message ?? payment.status}`);
-        setMpStep(null);
+        setError('No se pudo obtener el enlace de pago.');
+        setLoading(false);
       }
     } catch (err) {
-      setError('Error al procesar el pago. Intentá de nuevo.');
-      setMpStep(null);
-    } finally {
+      setError('Error al crear el enlace de pago. Intentá de nuevo.');
       setLoading(false);
     }
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/55" onClick={mpStep ? undefined : onClose} />
+      <div className="absolute inset-0 bg-black/55" onClick={onClose} />
       <div className="relative bg-[#FAF8F4] border border-[#D2C4A8] rounded-2xl shadow-2xl w-full max-w-sm overflow-y-auto max-h-[92vh]">
         {/* Mini header del taller */}
         <div
@@ -431,48 +407,7 @@ function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, onConfi
             {formatFecha(workshop.fecha)} · {formatHora(workshop.fecha)}
           </p>
 
-          {mpStep === 'card' ? (
-            <div>
-              <div className="mb-4 p-3 bg-[#F2EDE3] border border-[#D2C4A8] rounded-xl flex items-start justify-between gap-3">
-                <div className="text-xs text-[#6B5F4C] min-w-0">
-                  <p className="font-medium text-[#2B241A] truncate">{nombres.join(', ')}</p>
-                  <p className="truncate">{email}</p>
-                  {cantidad > 1 && <p className="mt-0.5">{cantidad} cupos</p>}
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="font-mono font-bold text-lg text-[#1A1611] leading-tight">{formatPrecio(workshop.precio * cantidad)}</p>
-                  {cantidad > 1 && (
-                    <p className="text-[10px] text-[#9B9083] font-mono mt-0.5">{cantidad} × {formatPrecio(workshop.precio)}</p>
-                  )}
-                </div>
-              </div>
-              {loading === 'MERCADO_PAGO' ? (
-                <div className="py-10 text-center text-sm text-[#6B5F4C]">Procesando pago…</div>
-              ) : !mpKey ? (
-                <div className="py-10 text-center text-sm text-[#6B5F4C]">Cargando…</div>
-              ) : (
-                <CardPayment
-                  initialization={{ amount: workshop.precio * cantidad }}
-                  onSubmit={handleMPPayment}
-                  onError={() => { setError('Error en el formulario de pago'); setMpStep(null); }}
-                  customization={{
-                    paymentMethods: { minInstallments: 1, maxInstallments: 1 },
-                  }}
-                />
-              )}
-              {error && (
-                <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 mt-3">{error}</p>
-              )}
-              <button
-                type="button"
-                onClick={() => { setMpStep(null); setError(''); }}
-                className="w-full text-xs text-[#6B5F4C] hover:text-[#2B241A] text-center py-2 mt-2 transition-colors"
-              >
-                ← Volver
-              </button>
-            </div>
-          ) : (
-            <form onSubmit={e => e.preventDefault()} className="flex flex-col gap-3">
+          <form onSubmit={e => e.preventDefault()} className="flex flex-col gap-3">
               {workshop.cuposDisponibles > 1 && (
                 <div>
                   <label className={LABEL}>Cantidad de cupos</label>
@@ -561,7 +496,7 @@ function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, onConfi
                           )}
                         </button>
                       )}
-                      {showMercadoPago && tenantMpReady && mpKey && (
+                      {showMercadoPago && tenantMpReady && (
                         <button
                           type="button"
                           onClick={handleGoToMP}
@@ -569,7 +504,10 @@ function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, onConfi
                           className="flex-1 rounded-xl transition-opacity disabled:opacity-50 overflow-hidden"
                           style={{ backgroundColor: '#fee600', color: '#1B1464', height: '44px', padding: '4px 8px' }}
                         >
-                          <img src={mpLogo} alt="Mercado Pago" style={{ height: '100%', width: '100%', objectFit: 'contain' }} />
+                          {loading === 'MERCADO_PAGO'
+                            ? <span className="text-xs font-semibold">Redirigiendo…</span>
+                            : <img src={mpLogo} alt="Mercado Pago" style={{ height: '100%', width: '100%', objectFit: 'contain' }} />
+                          }
                         </button>
                       )}
                     </div>
@@ -600,7 +538,6 @@ function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, onConfi
                 Cancelar
               </button>
             </form>
-          )}
         </div>
       </div>
     </div>
@@ -854,6 +791,54 @@ export default function EspacioPublico() {
       if (result) handleAuthSuccess(result);
     }).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const mpStatus = params.get('mp_status');
+    if (!mpStatus) return;
+    const url = new URL(window.location);
+    url.searchParams.delete('mp_status');
+    url.searchParams.delete('collection_id');
+    url.searchParams.delete('collection_status');
+    url.searchParams.delete('payment_id');
+    url.searchParams.delete('status');
+    url.searchParams.delete('external_reference');
+    url.searchParams.delete('payment_type');
+    url.searchParams.delete('merchant_order_id');
+    url.searchParams.delete('preference_id');
+    url.searchParams.delete('site_id');
+    url.searchParams.delete('processing_mode');
+    url.searchParams.delete('merchant_account_id');
+    window.history.replaceState({}, '', url);
+
+    const raw = sessionStorage.getItem('mp_pending_booking');
+    if (!raw) return;
+    const pending = JSON.parse(raw);
+    sessionStorage.removeItem('mp_pending_booking');
+    const paymentId = params.get('payment_id') || params.get('collection_id') || '';
+
+    if (mpStatus === 'approved') {
+      (async () => {
+        try {
+          const ws = workshops.find(w => w.id === pending.workshopId) ?? await workshopsApi.get(pending.workshopId);
+          const reservas = await Promise.all(
+            pending.nombres.map(n => reservasApi.create(pending.workshopId, {
+              nombre:      n,
+              email:       pending.email,
+              telefono:    pending.telefono,
+              metodoPago:  'MERCADO_PAGO',
+              mpPaymentId: paymentId,
+            }))
+          );
+          if (ws) {
+            setWorkshops(prev => prev.map(w => w.id === ws.id ? { ...w, cuposDisponibles: Math.max(0, w.cuposDisponibles - reservas.length) } : w));
+            setConfirmed({ reservas, workshop: ws });
+          }
+          if (currentUser) loadUserReservas(currentUser.user?.email ?? currentUser.profile?.email ?? '');
+        } catch { /* best effort */ }
+      })();
+    }
+  }, [workshops.length]);
 
   useEffect(() => {
     return subscribeAuth((user, profile) => {

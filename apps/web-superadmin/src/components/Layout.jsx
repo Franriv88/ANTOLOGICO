@@ -84,8 +84,10 @@ export default function Layout({ children }) {
         <header className="h-12 bg-surface-0 border-b border-border flex items-center px-6 shrink-0">
           <span className="text-xs text-ink-muted">Panel de administración</span>
         </header>
-        <main className="flex-1 overflow-y-auto bg-surface-0 p-8">
-          {children}
+        <main className="flex-1 overflow-y-auto bg-surface-0">
+          <div className="max-w-[1600px] mx-auto p-6 lg:p-8">
+            {children}
+          </div>
         </main>
       </div>
     </div>

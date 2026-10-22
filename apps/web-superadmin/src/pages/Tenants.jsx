@@ -230,7 +230,7 @@ export default function Tenants() {
         />
       )}
 
-      <div className="max-w-6xl">
+      <div className="w-full">
         <div className="flex items-center justify-between mb-5">
           <div>
             <h1 className="font-display text-2xl text-ink">Tenants</h1>
