@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell,
+  AreaChart, Area,
+  BarChart, Bar,
+  PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 import { planes as planesApi, tenants as tenantsApi, usuarios as usuariosApi } from '../services/adminApi';
 
@@ -200,42 +203,108 @@ export default function Reportes() {
         />
       </div>
 
-      {/* Nuevos tenants por mes */}
+      {/* Nuevos tenants por mes — área con curva suave */}
       <div className="bg-surface-100 border border-border rounded-xl p-5">
-        <h2 className="font-semibold text-sm text-ink mb-4">Nuevos tenants por mes</h2>
-        <ResponsiveContainer width="100%" height={200}>
-          <BarChart data={porMes} barSize={32}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#E5DDD0" vertical={false} />
+        <h2 className="font-semibold text-sm text-ink mb-1">Nuevos tenants por mes</h2>
+        <p className="text-xs text-ink-muted mb-5">Registros en los últimos 6 meses</p>
+        <ResponsiveContainer width="100%" height={180}>
+          <AreaChart data={porMes} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+            <defs>
+              <linearGradient id="gradTenants" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%"   stopColor={CORAL} stopOpacity={0.22} />
+                <stop offset="100%" stopColor={CORAL} stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid stroke="#E5DDD0" strokeDasharray="0" vertical={false} />
             <XAxis dataKey="mes" tick={{ fontSize: 11, fill: MUTED }} axisLine={false} tickLine={false} />
-            <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: MUTED }} axisLine={false} tickLine={false} width={24} />
-            <Tooltip content={<CustomTooltip />} />
-            <Bar dataKey="nuevos" name="Nuevos" radius={[4, 4, 0, 0]}>
-              {porMes.map((_, i) => (
-                <Cell key={i} fill={i === porMes.length - 1 ? CORAL : OCRE + '99'} />
-              ))}
-            </Bar>
-          </BarChart>
+            <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: MUTED }} axisLine={false} tickLine={false} width={28} />
+            <Tooltip content={<CustomTooltip />} cursor={{ stroke: CORAL, strokeWidth: 1, strokeDasharray: '4 2' }} />
+            <Area
+              type="monotone"
+              dataKey="nuevos"
+              name="Nuevos"
+              stroke={CORAL}
+              strokeWidth={2.5}
+              fill="url(#gradTenants)"
+              dot={false}
+              activeDot={{ r: 5, fill: CORAL, stroke: '#FAF8F4', strokeWidth: 2 }}
+            />
+          </AreaChart>
         </ResponsiveContainer>
       </div>
 
-      {/* Distribución por plan */}
-      <div className="bg-surface-100 border border-border rounded-xl p-5">
-        <h2 className="font-semibold text-sm text-ink mb-4">Distribución por plan</h2>
-        <ResponsiveContainer width="100%" height={200}>
-          <BarChart data={distPlanes} barSize={48}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#E5DDD0" vertical={false} />
-            <XAxis dataKey="nombre" tick={{ fontSize: 11, fill: MUTED }} axisLine={false} tickLine={false} />
-            <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: MUTED }} axisLine={false} tickLine={false} width={24} />
-            <Tooltip content={<CustomTooltip />} />
-            <Bar dataKey="count" name="Tenants" radius={[4, 4, 0, 0]}>
-              {distPlanes.map((entry, i) => {
-                const colors = [OCRE, CORAL, GREEN, MUTED];
-                return <Cell key={i} fill={colors[i % colors.length]} />;
-              })}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+      {/* Distribución por plan — donut con leyenda */}
+      {(() => {
+        const PIE_COLORS = [CORAL, OCRE, GREEN, '#5B6FA8', MUTED];
+        const totalPie   = distPlanes.reduce((s, d) => s + d.count, 0);
+        return (
+          <div className="bg-surface-100 border border-border rounded-xl p-5">
+            <h2 className="font-semibold text-sm text-ink mb-1">Distribución por plan</h2>
+            <p className="text-xs text-ink-muted mb-5">Tenants por plan activo</p>
+            <div className="flex flex-col sm:flex-row items-center gap-6">
+              {/* Donut */}
+              <div className="relative shrink-0" style={{ width: 180, height: 180 }}>
+                <ResponsiveContainer width={180} height={180}>
+                  <PieChart>
+                    <Pie
+                      data={distPlanes}
+                      dataKey="count"
+                      nameKey="nombre"
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={58}
+                      outerRadius={82}
+                      paddingAngle={3}
+                      strokeWidth={0}
+                    >
+                      {distPlanes.map((_, i) => (
+                        <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      content={({ active, payload }) =>
+                        active && payload?.length ? (
+                          <div className="bg-[#1A1611] border border-white/10 rounded-lg px-3 py-2 text-xs text-white shadow-lg">
+                            <p className="font-medium">{payload[0].name}</p>
+                            <p style={{ color: payload[0].payload.fill }}>
+                              {payload[0].value} tenant{payload[0].value !== 1 ? 's' : ''} · {Math.round(payload[0].value / totalPie * 100)}%
+                            </p>
+                          </div>
+                        ) : null
+                      }
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                {/* Centro del donut */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <span className="font-display text-2xl font-semibold text-ink leading-none">{totalPie}</span>
+                  <span className="text-[10px] text-ink-muted mt-0.5">tenants</span>
+                </div>
+              </div>
+              {/* Leyenda */}
+              <div className="flex flex-col gap-3 flex-1 min-w-0">
+                {distPlanes.map((d, i) => (
+                  <div key={d.nombre} className="flex items-center gap-3">
+                    <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-sm font-medium text-ink truncate">{d.nombre}</span>
+                        <span className="font-mono text-xs text-ink-muted shrink-0">{d.count} · {Math.round(d.count / totalPie * 100)}%</span>
+                      </div>
+                      <div className="mt-1 h-1.5 bg-surface-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full rounded-full transition-all"
+                          style={{ width: `${Math.round(d.count / totalPie * 100)}%`, background: PIE_COLORS[i % PIE_COLORS.length] }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* MRR por plan */}
       <div className="bg-surface-100 border border-border rounded-xl p-5">
