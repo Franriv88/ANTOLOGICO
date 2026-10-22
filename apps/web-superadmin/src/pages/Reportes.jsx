@@ -143,20 +143,26 @@ export default function Reportes() {
         });
         const porMes = Object.values(monthsMap);
 
-        // Tenants únicos (por userId) vs espacios totales
-        const uniqueUserIds = new Set(tenantsList.map(t => t.userId).filter(Boolean));
-        const totalTenants  = uniqueUserIds.size;
-        const totalEspacios = tenantsList.length;
-        const activosCount  = tenantsList.filter(t => t.estado === 'ACTIVO').length;
+        // Tenants únicos: contamos por userId cuando existe, o por espacio como fallback
+        const seenIds = new Set();
+        let totalTenants = 0;
+        tenantsList.forEach(t => {
+          const key = t.userId || `anon:${t.id}`;
+          if (!seenIds.has(key)) { seenIds.add(key); totalTenants++; }
+        });
 
-        setData({ mrr, trialing, activos: activosCount, total: totalTenants, totalEspacios, totalUsuarios, distPlanes, porMes });
+        // Espacios activos (métrica de espacios, no de tenants)
+        const totalEspacios  = tenantsList.length;
+        const espaciosActivos = tenantsList.filter(t => t.estado === 'ACTIVO').length;
+
+        setData({ mrr, trialing, total: totalTenants, totalEspacios, espaciosActivos, totalUsuarios, distPlanes, porMes });
       })
       .finally(() => setLoading(false));
   }, []);
 
   if (loading) return <p className="text-sm text-ink-muted">Calculando métricas…</p>;
 
-  const { mrr, trialing, activos, total, totalEspacios, totalUsuarios, distPlanes, porMes } = data;
+  const { mrr, trialing, total, totalEspacios, espaciosActivos, totalUsuarios, distPlanes, porMes } = data;
 
   return (
     <div className="max-w-4xl flex flex-col gap-8">
@@ -182,12 +188,12 @@ export default function Reportes() {
       {/* KPIs — fila cuentas */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <StatCard
-          label="Tenants" value={total} sub={`${activos} activo${activos !== 1 ? 's' : ''}`}
+          label="Tenants" value={total} sub={`${totalEspacios} espacio${totalEspacios !== 1 ? 's' : ''} en total`}
           iconColor="#5B6FA8" iconBg="bg-[#5B6FA8]/10"
           icon={icons.tenants}
         />
         <StatCard
-          label="Espacios" value={totalEspacios} sub={`${(totalEspacios / Math.max(total,1)).toFixed(1)} por tenant`}
+          label="Espacios activos" value={espaciosActivos} sub={`de ${totalEspacios} espacios totales`}
           iconColor={MUTED} iconBg="bg-surface-200"
           icon={icons.spaces}
         />
