@@ -20,12 +20,56 @@ function monthLabel(iso) {
   return d.toLocaleDateString('es-AR', { month: 'short', year: '2-digit' });
 }
 
-function StatCard({ label, value, sub, color = 'text-ink' }) {
+// ── Iconos ────────────────────────────────────────────────────────────────────
+const icons = {
+  mrr: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+    </svg>
+  ),
+  trending: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
+    </svg>
+  ),
+  tenants: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+  ),
+  spaces: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+      <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+    </svg>
+  ),
+  trial: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+    </svg>
+  ),
+  users: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+    </svg>
+  ),
+};
+
+function StatCard({ label, value, sub, color = 'text-ink', iconColor, icon, iconBg = 'bg-surface-200' }) {
   return (
-    <div className="bg-surface-100 border border-border rounded-xl p-5">
-      <p className="text-xs text-ink-muted mb-1">{label}</p>
-      <p className={`font-display text-2xl font-semibold ${color}`}>{value}</p>
-      {sub && <p className="text-xs text-ink-muted mt-1">{sub}</p>}
+    <div className="bg-surface-100 border border-border rounded-xl p-5 flex gap-4 items-start">
+      {icon && (
+        <div className={`shrink-0 w-9 h-9 rounded-lg ${iconBg} flex items-center justify-center`}
+             style={{ color: iconColor }}>
+          {icon}
+        </div>
+      )}
+      <div className="min-w-0">
+        <p className="text-xs text-ink-muted mb-0.5">{label}</p>
+        <p className={`font-display text-2xl font-semibold leading-tight ${color}`}>{value}</p>
+        {sub && <p className="text-xs text-ink-muted mt-1">{sub}</p>}
+      </div>
     </div>
   );
 }
@@ -96,14 +140,20 @@ export default function Reportes() {
         });
         const porMes = Object.values(monthsMap);
 
-        setData({ mrr, trialing, activos, total: tenantsList.length, totalUsuarios, distPlanes, porMes });
+        // Tenants únicos (por userId) vs espacios totales
+        const uniqueUserIds = new Set(tenantsList.map(t => t.userId).filter(Boolean));
+        const totalTenants  = uniqueUserIds.size;
+        const totalEspacios = tenantsList.length;
+        const activosCount  = tenantsList.filter(t => t.estado === 'ACTIVO').length;
+
+        setData({ mrr, trialing, activos: activosCount, total: totalTenants, totalEspacios, totalUsuarios, distPlanes, porMes });
       })
       .finally(() => setLoading(false));
   }, []);
 
   if (loading) return <p className="text-sm text-ink-muted">Calculando métricas…</p>;
 
-  const { mrr, trialing, activos, total, totalUsuarios, distPlanes, porMes } = data;
+  const { mrr, trialing, activos, total, totalEspacios, totalUsuarios, distPlanes, porMes } = data;
 
   return (
     <div className="max-w-4xl flex flex-col gap-8">
@@ -112,13 +162,42 @@ export default function Reportes() {
         <p className="text-sm text-ink-muted mt-0.5">Métricas basadas en planes activos. Los ingresos reales se agregarán al integrar Mercado Pago.</p>
       </div>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        <StatCard label="MRR estimado" value={formatARS(mrr)} sub="Ingresos mensuales recurrentes" color="text-primary" />
-        <StatCard label="MRR anualizado" value={formatARS(mrr * 12)} sub="ARR proyectado" color="text-success" />
-        <StatCard label="Tenants totales" value={total} sub={`${activos} activos`} />
-        <StatCard label="En período de prueba" value={trialing} sub="14 días gratis" color="text-[#B98527]" />
-        <StatCard label="Usuarios registrados" value={totalUsuarios} sub="Cuentas de usuario finales" color="text-[#B98527]" />
+      {/* KPIs — fila ingresos */}
+      <div className="grid grid-cols-2 gap-4">
+        <StatCard
+          label="MRR estimado" value={formatARS(mrr)} sub="Ingresos mensuales recurrentes"
+          color="text-primary" iconColor={CORAL} iconBg="bg-[#E85D4A]/10"
+          icon={icons.mrr}
+        />
+        <StatCard
+          label="MRR anualizado" value={formatARS(mrr * 12)} sub="ARR proyectado"
+          color="text-success" iconColor={GREEN} iconBg="bg-[#4A9E6B]/10"
+          icon={icons.trending}
+        />
+      </div>
+
+      {/* KPIs — fila cuentas */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <StatCard
+          label="Tenants" value={total} sub={`${activos} activo${activos !== 1 ? 's' : ''}`}
+          iconColor="#5B6FA8" iconBg="bg-[#5B6FA8]/10"
+          icon={icons.tenants}
+        />
+        <StatCard
+          label="Espacios" value={totalEspacios} sub={`${(totalEspacios / Math.max(total,1)).toFixed(1)} por tenant`}
+          iconColor={MUTED} iconBg="bg-surface-200"
+          icon={icons.spaces}
+        />
+        <StatCard
+          label="En trial" value={trialing} sub="14 días gratis"
+          iconColor={OCRE} iconBg="bg-[#B98527]/10"
+          icon={icons.trial}
+        />
+        <StatCard
+          label="Usuarios finales" value={totalUsuarios} sub="Alumnos registrados"
+          iconColor="#7A6FA8" iconBg="bg-[#7A6FA8]/10"
+          icon={icons.users}
+        />
       </div>
 
       {/* Nuevos tenants por mes */}
