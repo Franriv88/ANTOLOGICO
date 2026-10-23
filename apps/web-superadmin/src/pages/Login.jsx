@@ -107,7 +107,7 @@ export default function Login() {
   useEffect(() => {
     const root = document.documentElement;
     const prev = root.getAttribute('data-theme');
-    root.removeAttribute('data-theme');
+    root.setAttribute('data-theme', 'light');
     return () => { if (prev) root.setAttribute('data-theme', prev); };
   }, []);
 
