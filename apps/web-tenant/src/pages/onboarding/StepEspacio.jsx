@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { espacios as espacioApi } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { detectGeo } from '../../lib/geo';
 
 const INPUT_CLS =
   'w-full px-3 py-2 bg-surface-100 border border-border rounded-md text-sm text-ink ' +
@@ -31,6 +32,9 @@ export default function StepEspacio({ onNext, onBack, accumulated }) {
   const [rubroPersonalizado, setCustom] = useState('');
   const [loading, setLoading]           = useState(false);
   const [error, setError]               = useState('');
+  const geoRef = useRef(null);
+
+  useEffect(() => { detectGeo().then(g => { geoRef.current = g; }); }, []);
 
   const isOtro = selectedRubro === 'OTRO';
 
@@ -50,6 +54,7 @@ export default function StepEspacio({ onNext, onBack, accumulated }) {
         rubroPersonalizado: rubroFinal,
         userId:            user?.uid ?? null,
         telefono:          accumulated?.telefono ?? '',
+        geo:               geoRef.current ?? null,
       });
       onNext({ espacioId: key.id, espacioNombre: nombre.trim() });
     } catch (err) {

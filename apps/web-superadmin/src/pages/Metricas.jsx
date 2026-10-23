@@ -6,6 +6,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 import { tenants as tenantsApi, metricas as metricasApi, usuarios as usuariosApi } from '../services/adminApi';
+import ArgentinaMap from '../components/ArgentinaMap';
 
 const CORAL = '#E85D4A';
 const OCRE  = '#B98527';
@@ -211,6 +212,7 @@ export default function Metricas() {
         totalReservas, totalWorkshops, wsActivos, revenue, totalUsuarios,
         tasaOcupacion, totalCupos, cuposOcupados,
         porMes, ultimos14, metodos, topWorkshops, topEspacios,
+        tenantsList,
       });
     }).finally(() => setLoading(false));
   }, []);
@@ -220,7 +222,7 @@ export default function Metricas() {
   const {
     totalReservas, totalWorkshops, wsActivos, revenue, totalUsuarios,
     tasaOcupacion, totalCupos, cuposOcupados,
-    porMes, ultimos14, metodos, topWorkshops, topEspacios,
+    porMes, ultimos14, metodos, topWorkshops, topEspacios, tenantsList,
   } = data;
 
   const PIE_COLORS = [CORAL, OCRE, GREEN, BLUE, MUTED, PURPLE];
@@ -340,35 +342,41 @@ export default function Metricas() {
         </div>
       </div>
 
-      {/* Top workshops + Top espacios */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top workshops */}
-        <div className="bg-surface-100 border border-border rounded-xl p-5">
-          <h2 className="font-semibold text-sm text-ink mb-4">Top workshops por reservas</h2>
-          {topWorkshops.length > 0 ? (
-            <div className="flex flex-col gap-3">
-              {topWorkshops.map((w, i) => {
-                const maxCount = topWorkshops[0].count;
-                return (
-                  <div key={i} className="flex items-center gap-3">
-                    <span className="w-5 text-right font-mono text-xs text-ink-muted shrink-0">{i + 1}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-ink truncate">{w.nombre}</p>
-                      <p className="text-[11px] text-ink-muted truncate">{w.espacio}</p>
-                    </div>
-                    <div className="w-24 shrink-0">
-                      <div className="h-1.5 bg-surface-200 rounded-full overflow-hidden">
-                        <div className="h-full rounded-full" style={{ width: `${Math.round(w.count / maxCount * 100)}%`, background: CORAL }} />
-                      </div>
-                    </div>
-                    <span className="font-mono text-xs text-ink-muted w-8 text-right shrink-0">{w.count}</span>
+      {/* Top workshops */}
+      <div className="bg-surface-100 border border-border rounded-xl p-5">
+        <h2 className="font-semibold text-sm text-ink mb-4">Top workshops por reservas</h2>
+        {topWorkshops.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3">
+            {topWorkshops.map((w, i) => {
+              const maxCount = topWorkshops[0].count;
+              return (
+                <div key={i} className="flex items-center gap-3">
+                  <span className="w-5 text-right font-mono text-xs text-ink-muted shrink-0">{i + 1}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-ink truncate">{w.nombre}</p>
+                    <p className="text-[11px] text-ink-muted truncate">{w.espacio}</p>
                   </div>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="text-xs text-ink-muted text-center py-8">Sin datos aún</p>
-          )}
+                  <div className="w-20 shrink-0">
+                    <div className="h-1.5 bg-surface-200 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full" style={{ width: `${Math.round(w.count / maxCount * 100)}%`, background: CORAL }} />
+                    </div>
+                  </div>
+                  <span className="font-mono text-xs text-ink-muted w-8 text-right shrink-0">{w.count}</span>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-xs text-ink-muted text-center py-8">Sin datos aún</p>
+        )}
+      </div>
+
+      {/* Mapa geográfico + top espacios */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-surface-100 border border-border rounded-xl p-5">
+          <h2 className="font-semibold text-sm text-ink mb-1">Distribución geográfica</h2>
+          <p className="text-xs text-ink-muted mb-4">Ubicación de tenants al registrarse (por IP)</p>
+          <ArgentinaMap data={tenantsList} />
         </div>
 
         {/* Top espacios */}
