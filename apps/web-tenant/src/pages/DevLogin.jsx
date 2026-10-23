@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   signInWithPopup,
   signInWithEmailAndPassword,
@@ -10,7 +10,6 @@ import {
   GoogleAuthProvider,
 } from 'firebase/auth';
 import { auth } from '../lib/firebase';
-import { DEMO_MODE, DEMO_EMAIL, DEMO_PASSWORD, createNewDemoSession } from '../lib/demo';
 import { useAuth } from '../context/AuthContext';
 import { authErrorMsg } from '../services/userAuth';
 
@@ -47,97 +46,12 @@ export default function Login({ mode = 'login' }) {
   const [error, setError]     = useState('');
   const [loading, setLoading] = useState(false);
   const navigate  = useNavigate();
-  const { loginDemo } = useAuth();
-
-  // ─── Modo Demo ───────────────────────────────────────────────────────────────
-  const [demoEmail, setDemoEmail]       = useState(DEMO_EMAIL);
-  const [demoPassword, setDemoPassword] = useState(DEMO_PASSWORD);
 
   useEffect(() => {
     if (mode === 'register') return;
-    if (DEMO_MODE) return;
     if (isDev) handleDevLogin();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
-
-  if (DEMO_MODE && mode !== 'register') {
-    async function handleDemoLogin(e) {
-      e.preventDefault();
-      setError('');
-      setLoading(true);
-      try {
-        await loginDemo(demoEmail, demoPassword);
-        navigate('/workshops');
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    function handleNewUser() {
-      localStorage.removeItem('ant_demo_data');
-      createNewDemoSession();
-      window.location.href = '/onboarding';
-    }
-
-    return (
-      <div className="min-h-screen bg-surface-0 flex items-center justify-center px-4">
-        <div className="bg-surface-100 border border-border rounded-xl p-8 w-full max-w-sm">
-          <div className="mb-6">
-            <h1 className="font-display text-2xl text-ink mb-1">Antológico</h1>
-            <span className="inline-block text-xs font-medium bg-amber-100 text-amber-700 border border-amber-300 rounded px-2 py-0.5">
-              Demo
-            </span>
-          </div>
-
-          <div className="bg-surface-200 border border-border rounded-lg px-3 py-2.5 mb-5 text-xs text-ink-muted space-y-0.5">
-            <p className="font-medium text-ink">Credenciales de acceso:</p>
-            <p>Email: <span className="font-mono text-ink">{DEMO_EMAIL}</span></p>
-            <p>Contraseña: <span className="font-mono text-ink">{DEMO_PASSWORD}</span></p>
-          </div>
-
-          <form onSubmit={handleDemoLogin} className="flex flex-col gap-3">
-            <input
-              type="email"
-              value={demoEmail}
-              onChange={(e) => setDemoEmail(e.target.value)}
-              placeholder="Email"
-              className={INPUT_CLS}
-            />
-            <input
-              type="password"
-              value={demoPassword}
-              onChange={(e) => setDemoPassword(e.target.value)}
-              placeholder="Contraseña"
-              className={INPUT_CLS}
-            />
-            {error && (
-              <p className="text-xs text-danger bg-danger/5 border border-danger/20 rounded px-3 py-2">
-                {error}
-              </p>
-            )}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2.5 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary-strong transition-colors disabled:opacity-50"
-            >
-              {loading ? 'Ingresando…' : 'Ingresar'}
-            </button>
-          </form>
-
-          <div className="mt-4 pt-4 border-t border-border text-center">
-            <p className="text-xs text-ink-muted">
-              ¿No tenés cuenta?{' '}
-              <Link to="/registro" className="text-primary hover:underline font-medium">
-                Crear cuenta →
-              </Link>
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   // ─── Dev auto-login ──────────────────────────────────────────────────────────
   async function handleDevLogin() {
