@@ -11,6 +11,7 @@ import {
 } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
+import { useEspacio } from '../context/EspacioContext';
 import { authErrorMsg } from '../services/userAuth';
 
 const provider = new GoogleAuthProvider();
@@ -112,13 +113,16 @@ export default function Login({ mode = 'login' }) {
 function TenantLoginPage({ initialTab = 'login' }) {
   const navigate = useNavigate();
   const { user }  = useAuth();
+  const { activeEspacio, loading: espacioLoading } = useEspacio();
 
   const [tab, setTab] = useState(initialTab);
 
-  // Auto-redirigir solo si ya hay sesión y estamos en tab login (no en registro)
+  // Auto-redirigir solo si ya tiene sesión + espacio configurado (onboarding completo)
   useEffect(() => {
-    if (user && tab === 'login') navigate('/workshops', { replace: true });
-  }, [user, navigate, tab]);
+    if (user && tab === 'login' && !espacioLoading && activeEspacio) {
+      navigate('/workshops', { replace: true });
+    }
+  }, [user, navigate, tab, activeEspacio, espacioLoading]);
 
   // Login
   const [loginEmail, setLoginEmail]       = useState('');
