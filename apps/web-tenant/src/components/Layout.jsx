@@ -380,20 +380,38 @@ const IconLogout = () => (
   </svg>
 );
 
-const IconSun = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
-    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-    <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
-    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-  </svg>
-);
-
-const IconMoon = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-  </svg>
-);
+function ThemeToggleButton({ isDark, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      title={isDark ? 'Modo claro' : 'Modo oscuro'}
+      className="group relative w-9 h-9 rounded-full transition-all duration-300 flex items-center justify-center shrink-0"
+      style={{
+        background: isDark
+          ? 'linear-gradient(145deg, #1a1611, #2b241a)'
+          : 'linear-gradient(145deg, #e4dac5, #fbf8f2)',
+        boxShadow: isDark
+          ? 'inset 3px 3px 6px #111, inset -2px -2px 5px #3d342580, 0 1px 2px #0003'
+          : 'inset 3px 3px 6px #c4b89a, inset -2px -2px 5px #fff8, 0 1px 2px #0001',
+      }}
+    >
+      <div className="transition-transform duration-300" style={{ transform: isDark ? 'rotate(0deg)' : 'rotate(90deg)' }}>
+        {isDark ? (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="4" stroke="#D49E3A" fill="#D49E3A" fillOpacity="0.15"/>
+            {[[12,2,12,4],[12,20,12,22],[4.22,4.22,5.64,5.64],[18.36,18.36,19.78,19.78],[2,12,4,12],[20,12,22,12],[4.22,19.78,5.64,18.36],[18.36,5.64,19.78,4.22]].map(([x1,y1,x2,y2],i) => (
+              <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#D49E3A" strokeWidth="1.5"/>
+            ))}
+          </svg>
+        ) : (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="#6B5F4C" fill="#6B5F4C" fillOpacity="0.08"/>
+          </svg>
+        )}
+      </div>
+    </button>
+  );
+}
 
 export default function Layout({ children }) {
   const { user, logout } = useAuth();
@@ -564,13 +582,7 @@ export default function Layout({ children }) {
           <span className="text-xs text-ink-muted truncate max-w-[200px]">
             {user?.displayName || user?.email}
           </span>
-          <button
-            onClick={toggleTheme}
-            className="flex items-center justify-center w-8 h-8 rounded-md text-ink-muted hover:text-ink hover:bg-surface-200 transition-colors"
-            title={isDark ? 'Modo claro' : 'Modo oscuro'}
-          >
-            {isDark ? <IconSun /> : <IconMoon />}
-          </button>
+          <ThemeToggleButton isDark={isDark} onClick={toggleTheme} />
           <button
             onClick={logout}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-muted border border-border rounded-md hover:bg-danger/8 hover:text-danger hover:border-danger/30 transition-colors"
