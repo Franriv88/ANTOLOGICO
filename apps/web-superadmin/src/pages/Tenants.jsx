@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { tenants as tenantsApi, planes as planesApi, userManagement } from '../services/adminApi';
 import ConfirmModal from '../components/ConfirmModal';
 
-const INPUT_CLS = 'w-full px-3 py-2 bg-white border border-border rounded-md text-sm text-ink focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary';
+const INPUT_CLS = 'w-full px-3 py-2 bg-surface-100 border border-border rounded-md text-sm text-ink focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary';
 
 function EstadoBadge({ bloqueado, trialStartedAt, planId, selectedPlan }) {
   if (bloqueado) {
@@ -246,7 +246,7 @@ export default function Tenants() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Buscar por nombre de espacio, email, rubro…"
-            className="w-full max-w-lg px-4 py-2.5 bg-white border border-border rounded-xl text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:border-primary"
+            className="w-full max-w-lg px-4 py-2.5 bg-surface-100 border border-border rounded-xl text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:border-primary"
           />
         </div>
 

@@ -262,7 +262,7 @@ export default function Landing() {
                 return (
                   <button key={op.id} type="button" onClick={() => setPeriodo(op.id)}
                     className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                      periodo === op.id ? 'bg-white shadow-sm text-ink' : 'text-ink-muted hover:text-ink'
+                      periodo === op.id ? 'bg-surface-100 shadow-sm text-ink' : 'text-ink-muted hover:text-ink'
                     }`}>
                     {op.label}
                     {op.id !== 'mensual' && dto > 0 && (

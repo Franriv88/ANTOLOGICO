@@ -30,11 +30,11 @@ function RequireDesktop({ children }) {
             <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
           </svg>
         </div>
-        <h1 className="font-display text-xl text-[#1A1611] mb-2">Abrí el panel desde tu computadora</h1>
-        <p className="text-sm text-[#6B5F4C] mb-6 max-w-xs mx-auto">
+        <h1 className="font-display text-xl text-ink mb-2">Abrí el panel desde tu computadora</h1>
+        <p className="text-sm text-ink-muted mb-6 max-w-xs mx-auto">
           El panel de gestión está optimizado para pantallas grandes. Usá una computadora o tablet para gestionar tus talleres.
         </p>
-        <a href="/mis-reservas" className="text-sm text-[#E85D4A] hover:underline">
+        <a href="/mis-reservas" className="text-sm text-primary hover:underline">
           ¿Sos alumno? Ver mis reservas →
         </a>
       </div>

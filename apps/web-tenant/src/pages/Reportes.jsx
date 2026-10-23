@@ -271,7 +271,7 @@ export default function Reportes() {
               key={p.id}
               onClick={() => setPeriod(p.id)}
               className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                period === p.id ? 'bg-white text-ink shadow-sm' : 'text-ink-muted hover:text-ink'
+                period === p.id ? 'bg-surface-100 text-ink shadow-sm' : 'text-ink-muted hover:text-ink'
               }`}
             >
               {p.label}

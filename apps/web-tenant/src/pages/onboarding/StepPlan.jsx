@@ -52,7 +52,7 @@ export default function StepPlan({ onFinish, onBack }) {
         <div className="flex gap-1 p-1 bg-surface-200 rounded-lg w-fit">
           {PERIODOS.map(op => (
             <button key={op.id} type="button" onClick={() => setPeriodo(op.id)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${periodo === op.id ? 'bg-white shadow-sm text-ink' : 'text-ink-muted hover:text-ink'}`}>
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${periodo === op.id ? 'bg-surface-100 shadow-sm text-ink' : 'text-ink-muted hover:text-ink'}`}>
               {op.label}
               {op.id !== 'mensual' && list[0] && (list[0].descuentoTrimestral ?? 0) + (list[0].descuentoAnual ?? 0) > 0 && (
                 <span className="ml-1 text-success font-semibold">
@@ -127,8 +127,8 @@ function PlanCard({ plan, precio, descuento, periodo, features, selected, onSele
         selected
           ? 'border-primary bg-primary/5'
           : plan.highlight
-          ? 'border-primary/40 hover:border-primary bg-white'
-          : 'border-border hover:border-primary/40 bg-white'
+          ? 'border-primary/40 hover:border-primary bg-surface-100'
+          : 'border-border hover:border-primary/40 bg-surface-100'
       }`}>
       {plan.highlight && (
         <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-xs font-semibold bg-primary text-white rounded-full px-2.5 py-0.5 whitespace-nowrap">

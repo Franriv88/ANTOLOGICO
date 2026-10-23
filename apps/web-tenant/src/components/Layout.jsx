@@ -6,6 +6,7 @@ import { IconAntologico, LogoAntologico } from './LogoAntologico';
 import Instructivo from './Instructivo';
 import { usePlanes, precioConPeriodo } from '../hooks/usePlanes';
 import { useTrialDays } from '../hooks/useTrialDays';
+import { useTheme } from '../hooks/useTheme';
 import { espacios as espacioApi } from '../services/api';
 
 const MP_WORKER_URL = 'https://antologico-mp.franriv2388.workers.dev';
@@ -162,7 +163,7 @@ function TrialExpiredOverlay({ espacio, trialDays, onSelectPlan }) {
           <div className="flex gap-1 p-1 bg-surface-200 rounded-lg w-fit mx-auto">
             {PERIODOS_OVERLAY.map(op => (
               <button key={op.id} onClick={() => setPeriodo(op.id)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${periodo === op.id ? 'bg-white shadow-sm text-ink' : 'text-ink-muted hover:text-ink'}`}>
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${periodo === op.id ? 'bg-surface-100 shadow-sm text-ink' : 'text-ink-muted hover:text-ink'}`}>
                 {op.label}
                 {op.id !== 'mensual' && (planes ?? [])[0] && (
                   <span className="ml-1 text-success font-semibold">
@@ -183,7 +184,7 @@ function TrialExpiredOverlay({ espacio, trialDays, onSelectPlan }) {
             const total = precio * meses;
             const ahorro = dto > 0 ? (plan.precioMensual - precio) * meses : 0;
             return (
-              <div key={plan.id} className={`flex items-center gap-4 p-4 rounded-xl border transition-colors ${plan.highlight ? 'border-primary/40 bg-primary/5' : 'border-border bg-white'}`}>
+              <div key={plan.id} className={`flex items-center gap-4 p-4 rounded-xl border transition-colors ${plan.highlight ? 'border-primary/40 bg-primary/5' : 'border-border bg-surface-100'}`}>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                     <p className="text-sm font-semibold text-ink">{plan.nombre}</p>
@@ -258,7 +259,14 @@ export function injectBrandTheme({ primary, button, bg, dFont, bFont }) {
   const effectiveButton = button || primary;
   const textOnButton = contrastText(effectiveButton);
 
-  let css = `:root { --color-primary: ${primary};`;
+  const hexToRgbChannels = (hex) => {
+    const r = parseInt(hex.slice(1,3), 16);
+    const g = parseInt(hex.slice(3,5), 16);
+    const b = parseInt(hex.slice(5,7), 16);
+    return `${r} ${g} ${b}`;
+  };
+
+  let css = `:root { --color-primary: ${hexToRgbChannels(primary)};`;
   if (dFont) css += ` --font-display: '${dFont}', serif;`;
   if (bFont) css += ` --font-sans: '${bFont}', sans-serif;`;
   css += ' }';
@@ -311,42 +319,42 @@ export function injectBrandTheme({ primary, button, bg, dFont, bFont }) {
       #dashboard-main span:not([class*="text-"]):not([style*="color"]),
       #dashboard-main label:not([class*="text-"]) { color: ${ink}; }
 
-      /* Contenedores: siempre estética original (cream/blanco) */
-      #dashboard-main .bg-surface-0   { background-color: #EFE7D8 !important; }
-      #dashboard-main .bg-surface-100 { background-color: #FBF8F2 !important; }
-      #dashboard-main .bg-surface-200 { background-color: #E4DAC5 !important; }
-      #dashboard-main .border-border  { border-color: #D2C4A8 !important; }
+      /* Contenedores: usan tokens (respetan dark mode) */
+      #dashboard-main .bg-surface-0   { background-color: rgb(var(--color-surface-0)) !important; }
+      #dashboard-main .bg-surface-100 { background-color: rgb(var(--color-surface-100)) !important; }
+      #dashboard-main .bg-surface-200 { background-color: rgb(var(--color-surface-200)) !important; }
+      #dashboard-main .border-border  { border-color: rgb(var(--color-border)) !important; }
 
-      /* Texto dentro de contenedores: siempre oscuro */
+      /* Texto dentro de contenedores: usan tokens */
       #dashboard-main .bg-surface-0 .text-ink,
       #dashboard-main .bg-surface-100 .text-ink,
-      #dashboard-main .bg-white .text-ink  { color: #2B241A !important; }
+      #dashboard-main .bg-white .text-ink  { color: rgb(var(--color-ink)) !important; }
       #dashboard-main .bg-surface-0 .text-ink-muted,
       #dashboard-main .bg-surface-100 .text-ink-muted,
-      #dashboard-main .bg-white .text-ink-muted { color: #6B5F4C !important; }
+      #dashboard-main .bg-white .text-ink-muted { color: rgb(var(--color-ink-muted)) !important; }
 
-      /* Form elements: siempre fondo blanco texto oscuro */
+      /* Form elements */
       #dashboard-main input,
       #dashboard-main textarea,
       #dashboard-main select {
-        color: #2B241A !important;
-        background-color: #ffffff !important;
-        border-color: #D2C4A8 !important;
+        color: rgb(var(--color-ink)) !important;
+        background-color: rgb(var(--color-surface-100)) !important;
+        border-color: rgb(var(--color-border)) !important;
       }
       #dashboard-main input:focus,
       #dashboard-main textarea:focus,
-      #dashboard-main select:focus { border-color: #E85D4A !important; }
+      #dashboard-main select:focus { border-color: rgb(var(--color-primary)) !important; }
       #dashboard-main input::placeholder,
-      #dashboard-main textarea::placeholder { color: rgba(107,95,76,0.55) !important; }
+      #dashboard-main textarea::placeholder { color: rgb(var(--color-ink-muted) / 0.55) !important; }
       #dashboard-main input[type="date"]::-webkit-datetime-edit,
       #dashboard-main input[type="date"]::-webkit-datetime-edit-text,
       #dashboard-main input[type="date"]::-webkit-datetime-edit-day-field,
       #dashboard-main input[type="date"]::-webkit-datetime-edit-month-field,
-      #dashboard-main input[type="date"]::-webkit-datetime-edit-year-field { color: #2B241A !important; }
+      #dashboard-main input[type="date"]::-webkit-datetime-edit-year-field { color: rgb(var(--color-ink)) !important; }
 
-      /* Botones no-primary: texto oscuro */
+      /* Botones no-primary: texto token */
       #dashboard-main button:not([class*="bg-primary"]):not([class*="bg-danger"]):not([class*="bg-amber"]):not([class*="bg-ink"]):not([class*="bg-black"]):not([style*="background-color"]) {
-        color: #2B241A !important;
+        color: rgb(var(--color-ink)) !important;
       }
     `;
   }
@@ -372,10 +380,26 @@ const IconLogout = () => (
   </svg>
 );
 
+const IconSun = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+    <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+  </svg>
+);
+
+const IconMoon = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+);
+
 export default function Layout({ children }) {
   const { user, logout } = useAuth();
   const { espacios, activeEspacio, setActive, refresh } = useEspacio();
   const trialDays = useTrialDays();
+  const { isDark, toggle: toggleTheme } = useTheme();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const trialRef = activeEspacio?.trialStartedAt ?? activeEspacio?.createdAt;
@@ -460,7 +484,7 @@ export default function Layout({ children }) {
                 const found = espacios.find(esp => esp.id === e.target.value);
                 if (found) setActive(found);
               }}
-              className="w-full px-2 py-1.5 bg-white border border-border rounded-md text-xs text-ink focus:outline-none focus:border-primary"
+              className="w-full px-2 py-1.5 bg-surface-100 border border-border rounded-md text-xs text-ink focus:outline-none focus:border-primary"
             >
               {espacios.map(esp => (
                 <option key={esp.id} value={esp.id}>{esp.nombre}</option>
@@ -540,6 +564,13 @@ export default function Layout({ children }) {
           <span className="text-xs text-ink-muted truncate max-w-[200px]">
             {user?.displayName || user?.email}
           </span>
+          <button
+            onClick={toggleTheme}
+            className="flex items-center justify-center w-8 h-8 rounded-md text-ink-muted hover:text-ink hover:bg-surface-200 transition-colors"
+            title={isDark ? 'Modo claro' : 'Modo oscuro'}
+          >
+            {isDark ? <IconSun /> : <IconMoon />}
+          </button>
           <button
             onClick={logout}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-muted border border-border rounded-md hover:bg-danger/8 hover:text-danger hover:border-danger/30 transition-colors"

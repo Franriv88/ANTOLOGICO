@@ -1,5 +1,5 @@
 /*
-  Antológico — Design Tokens (v2, Coral)
+  Antológico — Design Tokens (v3, Coral + Dark Mode)
   Importar una sola vez en el proyecto real (globals.css o el entry point).
 
   Fuentes (Google Fonts):
@@ -7,25 +7,21 @@
 */
 
 :root {
-  /* Color — tema claro */
-  --color-surface-0: #EFE7D8;      /* fondo de página */
-  --color-surface-100: #FBF8F2;    /* tarjetas, paneles, modales */
-  --color-surface-200: #E4DAC5;    /* hover, franjas de tabla, chips inactivos */
-  --color-border: #D2C4A8;         /* divisores, bordes de inputs */
-  --color-ink: #2B241A;            /* texto principal */
-  --color-ink-muted: #6B5F4C;      /* texto secundario, metadatos */
+  /* Color — tema claro (RGB channels para Tailwind opacity) */
+  --color-surface-0: 239 231 216;      /* #EFE7D8 — fondo de página */
+  --color-surface-100: 251 248 242;    /* #FBF8F2 — tarjetas, paneles, modales */
+  --color-surface-200: 228 218 197;    /* #E4DAC5 — hover, franjas de tabla, chips inactivos */
+  --color-border: 210 196 168;         /* #D2C4A8 — divisores, bordes de inputs */
+  --color-ink: 43 36 26;              /* #2B241A — texto principal */
+  --color-ink-muted: 107 95 76;        /* #6B5F4C — texto secundario, metadatos */
 
-  --color-primary: #E85D4A;        /* Coral — identidad de marca, acciones */
-  --color-primary-mid: #C94A38;    /* paso medio de degradés */
-  --color-primary-strong: #8C2E1F; /* hover/presionado, fin de degradés */
+  --color-primary: 232 93 74;         /* #E85D4A — Coral, identidad de marca */
+  --color-primary-mid: 201 74 56;     /* #C94A38 — paso medio de degradés */
+  --color-primary-strong: 140 46 31;  /* #8C2E1F — hover/presionado, fin de degradés */
 
-  --color-accent: #B98527;         /* categorías, badges — NO cambia con el tema de marca */
-  --color-danger: #A23B34;         /* errores, acciones destructivas */
-  --color-success: #3C6E4F;        /* confirmaciones, estados activos */
-
-  /* Reservados para el modo oscuro / alto contraste (pendiente de definir valores finales) */
-  --color-surface-0-dark: #1A1611;
-  --color-ink-dark: #FBF8F2;
+  --color-accent: 185 133 39;         /* #B98527 — categorías, badges */
+  --color-danger: 162 59 52;          /* #A23B34 — errores, acciones destructivas */
+  --color-success: 60 110 79;         /* #3C6E4F — confirmaciones, estados activos */
 
   /* Tipografía */
   --font-display: 'Fraunces', Georgia, serif;
@@ -54,7 +50,25 @@
   --radius-lg: 16px;
 
   /* Degradé de marca (usado en Landing) */
-  --gradient-brand: linear-gradient(150deg, var(--color-primary) 0%, var(--color-primary-mid) 55%, var(--color-primary-strong) 100%);
+  --gradient-brand: linear-gradient(150deg, rgb(var(--color-primary)) 0%, rgb(var(--color-primary-mid)) 55%, rgb(var(--color-primary-strong)) 100%);
+}
+
+/* ── Modo oscuro ────────────────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --color-surface-0: 26 22 17;         /* #1A1611 */
+  --color-surface-100: 38 32 24;       /* #262018 */
+  --color-surface-200: 55 47 34;       /* #372F22 */
+  --color-border: 75 65 48;            /* #4B4130 */
+  --color-ink: 245 239 227;            /* #F5EFE3 */
+  --color-ink-muted: 168 155 132;      /* #A89B84 */
+
+  --color-primary: 239 117 99;        /* #EF7563 — ligeramente más claro para contraste */
+  --color-primary-mid: 212 93 74;     /* #D45D4A */
+  --color-primary-strong: 168 72 58;  /* #A8483A */
+
+  --color-accent: 212 158 58;         /* #D49E3A — más brillante para legibilidad */
+  --color-danger: 212 83 74;          /* #D4534A */
+  --color-success: 90 158 114;        /* #5A9E72 */
 }
 
 /* Panel del Super Admin: deliberadamente distinto al del Tenant.

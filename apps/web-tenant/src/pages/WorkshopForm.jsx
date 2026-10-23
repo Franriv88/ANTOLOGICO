@@ -16,7 +16,7 @@ function CustomSelect({ value, onChange, options, placeholder = 'Seleccioná una
       <button
         type="button"
         onClick={() => setOpen(p => !p)}
-        className="w-full px-3 py-2 bg-white border border-border rounded-md text-sm text-left flex items-center justify-between gap-2 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+        className="w-full px-3 py-2 bg-surface-100 border border-border rounded-md text-sm text-left flex items-center justify-between gap-2 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
       >
         <span className={selected ? 'text-ink' : 'text-ink-muted'}>{selected ? selected.label : placeholder}</span>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
@@ -100,7 +100,7 @@ const TIPO_DESC = {
   CURSO:    'Formación estructurada en varios encuentros con programa, objetivos y evaluación.',
 };
 
-const INPUT_CLS = 'w-full px-3 py-2 bg-white border border-border rounded-md text-sm text-[#2B241A] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary';
+const INPUT_CLS = 'w-full px-3 py-2 bg-surface-100 border border-border rounded-md text-sm text-ink focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary';
 const LABEL_CLS = 'block text-xs font-medium text-ink-muted mb-1';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -235,7 +235,7 @@ function MultiDateCalendar({ selected, onChange, startDate }) {
   const cells = [...Array(offset).fill(null), ...Array.from({ length: daysInMonth }, (_,i) => i+1)];
 
   return (
-    <div className="border border-border rounded-lg bg-white p-4 select-none">
+    <div className="border border-border rounded-lg bg-surface-100 p-4 select-none">
       <div className="flex items-center justify-between mb-3">
         <button type="button" onClick={prevMonth} className="w-7 h-7 flex items-center justify-center hover:bg-surface-200 rounded text-ink-muted">‹</button>
         <span className="text-xs font-semibold text-ink">{MESES[view.month]} {view.year}</span>
@@ -303,7 +303,7 @@ function WeekdayCalendarPicker({ startDate, weekdayMyIdx, value, onChange, compu
   const cells = [...Array(offset).fill(null), ...Array.from({ length: daysInMonth }, (_,i) => i+1)];
 
   return (
-    <div className="border border-border rounded-lg bg-white p-4 select-none">
+    <div className="border border-border rounded-lg bg-surface-100 p-4 select-none">
       <div className="flex items-center justify-between mb-3">
         <button type="button" onClick={prevMonth} className="w-7 h-7 flex items-center justify-center hover:bg-surface-200 rounded text-ink-muted">‹</button>
         <span className="text-xs font-semibold text-ink">{MESES[view.month]} {view.year}</span>
@@ -382,7 +382,7 @@ function WeeklyPicker({ startDate, endDate, numSessions, frequency, onEndDateCha
               className={`px-3 py-1.5 rounded-md border text-xs font-medium transition-colors ${
                 frequency === val
                   ? 'border-primary bg-primary/5 text-primary'
-                  : 'border-border text-ink hover:border-primary/40 bg-white'
+                  : 'border-border text-ink hover:border-primary/40 bg-surface-100'
               }`}
             >
               {label}
@@ -400,7 +400,7 @@ function WeeklyPicker({ startDate, endDate, numSessions, frequency, onEndDateCha
           value={numSessions}
           onChange={e => onNumSessionsChange(e.target.value)}
           placeholder="Ej: 8"
-          className="inline-block ml-2 w-20 px-2 py-1 bg-white border border-border rounded-md text-sm text-[#2B241A] font-mono focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+          className="inline-block ml-2 w-20 px-2 py-1 bg-surface-100 border border-border rounded-md text-sm text-ink font-mono focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
         />
       </p>
       <WeekdayCalendarPicker
@@ -712,7 +712,7 @@ export default function WorkshopForm() {
                         type="button"
                         onClick={() => handleTipoChange(t)}
                         className={`text-left px-3 py-2.5 rounded-md border-2 transition-colors ${
-                          active ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40 bg-white'
+                          active ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40 bg-surface-100'
                         }`}
                       >
                         <span className="block text-xs font-semibold text-ink mb-0.5">{cfg.label}</span>
@@ -752,7 +752,7 @@ export default function WorkshopForm() {
                         className={`px-3 py-1.5 rounded-md border text-xs font-medium transition-colors ${
                           form.scheduleMode === mode
                             ? 'border-primary bg-primary/5 text-primary'
-                            : 'border-border text-ink hover:border-primary/40 bg-white'
+                            : 'border-border text-ink hover:border-primary/40 bg-surface-100'
                         }`}
                       >
                         {label}
@@ -820,7 +820,7 @@ export default function WorkshopForm() {
                       className={`flex-1 px-3 py-2 rounded-md border text-xs font-medium transition-colors ${
                         form.experienciaPrevia === val
                           ? 'border-primary bg-primary/5 text-primary'
-                          : 'border-border text-ink hover:border-primary/40 bg-white'
+                          : 'border-border text-ink hover:border-primary/40 bg-surface-100'
                       }`}
                     >
                       {label}
@@ -944,14 +944,14 @@ export default function WorkshopForm() {
                       value={form.duracionHoras}
                       onChange={e => set('duracionHoras', e.target.value)}
                       placeholder="0"
-                      className="w-20 px-3 py-2 bg-white border border-border rounded-md text-sm text-[#2B241A] font-mono focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                      className="w-20 px-3 py-2 bg-surface-100 border border-border rounded-md text-sm text-ink font-mono focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                     />
                     <span className="text-sm text-ink-muted shrink-0">hs</span>
                   </div>
                   <select
                     value={form.duracionMinutos}
                     onChange={e => set('duracionMinutos', e.target.value)}
-                    className="w-28 px-3 py-2 bg-white border border-border rounded-md text-sm text-[#2B241A] font-mono focus:outline-none focus:border-primary"
+                    className="w-28 px-3 py-2 bg-surface-100 border border-border rounded-md text-sm text-ink font-mono focus:outline-none focus:border-primary"
                   >
                     <option value="0">0 min</option>
                     <option value="15">15 min</option>
@@ -978,7 +978,7 @@ export default function WorkshopForm() {
                         className={`px-3 py-1.5 rounded-md border text-xs font-medium transition-colors ${
                           form.headerType === val
                             ? 'border-primary bg-primary/5 text-primary'
-                            : 'border-border text-ink hover:border-primary/40 bg-white'
+                            : 'border-border text-ink hover:border-primary/40 bg-surface-100'
                         }`}
                       >
                         {label}
@@ -1025,7 +1025,7 @@ export default function WorkshopForm() {
                         value={form.headerValue}
                         onChange={e => setForm(prev => ({ ...prev, headerValue: e.target.value }))}
                         placeholder="#E85D4A o rgb(232, 93, 74)"
-                        className="flex-1 px-2 py-1.5 bg-white border border-border rounded-md text-xs font-mono text-[#2B241A] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                        className="flex-1 px-2 py-1.5 bg-surface-100 border border-border rounded-md text-xs font-mono text-ink focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
                       />
                     </div>
                   </div>
@@ -1129,7 +1129,7 @@ export default function WorkshopForm() {
                       className={`px-2 py-2.5 rounded-md border-2 text-xs font-semibold transition-colors ${
                         form._estadoAction === action
                           ? 'border-primary bg-primary/5 text-primary'
-                          : 'border-border text-ink hover:border-primary/40 bg-white'
+                          : 'border-border text-ink hover:border-primary/40 bg-surface-100'
                       }`}
                     >
                       {label}

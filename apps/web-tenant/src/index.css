@@ -1,3 +1,5 @@
+@import '@antologico/design-tokens/tokens.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -30,38 +32,38 @@
 /* ── Scrollbar de marca (Dashboard) ────────────────────────────────────────── */
 .scrollbar-brand {
   scrollbar-width: thin;
-  scrollbar-color: #D2B8A0 #EFE7D8;
+  scrollbar-color: rgb(var(--color-border)) rgb(var(--color-surface-0));
 }
 .scrollbar-brand::-webkit-scrollbar {
   width: 5px;
 }
 .scrollbar-brand::-webkit-scrollbar-track {
-  background: #EFE7D8;
+  background: rgb(var(--color-surface-0));
   border-radius: 999px;
 }
 .scrollbar-brand::-webkit-scrollbar-thumb {
-  background: #D2B8A0;
+  background: rgb(var(--color-border));
   border-radius: 999px;
   transition: background 0.2s;
 }
 .scrollbar-brand::-webkit-scrollbar-thumb:hover {
-  background: #E85D4A;
+  background: rgb(var(--color-primary));
 }
 
 /* ── SweetAlert2 — estilo Antológico ──────────────────────────────────────── */
 .swal-antologico {
   font-family: 'IBM Plex Sans', sans-serif !important;
   border-radius: 1rem !important;
-  border: 1px solid #D2C4A8 !important;
-  background: #FAF8F4 !important;
+  border: 1px solid rgb(var(--color-border)) !important;
+  background: rgb(var(--color-surface-100)) !important;
 }
 .swal-antologico .swal2-title {
   font-family: 'Fraunces', serif !important;
-  color: #1A1611 !important;
+  color: rgb(var(--color-ink)) !important;
   font-size: 1.25rem !important;
 }
 .swal-antologico .swal2-html-container {
-  color: #6B5F4C !important;
+  color: rgb(var(--color-ink-muted)) !important;
 }
 .swal-antologico .swal2-confirm {
   border-radius: 0.5rem !important;
@@ -72,8 +74,16 @@
   border-radius: 0.5rem !important;
   font-weight: 500 !important;
   font-size: 0.875rem !important;
-  color: #6B5F4C !important;
+  color: rgb(var(--color-ink-muted)) !important;
 }
 .swal-antologico-icon {
-  border-color: #E85D4A !important;
+  border-color: rgb(var(--color-primary)) !important;
+}
+
+/* ── Transición suave al cambiar tema ─────────────────────────────────────── */
+html.theme-transition,
+html.theme-transition *,
+html.theme-transition *::before,
+html.theme-transition *::after {
+  transition: background-color 0.3s ease, color 0.2s ease, border-color 0.3s ease, box-shadow 0.3s ease !important;
 }

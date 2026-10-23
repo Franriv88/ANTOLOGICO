@@ -521,7 +521,7 @@ function InstructivoModal({ onClose }) {
           </div>
           <button
             onClick={onClose}
-            className="w-7 h-7 flex items-center justify-center rounded-full text-[#9B8F80] hover:bg-[#EDE8DE] hover:text-[#2B241A] transition-colors"
+            className="w-7 h-7 flex items-center justify-center rounded-full text-ink-muted hover:bg-surface-200 hover:text-ink transition-colors"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           </button>
@@ -534,9 +534,9 @@ function InstructivoModal({ onClose }) {
 
         {/* Contenido */}
         <div className="flex-1 overflow-y-auto px-6 py-5">
-          <p className="text-xs text-[#9B8F80] font-mono mb-1">{step.label}</p>
-          <h2 className="text-xl font-bold text-[#1A1611] mb-3 leading-snug">{step.title}</h2>
-          <div className="text-sm text-[#2B241A] leading-relaxed space-y-2">
+          <p className="text-xs text-ink-muted font-mono mb-1">{step.label}</p>
+          <h2 className="text-xl font-bold text-ink mb-3 leading-snug">{step.title}</h2>
+          <div className="text-sm text-ink leading-relaxed space-y-2">
             {step.paras.map((p, i) => (
               <p key={i} dangerouslySetInnerHTML={{ __html: p }} />
             ))}
@@ -556,11 +556,11 @@ function InstructivoModal({ onClose }) {
         </div>
 
         {/* Navegación */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-[#EDE8DE] shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-t border-border shrink-0">
           <button
             onClick={() => setIdx(i => i - 1)}
             disabled={isFirst}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-[#D2C4A8] text-sm font-medium text-[#6B5F4C] hover:bg-[#EDE8DE] disabled:opacity-30 disabled:cursor-default transition-colors"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-border text-sm font-medium text-ink-muted hover:bg-surface-200 disabled:opacity-30 disabled:cursor-default transition-colors"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><polyline points="15 18 9 12 15 6"/></svg>
             Anterior
@@ -601,7 +601,7 @@ export default function Instructivo() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-[100] flex items-center gap-2 bg-[#FAF8F4] border border-[#D2C4A8] shadow-lg rounded-full pl-3.5 pr-4 py-2.5 text-sm font-medium text-[#2B241A] hover:shadow-xl hover:bg-white transition-all"
+        className="fixed bottom-6 right-6 z-[100] flex items-center gap-2 bg-surface-100 border border-border shadow-lg rounded-full pl-3.5 pr-4 py-2.5 text-sm font-medium text-ink hover:shadow-xl hover:bg-surface-200 transition-all"
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B5F4C" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>

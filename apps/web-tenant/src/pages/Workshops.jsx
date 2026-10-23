@@ -89,7 +89,7 @@ function ConfirmModal({ title, message, confirmLabel = 'Confirmar', confirmClass
         className="absolute inset-0 bg-black/50"
         onClick={onCancel}
       />
-      <div className="relative bg-[#FAF8F4] border border-[#D2C4A8] rounded-xl shadow-2xl p-6 max-w-sm w-full">
+      <div className="relative bg-surface-100 border border-border rounded-xl shadow-2xl p-6 max-w-sm w-full">
         {title && (
           <h2 className="font-display text-lg text-ink mb-2">{title}</h2>
         )}
@@ -485,7 +485,7 @@ export default function Workshops() {
                       {w.estado !== 'CANCELADO' && (
                         <button
                           onClick={() => handleCancelRequest(w.id, w.nombre)}
-                          className="w-full py-1.5 text-xs font-medium rounded-md border border-border bg-white text-ink-muted hover:bg-ink/5 hover:text-ink hover:border-ink/30 transition-all"
+                          className="w-full py-1.5 text-xs font-medium rounded-md border border-border bg-surface-100 text-ink-muted hover:bg-ink/5 hover:text-ink hover:border-ink/30 transition-all"
                         >
                           Cancelar taller
                         </button>

@@ -4,7 +4,7 @@ import { profesionales as profesionalesApi } from '../../services/api';
 import { updateUserProfile } from '../../services/userAuth';
 
 const INPUT_CLS =
-  'w-full px-3 py-2 bg-white border border-border rounded-md text-sm text-ink ' +
+  'w-full px-3 py-2 bg-surface-100 border border-border rounded-md text-sm text-ink ' +
   'focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary';
 const LABEL_CLS = 'block text-xs font-medium text-ink-muted mb-1';
 

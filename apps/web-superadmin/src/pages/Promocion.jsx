@@ -4,7 +4,7 @@ import { promoApi, promoCodes as promoCodesApi, tenants as tenantsApi, planes as
 const FMT = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
 const fmt = n => FMT.format(n);
 
-const INPUT = 'w-full px-3 py-2 bg-white border border-border rounded-md text-sm text-ink focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary';
+const INPUT = 'w-full px-3 py-2 bg-surface-100 border border-border rounded-md text-sm text-ink focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary';
 const LBL   = 'block text-xs font-medium text-ink-muted mb-1';
 
 function toDatetimeLocal(iso) {

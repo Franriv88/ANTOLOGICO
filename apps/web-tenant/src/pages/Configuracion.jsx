@@ -139,7 +139,7 @@ function complementaryColor(hex) {
   return '#' + toHex(hue2rgb(hN + 1/3)) + toHex(hue2rgb(hN)) + toHex(hue2rgb(hN - 1/3));
 }
 
-const INPUT_CLS = 'w-full px-3 py-2 bg-white border border-border rounded-md text-sm text-ink focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary';
+const INPUT_CLS = 'w-full px-3 py-2 bg-surface-100 border border-border rounded-md text-sm text-ink focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary';
 const LABEL_CLS = 'block text-xs font-medium text-ink-muted mb-1';
 
 // ── Catalogue ─────────────────────────────────────────────────────────────────
@@ -428,7 +428,7 @@ function AgregarEspacioModal({ userId, onSuccess, onClose }) {
               value={nombre}
               onChange={e => setNombre(e.target.value)}
               placeholder="Ej: Studio Norte, Espacio Palermo…"
-              className="w-full px-3 py-2 border border-border rounded-md text-sm text-ink bg-white focus:outline-none focus:border-primary"
+              className="w-full px-3 py-2 border border-border rounded-md text-sm text-ink bg-surface-100 focus:outline-none focus:border-primary"
               required
               autoFocus
             />
@@ -487,7 +487,7 @@ function CompartirEspacio({ espacio }) {
         <button
           type="button"
           onClick={handleCopy}
-          className="shrink-0 px-4 py-2 text-sm font-medium border border-border rounded-md bg-white hover:bg-surface-200 transition-colors"
+          className="shrink-0 px-4 py-2 text-sm font-medium border border-border rounded-md bg-surface-100 hover:bg-surface-200 transition-colors"
         >
           {copied ? '¡Copiado!' : 'Copiar'}
         </button>
@@ -495,7 +495,7 @@ function CompartirEspacio({ espacio }) {
           href={publicUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="shrink-0 px-4 py-2 text-sm font-medium border border-border rounded-md bg-white hover:bg-surface-200 transition-colors"
+          className="shrink-0 px-4 py-2 text-sm font-medium border border-border rounded-md bg-surface-100 hover:bg-surface-200 transition-colors"
         >
           Abrir →
         </a>
@@ -593,7 +593,7 @@ function RedesSocialesSection({ espacio, livePalette, links, setLinks, style, se
             className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${
               style === v
                 ? 'border-primary bg-primary/8 text-primary'
-                : 'border-border text-ink-muted hover:border-primary/40 bg-white'
+                : 'border-border text-ink-muted hover:border-primary/40 bg-surface-100'
             }`}
           >
             {label}
@@ -1201,7 +1201,7 @@ function TabIdentidad({ espacio, refresh }) {
                   <div className="flex gap-2">
                     {SHAPES.map(s => (
                       <button key={s.key} type="button" onClick={() => setLogoShape(s.key)}
-                        className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${logoShape === s.key ? 'border-primary bg-primary/5 text-primary' : 'border-border text-ink-muted hover:border-primary/40 bg-white'}`}>
+                        className={`px-3 py-1.5 text-xs font-medium rounded-md border transition-colors ${logoShape === s.key ? 'border-primary bg-primary/5 text-primary' : 'border-border text-ink-muted hover:border-primary/40 bg-surface-100'}`}>
                         {s.label}
                       </button>
                     ))}
@@ -1220,12 +1220,12 @@ function TabIdentidad({ espacio, refresh }) {
                 )}
                 <div className="flex flex-wrap gap-2 mt-1">
                   <button type="button" onClick={() => logoInputRef.current?.click()}
-                    className="px-3 py-1.5 text-xs font-medium border border-border rounded-md bg-white text-ink hover:bg-surface-200 transition-colors">
+                    className="px-3 py-1.5 text-xs font-medium border border-border rounded-md bg-surface-100 text-ink hover:bg-surface-200 transition-colors">
                     {logoData ? 'Cambiar' : 'Subir logo'}
                   </button>
                   {logoData && !removingBg && (
                     <button type="button" onClick={handleRemoveBg}
-                      className="px-3 py-1.5 text-xs font-medium border border-border rounded-md bg-white text-ink hover:bg-surface-200 transition-colors">
+                      className="px-3 py-1.5 text-xs font-medium border border-border rounded-md bg-surface-100 text-ink hover:bg-surface-200 transition-colors">
                       ✨ Quitar fondo
                     </button>
                   )}
@@ -1237,7 +1237,7 @@ function TabIdentidad({ espacio, refresh }) {
                   )}
                   {logoData && (
                     <button type="button" onClick={() => { setLogoData(''); setBgError(''); }}
-                      className="px-3 py-1.5 text-xs font-medium border border-danger/30 rounded-md bg-white text-danger hover:bg-danger/5 transition-colors">
+                      className="px-3 py-1.5 text-xs font-medium border border-danger/30 rounded-md bg-surface-100 text-danger hover:bg-danger/5 transition-colors">
                       Quitar logo
                     </button>
                   )}
@@ -1318,7 +1318,7 @@ function TabIdentidad({ espacio, refresh }) {
                 <h3 className="text-sm font-semibold text-ink mb-0.5">Roles de color</h3>
                 <p className="text-xs text-ink-muted">¿Qué hace cada color de tu paleta? Asignalo a cada función.</p>
               </div>
-              <div className="flex flex-col divide-y divide-[#E8DFD0] border border-[#D2C4A8] rounded-xl overflow-hidden bg-[#FBF8F2]">
+              <div className="flex flex-col divide-y divide-border border border-border rounded-xl overflow-hidden bg-surface-100">
                 {COLOR_ROLES.map((role) => (
                   <div key={role.key} className="flex items-center gap-3 px-4 py-2.5">
                     <span className="w-[7.5rem] shrink-0 text-xs font-medium text-ink" title={role.hint}>{role.label}</span>
@@ -1374,7 +1374,7 @@ function TabIdentidad({ espacio, refresh }) {
                 return (
                   <button key={pair.key} type="button" disabled={locked}
                     onClick={() => !locked && setFontPair(pair)}
-                    className={`relative text-left px-4 py-3 rounded-xl border-2 transition-all ${locked ? 'border-border bg-surface-100 cursor-not-allowed opacity-55' : selected ? 'bg-white' : 'border-border bg-white hover:border-primary/40'}`}
+                    className={`relative text-left px-4 py-3 rounded-xl border-2 transition-all ${locked ? 'border-border bg-surface-100 cursor-not-allowed opacity-55' : selected ? 'bg-surface-100' : 'border-border bg-surface-100 hover:border-primary/40'}`}
                     style={selected && !locked ? { borderColor: selectedFontColor } : {}}>
                     <p className="font-bold leading-tight" style={{ fontFamily: `'${pair.display}', serif`, fontSize: '1.1rem', color: selected ? selectedFontColor : '#2B241A' }}>
                       {pair.display}
@@ -1466,7 +1466,7 @@ function Toggle({ checked, onChange, disabled }) {
         checked ? 'bg-primary border-primary' : 'bg-surface-200 border-surface-200'
       }`}
     >
-      <span className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-sm transform transition-transform duration-200 ${
+      <span className={`pointer-events-none inline-block h-4 w-4 rounded-full bg-surface-100 shadow-sm transform transition-transform duration-200 ${
         checked ? 'translate-x-4' : 'translate-x-0'
       }`} />
     </button>
@@ -1720,7 +1720,7 @@ function TabCobros({ espacio, refresh }) {
             {links.length > 0 && (
               <div className="flex flex-col gap-2">
                 {links.map(link => (
-                  <div key={link.id} className="flex items-center gap-3 bg-white border border-border rounded-lg px-3 py-2.5">
+                  <div key={link.id} className="flex items-center gap-3 bg-surface-100 border border-border rounded-lg px-3 py-2.5">
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold text-ink truncate">{link.nombre}</p>
                       <p className="text-[10px] text-ink-muted font-mono truncate">{link.url}</p>
@@ -1740,7 +1740,7 @@ function TabCobros({ espacio, refresh }) {
             )}
 
             {showAddLink ? (
-              <div className="bg-white border border-border rounded-xl p-4 flex flex-col gap-3">
+              <div className="bg-surface-100 border border-border rounded-xl p-4 flex flex-col gap-3">
                 <div>
                   <label className={LABEL_CLS}>Nombre del link *</label>
                   <input
@@ -1945,7 +1945,7 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
                 { id: 'anual',      label: 'Anual' },
               ].map(op => (
                 <button key={op.id} onClick={() => setPeriodo(op.id)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${periodo === op.id ? 'bg-white shadow-sm text-ink' : 'text-ink-muted hover:text-ink'}`}>
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${periodo === op.id ? 'bg-surface-100 shadow-sm text-ink' : 'text-ink-muted hover:text-ink'}`}>
                   {op.label}
                   {op.id !== 'mensual' && (planesDB ?? [])[0] && (
                     <span className="ml-1 text-success font-semibold">
@@ -1974,7 +1974,7 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
               const meses  = periodo === 'trimestral' ? 3 : periodo === 'anual' ? 12 : 0;
               const ahorro = dto > 0 ? (plan.precioMensual - precioPlan) * meses : 0;
               return (
-                <div key={plan.id} className={`flex items-center gap-4 p-4 rounded-lg border transition-colors ${plan.id === 'estudio' ? 'border-primary/40 bg-primary/5' : 'border-border bg-white'}`}>
+                <div key={plan.id} className={`flex items-center gap-4 p-4 rounded-lg border transition-colors ${plan.id === 'estudio' ? 'border-primary/40 bg-primary/5' : 'border-border bg-surface-100'}`}>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                       <p className="text-sm font-semibold text-ink">{plan.nombre}</p>
@@ -2058,7 +2058,7 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
           {otrosEspacios.length > 0 && (
             <div className="flex flex-col gap-3 mb-3">
               {otrosEspacios.map(esp => (
-                <div key={esp.id} className="flex items-center gap-3 p-3 bg-white border border-border rounded-lg">
+                <div key={esp.id} className="flex items-center gap-3 p-3 bg-surface-100 border border-border rounded-lg">
                   <EspacioLogoThumb esp={esp} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-ink truncate">{esp.nombre}</p>

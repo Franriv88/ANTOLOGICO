@@ -84,7 +84,7 @@ function BlockModal({ email, isBloqueado, onConfirm, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-[#FAF8F4] border border-[#D2C4A8] rounded-2xl p-6 w-full max-w-sm shadow-xl">
+      <div className="relative bg-surface-100 border border-border rounded-2xl p-6 w-full max-w-sm shadow-xl">
         <h3 className="font-display text-lg text-ink mb-1">
           {isBloqueado ? '¿Desbloquear usuario?' : '¿Bloquear usuario?'}
         </h3>
@@ -97,7 +97,7 @@ function BlockModal({ email, isBloqueado, onConfirm, onClose }) {
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2 border border-[#D2C4A8] rounded-xl text-sm text-ink hover:bg-[#F2EDE3] transition-colors"
+            className="flex-1 px-4 py-2 border border-border rounded-xl text-sm text-ink hover:bg-surface-200 transition-colors"
           >
             Cancelar
           </button>
@@ -121,7 +121,7 @@ function CancelModal({ reserva, workshopNombre, onConfirm, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-[#FAF8F4] border border-[#D2C4A8] rounded-2xl p-6 w-full max-w-sm shadow-xl">
+      <div className="relative bg-surface-100 border border-border rounded-2xl p-6 w-full max-w-sm shadow-xl">
         <h3 className="font-display text-lg text-ink mb-1">¿Cancelar reserva?</h3>
         <p className="text-sm text-ink-muted mb-1">
           <span className="font-medium text-ink">{reserva.nombre}</span> — {workshopNombre}
@@ -285,7 +285,7 @@ export default function Reservas() {
         <select
           value={filterWs}
           onChange={e => setFilterWs(e.target.value)}
-          className="px-3 py-2 bg-white border border-border rounded-lg text-sm text-ink focus:outline-none focus:border-primary"
+          className="px-3 py-2 bg-surface-100 border border-border rounded-lg text-sm text-ink focus:outline-none focus:border-primary"
         >
           <option value="">Todos los talleres</option>
           {workshops.map(w => (
@@ -297,7 +297,7 @@ export default function Reservas() {
           placeholder="Buscar por nombre o email…"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="flex-1 px-3 py-2 bg-white border border-border rounded-lg text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:border-primary"
+          className="flex-1 px-3 py-2 bg-surface-100 border border-border rounded-lg text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:border-primary"
         />
       </div>
 

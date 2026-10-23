@@ -22,7 +22,7 @@ const DEV_PASSWORD = 'dev123456';
 const DEV_NAME     = 'Dev User';
 
 const INPUT_CLS =
-  'w-full px-3 py-2 bg-white border border-border rounded-md text-sm text-ink ' +
+  'w-full px-3 py-2 bg-surface-100 border border-border rounded-md text-sm text-ink ' +
   'focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary';
 
 // ─── Google SVG ──────────────────────────────────────────────────────────────
@@ -411,7 +411,7 @@ function TenantLoginPage({ initialTab = 'login' }) {
               className={`flex-1 py-2 text-sm font-medium transition-colors ${
                 tab === key
                   ? 'bg-primary text-white'
-                  : 'bg-white text-ink-muted hover:text-ink hover:bg-surface-100'
+                  : 'bg-surface-100 text-ink-muted hover:text-ink hover:bg-surface-200'
               }`}
             >
               {label}
