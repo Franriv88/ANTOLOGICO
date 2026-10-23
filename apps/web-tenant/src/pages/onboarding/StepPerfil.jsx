@@ -54,38 +54,59 @@ export default function StepPerfil({ onNext }) {
     setLoading(false);
   }
 
+  const hasName  = !!user?.displayName;
+  const hasEmail = !!user?.email;
+
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
       <div>
-        <h2 className="font-display text-xl text-ink mb-1">Tu perfil</h2>
+        <h2 className="font-display text-xl text-ink mb-1">
+          {hasName ? `Hola, ${user.displayName.split(' ')[0]}` : 'Tu perfil'}
+        </h2>
         <p className="text-sm text-ink-muted">
-          Este nombre aparecerá en tu panel y en tus comunicaciones con usuarios.
+          {hasName
+            ? 'Completá tu perfil con algunos datos opcionales.'
+            : 'Este nombre aparecerá en tu panel y en tus comunicaciones con usuarios.'}
         </p>
       </div>
 
-      <div>
-        <label className={LABEL_CLS}>Nombre completo *</label>
-        <input
-          type="text"
-          value={nombre}
-          onChange={(e) => { setNombre(e.target.value); setError(''); }}
-          placeholder="Ej: María González"
-          autoFocus
-          className={INPUT_CLS}
-        />
-        {error && <p className="mt-1 text-xs text-danger">{error}</p>}
-      </div>
+      {hasName ? (
+        <div className="flex items-center gap-3 bg-surface-100 border border-border rounded-md px-4 py-3">
+          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm shrink-0">
+            {nombre.charAt(0).toUpperCase()}
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-ink truncate">{nombre}</p>
+            {hasEmail && <p className="text-xs text-ink-muted truncate">{email}</p>}
+          </div>
+        </div>
+      ) : (
+        <>
+          <div>
+            <label className={LABEL_CLS}>Nombre completo *</label>
+            <input
+              type="text"
+              value={nombre}
+              onChange={(e) => { setNombre(e.target.value); setError(''); }}
+              placeholder="Ej: María González"
+              autoFocus
+              className={INPUT_CLS}
+            />
+            {error && <p className="mt-1 text-xs text-danger">{error}</p>}
+          </div>
 
-      <div>
-        <label className={LABEL_CLS}>Email</label>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => { setEmail(e.target.value); setError(''); }}
-          placeholder="tu@email.com"
-          className={INPUT_CLS}
-        />
-      </div>
+          <div>
+            <label className={LABEL_CLS}>Email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => { setEmail(e.target.value); setError(''); }}
+              placeholder="tu@email.com"
+              className={INPUT_CLS}
+            />
+          </div>
+        </>
+      )}
 
       <div>
         <label className={LABEL_CLS}>Teléfono de contacto <span className="font-normal">(opcional)</span></label>
