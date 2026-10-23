@@ -601,9 +601,15 @@ function VerifyEmailScreen({ email, onVerified }) {
               </button>
             </div>
 
-            <p className="text-xs text-ink-muted">
-              ¿No lo ves? Revisá la carpeta de spam o correo no deseado.
-            </p>
+            <div className="w-full bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 flex items-start gap-3">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b45309" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 mt-0.5">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              <p className="text-xs text-amber-800 leading-relaxed">
+                <span className="font-semibold">¿No lo ves?</span> Revisá tu carpeta de <span className="font-semibold">spam</span> o correo no deseado. El email llega desde <span className="font-mono text-[11px]">noreply@antologico.firebaseapp.com</span>.
+              </p>
+            </div>
 
             <div className="flex items-center gap-2 text-xs text-ink-muted">
               <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
