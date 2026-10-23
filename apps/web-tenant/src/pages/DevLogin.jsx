@@ -199,13 +199,12 @@ function TenantLoginPage({ initialTab = 'login' }) {
   const navigate = useNavigate();
   const { user }  = useAuth();
 
-  // Navegar en cuanto onAuthStateChanged confirme el usuario
-  useEffect(() => {
-    if (user) navigate('/workshops', { replace: true });
-  }, [user, navigate]);
-
-  // Tabs: 'login' | 'register'
   const [tab, setTab] = useState(initialTab);
+
+  // Auto-redirigir solo si ya hay sesión y estamos en tab login (no en registro)
+  useEffect(() => {
+    if (user && tab === 'login') navigate('/workshops', { replace: true });
+  }, [user, navigate, tab]);
 
   // Login
   const [loginEmail, setLoginEmail]       = useState('');
@@ -237,7 +236,7 @@ function TenantLoginPage({ initialTab = 'login' }) {
     setLoading(true);
     try {
       await signInWithPopup(auth, provider);
-      // La navegación la maneja el useEffect que observa `user`
+      navigate('/workshops', { replace: true });
     } catch (err) {
       if (err.code !== 'auth/popup-closed-by-user') setError(authErrorMsg(err.code));
       setLoading(false);
@@ -259,6 +258,7 @@ function TenantLoginPage({ initialTab = 'login' }) {
         setLoading(false);
         return;
       }
+      navigate('/workshops', { replace: true });
     } catch (err) {
       setError(authErrorMsg(err.code));
       setLoading(false);
