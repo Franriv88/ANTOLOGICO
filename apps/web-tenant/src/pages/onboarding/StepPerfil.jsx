@@ -8,13 +8,23 @@ const INPUT_CLS =
   'focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary';
 const LABEL_CLS = 'block text-xs font-medium text-ink-muted mb-1';
 
+const GENEROS = [
+  { value: '',               label: 'Seleccioná…' },
+  { value: 'masculino',      label: 'Masculino' },
+  { value: 'femenino',       label: 'Femenino' },
+  { value: 'no-binario',     label: 'No binario' },
+  { value: 'prefiero-no-decirlo', label: 'Prefiero no decirlo' },
+];
+
 export default function StepPerfil({ onNext }) {
   const { user } = useAuth();
-  const [nombre,   setNombre]   = useState(user?.displayName ?? '');
-  const [email,    setEmail]    = useState(user?.email ?? '');
-  const [telefono, setTelefono] = useState('');
-  const [loading,  setLoading]  = useState(false);
-  const [error,    setError]    = useState('');
+  const [nombre,       setNombre]       = useState(user?.displayName ?? '');
+  const [email,        setEmail]        = useState(user?.email ?? '');
+  const [telefono,     setTelefono]     = useState('');
+  const [genero,       setGenero]       = useState('');
+  const [fechaNac,     setFechaNac]     = useState('');
+  const [loading,      setLoading]      = useState(false);
+  const [error,        setError]        = useState('');
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -30,12 +40,14 @@ export default function StepPerfil({ onNext }) {
     if (user?.uid) {
       try {
         await updateUserProfile(user.uid, {
-          nombre:   nombre.trim(),
-          email:    email.trim(),
-          telefono: telefono.trim(),
+          nombre:    nombre.trim(),
+          email:     email.trim(),
+          telefono:  telefono.trim(),
+          genero:    genero || 'prefiero-no-decirlo',
+          fechaNac:  fechaNac || null,
         });
       } catch {
-        // non-blocking — perfil en super admin es informativo
+        // non-blocking
       }
     }
     onNext({ nombre: nombre.trim(), telefono: telefono.trim() });
@@ -84,6 +96,30 @@ export default function StepPerfil({ onNext }) {
           placeholder="Ej: +54 9 11 1234-5678"
           className={INPUT_CLS}
         />
+      </div>
+
+      <div>
+        <label className={LABEL_CLS}>Fecha de nacimiento <span className="font-normal">(opcional)</span></label>
+        <input
+          type="date"
+          value={fechaNac}
+          onChange={(e) => setFechaNac(e.target.value)}
+          max={new Date().toISOString().split('T')[0]}
+          className={INPUT_CLS}
+        />
+      </div>
+
+      <div>
+        <label className={LABEL_CLS}>Género <span className="font-normal">(opcional)</span></label>
+        <select
+          value={genero}
+          onChange={(e) => setGenero(e.target.value)}
+          className={INPUT_CLS}
+        >
+          {GENEROS.map(g => (
+            <option key={g.value} value={g.value}>{g.label}</option>
+          ))}
+        </select>
       </div>
 
       <button

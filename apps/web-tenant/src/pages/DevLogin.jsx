@@ -219,6 +219,7 @@ function TenantLoginPage({ initialTab = 'login' }) {
   const [regNombre,   setRegNombre]   = useState('');
   const [regEmail,    setRegEmail]    = useState('');
   const [regPass,     setRegPass]     = useState('');
+  const [regConfirm,  setRegConfirm]  = useState('');
 
   // Reset password
   const [resetMode,  setResetMode]   = useState(false);
@@ -254,8 +255,14 @@ function TenantLoginPage({ initialTab = 'login' }) {
     setError('');
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, loginEmail, loginPass);
-      // La navegación la maneja el useEffect que observa `user`
+      const cred = await signInWithEmailAndPassword(auth, loginEmail, loginPass);
+      if (!cred.user.emailVerified) {
+        try { await sendEmailVerification(cred.user); } catch (_) {}
+        setVerifyEmail(loginEmail);
+        setVerifyMode(true);
+        setLoading(false);
+        return;
+      }
     } catch (err) {
       setError(authErrorMsg(err.code));
       setLoading(false);
@@ -263,17 +270,30 @@ function TenantLoginPage({ initialTab = 'login' }) {
   }
 
   // ── Registro ─────────────────────────────────────────────────────────────────
+  function validatePassword(pass) {
+    if (pass.length < 8) return 'Mínimo 8 caracteres';
+    if (!/[a-zA-Z]/.test(pass)) return 'Debe contener al menos una letra';
+    if (!/[0-9]/.test(pass)) return 'Debe contener al menos un número';
+    if (!/[.#*$@!%&_\-+=?]/.test(pass)) return 'Debe contener un símbolo (. # * $ @ ! % &)';
+    return null;
+  }
+
+  const passError = regPass ? validatePassword(regPass) : null;
+  const passMatch = regConfirm && regPass !== regConfirm;
+
   async function handleRegister(e) {
     e.preventDefault();
     if (!regNombre.trim()) { setError('El nombre es requerido'); return; }
     if (!regEmail)         { setError('El email es requerido'); return; }
-    if (regPass.length < 6) { setError('La contraseña debe tener al menos 6 caracteres'); return; }
+    const pErr = validatePassword(regPass);
+    if (pErr) { setError(pErr); return; }
+    if (regPass !== regConfirm) { setError('Las contraseñas no coinciden'); return; }
     setError('');
     setLoading(true);
     try {
       const cred = await createUserWithEmailAndPassword(auth, regEmail, regPass);
       await updateProfile(cred.user, { displayName: regNombre.trim() });
-      try { await sendEmailVerification(cred.user); } catch (_) {}
+      await sendEmailVerification(cred.user);
       setVerifyEmail(regEmail);
       setVerifyMode(true);
     } catch (err) {
@@ -302,29 +322,10 @@ function TenantLoginPage({ initialTab = 'login' }) {
   // ── Verificación de email (post-registro) ────────────────────────────────────
   if (verifyMode) {
     return (
-      <PageShell>
-        <div className="flex flex-col items-center text-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-2xl">
-            ✉️
-          </div>
-          <div>
-            <h2 className="font-display text-xl text-ink mb-1">Verificá tu email</h2>
-            <p className="text-sm text-ink-muted">
-              Te enviamos un correo a <span className="font-medium text-ink">{verifyEmail}</span>.
-              Revisá tu bandeja y hacé clic en el enlace para activar tu cuenta.
-            </p>
-          </div>
-          <p className="text-xs text-ink-muted">
-            ¿No lo ves? Revisá la carpeta de spam o correo no deseado.
-          </p>
-          <button
-            onClick={() => navigate('/workshops')}
-            className="w-full py-2.5 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary-strong transition-colors"
-          >
-            Continuar al panel →
-          </button>
-        </div>
-      </PageShell>
+      <VerifyEmailScreen
+        email={verifyEmail}
+        onVerified={() => navigate('/workshops')}
+      />
     );
   }
 
@@ -527,9 +528,39 @@ function TenantLoginPage({ initialTab = 'login' }) {
                 type="password"
                 value={regPass}
                 onChange={(e) => { setRegPass(e.target.value); clearErr(); }}
-                placeholder="Mínimo 6 caracteres"
+                placeholder="Mínimo 8 caracteres"
                 className={INPUT_CLS}
               />
+              {regPass && (
+                <div className="mt-1.5 flex flex-col gap-1">
+                  {[
+                    [regPass.length >= 8, '8+ caracteres'],
+                    [/[a-zA-Z]/.test(regPass), 'Una letra'],
+                    [/[0-9]/.test(regPass), 'Un número'],
+                    [/[.#*$@!%&_\-+=?]/.test(regPass), 'Un símbolo (. # * $ @ !)'],
+                  ].map(([ok, label]) => (
+                    <span key={label} className={`text-[11px] flex items-center gap-1.5 ${ok ? 'text-emerald-600' : 'text-ink-muted'}`}>
+                      <span className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] ${ok ? 'bg-emerald-100 text-emerald-700' : 'bg-surface-200 text-ink-muted'}`}>
+                        {ok ? '✓' : '·'}
+                      </span>
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-ink-muted mb-1">Confirmar contraseña</label>
+              <input
+                type="password"
+                value={regConfirm}
+                onChange={(e) => { setRegConfirm(e.target.value); clearErr(); }}
+                placeholder="Repetí tu contraseña"
+                className={`${INPUT_CLS} ${passMatch ? 'border-danger focus:border-danger focus:ring-danger' : ''}`}
+              />
+              {passMatch && (
+                <p className="mt-1 text-[11px] text-danger">Las contraseñas no coinciden</p>
+              )}
             </div>
             {error && (
               <p className="text-xs text-danger bg-danger/5 border border-danger/20 rounded px-3 py-2">
@@ -538,7 +569,7 @@ function TenantLoginPage({ initialTab = 'login' }) {
             )}
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !!passError || passMatch}
               className="w-full py-2.5 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary-strong transition-colors disabled:opacity-50"
             >
               {loading ? 'Creando cuenta…' : 'Crear cuenta →'}
@@ -555,6 +586,116 @@ function TenantLoginPage({ initialTab = 'login' }) {
               </button>
             </p>
           </form>
+        )}
+      </div>
+    </PageShell>
+  );
+}
+
+// ─── Pantalla de verificación obligatoria ─────────────────────────────────────
+function VerifyEmailScreen({ email, onVerified }) {
+  const [checking, setChecking]   = useState(false);
+  const [resent, setResent]       = useState(false);
+  const [verified, setVerified]   = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const u = auth.currentUser;
+      if (!u) return;
+      await u.reload();
+      if (u.emailVerified) {
+        setVerified(true);
+        clearInterval(interval);
+      }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  async function handleResend() {
+    setChecking(true);
+    try {
+      const u = auth.currentUser;
+      if (u) await sendEmailVerification(u);
+      setResent(true);
+      setTimeout(() => setResent(false), 5000);
+    } catch (_) {}
+    setChecking(false);
+  }
+
+  async function handleCheck() {
+    setChecking(true);
+    const u = auth.currentUser;
+    if (u) {
+      await u.reload();
+      if (u.emailVerified) setVerified(true);
+    }
+    setChecking(false);
+  }
+
+  return (
+    <PageShell>
+      <div className="flex flex-col items-center text-center gap-4">
+        <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+          {verified ? (
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          ) : (
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+              <rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,7 12,13 2,7"/>
+            </svg>
+          )}
+        </div>
+
+        {verified ? (
+          <>
+            <div>
+              <h2 className="font-display text-xl text-ink mb-1">Email verificado</h2>
+              <p className="text-sm text-ink-muted">Tu cuenta está activa. Ya podés empezar.</p>
+            </div>
+            <button
+              onClick={onVerified}
+              className="w-full py-2.5 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary-strong transition-colors"
+            >
+              Continuar al panel →
+            </button>
+          </>
+        ) : (
+          <>
+            <div>
+              <h2 className="font-display text-xl text-ink mb-1">Verificá tu email</h2>
+              <p className="text-sm text-ink-muted">
+                Te enviamos un enlace a <span className="font-medium text-ink">{email}</span>.
+                Hacé clic en el enlace para activar tu cuenta.
+              </p>
+            </div>
+
+            <div className="w-full flex flex-col gap-2">
+              <button
+                onClick={handleCheck}
+                disabled={checking}
+                className="w-full py-2.5 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary-strong transition-colors disabled:opacity-50"
+              >
+                {checking ? 'Verificando…' : 'Ya verifiqué mi email'}
+              </button>
+              <button
+                onClick={handleResend}
+                disabled={checking || resent}
+                className="w-full py-2 border border-border rounded-md text-sm text-ink-muted hover:bg-surface-100 transition-colors disabled:opacity-50"
+              >
+                {resent ? 'Email reenviado ✓' : 'Reenviar email'}
+              </button>
+            </div>
+
+            <p className="text-xs text-ink-muted">
+              ¿No lo ves? Revisá la carpeta de spam o correo no deseado.
+            </p>
+
+            <div className="flex items-center gap-2 text-xs text-ink-muted">
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+              Esperando verificación…
+            </div>
+          </>
         )}
       </div>
     </PageShell>

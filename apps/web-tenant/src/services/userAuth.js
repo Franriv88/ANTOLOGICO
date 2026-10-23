@@ -41,19 +41,26 @@ export async function checkRedirectResult() {
 
 async function ensureProfile(user) {
   const existing = await fetchProfile(user.uid);
+  const now = new Date().toISOString();
   if (!existing.nombre) {
     await saveProfile(user.uid, {
-      nombre:    user.displayName || '',
-      email:     user.email || '',
-      telefono:  '',
-      createdAt: new Date().toISOString(),
+      nombre:      user.displayName || '',
+      email:       user.email || '',
+      telefono:    '',
+      authMethod:  'google',
+      photoURL:    user.photoURL || '',
+      createdAt:   now,
+      lastLoginAt: now,
     });
+  } else {
+    await saveProfile(user.uid, { lastLoginAt: now });
   }
   return { user, profile: await fetchProfile(user.uid) };
 }
 
 export async function loginEmail(email, password) {
   const { user } = await signInWithEmailAndPassword(auth, email, password);
+  await saveProfile(user.uid, { lastLoginAt: new Date().toISOString() });
   trackLogin({ method: 'email' });
   return { user, profile: await fetchProfile(user.uid) };
 }
@@ -61,10 +68,18 @@ export async function loginEmail(email, password) {
 export async function register(email, password, nombre, telefono) {
   const { user } = await createUserWithEmailAndPassword(auth, email, password);
   await updateProfile(user, { displayName: nombre });
-  const profile = { nombre, email, telefono, createdAt: new Date().toISOString() };
+  const now = new Date().toISOString();
+  const profile = {
+    nombre,
+    email,
+    telefono,
+    authMethod:  'email',
+    photoURL:    '',
+    createdAt:   now,
+    lastLoginAt: now,
+  };
   await saveProfile(user.uid, profile);
-  // Send verification email (non-blocking — ignore errors in case of emulator)
-  try { await sendEmailVerification(user); } catch (_) {}
+  await sendEmailVerification(user);
   trackRegistro({ method: 'email' });
   return { user, profile };
 }
@@ -127,7 +142,7 @@ export function authErrorMsg(code) {
     code === 'auth/wrong-password'       ? 'Contraseña incorrecta' :
     code === 'auth/user-not-found'       ? 'No existe una cuenta con ese email' :
     code === 'auth/email-already-in-use' ? 'Ya existe una cuenta con ese email' :
-    code === 'auth/weak-password'        ? 'La contraseña debe tener al menos 6 caracteres' :
+    code === 'auth/weak-password'        ? 'La contraseña debe tener al menos 8 caracteres, una letra, un número y un símbolo' :
     code === 'auth/invalid-email'        ? 'Email inválido' :
     code === 'auth/popup-closed-by-user' ? 'Cerraste la ventana de Google' :
     code === 'auth/popup-blocked'        ? 'El navegador bloqueó la ventana. Permitir popups e intentar de nuevo.' :
