@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { fetchProfile, updateUserProfile, changePassword, changeEmail, authErrorMsg } from '../services/userAuth';
 import Layout from '../components/Layout';
+import BirthDatePicker from '../components/BirthDatePicker';
 
 const INPUT_CLS =
   'w-full px-3 py-2 bg-surface-100 border border-border rounded-md text-sm text-ink ' +
@@ -218,7 +219,7 @@ export default function Perfil() {
 
             <div>
               <label className={LABEL_CLS}>Fecha de nacimiento <span className="font-normal">(opcional)</span></label>
-              <input type="date" value={fechaNac} onChange={e => setFechaNac(e.target.value)} max={new Date().toISOString().split('T')[0]} className={INPUT_CLS} />
+              <BirthDatePicker value={fechaNac} onChange={setFechaNac} />
             </div>
 
             <div>
