@@ -11,6 +11,7 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, firestore } from '../lib/firebase.js';
+import { trackRegistro, trackLogin } from '../lib/analytics.js';
 
 const C_USUARIOS = 'demo_usuarios';
 const googleProvider = new GoogleAuthProvider();
@@ -28,7 +29,9 @@ async function fetchProfile(uid) {
 // signInWithPopup funciona en todos los navegadores cuando viene de un gesto del usuario.
 export async function loginGoogle() {
   const { user } = await signInWithPopup(auth, googleProvider);
-  return ensureProfile(user);
+  const result = await ensureProfile(user);
+  trackLogin({ method: 'google' });
+  return result;
 }
 
 // Mantenemos la función como no-op por compatibilidad con los useEffect existentes
@@ -51,6 +54,7 @@ async function ensureProfile(user) {
 
 export async function loginEmail(email, password) {
   const { user } = await signInWithEmailAndPassword(auth, email, password);
+  trackLogin({ method: 'email' });
   return { user, profile: await fetchProfile(user.uid) };
 }
 
@@ -61,6 +65,7 @@ export async function register(email, password, nombre, telefono) {
   await saveProfile(user.uid, profile);
   // Send verification email (non-blocking — ignore errors in case of emulator)
   try { await sendEmailVerification(user); } catch (_) {}
+  trackRegistro({ method: 'email' });
   return { user, profile };
 }
 

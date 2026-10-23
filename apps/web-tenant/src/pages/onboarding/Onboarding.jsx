@@ -6,6 +6,7 @@ import { espacios as espacioApi } from '../../services/api';
 import StepPerfil   from './StepPerfil';
 import StepEspacio  from './StepEspacio';
 import StepPlan     from './StepPlan';
+import { trackOnboardingComplete } from '../../lib/analytics';
 
 const STEPS = ['Tu perfil', 'Tu espacio', 'Elige un plan'];
 
@@ -41,6 +42,7 @@ export default function Onboarding() {
         console.error('Error al guardar el plan:', e);
       }
     }
+    trackOnboardingComplete({ espacioId: data.espacioId, planId });
     await refresh(data.espacioId ? { id: data.espacioId, nombre: data.espacioNombre || 'Mi espacio', estado: 'ACTIVO' } : null);
     navigate('/workshops', { replace: true });
   }

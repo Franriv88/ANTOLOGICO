@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
+import { trackWorkshopCreado } from '../lib/analytics';
 
 // ── Custom Select con estética del proyecto ───────────────────────────────────
 function CustomSelect({ value, onChange, options, placeholder = 'Seleccioná una opción' }) {
@@ -642,6 +643,7 @@ export default function WorkshopForm() {
       } else {
         const created = await api.create(activeEspacio.id, payload);
         if (!created) throw new Error('El taller no pudo guardarse. Verificá que el emulador de Firebase esté activo.');
+        trackWorkshopCreado({ workshopId: created.id, espacioId: activeEspacio.id });
       }
       navigate('/workshops', { state: { refresh: Date.now() } });
     } catch (err) {

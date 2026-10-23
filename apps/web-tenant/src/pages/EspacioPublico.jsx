@@ -5,6 +5,7 @@ import { getSlotStatus } from '../lib/slotStatus';
 import { loginGoogle, loginEmail, register, logout, subscribeAuth, authErrorMsg, sendPasswordReset, checkRedirectResult } from '../services/userAuth';
 import mpLogo from '../assets/Mercado_Pago.png';
 import { SocialIconsRow } from '../components/SocialIcons';
+import { trackReserva } from '../lib/analytics';
 // CardPayment Brick removed — using Checkout Pro (redirect) instead
 
 const MP_WORKER_URL = 'https://antologico-mp.franriv2388.workers.dev';
@@ -919,6 +920,7 @@ export default function EspacioPublico() {
     );
     setBookedCounts(prev => ({ ...prev, [booking.id]: (prev[booking.id] ?? 0) + count }));
     if (currentUser) loadUserReservas(currentUser.user.email ?? currentUser.profile?.email ?? '');
+    trackReserva({ workshopId: booking.id, espacioId: tenantId, monto: (booking.precio ?? 0) * count });
     setConfirmed({ reservas, workshop: booking });
     setBooking(null);
   }

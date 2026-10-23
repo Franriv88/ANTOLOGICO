@@ -8,6 +8,7 @@ import { usePlanes, precioConPeriodo } from '../hooks/usePlanes';
 import { useTrialDays } from '../hooks/useTrialDays';
 import { useTheme } from '../hooks/useTheme';
 import { espacios as espacioApi } from '../services/api';
+import { trackSuscripcion } from '../lib/analytics';
 
 const MP_WORKER_URL = 'https://antologico-mp.franriv2388.workers.dev';
 
@@ -125,6 +126,7 @@ function TrialExpiredOverlay({ espacio, trialDays, onSelectPlan }) {
       const data = await res.json();
       if (data.error) { setError(data.error); setLoadingPlan(null); return; }
       if (data.initPoint) {
+        trackSuscripcion({ planId: plan.id, periodo, monto: total });
         window.location.href = data.initPoint;
       } else {
         setError('No se pudo obtener el enlace de suscripción.');
