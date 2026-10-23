@@ -231,6 +231,18 @@ export const usuarios = {
   },
 };
 
+// ─── Métricas (workshops + reservas) ─────────────────────────────────────────
+export const metricas = {
+  workshops: async () => {
+    const snap = await getDocs(collection(firestore, C_WORKSHOPS));
+    return snapToList(snap);
+  },
+  reservas: async () => {
+    const snap = await getDocs(collection(firestore, C_RESERVAS));
+    return snapToList(snap);
+  },
+};
+
 // ─── Tenants (espacios) ───────────────────────────────────────────────────────
 export const tenants = {
   list: async () => {

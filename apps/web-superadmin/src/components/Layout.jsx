@@ -7,6 +7,7 @@ const NAV = [
   { to: '/tenants',  label: 'Tenants' },
   { to: '/planes',   label: 'Planes' },
   { to: '/reportes', label: 'Reportes' },
+  { to: '/metricas', label: 'Métricas' },
 ];
 
 const IconLogout = () => (
