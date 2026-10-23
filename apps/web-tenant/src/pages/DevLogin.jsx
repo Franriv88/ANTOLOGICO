@@ -54,17 +54,13 @@ export default function Login({ mode = 'login' }) {
   const [demoPassword, setDemoPassword] = useState(DEMO_PASSWORD);
 
   useEffect(() => {
-    if (DEMO_MODE && mode === 'register') {
-      localStorage.removeItem('ant_demo_data');
-      createNewDemoSession();
-      window.location.href = '/onboarding';
-      return;
-    }
-    if (!DEMO_MODE && isDev) handleDevLogin();
+    if (mode === 'register') return;
+    if (DEMO_MODE) return;
+    if (isDev) handleDevLogin();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode]);
 
-  if (DEMO_MODE) {
+  if (DEMO_MODE && mode !== 'register') {
     async function handleDemoLogin(e) {
       e.preventDefault();
       setError('');
@@ -168,7 +164,7 @@ export default function Login({ mode = 'login' }) {
     }
   }
 
-  if (isDev) {
+  if (isDev && mode !== 'register') {
     return (
       <div className="min-h-screen bg-surface-0 flex items-center justify-center">
         <div className="bg-surface-100 border border-border rounded-lg p-8 w-full max-w-sm text-center">

@@ -1,8 +1,12 @@
 import {
   GoogleAuthProvider,
+  EmailAuthProvider,
   signInWithPopup,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  reauthenticateWithCredential,
+  updatePassword as fbUpdatePassword,
+  verifyBeforeUpdateEmail,
   updateProfile,
   sendEmailVerification,
   sendPasswordResetEmail,
@@ -20,7 +24,7 @@ async function saveProfile(uid, data) {
   await setDoc(doc(firestore, C_USUARIOS, uid), data, { merge: true });
 }
 
-async function fetchProfile(uid) {
+export async function fetchProfile(uid) {
   const snap = await getDoc(doc(firestore, C_USUARIOS, uid));
   return snap.exists() ? snap.data() : {};
 }
@@ -135,6 +139,22 @@ function getLocalFollowed() {
 }
 function clearLocalFollowed() {
   localStorage.removeItem('ant_espacios_seguidos');
+}
+
+export async function changePassword(currentPassword, newPassword) {
+  const user = auth.currentUser;
+  if (!user || !user.email) throw new Error('No hay sesión activa');
+  const cred = EmailAuthProvider.credential(user.email, currentPassword);
+  await reauthenticateWithCredential(user, cred);
+  await fbUpdatePassword(user, newPassword);
+}
+
+export async function changeEmail(currentPassword, newEmail) {
+  const user = auth.currentUser;
+  if (!user || !user.email) throw new Error('No hay sesión activa');
+  const cred = EmailAuthProvider.credential(user.email, currentPassword);
+  await reauthenticateWithCredential(user, cred);
+  await verifyBeforeUpdateEmail(user, newEmail);
 }
 
 export function authErrorMsg(code) {

@@ -82,6 +82,122 @@ function matchGroup(group, q) {
   );
 }
 
+// ── Modal de detalle de tenant ────────────────────────────────────────────────
+
+function calcAge(fechaNac) {
+  if (!fechaNac) return null;
+  const birth = new Date(fechaNac);
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+  return age;
+}
+
+function formatDateTime(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString('es-AR', {
+    day: '2-digit', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  });
+}
+
+const GENERO_LABELS = {
+  'masculino': 'Masculino',
+  'femenino': 'Femenino',
+  'no-binario': 'No binario',
+  'prefiero-no-decirlo': 'Prefiero no decirlo',
+};
+
+function DetailRow({ label, children }) {
+  return (
+    <div className="flex items-start gap-3 py-2.5 border-b border-border/40 last:border-0">
+      <span className="text-xs font-medium text-ink-muted w-32 shrink-0 pt-0.5">{label}</span>
+      <span className="text-sm text-ink break-all">{children || '—'}</span>
+    </div>
+  );
+}
+
+function TenantDetailModal({ group, planes, onClose }) {
+  const u = group.usuario ?? {};
+  const p = group.primary;
+  const age = calcAge(u.fechaNac);
+  const authLabel = u.authMethod === 'google' ? 'Google Sign-In' : u.authMethod === 'email' ? 'Email y contraseña' : '—';
+  const rubro = p.rubroPersonalizado || p.rubro?.nombre || '—';
+  const generoLabel = GENERO_LABELS[u.genero] || u.genero || 'Prefiero no decirlo';
+  const planRaw = p.selectedPlan || p.planId;
+  const planId = (planRaw === 'null' || planRaw === 'undefined' || !planRaw) ? null : planRaw;
+  const planNombre = planId ? (planes.find(pl => pl.id === planId)?.nombre ?? '—') : 'Sin plan';
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="relative bg-surface-100 border border-border rounded-2xl w-full max-w-md shadow-2xl max-h-[90vh] flex flex-col">
+        {/* Header */}
+        <div className="p-6 pb-4 border-b border-border flex items-start gap-4">
+          {u.authMethod === 'google' && u.photoURL ? (
+            <img src={u.photoURL} alt="" className="w-14 h-14 rounded-full object-cover border-2 border-border shrink-0" />
+          ) : (
+            <div className="w-14 h-14 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center shrink-0">
+              <span className="text-xl font-bold text-primary">
+                {(u.nombre?.[0] || p.nombre?.[0] || '?').toUpperCase()}
+              </span>
+            </div>
+          )}
+          <div className="min-w-0 flex-1">
+            <h3 className="font-display text-lg text-ink leading-tight">
+              {[u.nombre, u.apellido].filter(Boolean).join(' ') || p.nombre || '—'}
+            </h3>
+            {u.email && <p className="text-sm text-ink-muted font-mono mt-0.5">{u.email}</p>}
+            <div className="flex items-center gap-2 mt-1.5">
+              <span className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full ${
+                u.authMethod === 'google'
+                  ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                  : 'bg-amber-100 text-amber-700 border border-amber-200'
+              }`}>
+                {authLabel}
+              </span>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-surface-200 transition-colors text-ink-muted">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="p-6 overflow-y-auto">
+          <DetailRow label="Teléfono">{u.telefono}</DetailRow>
+          <DetailRow label="Género">{generoLabel}</DetailRow>
+          <DetailRow label="Fecha de nac.">
+            {u.fechaNac ? (
+              <span>
+                {new Date(u.fechaNac).toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' })}
+                {age != null && <span className="text-ink-muted ml-1.5">({age} años)</span>}
+              </span>
+            ) : '—'}
+          </DetailRow>
+          <DetailRow label="Rubro">{rubro}</DetailRow>
+          <DetailRow label="Plan">{planNombre}</DetailRow>
+          <DetailRow label="Espacio principal">{p.nombre || '—'}</DetailRow>
+          {group.extras.length > 0 && (
+            <DetailRow label="Otros espacios">
+              <div className="flex flex-col gap-1">
+                {group.extras.map(e => (
+                  <span key={e.id} className="text-xs text-ink-muted">{e.nombre}</span>
+                ))}
+              </div>
+            </DetailRow>
+          )}
+          <DetailRow label="Cliente desde">{formatFecha(u.createdAt || group.createdAt)}</DetailRow>
+          <DetailRow label="Último ingreso">{formatDateTime(u.lastLoginAt)}</DetailRow>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Modal de reset de contraseña ──────────────────────────────────────────────
 
 function ResetModal({ group, onClose }) {
@@ -165,6 +281,7 @@ export default function Tenants() {
   const [resetTarget,  setResetTarget]  = useState(null);
   const [trialTarget,  setTrialTarget]  = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [detailTarget, setDetailTarget] = useState(null);
 
   useEffect(() => {
     Promise.all([tenantsApi.list(), planesApi.list()])
@@ -215,6 +332,10 @@ export default function Tenants() {
 
   return (
     <>
+      {detailTarget && (
+        <TenantDetailModal group={detailTarget} planes={planes} onClose={() => setDetailTarget(null)} />
+      )}
+
       {blockTarget && (
         <ConfirmModal
           title={blockTarget.bloqueado ? '¿Desbloquear este tenant?' : '¿Bloquear este tenant?'}
@@ -302,7 +423,8 @@ export default function Tenants() {
                   return (
                     <tr
                       key={group.key}
-                      className={`border-b border-border/50 hover:bg-surface-200/20 transition-colors ${
+                      onClick={() => setDetailTarget(group)}
+                      className={`border-b border-border/50 hover:bg-surface-200/20 transition-colors cursor-pointer ${
                         isSaving ? 'opacity-50' : ''
                       } ${bloqueado ? 'bg-danger/[0.03]' : ''}`}
                     >
@@ -409,7 +531,7 @@ export default function Tenants() {
                       </td>
 
                       {/* ── Acciones — ancho fijo ── */}
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-2">
                           <button
                             onClick={() => setTrialTarget(group)}

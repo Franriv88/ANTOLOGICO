@@ -15,8 +15,8 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (DEMO_MODE) {
-      setUser(getDemoSession()); // null si no hay sesión guardada
-      return;
+      const demoUser = getDemoSession();
+      if (demoUser) setUser(demoUser);
     }
     return onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
@@ -30,7 +30,7 @@ export function AuthProvider({ children }) {
         }
         setUser(firebaseUser);
       } else {
-        setUser(null);
+        if (!DEMO_MODE) setUser(null);
       }
     });
   }, []);

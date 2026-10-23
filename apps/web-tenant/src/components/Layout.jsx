@@ -372,6 +372,7 @@ const NAV = [
   { to: '/reservas',  label: 'Reservas' },
   { to: '/reportes',  label: 'Reportes' },
   { to: '/config',    label: 'Configuración' },
+  { to: '/perfil',    label: 'Mi perfil' },
 ];
 
 const IconLogout = () => (
@@ -582,9 +583,9 @@ export default function Layout({ children }) {
 
         {/* Top bar — siempre visible */}
         <header id="dashboard-header" className="sticky top-0 z-40 h-12 bg-surface-0/95 backdrop-blur-sm border-b border-border flex items-center justify-end px-5 gap-3 shrink-0">
-          <span className="text-xs text-ink-muted truncate max-w-[200px]">
+          <Link to="/perfil" className="text-xs text-ink-muted truncate max-w-[200px] hover:text-primary transition-colors">
             {user?.displayName || user?.email}
-          </span>
+          </Link>
           <ThemeToggleButton isDark={isDark} onClick={toggleTheme} />
           <button
             onClick={logout}

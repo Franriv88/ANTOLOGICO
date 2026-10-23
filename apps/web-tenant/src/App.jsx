@@ -9,6 +9,7 @@ import WorkshopForm from './pages/WorkshopForm';
 import Configuracion from './pages/Configuracion';
 import Reservas from './pages/Reservas';
 import Reportes from './pages/Reportes';
+import Perfil   from './pages/Perfil';
 import EspacioPublico from './pages/EspacioPublico';
 import MisReservas    from './pages/MisReservas';
 import MisDatos       from './pages/MisDatos';
@@ -96,6 +97,10 @@ export default function App() {
             <Route
               path="/config"
               element={<RequireDesktop><RequireAuth><RequireEspacio><Configuracion /></RequireEspacio></RequireAuth></RequireDesktop>}
+            />
+            <Route
+              path="/perfil"
+              element={<RequireDesktop><RequireAuth><RequireEspacio><Perfil /></RequireEspacio></RequireAuth></RequireDesktop>}
             />
 
             {/* Fallback */}
