@@ -1,4 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
+
+const INITIAL_VB = { x: 250, y: -10, w: 460, h: 980 };
+const MIN_ZOOM = 0.5;
+const MAX_ZOOM = 4;
 
 const PROVINCES = [
   { id: 'AR-Y', name: 'Jujuy', label: 'Jujuy',
@@ -57,6 +61,67 @@ function normalize(name) {
 
 export default function ArgentinaMap({ data = [] }) {
   const [hovered, setHovered] = useState(null);
+  const [vb, setVb] = useState(INITIAL_VB);
+  const svgRef = useRef(null);
+  const dragRef = useRef(null);
+
+  const zoom = INITIAL_VB.w / vb.w;
+
+  const handleZoom = useCallback((factor, clientX, clientY) => {
+    setVb(prev => {
+      const newZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, (INITIAL_VB.w / prev.w) * factor));
+      const newW = INITIAL_VB.w / newZoom;
+      const newH = INITIAL_VB.h / newZoom;
+
+      const svg = svgRef.current;
+      let cx = prev.x + prev.w / 2;
+      let cy = prev.y + prev.h / 2;
+      if (svg && clientX != null) {
+        const rect = svg.getBoundingClientRect();
+        cx = prev.x + ((clientX - rect.left) / rect.width) * prev.w;
+        cy = prev.y + ((clientY - rect.top) / rect.height) * prev.h;
+      }
+
+      return {
+        x: cx - newW / 2,
+        y: cy - newH / 2,
+        w: newW,
+        h: newH,
+      };
+    });
+  }, []);
+
+  const handleWheel = useCallback(e => {
+    e.preventDefault();
+    const factor = e.deltaY < 0 ? 1.2 : 1 / 1.2;
+    handleZoom(factor, e.clientX, e.clientY);
+  }, [handleZoom]);
+
+  const handlePointerDown = useCallback(e => {
+    if (e.button !== 0) return;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    dragRef.current = { px: e.clientX, py: e.clientY, vb: { ...vb } };
+  }, [vb]);
+
+  const handlePointerMove = useCallback(e => {
+    if (!dragRef.current) return;
+    const svg = svgRef.current;
+    if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+    const dx = ((e.clientX - dragRef.current.px) / rect.width) * dragRef.current.vb.w;
+    const dy = ((e.clientY - dragRef.current.py) / rect.height) * dragRef.current.vb.h;
+    setVb({
+      ...dragRef.current.vb,
+      x: dragRef.current.vb.x - dx,
+      y: dragRef.current.vb.y - dy,
+    });
+  }, []);
+
+  const handlePointerUp = useCallback(() => {
+    dragRef.current = null;
+  }, []);
+
+  const resetView = useCallback(() => setVb(INITIAL_VB), []);
 
   const countByProv = {};
   data.forEach(d => {
@@ -87,10 +152,60 @@ export default function ArgentinaMap({ data = [] }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="relative mx-auto w-full" style={{ maxWidth: 420 }}>
-        <svg viewBox="250 -10 460 980" className="w-full h-auto block">
+      <div
+        className="relative mx-auto w-full overflow-hidden rounded-lg border border-border bg-surface-100"
+        style={{ maxWidth: 420 }}
+      >
+        {/* Controls */}
+        <div className="absolute top-3 left-3 z-20 flex flex-col gap-1">
+          <button
+            onClick={() => handleZoom(1.4)}
+            className="w-8 h-8 rounded-lg bg-surface-0 border border-border shadow-sm flex items-center justify-center text-ink hover:bg-surface-200 transition-colors"
+            title="Acercar"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/>
+            </svg>
+          </button>
+          <button
+            onClick={() => handleZoom(1 / 1.4)}
+            className="w-8 h-8 rounded-lg bg-surface-0 border border-border shadow-sm flex items-center justify-center text-ink hover:bg-surface-200 transition-colors"
+            title="Alejar"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/>
+            </svg>
+          </button>
+          <button
+            onClick={resetView}
+            disabled={zoom === 1 && vb.x === INITIAL_VB.x && vb.y === INITIAL_VB.y}
+            className="w-8 h-8 rounded-lg bg-surface-0 border border-border shadow-sm flex items-center justify-center text-ink hover:bg-surface-200 transition-colors disabled:opacity-30"
+            title="Restablecer"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+            </svg>
+          </button>
+        </div>
+
+        {zoom > 1 && (
+          <div className="absolute top-3 right-14 z-20 bg-surface-0/80 border border-border rounded px-1.5 py-0.5 text-[10px] font-mono text-ink-muted">
+            {zoom.toFixed(1)}x
+          </div>
+        )}
+
+        <svg
+          ref={svgRef}
+          viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`}
+          className="w-full h-auto block select-none"
+          style={{ cursor: dragRef.current ? 'grabbing' : 'grab' }}
+          onWheel={handleWheel}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+        >
           {PROVINCES.map(prov => {
-            const count = countByProv[prov.name] || 0;
             const isHovered = hovered === prov.name;
             const fill = getProvColor(prov.name);
             return (
