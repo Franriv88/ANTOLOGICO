@@ -372,8 +372,10 @@ export default function Plans() {
               if (!val || val < 1) return;
               setTrialSaving(true);
               try {
-                await configApi.saveTrial(val);
-                setTrialDays(val);
+                const result = await configApi.saveTrial(val);
+                setTrialDays(result.diasPrueba ?? val);
+              } catch (err) {
+                console.error('Error guardando días de prueba:', err);
               } finally {
                 setTrialSaving(false);
               }
