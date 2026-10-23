@@ -104,6 +104,13 @@ export default function Login() {
     if (admin) navigate('/tenants', { replace: true });
   }, [admin, navigate]);
 
+  useEffect(() => {
+    const root = document.documentElement;
+    const prev = root.getAttribute('data-theme');
+    root.removeAttribute('data-theme');
+    return () => { if (prev) root.setAttribute('data-theme', prev); };
+  }, []);
+
   // Parallax directo al DOM — sin re-renders React
   function handleMouseMove(e) {
     const { width, height, left, top } = e.currentTarget.getBoundingClientRect();
