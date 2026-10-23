@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   signInWithPopup,
@@ -38,6 +38,12 @@ function GoogleIcon() {
 }
 
 export default function Login({ mode = 'login' }) {
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    const prev = root.getAttribute('data-theme');
+    root.removeAttribute('data-theme');
+    return () => { if (prev) root.setAttribute('data-theme', prev); };
+  }, []);
   const [error, setError]     = useState('');
   const [loading, setLoading] = useState(false);
   const navigate  = useNavigate();

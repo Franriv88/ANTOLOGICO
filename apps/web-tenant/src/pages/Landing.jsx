@@ -4,6 +4,15 @@ import { IconAntologico, LogoAntologico } from '../components/LogoAntologico';
 import { usePlanes, precioConPeriodo } from '../hooks/usePlanes';
 import { usePromo, isPromoActiva, precioConPromoYPeriodo } from '../hooks/usePromo';
 
+function useForceLightMode() {
+  useEffect(() => {
+    const root = document.documentElement;
+    const prev = root.getAttribute('data-theme');
+    root.removeAttribute('data-theme');
+    return () => { if (prev) root.setAttribute('data-theme', prev); };
+  }, []);
+}
+
 // ── Red Q como fondo (solo nodos + punteado, sin íconos) ──────────────────
 const EDGES = [
   [256,108,392,128],[256,108,184,190],[256,108,315,198],[184,190,315,198],
@@ -101,6 +110,7 @@ const PERIODOS = [
 ];
 
 export default function Landing() {
+  useForceLightMode();
   const heroRef  = useRef(null);
   const rafRef   = useRef(null);
   const [offset,       setOffset]       = useState({ x: 0, y: 0 });

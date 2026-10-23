@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import jsQR from 'jsqr';
 import { reservas as reservasApi, workshops as workshopsApi, espacios as espaciosApi } from '../services/api';
@@ -510,6 +510,12 @@ function ReservaCard({ reserva, onCancel }) {
 // ── MisReservas ───────────────────────────────────────────────────────────────
 
 export default function MisReservas() {
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    const prev = root.getAttribute('data-theme');
+    root.removeAttribute('data-theme');
+    return () => { if (prev) root.setAttribute('data-theme', prev); };
+  }, []);
   const [currentUser,  setCurrentUser]  = useState(undefined); // undefined = loading
   const [reservas,     setReservas]     = useState([]);
   const [loadingR,     setLoadingR]     = useState(false);

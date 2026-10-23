@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useLayoutEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { espacios as espaciosApi, workshops as workshopsApi, reservas as reservasApi } from '../services/api';
 import { getSlotStatus } from '../lib/slotStatus';
@@ -750,6 +750,12 @@ function WorkshopCard({ w, brand, onReservar, bookedCount, direcciones }) {
 // ── EspacioPublico ────────────────────────────────────────────────────────────
 
 export default function EspacioPublico() {
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    const prev = root.getAttribute('data-theme');
+    root.removeAttribute('data-theme');
+    return () => { if (prev) root.setAttribute('data-theme', prev); };
+  }, []);
   const { espacioId } = useParams();
   const [espacio,   setEspacio]   = useState(null);
   const [workshops, setWorkshops] = useState([]);
