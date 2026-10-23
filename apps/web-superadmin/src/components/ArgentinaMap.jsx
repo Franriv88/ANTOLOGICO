@@ -55,6 +55,46 @@ const PROVINCES = [
     d: 'M382.63,952.21L378.72,951.06L372.82,952.55L370.18,949.97L370.33,920.28L370.44,893.65L370.56,870.92L376.82,879.69L378.46,883.54L375.52,884.06L372.2,888.17L372.2,891.93L374.67,894.24L380.16,894L382.19,897.81L384.74,905.85L393.16,914.09L393.64,917.32L398.11,921.43L412.85,931.53L415.82,935.77L422.56,940.5L432.06,945.02L434.99,945.61L442.5,944.19L446.66,944.86L442.05,955.28L436.53,955.42L429.24,954.16L427.63,956.3L420.15,957.36L418.09,960L413.56,958.96L409.87,955.73L405.72,954.54L395.27,953.36L390.34,953.72ZM456.76,954.49L455.18,952.04L464.22,947.68L471.35,949.61L465.97,951.97L462.35,951.92Z' },
 ];
 
+const PROVINCE_ALIASES = {
+  'buenos aires f.d.': 'Ciudad Autónoma de Buenos Aires',
+  'capital federal': 'Ciudad Autónoma de Buenos Aires',
+  'caba': 'Ciudad Autónoma de Buenos Aires',
+  'c.a.b.a.': 'Ciudad Autónoma de Buenos Aires',
+  'distrito federal': 'Ciudad Autónoma de Buenos Aires',
+  'buenos aires f.d': 'Ciudad Autónoma de Buenos Aires',
+  'sgo. del estero': 'Santiago del Estero',
+  'sgo del estero': 'Santiago del Estero',
+  't. del fuego': 'Tierra del Fuego',
+  'tierra del fuego, antartida e islas del atlantico sur': 'Tierra del Fuego',
+};
+
+const PROVINCE_CENTERS = {
+  'Ciudad Autónoma de Buenos Aires': { cx: 594, cy: 319 },
+  'Buenos Aires': { cx: 540, cy: 390 },
+  'Córdoba': { cx: 480, cy: 270 },
+  'Santa Fe': { cx: 540, cy: 240 },
+  'Mendoza': { cx: 370, cy: 320 },
+  'Tucumán': { cx: 440, cy: 130 },
+  'Salta': { cx: 460, cy: 60 },
+  'Entre Ríos': { cx: 560, cy: 260 },
+  'Misiones': { cx: 670, cy: 120 },
+  'Corrientes': { cx: 600, cy: 180 },
+  'Chaco': { cx: 545, cy: 120 },
+  'Formosa': { cx: 555, cy: 75 },
+  'Santiago del Estero': { cx: 490, cy: 150 },
+  'San Juan': { cx: 360, cy: 220 },
+  'San Luis': { cx: 420, cy: 300 },
+  'La Rioja': { cx: 400, cy: 200 },
+  'Catamarca': { cx: 410, cy: 140 },
+  'Jujuy': { cx: 435, cy: 35 },
+  'La Pampa': { cx: 445, cy: 400 },
+  'Neuquén': { cx: 340, cy: 420 },
+  'Río Negro': { cx: 400, cy: 490 },
+  'Chubut': { cx: 380, cy: 590 },
+  'Santa Cruz': { cx: 340, cy: 730 },
+  'Tierra del Fuego': { cx: 400, cy: 920 },
+};
+
 function normalize(name) {
   return (name || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 }
@@ -123,9 +163,10 @@ export default function ArgentinaMap({ data = [] }) {
     const prov = d.geo?.provincia;
     if (!prov) return;
     const norm = normalize(prov);
-    const match = PROVINCES.find(p =>
-      normalize(p.name) === norm || normalize(p.label) === norm
-    );
+    const aliased = PROVINCE_ALIASES[norm];
+    const match = aliased
+      ? PROVINCES.find(p => p.name === aliased)
+      : PROVINCES.find(p => normalize(p.name) === norm || normalize(p.label) === norm);
     const key = match?.name ?? prov;
     countByProv[key] = (countByProv[key] || 0) + 1;
   });
@@ -215,6 +256,26 @@ export default function ArgentinaMap({ data = [] }) {
               />
             );
           })}
+          {Object.entries(countByProv).map(([name, count]) => {
+            const center = PROVINCE_CENTERS[name];
+            if (!center) return null;
+            const r = Math.min(20, 6 + (count / maxCount) * 14);
+            return (
+              <g key={`dot-${name}`}
+                onMouseEnter={() => setHovered(name)}
+                onMouseLeave={() => setHovered(null)}
+                className="cursor-pointer"
+              >
+                <circle cx={center.cx} cy={center.cy} r={r + 4} fill="#E85D4A" opacity={0.15} />
+                <circle cx={center.cx} cy={center.cy} r={r} fill="#E85D4A" opacity={0.85} stroke="#fff" strokeWidth={1.5} />
+                <text x={center.cx} y={center.cy + 0.5} textAnchor="middle" dominantBaseline="central"
+                  fill="#fff" fontSize={r > 8 ? 10 : 8} fontWeight="600" fontFamily="IBM Plex Mono, monospace"
+                  style={{ pointerEvents: 'none' }}>
+                  {count}
+                </text>
+              </g>
+            );
+          })}
         </svg>
 
         {hovered && (
@@ -237,9 +298,12 @@ export default function ArgentinaMap({ data = [] }) {
           {Object.entries(countByProv)
             .sort((a, b) => b[1] - a[1])
             .slice(0, 8)
-            .map(([prov, count]) => (
+            .map(([prov, count]) => {
+              const provObj = PROVINCES.find(p => p.name === prov);
+              const displayName = provObj?.label ?? prov;
+              return (
               <div key={prov} className="flex items-center gap-2">
-                <span className="text-xs text-ink flex-1 truncate">{prov}</span>
+                <span className="text-xs text-ink flex-1 truncate">{displayName}</span>
                 <div className="w-20 h-1.5 bg-surface-200 rounded-full overflow-hidden shrink-0">
                   <div
                     className="h-full rounded-full bg-[#5B6FA8]"
@@ -250,7 +314,8 @@ export default function ArgentinaMap({ data = [] }) {
                   {count}
                 </span>
               </div>
-            ))}
+              );
+            })}
         </div>
       )}
 
