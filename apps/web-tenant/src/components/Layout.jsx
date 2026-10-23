@@ -424,6 +424,7 @@ export default function Layout({ children }) {
   const daysElapsed = trialRef ? Math.floor((Date.now() - new Date(trialRef)) / 86_400_000) : 0;
   const trialExpired = trialRef && daysElapsed >= trialDays && !activeEspacio?.planId;
 
+
   useEffect(() => {
     const mpSub = searchParams.get('mp_sub');
     const preapprovalId = searchParams.get('preapproval_id');

@@ -163,6 +163,7 @@ export default function Tenants() {
   const [search,       setSearch]       = useState('');
   const [blockTarget,  setBlockTarget]  = useState(null);
   const [resetTarget,  setResetTarget]  = useState(null);
+  const [trialTarget,  setTrialTarget]  = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   useEffect(() => {
@@ -180,6 +181,18 @@ export default function Tenants() {
     setList(prev => prev.filter(t => (t.userId ?? `__anon__${t.id}`) !== key));
     setSaving(null);
     setDeleteTarget(null);
+  }
+
+  async function confirmResetTrial() {
+    if (!trialTarget) return;
+    const { key, espacios } = trialTarget;
+    setSaving(key);
+    const now = await tenantsApi.resetTrial(espacios.map(e => e.id));
+    setList(prev => prev.map(t =>
+      espacios.some(e => e.id === t.id) ? { ...t, trialStartedAt: now } : t
+    ));
+    setSaving(null);
+    setTrialTarget(null);
   }
 
   async function confirmBloqueado() {
@@ -217,6 +230,16 @@ export default function Tenants() {
 
       {resetTarget && (
         <ResetModal group={resetTarget} onClose={() => setResetTarget(null)} />
+      )}
+
+      {trialTarget && (
+        <ConfirmModal
+          title="¿Resetear período de prueba?"
+          text={`Se reiniciará la prueba gratuita de "${trialTarget.primary.nombre}" (${trialTarget.espacios.length} espacio${trialTarget.espacios.length > 1 ? 's' : ''}). El contador empezará desde hoy.`}
+          confirmText="Sí, resetear"
+          onConfirm={confirmResetTrial}
+          onClose={() => setTrialTarget(null)}
+        />
       )}
 
       {deleteTarget && (
@@ -388,6 +411,14 @@ export default function Tenants() {
                       {/* ── Acciones — ancho fijo ── */}
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => setTrialTarget(group)}
+                            disabled={isSaving || !!primary.planId}
+                            title={primary.planId ? 'Tiene plan activo' : 'Resetear período de prueba'}
+                            className="w-16 text-center text-xs py-1 border border-border rounded text-ink-muted hover:text-ink hover:bg-surface-200 transition-colors disabled:opacity-30"
+                          >
+                            ↺ Trial
+                          </button>
                           <button
                             onClick={() => setResetTarget(group)}
                             disabled={isSaving}

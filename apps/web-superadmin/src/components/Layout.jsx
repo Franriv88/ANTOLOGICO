@@ -101,14 +101,16 @@ export default function Layout({ children }) {
           ))}
         </nav>
 
-        {/* Theme toggle + Usuario + logout */}
+        {/* Theme toggle — above divider */}
+        <div className="px-4 pb-3 shrink-0 flex items-center gap-2">
+          <ThemeToggleButton isDark={isDark} onClick={toggle} variant="sidebar" />
+          <span className="text-[11px]" style={{ color: 'rgba(239,231,216,0.45)' }}>
+            {isDark ? 'Claro' : 'Oscuro'}
+          </span>
+        </div>
+
+        {/* Usuario + logout */}
         <div className="px-4 py-4 border-t flex flex-col gap-3" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
-          <div className="flex items-center gap-2">
-            <ThemeToggleButton isDark={isDark} onClick={toggle} variant="sidebar" />
-            <span className="text-[11px]" style={{ color: 'rgba(239,231,216,0.45)' }}>
-              {isDark ? 'Claro' : 'Oscuro'}
-            </span>
-          </div>
           <p className="text-xs truncate" style={{ color: 'rgba(239,231,216,0.45)' }}>
             {admin?.email}
           </p>

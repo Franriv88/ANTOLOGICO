@@ -256,6 +256,14 @@ export const tenants = {
     return docToObj(snap);
   },
 
+  resetTrial: async (espacioIds) => {
+    const now = new Date().toISOString();
+    await Promise.all(
+      espacioIds.map(id => updateDoc(doc(firestore, C_ESPACIOS, id), { trialStartedAt: now }))
+    );
+    return now;
+  },
+
   // Elimina todos los espacios del tenant + sus workshops y reservas en cascada
   remove: async (espacioIds, userId) => {
     const batch = writeBatch(firestore);
