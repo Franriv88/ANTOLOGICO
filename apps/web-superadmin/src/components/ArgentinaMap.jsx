@@ -91,11 +91,6 @@ export default function ArgentinaMap({ data = [] }) {
     });
   }, []);
 
-  const handleWheel = useCallback(e => {
-    e.preventDefault();
-    const factor = e.deltaY < 0 ? 1.2 : 1 / 1.2;
-    handleZoom(factor, e.clientX, e.clientY);
-  }, [handleZoom]);
 
   const handlePointerDown = useCallback(e => {
     if (e.button !== 0) return;
@@ -199,7 +194,6 @@ export default function ArgentinaMap({ data = [] }) {
           viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`}
           className="w-full h-auto block select-none"
           style={{ cursor: dragRef.current ? 'grabbing' : 'grab' }}
-          onWheel={handleWheel}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
