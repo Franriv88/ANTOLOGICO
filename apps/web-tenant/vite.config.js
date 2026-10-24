@@ -13,6 +13,7 @@ export default defineConfig(({ mode }) => {
         registerType: 'autoUpdate',
         includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
         manifest: {
+          id: '/',
           name: 'Antológico',
           short_name: 'Antológico',
           description: 'Descubrí y reservá talleres y workshops cerca tuyo',
@@ -20,10 +21,14 @@ export default defineConfig(({ mode }) => {
           background_color: '#FAF7F2',
           display: 'standalone',
           orientation: 'portrait',
-          start_url: '/mis-reservas',
+          start_url: '/inicio',
+          scope: '/',
+          categories: ['education', 'lifestyle'],
           icons: [
-            { src: '/icon-192.png', sizes: '192x192', type: 'image/png' },
-            { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' },
+            { src: '/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+            { src: '/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+            { src: '/icon-maskable-192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+            { src: '/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
           ],
         },
         workbox: {
