@@ -34,12 +34,12 @@ function maskableSVG(size, { bg, edgeColor, edgeOpacity, nodes }) {
 }
 
 const DARK_BG = {
-  bg: '#1A1611', edgeColor: '#E85D4A', edgeOpacity: 1,
-  nodes: [[13,9,7,'#E85D4A'],[31,18,9,'#B98527'],[10,31,7,'#E85D4A'],[30,39,5,'#E85D4A']],
+  bg: '#E85D4A', edgeColor: 'rgba(250,247,242,0.55)', edgeOpacity: 1,
+  nodes: [[13,9,7,'#FAF7F2'],[31,18,9,'#B98527'],[10,31,7,'#FAF7F2'],[30,39,5,'#FAF7F2']],
 };
 const MASKABLE = {
-  bg: '#E85D4A', edgeColor: 'rgba(255,255,255,0.55)', edgeOpacity: 1,
-  nodes: [[13,9,7,'#ffffff'],[31,18,9,'rgba(255,255,255,0.75)'],[10,31,7,'#ffffff'],[30,39,5,'#ffffff']],
+  bg: '#E85D4A', edgeColor: 'rgba(250,247,242,0.55)', edgeOpacity: 1,
+  nodes: [[13,9,7,'#FAF7F2'],[31,18,9,'#B98527'],[10,31,7,'#FAF7F2'],[30,39,5,'#FAF7F2']],
 };
 const LIGHT_BG = {
   bg: '#FBF8F2', edgeColor: '#A88C74', edgeOpacity: 0.65,
