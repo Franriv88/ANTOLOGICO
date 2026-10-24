@@ -2,16 +2,13 @@
   "buildCommand": "pnpm --filter @antologico/web-tenant build:demo",
   "outputDirectory": "apps/web-tenant/dist",
   "installCommand": "npm install -g pnpm@9.15.4 && pnpm install",
-  "headers": [
+  "routes": [
     {
-      "source": "/.well-known/assetlinks.json",
-      "headers": [
-        { "key": "Content-Type", "value": "application/json" }
-      ]
-    }
-  ],
-  "rewrites": [
-    { "source": "/.well-known/(.*)", "destination": "/.well-known/$1" },
-    { "source": "/((?!\\.well-known).*)", "destination": "/index.html" }
+      "src": "/.well-known/assetlinks.json",
+      "headers": { "Content-Type": "application/json" },
+      "dest": "/.well-known/assetlinks.json"
+    },
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
