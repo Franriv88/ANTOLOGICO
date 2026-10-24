@@ -2,11 +2,12 @@ import { useEffect, useState, useLayoutEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { espacios as espaciosApi, workshops as workshopsApi, reservas as reservasApi } from '../services/api';
 import { getSlotStatus } from '../lib/slotStatus';
-import { loginGoogle, loginEmail, register, logout, subscribeAuth, authErrorMsg, sendPasswordReset, checkRedirectResult } from '../services/userAuth';
+import { loginGoogle, loginEmail, register, logout, subscribeAuth, authErrorMsg, sendPasswordReset, checkRedirectResult, updateUserProfile } from '../services/userAuth';
 import mpLogo from '../assets/Mercado_Pago.png';
 import { SocialIconsRow } from '../components/SocialIcons';
 import { trackReserva } from '../lib/analytics';
-// CardPayment Brick removed — using Checkout Pro (redirect) instead
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../lib/firebase';
 
 const MP_WORKER_URL = 'https://antologico-mp.franriv2388.workers.dev';
 // SlotBadge no se usa aquí — reemplazado por PublicSlotBadge con fondo sólido
@@ -276,7 +277,7 @@ function AuthModal({ brand, onClose, onSuccess }) {
 
 // ── BookingModal ──────────────────────────────────────────────────────────────
 
-function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, onConfirm, onClose }) {
+function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, tyc, onConfirm, onClose }) {
   const [cantidad,  setCantidad]  = useState(1);
   const [nombres,   setNombres]   = useState([prefill?.nombre ?? '']);
   const [email,    setEmail]    = useState(prefill?.email    ?? '');
@@ -284,6 +285,8 @@ function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, onConfi
   const [loading,  setLoading]  = useState(false);
   const [error,       setError]       = useState('');
   const [tenantMpReady,   setTenantMpReady]   = useState(false);
+  const [tycAccepted,     setTycAccepted]     = useState(!tyc);
+  const [showTyc,         setShowTyc]         = useState(false);
 
   useEffect(() => {
     fetch(`${MP_WORKER_URL}/tenant-mp-config?tenantId=${tenantId}`)
@@ -314,6 +317,7 @@ function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, onConfi
     if (nombres.some(n => !n.trim())) { setError(cantidad > 1 ? 'Todos los nombres son requeridos' : 'El nombre es requerido'); return false; }
     if (!email.trim() || !email.includes('@')) { setError('Email inválido'); return false; }
     if (!telefono.trim()) { setError('El teléfono es requerido'); return false; }
+    if (tyc && !tycAccepted) { setError('Debés aceptar los términos y condiciones'); return false; }
     return true;
   }
 
@@ -325,12 +329,14 @@ function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, onConfi
     setLoading('EFECTIVO');
     setError('');
     try {
+      const grupoId = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
       const reservas = await Promise.all(
         nombres.map(n => reservasApi.create(workshop.id, {
           nombre:   n.trim(),
           email:    email.trim(),
           telefono: telefono.trim(),
           metodoPago: 'EFECTIVO',
+          grupoId,
         }))
       );
       onConfirm(reservas);
@@ -346,7 +352,8 @@ function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, onConfi
     setLoading('MERCADO_PAGO');
     setError('');
     try {
-      const pendingData = { workshopId: workshop.id, nombres: nombres.map(n => n.trim()), email: email.trim(), telefono: telefono.trim(), cantidad };
+      const grupoId = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
+      const pendingData = { workshopId: workshop.id, nombres: nombres.map(n => n.trim()), email: email.trim(), telefono: telefono.trim(), cantidad, grupoId };
       sessionStorage.setItem('mp_pending_booking', JSON.stringify(pendingData));
 
       const currentUrl = window.location.href.split('?')[0];
@@ -460,6 +467,36 @@ function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, onConfi
               </div>
               {error && (
                 <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>
+              )}
+              {tyc && (
+                <div className="flex items-start gap-2.5 p-3 bg-[#FAF7F2] rounded-xl border border-[#E5DDD0]">
+                  <input
+                    type="checkbox"
+                    id="tyc-accept"
+                    checked={tycAccepted}
+                    onChange={e => setTycAccepted(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded border-[#D2C4A8] accent-[#E85D4A] flex-shrink-0"
+                  />
+                  <label htmlFor="tyc-accept" className="text-xs text-[#6B5F4C] leading-relaxed">
+                    Leí y acepto los{' '}
+                    <button type="button" onClick={() => setShowTyc(true)} className="underline font-medium text-[#2B241A] hover:text-[#E85D4A]">
+                      términos y condiciones
+                    </button>
+                  </label>
+                </div>
+              )}
+              {showTyc && (
+                <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 p-4" onClick={() => setShowTyc(false)}>
+                  <div className="bg-white rounded-2xl max-w-lg w-full max-h-[80vh] overflow-y-auto shadow-xl" onClick={e => e.stopPropagation()}>
+                    <div className="sticky top-0 bg-white border-b border-[#E5DDD0] px-5 py-3 flex items-center justify-between">
+                      <h3 className="font-semibold text-sm text-[#2B241A]">Términos y condiciones</h3>
+                      <button type="button" onClick={() => setShowTyc(false)} className="text-[#9B9083] hover:text-[#2B241A]">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      </button>
+                    </div>
+                    <div className="px-5 py-4 prose prose-sm max-w-none text-[#2B241A] text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: tyc }} />
+                  </div>
+                </div>
               )}
               {(() => {
                 // Determine which methods to show based on workshop.metodosPago
@@ -607,7 +644,7 @@ function ConfirmationView({ reservas, workshop, brand, onBack }) {
             )}
             <p className="text-xs text-[#6B5F4C] mt-1">{first.email}</p>
             {first.telefono && <p className="text-xs text-[#6B5F4C]">{first.telefono}</p>}
-            <p className="text-xs font-mono text-[#9B9083] mt-1.5">Código: #{first.id.slice(-8).toUpperCase()}</p>
+            <p className="text-xs font-mono text-[#9B9083] mt-1.5">Código: #{(first.grupoId || first.id).slice(-8).toUpperCase()}</p>
           </div>
         </div>
 
@@ -750,14 +787,15 @@ function WorkshopCard({ w, brand, onReservar, bookedCount, direcciones }) {
 
 // ── EspacioPublico ────────────────────────────────────────────────────────────
 
-export default function EspacioPublico() {
+export default function EspacioPublico({ overrideEspacioId }) {
   useLayoutEffect(() => {
     const root = document.documentElement;
     const prev = root.getAttribute('data-theme');
     root.removeAttribute('data-theme');
     return () => { if (prev) root.setAttribute('data-theme', prev); };
   }, []);
-  const { espacioId } = useParams();
+  const params = useParams();
+  const espacioId = overrideEspacioId || params.espacioId;
   const [espacio,   setEspacio]   = useState(null);
   const [workshops, setWorkshops] = useState([]);
   const [loading,   setLoading]   = useState(true);
@@ -828,6 +866,7 @@ export default function EspacioPublico() {
       (async () => {
         try {
           const ws = workshops.find(w => w.id === pending.workshopId) ?? await workshopsApi.get(pending.workshopId);
+          const grupoId = pending.grupoId || (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
           const reservas = await Promise.all(
             pending.nombres.map(n => reservasApi.create(pending.workshopId, {
               nombre:      n,
@@ -835,11 +874,22 @@ export default function EspacioPublico() {
               telefono:    pending.telefono,
               metodoPago:  'MERCADO_PAGO',
               mpPaymentId: paymentId,
+              grupoId,
             }))
           );
           if (ws) {
             setWorkshops(prev => prev.map(w => w.id === ws.id ? { ...w, cuposDisponibles: Math.max(0, w.cuposDisponibles - reservas.length) } : w));
             setConfirmed({ reservas, workshop: ws });
+
+            httpsCallable(functions, 'notifyTenantNewBooking')({
+              espacioId,
+              workshopName: ws.nombre,
+              clientName: pending.nombres[0],
+              clientEmail: pending.email,
+              clientPhone: pending.telefono || '',
+              metodoPago: 'MERCADO_PAGO',
+              cantidad: reservas.length,
+            }).catch(() => {});
           }
           if (currentUser) loadUserReservas(currentUser.user?.email ?? currentUser.profile?.email ?? '');
         } catch { /* best effort */ }
@@ -920,9 +970,20 @@ export default function EspacioPublico() {
     );
     setBookedCounts(prev => ({ ...prev, [booking.id]: (prev[booking.id] ?? 0) + count }));
     if (currentUser) loadUserReservas(currentUser.user.email ?? currentUser.profile?.email ?? '');
-    trackReserva({ workshopId: booking.id, espacioId: tenantId, monto: (booking.precio ?? 0) * count });
+    trackReserva({ workshopId: booking.id, espacioId, monto: (booking.precio ?? 0) * count });
     setConfirmed({ reservas, workshop: booking });
     setBooking(null);
+
+    const first = reservas[0];
+    httpsCallable(functions, 'notifyTenantNewBooking')({
+      espacioId,
+      workshopName: booking.nombre,
+      clientName: first.nombre,
+      clientEmail: first.email,
+      clientPhone: first.telefono || '',
+      metodoPago: first.metodoPago || 'EFECTIVO',
+      cantidad: count,
+    }).catch(() => {});
   }
 
   if (loading) {
@@ -966,6 +1027,7 @@ export default function EspacioPublico() {
           brand={brand}
           tenantId={espacioId}
           cobrosLinks={espacio?.cobros?.links ?? []}
+          tyc={espacio.tycEnabled && espacio.terminosCondiciones ? espacio.terminosCondiciones : null}
           prefill={currentUser ? { nombre: currentUser.profile?.nombre ?? '', email: currentUser.user?.email ?? '', telefono: currentUser.profile?.telefono ?? '' } : undefined}
           onConfirm={handleConfirm}
           onClose={() => setBooking(null)}
@@ -1104,7 +1166,7 @@ export default function EspacioPublico() {
             </div>
           ) : (
             <>
-              <h2 className="font-display text-xl text-[#1A1611] mb-5">Talleres disponibles</h2>
+              <h2 className="font-display text-xl mb-5" style={{ color: contrastText(brand.bg) }}>Talleres disponibles</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {upcoming.map(w => (
                   <WorkshopCard key={w.id} w={w} brand={brand} onReservar={handleReservar} bookedCount={bookedCounts[w.id] ?? 0} direcciones={espacio.direcciones ?? []} />
@@ -1118,10 +1180,10 @@ export default function EspacioPublico() {
       {/* Vista: Mis reservas */}
       {view === 'mis-reservas' && (
         <div className="max-w-2xl mx-auto px-4 py-10">
-          <h2 className="font-display text-xl text-[#1A1611] mb-4">Mis reservas</h2>
+          <h2 className="font-display text-xl mb-4" style={{ color: contrastText(brand.bg) }}>Mis reservas</h2>
           {!currentUser ? (
             <div className="text-center py-12">
-              <p className="text-[#6B5F4C] text-sm mb-4">Iniciá sesión para ver tus reservas.</p>
+              <p className="text-sm mb-4" style={{ color: contrastText(brand.bg) === '#ffffff' ? 'rgba(255,255,255,0.65)' : '#6B5F4C' }}>Iniciá sesión para ver tus reservas.</p>
               <button
                 onClick={() => setShowAuth(true)}
                 className="px-5 py-2.5 rounded-xl text-sm font-bold text-white"
@@ -1132,7 +1194,7 @@ export default function EspacioPublico() {
             </div>
           ) : userReservas.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-[#6B5F4C] text-sm">Todavía no tenés reservas.</p>
+              <p className="text-sm" style={{ color: contrastText(brand.bg) === '#ffffff' ? 'rgba(255,255,255,0.65)' : '#6B5F4C' }}>Todavía no tenés reservas.</p>
             </div>
           ) : (
             <div className="flex flex-col gap-3">
@@ -1220,7 +1282,9 @@ export default function EspacioPublico() {
             <span>
               Obtén tu propio espacio{' '}
               <a
-                href="/"
+                href="https://www.antologico.app/registro"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="font-semibold underline underline-offset-2 hover:opacity-100 transition-opacity"
                 style={{ color: footerStrong }}
               >
@@ -1231,76 +1295,200 @@ export default function EspacioPublico() {
         );
       })()}
 
-      {/* Modal Mis datos */}
+      {/* Modal Mis datos (editable) */}
       {showMisDatos && currentUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden">
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[#EDE8DF]">
-              <h2 className="font-display text-lg text-[#1A1611]">Mis datos</h2>
-              <button
-                onClick={() => setShowMisDatos(false)}
-                className="text-[#9B9083] hover:text-[#2B241A] transition-colors"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-              </button>
-            </div>
+        <MisDatosModal
+          currentUser={currentUser}
+          brand={brand}
+          onClose={() => setShowMisDatos(false)}
+          onLogout={() => { logout(); setShowMisDatos(false); }}
+          onSaved={(updated) => setCurrentUser(prev => ({ ...prev, profile: { ...prev.profile, ...updated } }))}
+        />
+      )}
+    </div>
+  );
+}
 
-            {/* Contenido */}
-            <div className="px-5 py-5 flex flex-col gap-4">
-              {/* Avatar / inicial */}
-              <div className="flex items-center gap-3">
-                {currentUser.profile?.photoURL ? (
-                  <img src={currentUser.profile.photoURL} alt="" className="w-12 h-12 rounded-full object-cover" />
-                ) : (
-                  <div
-                    className="w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold text-lg"
-                    style={{ backgroundColor: brand.primary }}
-                  >
-                    {(currentUser.profile?.nombre || currentUser.user?.email || '?')[0].toUpperCase()}
-                  </div>
-                )}
-                <div className="min-w-0">
-                  <p className="font-medium text-[#1A1611] text-sm truncate">
-                    {currentUser.profile?.nombre || '—'}
-                  </p>
-                  <p className="text-xs text-[#9B9083] truncate">{currentUser.user?.email}</p>
-                </div>
+// ─── Modal editable "Mis datos" ─────────────────────────────────────────────
+const GENEROS_PUBLIC = [
+  { value: '',                    label: 'Prefiero no decirlo' },
+  { value: 'masculino',           label: 'Masculino' },
+  { value: 'femenino',            label: 'Femenino' },
+  { value: 'no-binario',          label: 'No binario' },
+  { value: 'prefiero-no-decirlo', label: 'Prefiero no decirlo' },
+];
+
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+function MisDatosModal({ currentUser, brand, onClose, onLogout, onSaved }) {
+  const p = currentUser.profile || {};
+  const [nombre, setNombre]     = useState(p.nombre || currentUser.user?.displayName || '');
+  const [telefono, setTelefono] = useState(p.telefono || '');
+  const [genero, setGenero]     = useState(p.genero || '');
+  const [fechaNac, setFechaNac] = useState(p.fechaNac || '');
+  const [saving, setSaving]     = useState(false);
+  const [saved, setSaved]       = useState(false);
+
+  const today = new Date();
+  const maxYear = today.getFullYear() - 13;
+  const minYear = today.getFullYear() - 100;
+
+  const parsed = fechaNac ? fechaNac.split('-') : [];
+  const [bdYear, setBdYear]   = useState(parsed[0] || '');
+  const [bdMonth, setBdMonth] = useState(parsed[1] ? String(parseInt(parsed[1])) : '');
+  const [bdDay, setBdDay]     = useState(parsed[2] ? String(parseInt(parsed[2])) : '');
+
+  function daysInMonth(m, y) {
+    if (!m || !y) return 31;
+    return new Date(Number(y), Number(m), 0).getDate();
+  }
+
+  useEffect(() => {
+    if (bdYear && bdMonth && bdDay) {
+      const mm = bdMonth.padStart(2, '0');
+      const dd = bdDay.padStart(2, '0');
+      setFechaNac(`${bdYear}-${mm}-${dd}`);
+    } else {
+      setFechaNac('');
+    }
+  }, [bdYear, bdMonth, bdDay]);
+
+  useEffect(() => {
+    if (bdDay && bdMonth && bdYear) {
+      const max = daysInMonth(bdMonth, bdYear);
+      if (Number(bdDay) > max) setBdDay(String(max));
+    }
+  }, [bdMonth, bdYear]);
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      const data = {
+        nombre: nombre.trim(),
+        telefono: telefono.trim(),
+        genero: genero || 'prefiero-no-decirlo',
+        fechaNac: fechaNac || null,
+      };
+      await updateUserProfile(currentUser.user.uid, data);
+      onSaved(data);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch {
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const inputCls = 'w-full px-3 py-2 bg-[#FAF8F4] border border-[#E0D8CC] rounded-lg text-sm text-[#2B241A] focus:outline-none focus:border-[#E85D4A] focus:ring-1 focus:ring-[#E85D4A]/30';
+  const selectCls = inputCls + ' appearance-none';
+  const labelCls = 'text-[10px] font-medium text-[#9B9083] uppercase tracking-wide mb-1';
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50" onClick={onClose}>
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full max-w-sm max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-[#EDE8DF] sticky top-0 bg-white rounded-t-2xl z-10">
+          <h2 className="font-display text-lg text-[#1A1611]">Mis datos</h2>
+          <button onClick={onClose} className="text-[#9B9083] hover:text-[#2B241A] transition-colors">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        <div className="px-5 py-5 flex flex-col gap-4">
+          {/* Avatar */}
+          <div className="flex items-center gap-3">
+            {currentUser.profile?.photoURL ? (
+              <img src={currentUser.profile.photoURL} alt="" className="w-12 h-12 rounded-full object-cover" />
+            ) : (
+              <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold text-lg" style={{ backgroundColor: brand.primary }}>
+                {(nombre || currentUser.user?.email || '?')[0].toUpperCase()}
               </div>
-
-              {/* Campos */}
-              <div className="flex flex-col gap-2 text-sm">
-                <div className="flex flex-col gap-0.5 p-3 bg-[#FAF8F4] rounded-xl">
-                  <span className="text-[10px] font-medium text-[#9B9083] uppercase tracking-wide">Nombre</span>
-                  <span className="text-[#2B241A]">{currentUser.profile?.nombre || '—'}</span>
-                </div>
-                <div className="flex flex-col gap-0.5 p-3 bg-[#FAF8F4] rounded-xl">
-                  <span className="text-[10px] font-medium text-[#9B9083] uppercase tracking-wide">Email</span>
-                  <span className="text-[#2B241A] break-all">{currentUser.user?.email}</span>
-                </div>
-                {currentUser.profile?.telefono && (
-                  <div className="flex flex-col gap-0.5 p-3 bg-[#FAF8F4] rounded-xl">
-                    <span className="text-[10px] font-medium text-[#9B9083] uppercase tracking-wide">Teléfono</span>
-                    <span className="text-[#2B241A]">{currentUser.profile.telefono}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="px-5 pb-5">
-              <button
-                onClick={() => { logout(); setShowMisDatos(false); }}
-                className="w-full py-2.5 border border-[#E0D8CC] text-sm font-medium text-[#6B5F4C] rounded-xl hover:bg-[#FAF8F4] transition-colors"
-              >
-                Cerrar sesión
-              </button>
+            )}
+            <div className="min-w-0">
+              <p className="font-medium text-[#1A1611] text-sm truncate">{nombre || '—'}</p>
+              <p className="text-xs text-[#9B9083] truncate">{currentUser.user?.email}</p>
             </div>
           </div>
+
+          {/* Nombre */}
+          <div>
+            <label className={labelCls}>Nombre</label>
+            <input type="text" value={nombre} onChange={e => setNombre(e.target.value)} placeholder="Tu nombre" className={inputCls} />
+          </div>
+
+          {/* Teléfono */}
+          <div>
+            <label className={labelCls}>Teléfono <span className="font-normal normal-case">(opcional)</span></label>
+            <input type="tel" value={telefono} onChange={e => setTelefono(e.target.value)} placeholder="+54 9 11 1234-5678" className={inputCls} />
+          </div>
+
+          {/* Fecha de nacimiento */}
+          <div>
+            <label className={labelCls}>Fecha de nacimiento <span className="font-normal normal-case">(opcional)</span></label>
+            <div className="grid grid-cols-[1fr_2fr_1.2fr] gap-2">
+              <select value={bdDay} onChange={e => setBdDay(e.target.value)} className={selectCls}>
+                <option value="">Día</option>
+                {Array.from({ length: daysInMonth(bdMonth || 1, bdYear || 2000) }, (_, i) => (
+                  <option key={i + 1} value={i + 1}>{i + 1}</option>
+                ))}
+              </select>
+              <select value={bdMonth} onChange={e => setBdMonth(e.target.value)} className={selectCls}>
+                <option value="">Mes</option>
+                {MESES.map((m, i) => (
+                  <option key={i} value={i + 1}>{m}</option>
+                ))}
+              </select>
+              <select value={bdYear} onChange={e => setBdYear(e.target.value)} className={selectCls}>
+                <option value="">Año</option>
+                {Array.from({ length: maxYear - minYear + 1 }, (_, i) => maxYear - i).map(y => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Género */}
+          <div>
+            <label className={labelCls}>Género <span className="font-normal normal-case">(opcional)</span></label>
+            <select value={genero} onChange={e => setGenero(e.target.value)} className={selectCls}>
+              {GENEROS_PUBLIC.map(g => (
+                <option key={g.value} value={g.value}>{g.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Guardar */}
+          {saved && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-700 font-medium">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Datos guardados
+            </div>
+          )}
+
+          <button
+            onClick={handleSave}
+            disabled={saving || !nombre.trim()}
+            className="w-full py-2.5 text-sm font-semibold text-white rounded-xl transition-colors disabled:opacity-50"
+            style={{ backgroundColor: brand.primary }}
+          >
+            {saving ? 'Guardando…' : 'Guardar cambios'}
+          </button>
         </div>
-      )}
+
+        {/* Footer */}
+        <div className="px-5 pb-5">
+          <button
+            onClick={onLogout}
+            className="w-full py-2.5 border border-[#E0D8CC] text-sm font-medium text-[#6B5F4C] rounded-xl hover:bg-[#FAF8F4] transition-colors"
+          >
+            Cerrar sesión
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
