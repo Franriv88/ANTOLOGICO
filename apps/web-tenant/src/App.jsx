@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { EspacioProvider, useEspacio } from './context/EspacioContext';
@@ -13,6 +14,8 @@ import Perfil   from './pages/Perfil';
 import EspacioPublico from './pages/EspacioPublico';
 import MisReservas    from './pages/MisReservas';
 import MisDatos       from './pages/MisDatos';
+import Inicio         from './pages/Inicio';
+import * as api from './services/api';
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
@@ -35,8 +38,8 @@ function RequireDesktop({ children }) {
         <p className="text-sm text-ink-muted mb-6 max-w-xs mx-auto">
           El panel de gestión está optimizado para pantallas grandes. Usá una computadora o tablet para gestionar tus talleres.
         </p>
-        <a href="/mis-reservas" className="text-sm text-primary hover:underline">
-          ¿Sos alumno? Ver mis reservas →
+        <a href="/inicio" className="text-sm text-primary hover:underline">
+          ¿Sos alumno? Ir a mi inicio →
         </a>
       </div>
     </div>
@@ -50,17 +53,96 @@ function RequireEspacio({ children }) {
   return activeEspacio ? children : <Navigate to="/onboarding" replace />;
 }
 
+function getSubdomain() {
+  const host = window.location.hostname;
+  const parts = host.split('.');
+  if (parts.length >= 3 && parts.slice(-2).join('.') === 'antologico.app') {
+    const sub = parts.slice(0, -2).join('.');
+    if (sub && sub !== 'www') return sub;
+  }
+  return null;
+}
+
+function SubdomainResolver() {
+  const [espacioId, setEspacioId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const slug = getSubdomain();
+
+  useEffect(() => {
+    if (!slug) return;
+    api.espacios.getBySlug(slug).then(esp => {
+      if (esp) setEspacioId(esp.id);
+      else setNotFound(true);
+    }).catch(() => setNotFound(true)).finally(() => setLoading(false));
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#FAF7F2] flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#E85D4A] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (notFound) {
+    return (
+      <div className="min-h-screen bg-[#FAF7F2] flex items-center justify-center p-6 text-center">
+        <div>
+          <h1 className="font-display text-2xl text-[#2C2416] mb-2">Espacio no encontrado</h1>
+          <p className="text-sm text-[#6B5D4D] mb-4">No existe un espacio con el subdominio <span className="font-mono font-medium">{slug}</span></p>
+          <a href="https://www.antologico.app" className="text-sm text-[#E85D4A] hover:underline">Ir a Antológico →</a>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<EspacioPublico overrideEspacioId={espacioId} />} />
+        <Route path="/inicio" element={<Inicio />} />
+        <Route path="/mis-reservas" element={<MisReservas />} />
+        <Route path="/mis-datos" element={<MisDatos />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+// Detecta si la app fue lanzada desde el TWA/PWA instalado (no desde el navegador)
+function RootPage() {
+  const isInstalled =
+    window.matchMedia('(display-mode: standalone)').matches ||
+    document.referrer.startsWith('android-app://');
+  if (isInstalled) return <Navigate to="/inicio" replace />;
+  return <Landing />;
+}
+
 export default function App() {
+  const subdomain = getSubdomain();
+
+  if (subdomain) {
+    return (
+      <AuthProvider>
+        <EspacioProvider>
+          <SubdomainResolver />
+        </EspacioProvider>
+      </AuthProvider>
+    );
+  }
+
   return (
     <AuthProvider>
       <EspacioProvider>
         <BrowserRouter>
           <Routes>
             {/* Rutas públicas */}
-            <Route path="/" element={<Landing />} />
+            <Route path="/" element={<RootPage />} />
             <Route path="/login"    element={<DevLogin />} />
             <Route path="/registro" element={<DevLogin mode="register" />} />
             <Route path="/p/:espacioId" element={<EspacioPublico />} />
+            <Route path="/inicio"       element={<Inicio />} />
             <Route path="/mis-reservas" element={<MisReservas />} />
             <Route path="/mis-datos"    element={<MisDatos />} />
 
