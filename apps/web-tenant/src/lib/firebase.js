@@ -2,6 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, connectAuthEmulator } from 'firebase/auth';
 import { getDataConnect, connectDataConnectEmulator } from 'firebase/data-connect';
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 import { connectorConfig } from '../dataconnect-generated';
 
 const firebaseConfig = {
@@ -17,9 +18,11 @@ export const app       = initializeApp(firebaseConfig);
 export const auth      = getAuth(app);
 export const dc        = getDataConnect(app, connectorConfig);
 export const firestore = getFirestore(app);
+export const functions = getFunctions(app, 'us-central1');
 
 if (import.meta.env.DEV && import.meta.env.MODE !== 'demo') {
   connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
   connectDataConnectEmulator(dc, '127.0.0.1', 9399);
   connectFirestoreEmulator(firestore, '127.0.0.1', 8080);
+  connectFunctionsEmulator(functions, '127.0.0.1', 5001);
 }
