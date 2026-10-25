@@ -1,6 +1,14 @@
 {
+  "installCommand": "npm install -g pnpm@9.15.4 && cd ../.. && pnpm install",
+  "buildCommand": "pnpm run build:demo",
   "outputDirectory": "dist",
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+  "routes": [
+    {
+      "src": "/.well-known/assetlinks.json",
+      "headers": { "Content-Type": "application/json" },
+      "dest": "/.well-known/assetlinks.json"
+    },
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
