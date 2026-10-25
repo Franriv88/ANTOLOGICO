@@ -19,8 +19,9 @@ function iconSVG(size, { bg, edgeColor, edgeOpacity, nodes }) {
 }
 
 function maskableSVG(size, { bg, edgeColor, edgeOpacity, nodes }) {
-  const pad = size * 0.1;
-  const inner = size * 0.8;
+  // 18% padding on each side keeps content within Android's adaptive icon safe zone (~66%)
+  const pad = size * 0.18;
+  const inner = size * 0.64;
   const sw = (inner * 1.8 / 48).toFixed(2);
   const s = (v) => (pad + v * inner / 48).toFixed(2);
   const edges = [[13,9,31,18],[13,9,10,31],[31,18,30,39],[10,31,30,39]];
