@@ -5,7 +5,7 @@ import { espacios as espaciosApi, workshops as workshopsApi } from '../services/
 import {
   loginGoogle, loginEmail, register, logout,
   subscribeAuth, authErrorMsg, sendPasswordReset,
-  checkRedirectResult,
+  checkRedirectResult, getAuthCurrentUser,
   followEspacio, unfollowEspacio, getEspaciosSeguidos, syncFollowedToFirestore,
 } from '../services/userAuth';
 import { getSlotStatus } from '../lib/slotStatus';
@@ -537,7 +537,10 @@ export default function Inicio() {
     return () => { if (prev) root.setAttribute('data-theme', prev); };
   }, []);
 
-  const [currentUser,  setCurrentUser]  = useState(undefined);
+  const [currentUser,  setCurrentUser]  = useState(() => {
+    const u = getAuthCurrentUser();
+    return u ? { user: u, profile: {} } : undefined;
+  });
   const [espacios,     setEspacios]     = useState(null);
   const [selectedId,   setSelectedId]   = useState(null);
   const [showScanner,  setShowScanner]  = useState(false);

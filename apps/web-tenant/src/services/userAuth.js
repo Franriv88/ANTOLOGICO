@@ -96,6 +96,10 @@ export async function logout() {
   await fbSignOut(auth);
 }
 
+export function getAuthCurrentUser() {
+  return auth.currentUser;
+}
+
 export function subscribeAuth(cb) {
   return fbOnAuthChanged(auth, async (user) => {
     if (!user) return cb(null, null);

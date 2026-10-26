@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { subscribeAuth, loginGoogle, loginEmail, authErrorMsg, checkRedirectResult, updateUserProfile } from '../services/userAuth';
+import { subscribeAuth, loginGoogle, loginEmail, authErrorMsg, checkRedirectResult, getAuthCurrentUser, updateUserProfile } from '../services/userAuth';
 
 const INPUT = 'w-full px-3 py-2 bg-white border border-[#D2C4A8] rounded-lg text-sm text-[#2B241A] focus:outline-none focus:ring-2 focus:ring-[#E85D4A] focus:ring-offset-1';
 const LABEL = 'block text-xs font-medium text-[#6B5F4C] mb-1';
@@ -64,7 +64,10 @@ function AuthPanel({ onSuccess }) {
 }
 
 export default function MisDatos() {
-  const [currentUser, setCurrentUser] = useState(undefined);
+  const [currentUser, setCurrentUser] = useState(() => {
+    const u = getAuthCurrentUser();
+    return u ? { user: u, profile: {} } : undefined;
+  });
   const [nombre,   setNombre]   = useState('');
   const [telefono, setTelefono] = useState('');
   const [saving,   setSaving]   = useState(false);
@@ -109,53 +112,79 @@ export default function MisDatos() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF7F2] p-6">
-      <div className="max-w-sm mx-auto">
-        <div className="flex items-center gap-3 mb-6">
-          <Link to="/mis-reservas" className="text-[#E85D4A] hover:underline text-sm">← Mis reservas</Link>
+    <div className="min-h-screen bg-[#FAF7F2] flex flex-col">
+      <div className="flex-1 p-6">
+        <div className="max-w-sm mx-auto">
+          <div className="bg-white rounded-2xl shadow-sm border border-[#EDE8DE] p-8">
+            <h1 className="font-display text-xl text-[#1A1611] mb-1">Mis datos</h1>
+            <p className="text-sm text-[#6B5F4C] mb-6">{currentUser.user.email}</p>
+
+            <form onSubmit={handleSave} className="flex flex-col gap-4">
+              <div>
+                <label className={LABEL}>Nombre</label>
+                <input
+                  type="text"
+                  value={nombre}
+                  onChange={e => setNombre(e.target.value)}
+                  required
+                  className={INPUT}
+                  placeholder="Tu nombre"
+                />
+              </div>
+              <div>
+                <label className={LABEL}>Teléfono</label>
+                <input
+                  type="tel"
+                  value={telefono}
+                  onChange={e => setTelefono(e.target.value)}
+                  className={INPUT}
+                  placeholder="+54 9 11 ..."
+                />
+              </div>
+
+              {error && <p className="text-xs text-red-600">{error}</p>}
+
+              <div className="flex items-center gap-3 pt-1">
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="px-5 py-2 bg-[#E85D4A] text-white rounded-lg text-sm font-semibold hover:bg-[#C4412F] transition-colors disabled:opacity-50"
+                >
+                  {saving ? 'Guardando…' : 'Guardar cambios'}
+                </button>
+                {saved && <span className="text-xs text-green-600 font-medium">¡Guardado!</span>}
+              </div>
+            </form>
+          </div>
         </div>
+      </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-[#EDE8DE] p-8">
-          <h1 className="font-display text-xl text-[#1A1611] mb-1">Mis datos</h1>
-          <p className="text-sm text-[#6B5F4C] mb-6">{currentUser.user.email}</p>
-
-          <form onSubmit={handleSave} className="flex flex-col gap-4">
-            <div>
-              <label className={LABEL}>Nombre</label>
-              <input
-                type="text"
-                value={nombre}
-                onChange={e => setNombre(e.target.value)}
-                required
-                className={INPUT}
-                placeholder="Tu nombre"
-              />
-            </div>
-            <div>
-              <label className={LABEL}>Teléfono</label>
-              <input
-                type="tel"
-                value={telefono}
-                onChange={e => setTelefono(e.target.value)}
-                className={INPUT}
-                placeholder="+54 9 11 ..."
-              />
-            </div>
-
-            {error && <p className="text-xs text-red-600">{error}</p>}
-
-            <div className="flex items-center gap-3 pt-1">
-              <button
-                type="submit"
-                disabled={saving}
-                className="px-5 py-2 bg-[#E85D4A] text-white rounded-lg text-sm font-semibold hover:bg-[#C4412F] transition-colors disabled:opacity-50"
-              >
-                {saving ? 'Guardando…' : 'Guardar cambios'}
-              </button>
-              {saved && <span className="text-xs text-green-600 font-medium">¡Guardado!</span>}
-            </div>
-          </form>
+      {/* Bottom nav */}
+      <nav className="sticky bottom-0 bg-white border-t border-[#EDE8DE] px-4 py-2">
+        <div className="max-w-lg mx-auto flex justify-around">
+          <Link to="/inicio" className="flex flex-col items-center gap-0.5 py-1 text-[#9B9083] hover:text-[#6B5F4C]">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            <span className="text-[10px] font-semibold">Inicio</span>
+          </Link>
+          <Link to="/mis-reservas" className="flex flex-col items-center gap-0.5 py-1 text-[#9B9083] hover:text-[#6B5F4C]">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <span className="text-[10px] font-semibold">Reservas</span>
+          </Link>
+          <Link to="/mis-datos" className="flex flex-col items-center gap-0.5 py-1 text-[#E85D4A]">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+            <span className="text-[10px] font-semibold">Perfil</span>
+          </Link>
         </div>
+      </nav>
+
+      <div className="text-center py-4 text-xs text-[#9B9083] border-t border-[#EDE8DE]">
+        Powered by <span className="font-semibold">Antológico</span>
       </div>
     </div>
   );
