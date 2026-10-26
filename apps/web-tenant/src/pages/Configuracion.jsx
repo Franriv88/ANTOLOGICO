@@ -2026,6 +2026,7 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
   const [error,        setError]        = useState('');
   const [periodo,      setPeriodo]      = useState('mensual'); // para el selector de activación
 
+  const isSuperAdmin   = !!espacio.isSuperAdmin;
   const pendiente      = espacio.cancelacionPendiente;
   const isEstudio      = espacio.planId === 'estudio';
 
@@ -2093,8 +2094,26 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
   return (
     <div className="max-w-lg flex flex-col gap-6">
 
+      {/* ── Banner Super Admin (sin cobro) ── */}
+      {isSuperAdmin && (
+        <div className="flex items-start gap-4 bg-[#B98527]/5 border border-[#B98527]/25 rounded-xl p-5">
+          <div className="w-10 h-10 rounded-lg bg-[#B98527]/10 flex items-center justify-center shrink-0">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B98527" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-ink mb-0.5">Espacio Super Admin</p>
+            <p className="text-xs text-ink-muted leading-relaxed">
+              Este espacio tiene el plan <strong className="text-ink">Estudio</strong> activado sin costo ni vencimiento.
+              No requiere suscripción.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* ── Selector de plan (cuando no hay plan activo) ── */}
-      {!planActivo && (
+      {!isSuperAdmin && !planActivo && (
         <div className="bg-surface-100 border border-border rounded-xl p-5">
           <p className="text-xs text-ink-muted mb-0.5">Plan actual</p>
           <p className="text-xl font-display text-ink mb-1">Sin plan (modo prueba)</p>
@@ -2174,7 +2193,7 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
       )}
 
       {/* ── Resumen de facturación (cuando hay plan activo) ── */}
-      {planActivo && (
+      {!isSuperAdmin && planActivo && (
       <div className="bg-surface-100 border border-border rounded-xl p-5">
         <div className="flex items-baseline justify-between gap-3 mb-1">
           <div>
@@ -2252,7 +2271,7 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
       )}
 
       {/* ── DEV: reset plan (quitar antes de producción) ── */}
-      {planActivo && (
+      {!isSuperAdmin && planActivo && (
         <button
           onClick={async () => {
             await espacioApi.update(espacio.id, { planId: null, plan: null, periodoFacturacion: null, precioActual: null, proximaRenovacion: null });
@@ -2264,8 +2283,8 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
         </button>
       )}
 
-      {/* ── Estado de la suscripción (solo con plan activo) ── */}
-      {planActivo && <div className="bg-surface-100 border border-border rounded-xl p-5">
+      {/* ── Estado de la suscripción (solo con plan activo, no admin) ── */}
+      {!isSuperAdmin && planActivo && <div className="bg-surface-100 border border-border rounded-xl p-5">
         <h2 className="font-semibold text-sm text-ink mb-3">Estado de la suscripción</h2>
         {pendiente ? (
           <div className="flex flex-col gap-4">
