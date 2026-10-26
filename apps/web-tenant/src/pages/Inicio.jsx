@@ -324,25 +324,24 @@ function QRScannerModal({ onClose, onFound, userId }) {
       stopCamera();
       let nombre = '';
       try { const esp = await espaciosApi.get(espacioId); nombre = esp?.nombre ?? ''; } catch {}
+      const alreadyFollowed = userId
+        ? (await getEspaciosSeguidos(userId).catch(() => getLocalFollowed())).includes(espacioId)
+        : getLocalFollowed().includes(espacioId);
+
+      // Seguir automáticamente si todavía no lo sigue
+      if (!alreadyFollowed) {
+        if (userId) await followEspacio(userId, espacioId).catch(() => {});
+        else addLocalFollowed(espacioId);
+      }
+
       setFound({ url: raw, espacioId, nombre });
-      setFollowed(userId ? (await getEspaciosSeguidos(userId)).includes(espacioId) : getLocalFollowed().includes(espacioId));
+      setFollowed(true);
       setPhase('found');
     } catch { setErrMsg('El QR escaneado no contiene una URL válida.'); setPhase('error'); }
   }
 
-  async function handleFollow() {
+  function handleGo() {
     if (!found) return;
-    if (userId) await followEspacio(userId, found.espacioId).catch(() => {});
-    else addLocalFollowed(found.espacioId);
-    setFollowed(true);
-  }
-
-  async function handleGo() {
-    if (!found) return;
-    if (!followed) {
-      if (userId) await followEspacio(userId, found.espacioId).catch(() => {});
-      else addLocalFollowed(found.espacioId);
-    }
     handleClose();
     onFound?.(found.espacioId);
   }
@@ -379,14 +378,11 @@ function QRScannerModal({ onClose, onFound, userId }) {
                 <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                 </div>
-                <p className="text-sm font-semibold text-[#1A1611]">¡QR detectado!</p>
-                {found.nombre && <p className="text-xs text-[#6B5F4C]">{found.nombre}</p>}
+                <p className="text-sm font-semibold text-[#1A1611]">¡Ahora seguís este espacio!</p>
+                {found.nombre && <p className="text-base font-display font-semibold text-[#E85D4A]">{found.nombre}</p>}
               </div>
-              <button onClick={handleGo} className="w-full py-2.5 rounded-xl text-sm font-bold bg-[#E85D4A] text-white">Ver espacio</button>
-              <button onClick={followed ? () => {} : handleFollow}
-                className={`w-full py-2.5 rounded-xl text-sm font-semibold border transition-colors ${followed ? 'border-emerald-300 bg-emerald-50 text-emerald-700' : 'border-[#D2C4A8] text-[#2B241A] hover:bg-[#F0EAE0]'}`}>
-                {followed ? '✓ Siguiendo' : '+ Seguir espacio'}
-              </button>
+              <button onClick={handleGo} className="w-full py-2.5 rounded-xl text-sm font-bold bg-[#E85D4A] text-white hover:bg-[#c94a38] transition-colors">Ver espacio</button>
+              <button onClick={handleClose} className="w-full py-2.5 rounded-xl text-sm font-semibold border border-[#D2C4A8] text-[#2B241A] hover:bg-[#F0EAE0] transition-colors">Listo</button>
             </div>
           )}
           <canvas ref={canvasRef} className="hidden" />
