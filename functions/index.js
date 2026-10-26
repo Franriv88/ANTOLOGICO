@@ -274,6 +274,42 @@ exports.resendVerificationCode = onCall(
   }
 );
 
+// ── Super Admin: eliminar cuenta de Firebase Auth de un tenant ──────────────
+// Llamada desde el panel de Super Admin cuando elimina un tenant. Verifica que
+// quien llama sea super admin (existe en sa_admins) y luego borra la cuenta
+// Firebase Auth del uid indicado, liberando el email para re-registro.
+exports.deleteTenantAuth = onCall(
+  { region: 'us-central1' },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'Debés estar autenticado.');
+    }
+
+    const callerUid = request.auth.uid;
+    const adminSnap = await db.collection('sa_admins').doc(callerUid).get();
+    if (!adminSnap.exists) {
+      throw new HttpsError('permission-denied', 'Solo super admins pueden hacer esto.');
+    }
+
+    const { uid } = request.data || {};
+    if (!uid || typeof uid !== 'string') {
+      throw new HttpsError('invalid-argument', 'Falta el uid del tenant.');
+    }
+
+    try {
+      await admin.auth().deleteUser(uid);
+      return { success: true };
+    } catch (err) {
+      if (err && err.code === 'auth/user-not-found') {
+        // Ya no estaba en Auth: lo tomamos como éxito.
+        return { success: true, alreadyGone: true };
+      }
+      console.error('deleteTenantAuth error', uid, err);
+      throw new HttpsError('internal', err.message || 'No se pudo eliminar la cuenta.');
+    }
+  }
+);
+
 // ── Limpieza automática de cuentas no verificadas ───────────────────────────
 // Corre cada 6 horas y elimina cuentas de Firebase Auth creadas hace más de 24h
 // que todavía no verificaron el email. Esto evita acumular "basura" cuando el

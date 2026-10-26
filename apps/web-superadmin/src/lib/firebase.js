@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { getFunctions } from 'firebase/functions';
 
 const firebaseConfig = {
   apiKey:            import.meta.env.VITE_FIREBASE_API_KEY     || 'demo-api-key',
@@ -14,3 +15,4 @@ const firebaseConfig = {
 export const app       = initializeApp(firebaseConfig, 'superadmin');
 export const auth      = getAuth(app);
 export const firestore = getFirestore(app);
+export const functions = getFunctions(app, 'us-central1');

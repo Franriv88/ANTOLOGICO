@@ -3,10 +3,11 @@ import {
   query, orderBy, where, writeBatch,
 } from 'firebase/firestore';
 import { sendPasswordResetEmail } from 'firebase/auth';
+import { httpsCallable } from 'firebase/functions';
 
 const C_PROMO       = 'demo_promo';
 const C_PROMO_CODES = 'demo_promo_codes';
-import { firestore, auth } from '../lib/firebase';
+import { firestore, auth, functions } from '../lib/firebase';
 
 const C_ADMINS    = 'sa_admins';
 const C_PLANES    = 'demo_planes';
@@ -278,7 +279,9 @@ export const tenants = {
     return now;
   },
 
-  // Elimina todos los espacios del tenant + sus workshops y reservas en cascada
+  // Elimina todos los espacios del tenant + sus workshops y reservas en cascada,
+  // y además borra la cuenta de Firebase Auth (via Cloud Function con Admin SDK)
+  // para que el email del tenant quede libre y pueda registrarse de nuevo.
   remove: async (espacioIds, userId) => {
     const batch = writeBatch(firestore);
 
@@ -294,10 +297,22 @@ export const tenants = {
       batch.delete(doc(firestore, C_ESPACIOS, espacioId));
     }
 
-    // Perfil de usuario
+    // Perfil de usuario (demo_usuarios)
     if (userId) batch.delete(doc(firestore, C_USUARIOS, userId));
 
     await batch.commit();
+
+    // Finalmente, eliminar la cuenta de Firebase Auth para liberar el email.
+    // Si falla acá no revertimos Firestore (el tenant ya quedó eliminado como
+    // registro), pero avisamos al UI.
+    if (userId) {
+      try {
+        await httpsCallable(functions, 'deleteTenantAuth')({ uid: userId });
+      } catch (err) {
+        console.error('deleteTenantAuth failed:', err);
+        throw new Error('El tenant fue eliminado de la base de datos, pero no se pudo liberar su email de Firebase Auth. Contactá soporte técnico.');
+      }
+    }
   },
 };
 
