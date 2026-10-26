@@ -113,7 +113,9 @@ export async function updateUserProfile(uid, data) {
 
 export async function getEspaciosSeguidos(uid) {
   const profile = await fetchProfile(uid);
-  return profile.espaciosSeguidos ?? [];
+  const remote = profile.espaciosSeguidos ?? [];
+  const local  = getLocalFollowed();
+  return [...new Set([...remote, ...local])];
 }
 
 export async function followEspacio(uid, espacioId) {
