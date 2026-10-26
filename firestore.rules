@@ -34,6 +34,12 @@ service cloud.firestore {
     match /demo_promo_codes/{id} {
       allow read, write: if true;
     }
+    match /demo_rubros/{id} {
+      allow read, write: if true;
+    }
+    match /demo_cupones/{id} {
+      allow read, write: if true;
+    }
 
     // Todo lo demás: denegado por defecto.
     match /{document=**} {
