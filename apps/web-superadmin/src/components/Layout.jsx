@@ -9,6 +9,7 @@ const NAV = [
   { to: '/reportes',   label: 'Reportes' },
   { to: '/metricas',   label: 'Métricas' },
   { to: '/rubros',     label: 'Rubros' },
+  { to: '/cupones',    label: 'Cupones' },
   { to: '/mi-espacio', label: 'Mi Espacio' },
 ];
 

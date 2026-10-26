@@ -7,7 +7,8 @@ import { useEspacio } from '../context/EspacioContext';
 import { espacios as espacioApi, reservas as reservasApi } from '../services/api';
 import { RUBROS, fetchRubros } from '../lib/rubros';
 import { httpsCallable } from 'firebase/functions';
-import { functions } from '../lib/firebase';
+import { doc, getDoc, updateDoc, increment } from 'firebase/firestore';
+import { functions, firestore } from '../lib/firebase';
 import { SOCIAL_NETWORKS, SocialIcon } from '../components/SocialIcons';
 import { IconAntologico } from '../components/LogoAntologico';
 import { usePlanes, precioConPeriodo, proximaRenovacion, formatFechaLarga } from '../hooks/usePlanes';
@@ -2025,6 +2026,10 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
   const [agregarOpen,  setAgregarOpen]  = useState(false);
   const [error,        setError]        = useState('');
   const [periodo,      setPeriodo]      = useState('mensual'); // para el selector de activación
+  const [cuponInput,   setCuponInput]   = useState('');
+  const [cuponValido,  setCuponValido]  = useState(null); // objeto cupón validado
+  const [cuponError,   setCuponError]   = useState('');
+  const [cuponLoading, setCuponLoading] = useState(false);
 
   const isSuperAdmin   = !!espacio.isSuperAdmin;
   const pendiente      = espacio.cancelacionPendiente;
@@ -2053,10 +2058,39 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
     ? new Date(espacio.proximaRenovacion)
     : proximaRenovacion(periodoActivo);
 
+  async function handleValidarCupon() {
+    const code = cuponInput.trim().toUpperCase();
+    if (!code) return;
+    setCuponLoading(true); setCuponError(''); setCuponValido(null);
+    try {
+      const snap = await getDoc(doc(firestore, 'demo_cupones', code));
+      if (!snap.exists()) { setCuponError('Código inválido.'); return; }
+      const c = snap.data();
+      if (!c.activo) { setCuponError('Este cupón ya no está activo.'); return; }
+      if (c.maxUsos && c.usosActuales >= c.maxUsos) { setCuponError('Este cupón alcanzó el límite de usos.'); return; }
+      setCuponValido({ id: code, ...c });
+    } catch { setCuponError('No se pudo validar el cupón.'); }
+    finally { setCuponLoading(false); }
+  }
+
   async function handleActivarPlan(plan) {
     setLoading(true); setError('');
     try {
       await espacioApi.updatePlan(espacio.id, plan.id, plan, periodo);
+      if (cuponValido) {
+        const vence = new Date();
+        vence.setMonth(vence.getMonth() + cuponValido.duracionMeses);
+        await espacioApi.update(espacio.id, {
+          cuponAplicado: {
+            codigo: cuponValido.codigo,
+            descuento: cuponValido.descuento,
+            duracionMeses: cuponValido.duracionMeses,
+            venceCupon: vence.toISOString(),
+          },
+        });
+        await updateDoc(doc(firestore, 'demo_cupones', cuponValido.id), { usosActuales: increment(1) });
+        setCuponValido(null); setCuponInput('');
+      }
       await refresh();
     } catch (e) { setError(e.message || 'Ocurrió un error.'); }
     finally { setLoading(false); }
@@ -2173,9 +2207,19 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
                     </ul>
                   </div>
                   <div className="shrink-0 text-right">
-                    <p className="font-mono text-sm font-semibold text-ink">${precioPlan.toLocaleString('es-AR')}/mes</p>
-                    {ahorro > 0 && <p className="text-xs text-success font-medium">Ahorrás ${ahorro.toLocaleString('es-AR')}</p>}
-                    {meses > 0 && <p className="text-xs text-ink-muted">${(precioPlan * meses).toLocaleString('es-AR')} c/{meses === 3 ? '3m' : 'año'}</p>}
+                    {cuponValido ? (
+                      <>
+                        <p className="font-mono text-xs line-through text-ink-muted">${precioPlan.toLocaleString('es-AR')}/mes</p>
+                        <p className="font-mono text-sm font-semibold text-success">${Math.round(precioPlan * (1 - cuponValido.descuento / 100)).toLocaleString('es-AR')}/mes</p>
+                        <p className="text-[10px] text-success">por {cuponValido.duracionMeses} {cuponValido.duracionMeses === 1 ? 'mes' : 'meses'}</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="font-mono text-sm font-semibold text-ink">${precioPlan.toLocaleString('es-AR')}/mes</p>
+                        {ahorro > 0 && <p className="text-xs text-success font-medium">Ahorrás ${ahorro.toLocaleString('es-AR')}</p>}
+                        {meses > 0 && <p className="text-xs text-ink-muted">${(precioPlan * meses).toLocaleString('es-AR')} c/{meses === 3 ? '3m' : 'año'}</p>}
+                      </>
+                    )}
                   </div>
                   <button
                     onClick={() => handleActivarPlan(plan)}
@@ -2189,6 +2233,37 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
             })}
           </div>
           {error && <p className="mt-3 text-xs text-danger">{error}</p>}
+
+          {/* Cupón */}
+          <div className="mt-4 pt-4 border-t border-border">
+            <p className="text-xs font-medium text-ink-muted mb-2">¿Tenés un cupón de descuento?</p>
+            <div className="flex gap-2">
+              <input
+                value={cuponInput}
+                onChange={e => { setCuponInput(e.target.value.toUpperCase()); setCuponValido(null); setCuponError(''); }}
+                onKeyDown={e => e.key === 'Enter' && handleValidarCupon()}
+                placeholder="Ej: PROMO20"
+                className="flex-1 px-3 py-2 bg-surface-100 border border-border rounded-md text-sm font-mono text-ink focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              />
+              <button
+                type="button"
+                onClick={handleValidarCupon}
+                disabled={!cuponInput.trim() || cuponLoading}
+                className="px-3 py-2 text-xs font-semibold border border-border rounded-md hover:bg-surface-200 transition-colors disabled:opacity-40"
+              >
+                {cuponLoading ? '…' : 'Aplicar'}
+              </button>
+            </div>
+            {cuponError && <p className="text-xs text-danger mt-1.5">{cuponError}</p>}
+            {cuponValido && (
+              <div className="flex items-center gap-2 mt-2 px-3 py-2 bg-success/5 border border-success/25 rounded-lg">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                <p className="text-xs text-success font-medium">
+                  Cupón válido — {cuponValido.descuento}% de descuento por {cuponValido.duracionMeses} {cuponValido.duracionMeses === 1 ? 'mes' : 'meses'}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -2219,15 +2294,32 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
           </div>
         )}
 
-        <div className="mt-2">
-          <p className="text-xs text-ink-muted font-mono">
-            ${precioBase.toLocaleString('es-AR')}/mes equiv.
-            {periodoActivo !== 'mensual' && (
-              <span className="ml-2">· ${(precioBase * (periodoActivo === 'trimestral' ? 3 : 12)).toLocaleString('es-AR')} cada {periodoActivo === 'trimestral' ? '3 meses' : 'año'}</span>
-            )}
-          </p>
-          <p className="text-xs text-ink-muted mt-0.5">Próxima renovación: {formatFechaLarga(fechaRenovacion)}</p>
-        </div>
+        {(() => {
+          const cupon = espacio.cuponAplicado;
+          const cuponActivo = cupon && new Date(cupon.venceCupon) > new Date();
+          const precioConCupon = cuponActivo ? Math.round(precioBase * (1 - cupon.descuento / 100)) : null;
+          return (
+            <>
+              {cuponActivo && (
+                <div className="flex items-center gap-2 mt-3 mb-1 px-3 py-2 bg-success/5 border border-success/25 rounded-lg">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  <p className="text-xs text-success font-medium">
+                    Cupón <span className="font-mono">{cupon.codigo}</span> — {cupon.descuento}% off hasta {formatFechaLarga(new Date(cupon.venceCupon))}
+                  </p>
+                </div>
+              )}
+              <div className="mt-2">
+                <p className="text-xs text-ink-muted font-mono">
+                  {cuponActivo
+                    ? <><span className="line-through opacity-50">${precioBase.toLocaleString('es-AR')}/mes</span> → <span className="text-success font-semibold">${precioConCupon.toLocaleString('es-AR')}/mes</span></>
+                    : <>${precioBase.toLocaleString('es-AR')}/mes equiv.{periodoActivo !== 'mensual' && <span className="ml-2">· ${(precioBase * (periodoActivo === 'trimestral' ? 3 : 12)).toLocaleString('es-AR')} cada {periodoActivo === 'trimestral' ? '3 meses' : 'año'}</span>}</>
+                  }
+                </p>
+                <p className="text-xs text-ink-muted mt-0.5">Próxima renovación: {formatFechaLarga(fechaRenovacion)}</p>
+              </div>
+            </>
+          );
+        })()}
       </div>
       )}
 

@@ -15,6 +15,7 @@ const C_WORKSHOPS = 'demo_workshops';
 const C_RESERVAS  = 'demo_reservas';
 const C_USUARIOS  = 'demo_usuarios';
 const C_RUBROS    = 'demo_rubros';
+const C_CUPONES   = 'demo_cupones';
 
 // Emails que pueden ser super admin (se auto-registran en sa_admins)
 const SEED_ADMIN_EMAILS = ['superadmin@antologico.app'];
@@ -423,5 +424,37 @@ export const rubros = {
 
   remove: async (id) => {
     await deleteDoc(doc(firestore, C_RUBROS, id));
+  },
+};
+
+export const cupones = {
+  list: async () => {
+    const snap = await getDocs(query(collection(firestore, C_CUPONES), orderBy('createdAt', 'desc')));
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  },
+
+  create: async ({ codigo, descuento, duracionMeses, maxUsos }) => {
+    const id = codigo.trim().toUpperCase().replace(/\s+/g, '');
+    const exists = await getDoc(doc(firestore, C_CUPONES, id));
+    if (exists.exists()) throw new Error('Ya existe un cupón con ese código.');
+    const data = {
+      codigo: id,
+      descuento: Number(descuento),
+      duracionMeses: Number(duracionMeses),
+      maxUsos: maxUsos ? Number(maxUsos) : null,
+      usosActuales: 0,
+      activo: true,
+      createdAt: new Date().toISOString(),
+    };
+    await setDoc(doc(firestore, C_CUPONES, id), data);
+    return { id, ...data };
+  },
+
+  toggle: async (id, activo) => {
+    await updateDoc(doc(firestore, C_CUPONES, id), { activo });
+  },
+
+  remove: async (id) => {
+    await deleteDoc(doc(firestore, C_CUPONES, id));
   },
 };
