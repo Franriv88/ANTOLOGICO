@@ -11,13 +11,19 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     return onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        try {
-          await upsertProfesional({
-            nombre: firebaseUser.displayName || firebaseUser.email,
-            email:  firebaseUser.email,
-          });
-        } catch (e) {
-          console.error('upsertProfesional:', e);
+        // Solo creamos el documento del profesional cuando el email está
+        // verificado. Si el usuario no completa la verificación, no queda
+        // ningún registro en nuestra base más allá de la cuenta Firebase Auth
+        // (que luego se purga).
+        if (firebaseUser.emailVerified) {
+          try {
+            await upsertProfesional({
+              nombre: firebaseUser.displayName || firebaseUser.email,
+              email:  firebaseUser.email,
+            });
+          } catch (e) {
+            console.error('upsertProfesional:', e);
+          }
         }
         setUser(firebaseUser);
       } else {

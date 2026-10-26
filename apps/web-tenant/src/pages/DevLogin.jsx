@@ -5,11 +5,13 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updateProfile,
-  sendEmailVerification,
   sendPasswordResetEmail,
+  deleteUser,
+  signOut,
   GoogleAuthProvider,
 } from 'firebase/auth';
-import { auth } from '../lib/firebase';
+import { httpsCallable } from 'firebase/functions';
+import { auth, functions } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 import { useEspacio } from '../context/EspacioContext';
 import { authErrorMsg } from '../services/userAuth';
@@ -170,7 +172,7 @@ function TenantLoginPage({ initialTab = 'login' }) {
     try {
       const cred = await signInWithEmailAndPassword(auth, loginEmail, loginPass);
       if (!cred.user.emailVerified) {
-        try { await sendEmailVerification(cred.user); } catch (_) {}
+        try { await httpsCallable(functions, 'sendVerificationCode')(); } catch (_) {}
         setVerifyEmail(loginEmail);
         setVerifyMode(true);
         setLoading(false);
@@ -204,14 +206,21 @@ function TenantLoginPage({ initialTab = 'login' }) {
     if (regPass !== regConfirm) { setError('Las contraseñas no coinciden'); return; }
     setError('');
     setLoading(true);
+    let createdUser = null;
     try {
       const cred = await createUserWithEmailAndPassword(auth, regEmail, regPass);
+      createdUser = cred.user;
       await updateProfile(cred.user, { displayName: regNombre.trim() });
-      await sendEmailVerification(cred.user);
+      await httpsCallable(functions, 'sendVerificationCode')();
       setVerifyEmail(regEmail);
       setVerifyMode(true);
     } catch (err) {
-      setError(authErrorMsg(err.code));
+      // Si fallamos después de crear la cuenta (ej: envío del código),
+      // eliminamos la cuenta recién creada para no dejar basura.
+      if (createdUser) {
+        try { await deleteUser(createdUser); } catch { /* ignore */ }
+      }
+      setError(authErrorMsg(err.code) || err?.message || 'Error al registrarse.');
     } finally {
       setLoading(false);
     }
@@ -239,6 +248,7 @@ function TenantLoginPage({ initialTab = 'login' }) {
       <VerifyEmailScreen
         email={verifyEmail}
         onVerified={() => navigate('/workshops')}
+        onCancel={() => { setVerifyMode(false); setVerifyEmail(''); }}
       />
     );
   }
@@ -506,45 +516,109 @@ function TenantLoginPage({ initialTab = 'login' }) {
   );
 }
 
-// ─── Pantalla de verificación obligatoria ─────────────────────────────────────
-function VerifyEmailScreen({ email, onVerified }) {
-  const [checking, setChecking]   = useState(false);
+// ─── Pantalla de verificación con código de 6 dígitos ───────────────────────
+function VerifyEmailScreen({ email, onVerified, onCancel }) {
+  const [digits, setDigits]       = useState(['', '', '', '', '', '']);
+  const [loading, setLoading]     = useState(false);
+  const [resending, setResending] = useState(false);
   const [resent, setResent]       = useState(false);
   const [verified, setVerified]   = useState(false);
+  const [error, setError]         = useState('');
+  const [cooldown, setCooldown]   = useState(0);
+  const [showConfirmCancel, setShowConfirmCancel] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
+
+  async function handleCancelRegistration() {
+    setCancelling(true);
+    const u = auth.currentUser;
+    try {
+      if (u && !u.emailVerified) await deleteUser(u);
+      else if (u) await signOut(auth);
+    } catch {
+      // Si falla deleteUser (ej. requiere re-auth), cerramos sesión al menos.
+      try { await signOut(auth); } catch { /* ignore */ }
+    } finally {
+      setCancelling(false);
+      setShowConfirmCancel(false);
+      onCancel?.();
+    }
+  }
 
   useEffect(() => {
-    const interval = setInterval(async () => {
-      const u = auth.currentUser;
-      if (!u) return;
-      await u.reload();
-      if (u.emailVerified) {
-        setVerified(true);
-        clearInterval(interval);
-      }
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
+    if (cooldown <= 0) return;
+    const t = setTimeout(() => setCooldown(c => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cooldown]);
+
+  function handleDigitChange(idx, value) {
+    if (value && !/^\d$/.test(value)) return;
+    const next = [...digits];
+    next[idx] = value;
+    setDigits(next);
+    setError('');
+    if (value && idx < 5) {
+      document.getElementById(`otp-${idx + 1}`)?.focus();
+    }
+  }
+
+  function handleKeyDown(idx, e) {
+    if (e.key === 'Backspace' && !digits[idx] && idx > 0) {
+      document.getElementById(`otp-${idx - 1}`)?.focus();
+    }
+  }
+
+  function handlePaste(e) {
+    const text = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (!text) return;
+    e.preventDefault();
+    const next = ['', '', '', '', '', ''];
+    for (let i = 0; i < text.length; i++) next[i] = text[i];
+    setDigits(next);
+    setError('');
+    const focusIdx = Math.min(text.length, 5);
+    document.getElementById(`otp-${focusIdx}`)?.focus();
+  }
+
+  async function handleVerify() {
+    const code = digits.join('');
+    if (code.length !== 6) { setError('Ingresá los 6 dígitos'); return; }
+    setLoading(true);
+    setError('');
+    try {
+      await httpsCallable(functions, 'verifyCode')({ code });
+      setVerified(true);
+      await auth.currentUser?.reload();
+    } catch (err) {
+      const msg = err?.message || '';
+      if (msg.includes('expiró'))          setError('El código expiró. Solicitá uno nuevo.');
+      else if (msg.includes('incorrecto')) setError('Código incorrecto. Intentá de nuevo.');
+      else if (msg.includes('intentos'))   setError('Demasiados intentos. Solicitá un código nuevo.');
+      else if (msg.includes('pendiente'))  setError('No hay código pendiente. Solicitá uno nuevo.');
+      else                                 setError(msg || 'Error al verificar.');
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function handleResend() {
-    setChecking(true);
+    setResending(true);
+    setError('');
     try {
-      const u = auth.currentUser;
-      if (u) await sendEmailVerification(u);
+      await httpsCallable(functions, 'resendVerificationCode')();
       setResent(true);
-      setTimeout(() => setResent(false), 5000);
-    } catch (_) {}
-    setChecking(false);
+      setCooldown(60);
+      setDigits(['', '', '', '', '', '']);
+      setTimeout(() => setResent(false), 4000);
+    } catch (err) {
+      const msg = err?.message || '';
+      if (msg.includes('minuto')) setError('Esperá un minuto antes de solicitar otro código.');
+      else setError(msg || 'Error al reenviar.');
+    } finally {
+      setResending(false);
+    }
   }
 
-  async function handleCheck() {
-    setChecking(true);
-    const u = auth.currentUser;
-    if (u) {
-      await u.reload();
-      if (u.emailVerified) setVerified(true);
-    }
-    setChecking(false);
-  }
+  const code = digits.join('');
 
   return (
     <PageShell>
@@ -579,25 +653,55 @@ function VerifyEmailScreen({ email, onVerified }) {
             <div>
               <h2 className="font-display text-xl text-ink mb-1">Verificá tu email</h2>
               <p className="text-sm text-ink-muted">
-                Te enviamos un enlace a <span className="font-medium text-ink">{email}</span>.
-                Hacé clic en el enlace para activar tu cuenta.
+                Enviamos un código de 6 dígitos a <span className="font-medium text-ink">{email}</span>.
+                Ingresalo a continuación.
               </p>
             </div>
 
+            {/* 6 digit OTP inputs */}
+            <div className="flex justify-center gap-2" onPaste={handlePaste}>
+              {digits.map((d, i) => (
+                <input
+                  key={i}
+                  id={`otp-${i}`}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={d}
+                  onChange={e => handleDigitChange(i, e.target.value)}
+                  onKeyDown={e => handleKeyDown(i, e)}
+                  autoFocus={i === 0}
+                  className={`w-11 h-13 text-center text-xl font-mono font-bold rounded-lg border-2 transition-colors outline-none ${
+                    error
+                      ? 'border-danger bg-danger/5 text-danger'
+                      : d
+                        ? 'border-primary bg-primary/5 text-ink'
+                        : 'border-border bg-surface-100 text-ink'
+                  } focus:border-primary focus:ring-2 focus:ring-primary/20`}
+                />
+              ))}
+            </div>
+
+            {error && (
+              <p className="text-xs text-danger bg-danger/5 border border-danger/20 rounded px-3 py-2 w-full">
+                {error}
+              </p>
+            )}
+
             <div className="w-full flex flex-col gap-2">
               <button
-                onClick={handleCheck}
-                disabled={checking}
+                onClick={handleVerify}
+                disabled={loading || code.length !== 6}
                 className="w-full py-2.5 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary-strong transition-colors disabled:opacity-50"
               >
-                {checking ? 'Verificando…' : 'Ya verifiqué mi email'}
+                {loading ? 'Verificando…' : 'Verificar código'}
               </button>
               <button
                 onClick={handleResend}
-                disabled={checking || resent}
+                disabled={resending || cooldown > 0}
                 className="w-full py-2 border border-border rounded-md text-sm text-ink-muted hover:bg-surface-100 transition-colors disabled:opacity-50"
               >
-                {resent ? 'Email reenviado ✓' : 'Reenviar email'}
+                {resent ? 'Código reenviado ✓' : cooldown > 0 ? `Reenviar código (${cooldown}s)` : 'Reenviar código'}
               </button>
             </div>
 
@@ -607,17 +711,55 @@ function VerifyEmailScreen({ email, onVerified }) {
                 <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
               </svg>
               <p className="text-xs text-amber-800 leading-relaxed">
-                <span className="font-semibold">¿No lo ves?</span> Revisá tu carpeta de <span className="font-semibold">spam</span> o correo no deseado. El email llega desde <span className="font-mono text-[11px]">noreply@antologico.firebaseapp.com</span>.
+                <span className="font-semibold">¿No lo ves?</span> Revisá tu carpeta de <span className="font-semibold">spam</span> o correo no deseado. El código expira en 10 minutos.
               </p>
             </div>
 
-            <div className="flex items-center gap-2 text-xs text-ink-muted">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-              Esperando verificación…
-            </div>
+            {/* Cancelar registro */}
+            <button
+              onClick={() => setShowConfirmCancel(true)}
+              className="w-full py-2 text-xs text-ink-muted hover:text-danger transition-colors underline"
+            >
+              Cancelar registro
+            </button>
           </>
         )}
       </div>
+
+      {/* Modal confirmar cancelación */}
+      {showConfirmCancel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => !cancelling && setShowConfirmCancel(false)} />
+          <div className="relative w-full max-w-sm bg-surface-0 border border-border rounded-xl p-6">
+            <div className="w-12 h-12 rounded-full bg-danger/10 flex items-center justify-center mb-4 mx-auto">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </div>
+            <h3 className="font-display text-lg text-ink text-center mb-2">¿Cancelar registro?</h3>
+            <p className="text-sm text-ink-muted text-center mb-5">
+              Vamos a eliminar tu cuenta pendiente. Si querés registrarte después, vas a tener que empezar de nuevo.
+            </p>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={handleCancelRegistration}
+                disabled={cancelling}
+                className="w-full py-2.5 bg-danger text-white rounded-md text-sm font-semibold hover:bg-danger/90 transition-colors disabled:opacity-50"
+              >
+                {cancelling ? 'Cancelando…' : 'Sí, cancelar y eliminar'}
+              </button>
+              <button
+                onClick={() => setShowConfirmCancel(false)}
+                disabled={cancelling}
+                className="w-full py-2.5 border border-border rounded-md text-sm text-ink hover:bg-surface-100 transition-colors disabled:opacity-50"
+              >
+                Volver a verificar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </PageShell>
   );
 }
