@@ -123,7 +123,7 @@ export default function MiEspacio() {
             )}
 
             <a
-              href={`${TENANT_ORIGIN}/workshops`}
+              href={TENANT_ORIGIN}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-4 bg-surface-0 border border-border rounded-xl p-5 hover:border-primary/40 transition-colors group"
