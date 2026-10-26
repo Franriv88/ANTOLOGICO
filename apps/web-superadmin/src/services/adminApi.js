@@ -35,6 +35,20 @@ function snapToList(snap) {
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
+// ─── Capabilities estandar (lo que el frontend REALMENTE valida) ─────────────
+// Cada plan tiene estos flags en Firestore. El frontend los lee para habilitar
+// o deshabilitar funcionalidad real (no son solo texto de marketing).
+export const PLAN_CAPABILITIES = [
+  { key: 'imagenEncabezado',   label: 'Imagen de encabezado en talleres', desc: 'Permite subir una imagen de portada. Si está apagado, solo color.' },
+  { key: 'talleresIlimitados', label: 'Talleres ilimitados',              desc: 'Si está apagado, respeta "Máx. talleres".' },
+  { key: 'multiplesEspacios',  label: 'Múltiples espacios',               desc: 'Permite al tenant tener más de un espacio.' },
+  { key: 'dominioPersonalizado', label: 'Dominio personalizado',          desc: 'Puede configurar un dominio propio.' },
+  { key: 'reportes',           label: 'Reportes avanzados',               desc: 'Acceso a estadísticas y métricas.' },
+  { key: 'auditoria',          label: 'Auditoría de cambios',             desc: 'Historial de cambios del tenant.' },
+];
+
+export const EMPTY_CAPABILITIES = PLAN_CAPABILITIES.reduce((acc, c) => { acc[c.key] = false; return acc; }, {});
+
 // ─── Planes iniciales (siembra automática si demo_planes está vacío) ──────────
 const SEED_PLANES = [
   {
@@ -47,6 +61,14 @@ const SEED_PLANES = [
     highlight: false,
     order: 1,
     features: ['Hasta 5 talleres activos', 'Dominio personalizado', 'Encabezado de color'],
+    capabilities: {
+      imagenEncabezado: false,
+      talleresIlimitados: false,
+      multiplesEspacios: false,
+      dominioPersonalizado: true,
+      reportes: false,
+      auditoria: false,
+    },
   },
   {
     id: 'profesional',
@@ -58,6 +80,14 @@ const SEED_PLANES = [
     highlight: true,
     order: 2,
     features: ['Talleres ilimitados', 'Dominio personalizado', 'Encabezado con imagen', 'Reportes'],
+    capabilities: {
+      imagenEncabezado: true,
+      talleresIlimitados: true,
+      multiplesEspacios: false,
+      dominioPersonalizado: true,
+      reportes: true,
+      auditoria: false,
+    },
   },
   {
     id: 'estudio',
@@ -69,6 +99,14 @@ const SEED_PLANES = [
     highlight: false,
     order: 3,
     features: ['Talleres ilimitados', 'Múltiples espacios', 'Encabezado con imagen', 'Reportes', 'Auditoría'],
+    capabilities: {
+      imagenEncabezado: true,
+      talleresIlimitados: true,
+      multiplesEspacios: true,
+      dominioPersonalizado: true,
+      reportes: true,
+      auditoria: true,
+    },
   },
 ];
 
@@ -83,19 +121,36 @@ async function ensurePlanesSeeded() {
     });
     await batch.commit();
   } else {
-    // Parchar planes existentes que no tengan order ni campos de descuento
+    // Parchar planes existentes que no tengan order, descuentos o capabilities
     const batch = writeBatch(firestore);
     let changed = false;
     snap.docs.forEach((d, i) => {
       const data = d.data();
       const seed = SEED_PLANES.find(p => p.id === d.id);
       const patch = {};
-      // Patch order si falta (causa del orderBy vacío)
       if (data.order == null) patch.order = seed?.order ?? (i + 1);
       if (data.descuentoTrimestral == null && seed?.descuentoTrimestral != null)
         patch.descuentoTrimestral = seed.descuentoTrimestral;
       if (data.descuentoAnual == null && seed?.descuentoAnual != null)
         patch.descuentoAnual = seed.descuentoAnual;
+      // Migración de capabilities: si no existe el campo, inferimos del seed
+      // (si matchea por id) o del nombre del plan (Profesional/Estudio => todo true).
+      if (data.capabilities == null) {
+        if (seed?.capabilities) {
+          patch.capabilities = seed.capabilities;
+        } else {
+          const nombre = (data.nombre || '').toLowerCase();
+          patch.capabilities = {
+            ...EMPTY_CAPABILITIES,
+            dominioPersonalizado: true,
+            imagenEncabezado:   nombre.includes('profesional') || nombre.includes('estudio'),
+            talleresIlimitados: nombre.includes('profesional') || nombre.includes('estudio'),
+            multiplesEspacios:  nombre.includes('estudio'),
+            reportes:           nombre.includes('profesional') || nombre.includes('estudio'),
+            auditoria:          nombre.includes('estudio'),
+          };
+        }
+      }
       if (Object.keys(patch).length > 0) {
         batch.update(doc(firestore, C_PLANES, d.id), patch);
         changed = true;

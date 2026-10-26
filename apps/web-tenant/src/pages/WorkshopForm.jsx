@@ -443,7 +443,13 @@ export default function WorkshopForm() {
   const navigate = useNavigate();
   const { activeEspacio } = useEspacio();
   const planNombre = activeEspacio?.plan?.nombre ?? null;
-  const canUploadImage = DEMO_MODE || planNombre === 'Profesional' || planNombre === 'Estudio';
+  const planCaps   = activeEspacio?.plan?.capabilities;
+  // Primero miramos la capability explícita del plan (fuente de verdad desde Super Admin).
+  // Si el plan no tiene capabilities definidas (planes legacy sin migrar), caemos al
+  // mapeo por nombre histórico.
+  const canUploadImage = DEMO_MODE
+    || (planCaps ? planCaps.imagenEncabezado === true
+                 : (planNombre === 'Profesional' || planNombre === 'Estudio'));
   const imgInputRef  = useRef(null);
   const dragStateRef = useRef(null); // { startX, startY, startPosX, startPosY }
 
