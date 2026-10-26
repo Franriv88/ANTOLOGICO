@@ -55,6 +55,7 @@ import Layout from '../components/Layout';
 import TimeSelect from '../components/TimeSelect';
 import { workshops as api } from '../services/api';
 import { useEspacio } from '../context/EspacioContext';
+import { usePlanes } from '../hooks/usePlanes';
 import { TIPO_CONFIG, TIPOS } from '../lib/tipoWorkshop';
 import { DEMO_MODE } from '../lib/demo';
 
@@ -442,14 +443,19 @@ export default function WorkshopForm() {
   const isEdit = Boolean(id);
   const navigate = useNavigate();
   const { activeEspacio } = useEspacio();
-  const planNombre = activeEspacio?.plan?.nombre ?? null;
-  const planCaps   = activeEspacio?.plan?.capabilities;
-  // Primero miramos la capability explícita del plan (fuente de verdad desde Super Admin).
-  // Si el plan no tiene capabilities definidas (planes legacy sin migrar), caemos al
-  // mapeo por nombre histórico.
+  // El plan embebido en activeEspacio viene del schema de Data Connect y NO incluye
+  // capabilities. Para la fuente de verdad real (configurable desde Super Admin),
+  // leemos el plan directamente de Firestore vía usePlanes() y lo matcheamos por id.
+  const planes = usePlanes();
+  const planActualId = activeEspacio?.plan?.id ?? null;
+  const planActual = planes && planActualId
+    ? planes.find(p => p.id === planActualId) ?? null
+    : null;
+  const planCaps = planActual?.capabilities;
+  // Mientras los planes todavía están cargando (null), ocultamos el selector
+  // para no mostrar accidentalmente "Imagen" a quien no lo tiene permitido.
   const canUploadImage = DEMO_MODE
-    || (planCaps ? planCaps.imagenEncabezado === true
-                 : (planNombre === 'Profesional' || planNombre === 'Estudio'));
+    || (planes != null && planCaps != null && planCaps.imagenEncabezado === true);
   const imgInputRef  = useRef(null);
   const dragStateRef = useRef(null); // { startX, startY, startPosX, startPosY }
 
@@ -623,6 +629,13 @@ export default function WorkshopForm() {
       const estadoFinal      = form._estadoAction === 'OCULTAR' ? 'BORRADOR' : 'PUBLICADO';
       const cuposDisponibles = form._estadoAction === 'AGOTAR' ? 0 : cuposTotales;
 
+      // Defensa server-side (del lado del cliente): aunque el selector no se
+      // muestra cuando el plan no permite imagen, si por algún camino el estado
+      // tiene headerType=IMAGE (ej. workshop editado tras downgrade), forzamos
+      // COLOR al momento de guardar para respetar las capabilities del plan.
+      const effectiveHeaderType = canUploadImage ? (form.headerType || 'COLOR') : 'COLOR';
+      const effectiveHeaderValue = effectiveHeaderType === 'IMAGE' ? form.headerValue : (isValidColor(form.headerValue) ? form.headerValue : '#E85D4A');
+
       const payload = {
         nombre:            form.nombre,
         tipo:              form.tipo   || null,
@@ -636,8 +649,8 @@ export default function WorkshopForm() {
         estado:            estadoFinal,
         experienciaPrevia: form.experienciaPrevia,
         scheduleData:      buildScheduleData(form),
-        headerType:          form.headerType          || 'COLOR',
-        headerValue:         form.headerValue         || null,
+        headerType:          effectiveHeaderType,
+        headerValue:         effectiveHeaderValue,
         headerImagePosition: form.headerImagePosition ?? { x: 50, y: 50 },
         direccionId:         form.direccionId         || null,
         metodosPago:         form.metodosPago.length  ? form.metodosPago : null,

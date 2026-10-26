@@ -2,6 +2,37 @@ import { useEffect, useState } from 'react';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore';
 import { firestore } from '../lib/firebase';
 
+export const EMPTY_PLAN_CAPABILITIES = {
+  imagenEncabezado:    false,
+  talleresIlimitados:  false,
+  multiplesEspacios:   false,
+  dominioPersonalizado: false,
+  reportes:            false,
+  auditoria:           false,
+};
+
+// Si el plan guardado en Firestore no tiene el campo `capabilities` (planes
+// legacy anteriores al rediseño del Super Admin), inferimos los permisos a
+// partir del nombre histórico. Esto evita que un tenant con plan Esencial
+// pueda subir imagen de encabezado solo porque el objeto plan no fue migrado.
+export function normalizePlan(plan) {
+  if (!plan) return null;
+  if (plan.capabilities && typeof plan.capabilities === 'object') return plan;
+  const nombre = (plan.nombre || '').toLowerCase();
+  return {
+    ...plan,
+    capabilities: {
+      ...EMPTY_PLAN_CAPABILITIES,
+      dominioPersonalizado: true,
+      imagenEncabezado:   nombre.includes('profesional') || nombre.includes('estudio'),
+      talleresIlimitados: nombre.includes('profesional') || nombre.includes('estudio'),
+      multiplesEspacios:  nombre.includes('estudio'),
+      reportes:           nombre.includes('profesional') || nombre.includes('estudio'),
+      auditoria:          nombre.includes('estudio'),
+    },
+  };
+}
+
 export const PLANES_FALLBACK = [
   {
     id: 'esencial',
@@ -12,6 +43,7 @@ export const PLANES_FALLBACK = [
     highlight: false,
     order: 1,
     features: ['Hasta 5 talleres activos', 'Dominio personalizado', 'Encabezado de color'],
+    capabilities: { ...EMPTY_PLAN_CAPABILITIES, dominioPersonalizado: true },
   },
   {
     id: 'profesional',
@@ -22,6 +54,10 @@ export const PLANES_FALLBACK = [
     highlight: true,
     order: 2,
     features: ['Talleres ilimitados', 'Dominio personalizado', 'Encabezado con imagen', 'Reportes'],
+    capabilities: {
+      imagenEncabezado: true, talleresIlimitados: true, multiplesEspacios: false,
+      dominioPersonalizado: true, reportes: true, auditoria: false,
+    },
   },
   {
     id: 'estudio',
@@ -32,6 +68,10 @@ export const PLANES_FALLBACK = [
     highlight: false,
     order: 3,
     features: ['Talleres ilimitados', 'Múltiples espacios', 'Encabezado con imagen', 'Reportes', 'Auditoría'],
+    capabilities: {
+      imagenEncabezado: true, talleresIlimitados: true, multiplesEspacios: true,
+      dominioPersonalizado: true, reportes: true, auditoria: true,
+    },
   },
 ];
 
@@ -62,7 +102,7 @@ export function usePlanes() {
   useEffect(() => {
     getDocs(query(collection(firestore, 'demo_planes'), orderBy('order')))
       .then(snap => {
-        const list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        const list = snap.docs.map(d => normalizePlan({ id: d.id, ...d.data() }));
         setPlanes(list.length > 0 ? list : PLANES_FALLBACK);
       })
       .catch(() => setPlanes(PLANES_FALLBACK));
