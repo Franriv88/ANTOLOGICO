@@ -8,7 +8,6 @@ const EMPTY = {
   descuentoTrimestral: '10',
   descuentoAnual: '20',
   maxWorkshops: '',
-  features: [],
   highlight: false,
   capabilities: { ...EMPTY_CAPABILITIES },
 };
@@ -43,28 +42,23 @@ function PlanForm({ initial, onSave, onCancel, saving }) {
   function toggleCap(key) {
     setForm(f => ({ ...f, capabilities: { ...f.capabilities, [key]: !f.capabilities?.[key] } }));
   }
-  function updateFeature(idx, value) {
-    setForm(f => ({ ...f, features: f.features.map((v, i) => i === idx ? value : v) }));
-  }
-  function addFeature() {
-    setForm(f => ({ ...f, features: [...f.features, ''] }));
-  }
-  function removeFeature(idx) {
-    setForm(f => ({ ...f, features: f.features.filter((_, i) => i !== idx) }));
-  }
 
   function handleSubmit(e) {
     e.preventDefault();
     if (!form.nombre.trim()) return;
+    const capabilities = { ...EMPTY_CAPABILITIES, ...form.capabilities };
+    // Las features visibles en la landing se derivan de las capabilities activas,
+    // así todo queda consistente y no hay forma de "quedarse pegado" con texto manual.
+    const features = PLAN_CAPABILITIES.filter(c => capabilities[c.key]).map(c => c.label);
     onSave({
       nombre:              form.nombre.trim(),
       precioMensual:       Number(form.precioMensual) || 0,
       descuentoTrimestral: Number(form.descuentoTrimestral) || 0,
       descuentoAnual:      Number(form.descuentoAnual) || 0,
       maxWorkshops:        form.maxWorkshops ? Number(form.maxWorkshops) : null,
-      features:            form.features.map(f => f.trim()).filter(Boolean),
+      features,
       highlight:           form.highlight,
-      capabilities:        { ...EMPTY_CAPABILITIES, ...form.capabilities },
+      capabilities,
     });
   }
 
@@ -83,7 +77,7 @@ function PlanForm({ initial, onSave, onCancel, saving }) {
           <div>
             <h3 className="font-display text-base text-ink leading-tight">{initial ? 'Editar plan' : 'Nuevo plan'}</h3>
             <p className="text-[11px] text-ink-muted mt-0.5">
-              {capsHabilitadas} de {PLAN_CAPABILITIES.length} permisos habilitados
+              {capsHabilitadas} de {PLAN_CAPABILITIES.length} features habilitadas
             </p>
           </div>
         </div>
@@ -94,33 +88,36 @@ function PlanForm({ initial, onSave, onCancel, saving }) {
         )}
       </div>
 
-      <div className="px-6 py-5 flex flex-col gap-5">
-        {/* Fila 1: Nombre + Precio */}
-        <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
-          <div className="sm:col-span-3">
+      {/* Grid 2 columnas: izq = datos, der = features */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 px-6 py-5">
+
+        {/* Columna izquierda: datos del plan */}
+        <div className="flex flex-col gap-4">
+          <div>
             <label className={LABEL_CLS}>Nombre del plan *</label>
             <input type="text" value={form.nombre} onChange={e => set('nombre', e.target.value)}
               placeholder="Ej: Profesional" required className={INPUT_CLS} />
           </div>
-          <div className="sm:col-span-2">
+
+          <div>
             <label className={LABEL_CLS}>Precio mensual (ARS)</label>
             <input type="number" value={form.precioMensual} onChange={e => set('precioMensual', e.target.value)}
               placeholder="12900" min="0" className={INPUT_CLS + ' font-mono'} />
           </div>
-        </div>
 
-        {/* Fila 2: Descuentos + Máx talleres */}
-        <div className="grid grid-cols-3 gap-3">
-          <div>
-            <label className={LABEL_CLS}>Dto. trimestral (%)</label>
-            <input type="number" value={form.descuentoTrimestral} onChange={e => set('descuentoTrimestral', e.target.value)}
-              placeholder="10" min="0" max="100" className={INPUT_CLS + ' font-mono'} />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={LABEL_CLS}>Dto. trimestral (%)</label>
+              <input type="number" value={form.descuentoTrimestral} onChange={e => set('descuentoTrimestral', e.target.value)}
+                placeholder="10" min="0" max="100" className={INPUT_CLS + ' font-mono'} />
+            </div>
+            <div>
+              <label className={LABEL_CLS}>Dto. anual (%)</label>
+              <input type="number" value={form.descuentoAnual} onChange={e => set('descuentoAnual', e.target.value)}
+                placeholder="20" min="0" max="100" className={INPUT_CLS + ' font-mono'} />
+            </div>
           </div>
-          <div>
-            <label className={LABEL_CLS}>Dto. anual (%)</label>
-            <input type="number" value={form.descuentoAnual} onChange={e => set('descuentoAnual', e.target.value)}
-              placeholder="20" min="0" max="100" className={INPUT_CLS + ' font-mono'} />
-          </div>
+
           <div>
             <label className={LABEL_CLS}>Máx. talleres</label>
             <input
@@ -132,16 +129,33 @@ function PlanForm({ initial, onSave, onCancel, saving }) {
               min="1"
               className={INPUT_CLS + ' font-mono disabled:opacity-50 disabled:cursor-not-allowed'}
             />
+            {form.capabilities?.talleresIlimitados && (
+              <p className="text-[11px] text-ink-muted mt-1">
+                Deshabilitado porque "Talleres ilimitados" está activo.
+              </p>
+            )}
+          </div>
+
+          <div className="pt-2 mt-auto border-t border-border/60">
+            <label className="flex items-center gap-2.5 cursor-pointer select-none pt-3">
+              <input
+                type="checkbox"
+                checked={form.highlight}
+                onChange={e => set('highlight', e.target.checked)}
+                className="w-4 h-4 accent-primary"
+              />
+              <span className="text-sm text-ink">Marcar como <span className="font-semibold">plan recomendado</span></span>
+            </label>
           </div>
         </div>
 
-        {/* Capabilities */}
+        {/* Columna derecha: features (capabilities) */}
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-xs font-semibold text-ink uppercase tracking-wide">Permisos del plan</label>
-            <span className="text-[11px] text-ink-muted">Lo que el tenant realmente puede hacer</span>
+          <div className="flex items-center justify-between mb-3">
+            <label className="text-xs font-semibold text-ink uppercase tracking-wide">Features del plan</label>
+            <span className="text-[11px] text-ink-muted">{capsHabilitadas} / {PLAN_CAPABILITIES.length}</span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="flex flex-col gap-2">
             {PLAN_CAPABILITIES.map(cap => {
               const checked = !!form.capabilities?.[cap.key];
               return (
@@ -171,61 +185,6 @@ function PlanForm({ initial, onSave, onCancel, saving }) {
           </div>
         </div>
 
-        {/* Features */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-xs font-semibold text-ink uppercase tracking-wide">Features del plan</label>
-            <span className="text-[11px] text-ink-muted">Texto que aparece en la landing</span>
-          </div>
-          <div className="flex flex-col gap-1.5">
-            {form.features.length === 0 && (
-              <p className="text-xs text-ink-muted italic px-1">Sin features todavía. Agregá al menos una abajo.</p>
-            )}
-            {form.features.map((feat, i) => (
-              <div key={i} className="flex items-center gap-2">
-                <span className="text-success shrink-0">✓</span>
-                <input
-                  type="text"
-                  value={feat}
-                  onChange={e => updateFeature(i, e.target.value)}
-                  placeholder="Ej: Talleres ilimitados"
-                  className={INPUT_CLS}
-                />
-                <button
-                  type="button"
-                  onClick={() => removeFeature(i)}
-                  className="shrink-0 w-8 h-8 flex items-center justify-center rounded-md border border-border text-ink-muted hover:border-danger/40 hover:bg-danger/5 hover:text-danger transition-colors"
-                  aria-label="Eliminar feature"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                  </svg>
-                </button>
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={addFeature}
-              className="self-start mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:text-primary-strong"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-              </svg>
-              Agregar feature
-            </button>
-          </div>
-        </div>
-
-        {/* Highlight */}
-        <label className="flex items-center gap-2.5 cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={form.highlight}
-            onChange={e => set('highlight', e.target.checked)}
-            className="w-4 h-4 accent-primary"
-          />
-          <span className="text-sm text-ink">Marcar como <span className="font-semibold">plan recomendado</span></span>
-        </label>
       </div>
 
       {/* Acciones */}
@@ -470,7 +429,6 @@ export default function Plans() {
               descuentoTrimestral: String(editingPlan.descuentoTrimestral ?? '10'),
               descuentoAnual:      String(editingPlan.descuentoAnual ?? '20'),
               maxWorkshops:        editingPlan.maxWorkshops ? String(editingPlan.maxWorkshops) : '',
-              features:            Array.isArray(editingPlan.features) ? editingPlan.features : [],
               highlight:           editingPlan.highlight ?? false,
               capabilities:        { ...EMPTY_CAPABILITIES, ...(editingPlan.capabilities ?? {}) },
             } : undefined}
