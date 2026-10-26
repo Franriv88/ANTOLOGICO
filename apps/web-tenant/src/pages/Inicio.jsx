@@ -592,8 +592,24 @@ export default function Inicio() {
 
         {authSheet && <AuthSheet mode={authSheet} onClose={() => setAuthSheet(null)} onSuccess={handleAuthSuccess} />}
 
+        {/* Nav superior: solo acciones (sin favicon ni nombre) */}
+        <nav className="relative z-10 w-full max-w-6xl mx-auto px-5 pt-5 flex items-center justify-end gap-2 shrink-0">
+          <button
+            onClick={() => setAuthSheet('login')}
+            className="px-4 py-2 border border-white/30 text-white text-sm font-medium rounded-lg hover:bg-white/10 transition-colors"
+          >
+            Ingresar
+          </button>
+          <button
+            onClick={() => setAuthSheet('register')}
+            className="px-4 py-2 bg-white text-[#C4412F] text-sm font-semibold rounded-lg hover:bg-white/90 transition-colors shadow-lg"
+          >
+            Registrarse
+          </button>
+        </nav>
+
         {/* Hero content */}
-        <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 pt-10 pb-6 text-center min-h-0">
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 pt-6 pb-6 text-center min-h-0">
           <div className="w-full" style={{ maxWidth: 420 }}>
             <LogoAntologico theme="coral" width={420} />
           </div>
