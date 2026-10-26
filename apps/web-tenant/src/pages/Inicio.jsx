@@ -543,30 +543,44 @@ export default function Inicio() {
   const [showScanner,  setShowScanner]  = useState(false);
   const [authSheet,    setAuthSheet]    = useState(null); // 'login' | 'register' | null
   const [refreshKey,   setRefreshKey]   = useState(0);
+  // profileReady: true cuando subscribeAuth confirmó el estado real
+  // (autenticado con perfil cargado, o no autenticado). Hasta que no sea true,
+  // no mostramos "No seguís ningún espacio" para evitar el flash del vacío
+  // cuando el perfil todavía no se leyó de Firestore.
+  const [profileReady, setProfileReady] = useState(false);
 
-  useEffect(() => { checkRedirectResult().then(r => { if (r) setCurrentUser({ user: r.user, profile: r.profile ?? {} }); }).catch(() => {}); }, []);
+  useEffect(() => { checkRedirectResult().then(r => { if (r) { setCurrentUser({ user: r.user, profile: r.profile ?? {} }); setProfileReady(true); } }).catch(() => {}); }, []);
   useEffect(() => {
     return subscribeAuth((user, profile) => {
-      if (!user) { setCurrentUser(null); setEspacios(null); return; }
+      if (!user) { setCurrentUser(null); setEspacios(null); setProfileReady(true); return; }
       setCurrentUser({ user, profile: profile ?? {} });
+      setProfileReady(true);
     });
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
     async function load() {
       const ids = currentUser?.user?.uid
         ? await getEspaciosSeguidos(currentUser.user.uid).catch(() => getLocalFollowed())
         : getLocalFollowed();
+      if (cancelled) return;
       if (ids.length === 0) { setEspacios([]); return; }
       const list = await Promise.all(ids.map(id => espaciosApi.get(id).catch(() => null)));
+      if (cancelled) return;
       setEspacios(list.filter(Boolean));
     }
-    if (currentUser !== undefined) load();
-  }, [currentUser, refreshKey]);
+    // Solo cargamos cuando el estado de auth está confirmado por subscribeAuth,
+    // para que la primera lectura sea con el perfil real de Firestore y
+    // no haga un flash de "sin espacios" mientras el perfil todavía está cargando.
+    if (profileReady) load();
+    return () => { cancelled = true; };
+  }, [currentUser?.user?.uid, profileReady, refreshKey]);
 
   function handleUnfollow(espacioId) { setSelectedId(null); setEspacios(prev => prev?.filter(e => e.id !== espacioId) ?? []); }
   function handleAuthSuccess({ user, profile }) {
     setCurrentUser({ user, profile: profile ?? {} });
+    setProfileReady(true);
     syncFollowedToFirestore(user.uid).catch(() => {});
     setRefreshKey(r => r + 1);
   }
