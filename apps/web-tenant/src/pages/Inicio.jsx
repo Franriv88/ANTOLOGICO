@@ -560,19 +560,40 @@ export default function Inicio() {
 
   useEffect(() => {
     let cancelled = false;
-    async function load() {
-      const ids = currentUser?.user?.uid
+
+    async function fetchIds() {
+      return currentUser?.user?.uid
         ? await getEspaciosSeguidos(currentUser.user.uid).catch(() => getLocalFollowed())
         : getLocalFollowed();
+    }
+
+    async function load() {
+      // Antes de empezar, aseguramos que la UI muestre el spinner.
+      setEspacios(null);
+
+      let ids = await fetchIds();
       if (cancelled) return;
+
+      // Si la primera lectura dice "sin espacios" pero hay un usuario autenticado,
+      // puede ser una race condition (Firestore todavía no respondió con el perfil
+      // real, el token aún no está propagado, etc.). Reintentamos una vez con un
+      // pequeño delay. Solo si el segundo intento también da vacío, damos por
+      // cierto que no sigue a nadie.
+      if (ids.length === 0 && currentUser?.user?.uid) {
+        await new Promise(r => setTimeout(r, 1500));
+        if (cancelled) return;
+        ids = await fetchIds();
+        if (cancelled) return;
+      }
+
       if (ids.length === 0) { setEspacios([]); return; }
       const list = await Promise.all(ids.map(id => espaciosApi.get(id).catch(() => null)));
       if (cancelled) return;
       setEspacios(list.filter(Boolean));
     }
+
     // Solo cargamos cuando el estado de auth está confirmado por subscribeAuth,
-    // para que la primera lectura sea con el perfil real de Firestore y
-    // no haga un flash de "sin espacios" mientras el perfil todavía está cargando.
+    // para que la primera lectura sea con el perfil real de Firestore.
     if (profileReady) load();
     return () => { cancelled = true; };
   }, [currentUser?.user?.uid, profileReady, refreshKey]);
