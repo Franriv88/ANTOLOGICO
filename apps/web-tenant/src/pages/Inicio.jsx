@@ -9,7 +9,7 @@ import {
   followEspacio, unfollowEspacio, getEspaciosSeguidos, syncFollowedToFirestore,
 } from '../services/userAuth';
 import { getSlotStatus } from '../lib/slotStatus';
-import { LogoAntologico, IconAntologico } from '../components/LogoAntologico';
+import { LogoAntologico } from '../components/LogoAntologico';
 import MobileAppShell from '../components/MobileAppShell';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -587,66 +587,38 @@ export default function Inicio() {
 
   if (!isAuthed) {
     return (
-      <div className="min-h-screen overflow-hidden relative" style={{ background: 'linear-gradient(148deg, #E85D4A 0%, #C4412F 48%, #8C2E1F 100%)' }}>
+      <div className="h-screen overflow-hidden relative flex flex-col" style={{ background: 'linear-gradient(148deg, #E85D4A 0%, #C4412F 48%, #8C2E1F 100%)' }}>
         <HeroNetwork />
 
         {authSheet && <AuthSheet mode={authSheet} onClose={() => setAuthSheet(null)} onSuccess={handleAuthSuccess} />}
 
-        {/* Nav */}
-        <nav className="relative z-10 w-full max-w-6xl mx-auto px-5 pt-5 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <IconAntologico size={30} />
-            <span className="text-base font-semibold text-white" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-              Antológico
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button onClick={() => setAuthSheet('login')}
-              className="px-4 py-2 border border-white/30 text-white text-sm font-medium rounded-lg hover:bg-white/10 transition-colors">
-              Ingresar
-            </button>
-            <button onClick={() => setAuthSheet('register')}
-              className="px-4 py-2 bg-white text-[#C4412F] text-sm font-semibold rounded-lg hover:bg-white/90 transition-colors shadow-lg">
-              Registrarse
-            </button>
-          </div>
-        </nav>
-
         {/* Hero content */}
-        <div className="relative z-10 flex flex-col items-center justify-center px-6 pt-10 pb-16 text-center">
-          <div className="w-full" style={{ maxWidth: 480 }}>
-            <LogoAntologico theme="coral" width={480} />
+        <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 pt-10 pb-6 text-center min-h-0">
+          <div className="w-full" style={{ maxWidth: 420 }}>
+            <LogoAntologico theme="coral" width={420} />
           </div>
 
-          <p className="mt-6 text-base sm:text-lg max-w-md leading-relaxed" style={{ color: 'rgba(255,255,255,0.78)' }}>
+          <p className="mt-6 text-base max-w-md leading-relaxed" style={{ color: 'rgba(255,255,255,0.78)' }}>
             Descubrí talleres de arte, yoga, cocina, música y mucho más.
             Reservá tu lugar y gestioná todo desde un solo lugar.
           </p>
-
-          <div className="mt-8 flex flex-col sm:flex-row items-center gap-3">
-            <button
-              onClick={() => setAuthSheet('register')}
-              className="px-7 py-3.5 bg-white font-semibold text-sm rounded-lg hover:bg-white/90 transition-colors shadow-lg"
-              style={{ color: '#C4412F' }}
-            >
-              Crear mi cuenta gratis →
-            </button>
-            <button
-              onClick={() => setAuthSheet('login')}
-              className="px-7 py-3.5 border border-white/35 text-white text-sm font-medium rounded-lg hover:bg-white/10 transition-colors"
-            >
-              Ya tengo cuenta
-            </button>
-          </div>
         </div>
 
-        {/* Features */}
-        <div className="relative z-10 px-5 pb-16">
-          <div className="max-w-lg mx-auto grid grid-cols-2 gap-3">
+        {/* Features — swipe horizontal con 2 cards visibles */}
+        <div className="relative z-10 pb-6 shrink-0">
+          <div
+            className="flex gap-3 overflow-x-auto px-5 pb-2 snap-x snap-mandatory [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+            style={{ scrollPaddingLeft: 20 }}
+          >
             {STUDENT_FEATURES.map(({ icon, title, desc }) => (
-              <div key={title}
-                className="rounded-2xl p-4 border border-white/15 transition-colors"
-                style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(8px)' }}
+              <div
+                key={title}
+                className="shrink-0 snap-start rounded-2xl p-4 border border-white/15"
+                style={{
+                  width: 'calc((100% - 12px) / 2)',
+                  background: 'rgba(255,255,255,0.08)',
+                  backdropFilter: 'blur(8px)',
+                }}
               >
                 <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white/80 mb-3">
                   {FEATURE_ICONS[icon]}
@@ -656,10 +628,13 @@ export default function Inicio() {
               </div>
             ))}
           </div>
+          <p className="text-center text-[10px] text-white/40 mt-2">
+            Deslizá para ver más →
+          </p>
         </div>
 
         {/* Footer */}
-        <div className="relative z-10 text-center py-6 text-xs text-white/30 border-t border-white/10">
+        <div className="relative z-10 text-center py-4 text-xs text-white/30 border-t border-white/10 shrink-0">
           Powered by <span className="font-semibold">Antológico</span>
         </div>
       </div>
