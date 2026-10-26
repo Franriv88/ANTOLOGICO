@@ -4,10 +4,12 @@ import { IconAntologico } from './LogoAntologico';
 import { useTheme } from '../hooks/useTheme';
 
 const NAV = [
-  { to: '/tenants',  label: 'Tenants' },
-  { to: '/planes',   label: 'Planes' },
-  { to: '/reportes', label: 'Reportes' },
-  { to: '/metricas', label: 'Métricas' },
+  { to: '/tenants',    label: 'Tenants' },
+  { to: '/planes',     label: 'Planes' },
+  { to: '/reportes',   label: 'Reportes' },
+  { to: '/metricas',   label: 'Métricas' },
+  { to: '/rubros',     label: 'Rubros' },
+  { to: '/mi-espacio', label: 'Mi Espacio' },
 ];
 
 const IconLogout = () => (

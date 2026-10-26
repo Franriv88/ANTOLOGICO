@@ -7,6 +7,8 @@ import Plans     from './pages/Plans';
 import Reportes  from './pages/Reportes';
 import Metricas  from './pages/Metricas';
 import Promocion from './pages/Promocion';
+import MiEspacio from './pages/MiEspacio';
+import Rubros    from './pages/Rubros';
 
 function RequireAdmin({ children }) {
   const { admin, loading } = useAuth();
@@ -33,6 +35,8 @@ export default function App() {
           <Route path="/reportes"  element={<AdminPage><Reportes /></AdminPage>} />
           <Route path="/metricas" element={<AdminPage><Metricas /></AdminPage>} />
           <Route path="/promocion" element={<AdminPage><Promocion /></AdminPage>} />
+          <Route path="/mi-espacio" element={<AdminPage><MiEspacio /></AdminPage>} />
+          <Route path="/rubros"    element={<AdminPage><Rubros /></AdminPage>} />
           <Route path="*"          element={<Navigate to="/tenants" replace />} />
         </Routes>
       </BrowserRouter>

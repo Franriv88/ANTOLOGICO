@@ -4,7 +4,10 @@ import Swal from 'sweetalert2';
 import Layout from '../components/Layout';
 import { useAuth } from '../context/AuthContext';
 import { useEspacio } from '../context/EspacioContext';
-import { espacios as espacioApi, rubros as rubrosApi, reservas as reservasApi } from '../services/api';
+import { espacios as espacioApi, reservas as reservasApi } from '../services/api';
+import { RUBROS, fetchRubros } from '../lib/rubros';
+import { httpsCallable } from 'firebase/functions';
+import { functions } from '../lib/firebase';
 import { SOCIAL_NETWORKS, SocialIcon } from '../components/SocialIcons';
 import { IconAntologico } from '../components/LogoAntologico';
 import { usePlanes, precioConPeriodo, proximaRenovacion, formatFechaLarga } from '../hooks/usePlanes';
@@ -200,6 +203,7 @@ const COLOR_ROLES = [
 const TABS = [
   { key: 'espacio',     label: 'Mi espacio' },
   { key: 'identidad',   label: 'Identidad' },
+  { key: 'tyc',         label: 'Términos y condiciones' },
   { key: 'cobros',      label: 'Mis Cobros' },
   { key: 'suscripcion', label: 'Suscripción' },
 ];
@@ -448,12 +452,20 @@ function AgregarEspacioModal({ userId, onSuccess, onClose }) {
 
 // ── Compartir espacio ────────────────────────────────────────────────────────
 
-function CompartirEspacio({ espacio }) {
+function CompartirEspacio({ espacio, refresh }) {
   const [copied, setCopied] = useState(false);
   const [useLogo, setUseLogo] = useState(true);
   const qrRef = useRef(null);
 
-  const publicUrl = `${window.location.origin}/p/${espacio.id}`;
+  const [slug, setSlug]             = useState(espacio.slug ?? '');
+  const [slugDraft, setSlugDraft]   = useState(espacio.slug ?? '');
+  const [slugSaving, setSlugSaving] = useState(false);
+  const [slugError, setSlugError]   = useState('');
+  const [slugSaved, setSlugSaved]   = useState(false);
+  const [slugEditing, setSlugEditing] = useState(false);
+
+  const subdomainUrl = slug ? `https://${slug}.antologico.app` : null;
+  const publicUrl = subdomainUrl || `${window.location.origin}/p/${espacio.id}`;
   const logoUrl   = espacio.logoUrl ?? null;
   const QR_SIZE   = 200;
   const LOGO_SIZE = Math.round(QR_SIZE * 0.22);
@@ -474,10 +486,77 @@ function CompartirEspacio({ espacio }) {
     link.click();
   }
 
+  async function handleSlugSave() {
+    const normalized = slugDraft.toLowerCase().replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    if (!normalized) { setSlugError('Ingresá un subdominio.'); return; }
+    setSlugSaving(true); setSlugError(''); setSlugSaved(false);
+    try {
+      const oldSlug = slug;
+      await espacioApi.updateSlug(espacio.id, normalized);
+      httpsCallable(functions, 'registerSubdomain')({ slug: normalized, oldSlug }).catch(() => {});
+      setSlug(normalized);
+      setSlugDraft(normalized);
+      setSlugEditing(false);
+      setSlugSaved(true);
+      if (refresh) await refresh();
+      setTimeout(() => setSlugSaved(false), 3000);
+    } catch (err) {
+      setSlugError(err.message || 'Error al guardar.');
+    } finally {
+      setSlugSaving(false);
+    }
+  }
+
   return (
     <div>
       <h3 className="text-sm font-semibold text-ink mb-0.5">Compartir tu espacio</h3>
       <p className="text-xs text-ink-muted mb-5">Esta es la URL pública que podés compartir con tus clientes para que vean y reserven tus talleres.</p>
+
+      {/* Subdominio */}
+      <div className="mb-5">
+        <label className="block text-xs font-medium text-ink-muted mb-1.5">Subdominio personalizado</label>
+        {slug && !slugEditing ? (
+          <div className="flex items-center gap-2">
+            <div className="flex-1 flex items-center bg-surface-100 border border-border rounded-md overflow-hidden">
+              <span className="px-3 py-2 text-sm font-mono text-primary font-medium">{slug}</span>
+              <span className="text-sm text-ink-muted">.antologico.app</span>
+            </div>
+            <button type="button" onClick={() => { setSlugEditing(true); setSlugDraft(slug); }}
+              className="shrink-0 px-3 py-2 text-xs font-medium border border-border rounded-md bg-surface-100 hover:bg-surface-200 transition-colors text-ink-muted">
+              Editar
+            </button>
+            {slugSaved && <span className="text-xs text-green-600 font-medium">¡Guardado!</span>}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <div className="flex-1 flex items-center bg-surface-100 border border-border rounded-md overflow-hidden focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
+                <input
+                  type="text"
+                  value={slugDraft}
+                  onChange={e => { setSlugDraft(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')); setSlugError(''); }}
+                  placeholder="mi-espacio"
+                  className="flex-1 px-3 py-2 text-sm font-mono bg-transparent text-ink focus:outline-none"
+                  autoFocus={slugEditing}
+                />
+                <span className="pr-3 text-sm text-ink-muted whitespace-nowrap">.antologico.app</span>
+              </div>
+              <button type="button" onClick={handleSlugSave} disabled={slugSaving || !slugDraft.trim()}
+                className="shrink-0 px-4 py-2 text-sm font-semibold bg-primary text-white rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50">
+                {slugSaving ? '…' : 'Guardar'}
+              </button>
+              {slug && slugEditing && (
+                <button type="button" onClick={() => { setSlugEditing(false); setSlugDraft(slug); setSlugError(''); }}
+                  className="shrink-0 px-3 py-2 text-xs text-ink-muted border border-border rounded-md hover:bg-surface-200 transition-colors">
+                  Cancelar
+                </button>
+              )}
+            </div>
+            {slugError && <p className="text-xs text-danger">{slugError}</p>}
+            <p className="text-[11px] text-ink-muted">Solo letras minúsculas, números y guiones. Mínimo 3 caracteres.</p>
+          </div>
+        )}
+      </div>
 
       {/* URL */}
       <div className="flex items-center gap-2 mb-6">
@@ -686,12 +765,13 @@ function RedesSocialesSection({ espacio, livePalette, links, setLinks, style, se
 
 function TabEspacio({ espacio, refresh }) {
   const [nombre, setNombre]                = useState(espacio.nombre ?? '');
-  const [rubroId, setRubroId]              = useState(espacio.rubro?.id ?? '');
-  const [rubroPersonalizado, setRubroPers] = useState(espacio.rubroPersonalizado ?? '');
-  const [rubros, setRubros]                = useState([]);
+  const [selectedRubro, setSelectedRubro]  = useState(espacio.rubroPersonalizado ?? '');
   const [saving, setSaving]                = useState(false);
   const [saved, setSaved]                  = useState(false);
   const [error, setError]                  = useState('');
+  const [rubros, setRubros]                = useState(RUBROS);
+
+  useEffect(() => { fetchRubros().then(setRubros); }, []);
 
   // ── Eliminar espacio ─────────────────────────────────────────────────────────
   const [delPhase,    setDelPhase]    = useState(null); // null | 'warn' | 'confirm'
@@ -728,8 +808,6 @@ function TabEspacio({ espacio, refresh }) {
   const [pendingDir,  setPendingDir]  = useState(null); // dirección validada esperando nombre
   const [dirNombre,   setDirNombre]   = useState('');
 
-  useEffect(() => { rubrosApi.list().then(setRubros).catch(() => {}); }, []);
-
   async function handleSave(e) {
     e.preventDefault();
     if (!nombre.trim()) { setError('El nombre es requerido.'); return; }
@@ -737,8 +815,8 @@ function TabEspacio({ espacio, refresh }) {
     try {
       await espacioApi.update(espacio.id, {
         nombre: nombre.trim(),
-        rubroId: rubroId || null,
-        rubroPersonalizado: (!rubroId && rubroPersonalizado.trim()) ? rubroPersonalizado.trim() : null,
+        rubroId: null,
+        rubroPersonalizado: selectedRubro || null,
       });
       await refresh();
       setSaved(true);
@@ -823,14 +901,10 @@ function TabEspacio({ espacio, refresh }) {
           </div>
           <div>
             <label className={LABEL_CLS}>Rubro</label>
-            <select value={rubroId} onChange={e => { setRubroId(e.target.value); setRubroPers(''); }} className={INPUT_CLS}>
-              <option value="">Otro / Sin categoría</option>
-              {rubros.map(r => <option key={r.id} value={r.id}>{r.nombre}</option>)}
+            <select value={selectedRubro} onChange={e => setSelectedRubro(e.target.value)} className={INPUT_CLS}>
+              <option value="">Seleccioná un rubro…</option>
+              {rubros.map(r => <option key={r} value={r}>{r}</option>)}
             </select>
-            {!rubroId && (
-              <input type="text" value={rubroPersonalizado} onChange={e => setRubroPers(e.target.value)}
-                placeholder="Describí el rubro de tu espacio" className={INPUT_CLS + ' mt-2'} />
-            )}
           </div>
           {error && <p className="text-xs text-danger">{error}</p>}
           <div className="flex items-center gap-3">
@@ -843,7 +917,7 @@ function TabEspacio({ espacio, refresh }) {
         </form>
 
         {/* Columna derecha: Compartir */}
-        <CompartirEspacio espacio={espacio} />
+        <CompartirEspacio espacio={espacio} refresh={refresh} />
       </div>
 
       {/* ── Direcciones ── */}
@@ -1449,6 +1523,96 @@ function TabIdentidad({ espacio, refresh }) {
       {saved && <span className="text-xs text-green-600 font-medium">¡Guardado!</span>}
     </div>
     </>
+  );
+}
+
+// ── Tab: Términos y condiciones ───────────────────────────────────────────────
+
+function TabTerminos({ espacio, refresh }) {
+  const [tycHtml, setTycHtml]       = useState(espacio.terminosCondiciones ?? '');
+  const [tycEnabled, setTycEnabled] = useState(espacio.tycEnabled ?? false);
+  const [saving, setSaving]         = useState(false);
+  const [saved, setSaved]           = useState(false);
+  const [RichEditor, setRichEditor] = useState(null);
+
+  useEffect(() => {
+    import('../components/RichTextEditor').then(m => setRichEditor(() => m.default));
+  }, []);
+
+  async function handleSave() {
+    setSaving(true); setSaved(false);
+    try {
+      await espacioApi.update(espacio.id, {
+        terminosCondiciones: tycHtml || null,
+        tycEnabled,
+      });
+      await refresh();
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch {
+      // silently fail
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="bg-surface-0 rounded-2xl border border-border p-6 space-y-6">
+      <div>
+        <h3 className="text-sm font-semibold text-ink mb-1">Tus términos y condiciones</h3>
+        <p className="text-xs text-ink-muted mb-4">
+          Redactá los términos y condiciones que aplican a tus talleres. Podés incluir políticas de cancelación, reembolsos, requisitos, etc.
+        </p>
+
+        {RichEditor ? (
+          <RichEditor
+            content={tycHtml}
+            onChange={setTycHtml}
+            placeholder="Escribí tus términos y condiciones..."
+          />
+        ) : (
+          <div className="border border-border rounded-xl p-8 flex items-center justify-center">
+            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
+      </div>
+
+      {/* Toggle para activar */}
+      <div className="flex items-start gap-3 p-4 bg-surface-50 rounded-xl border border-border">
+        <button
+          type="button"
+          role="switch"
+          aria-checked={tycEnabled}
+          onClick={() => setTycEnabled(!tycEnabled)}
+          className={`relative flex-shrink-0 mt-0.5 w-10 h-6 rounded-full transition-colors ${tycEnabled ? 'bg-primary' : 'bg-border'}`}
+        >
+          <span className={`absolute top-1 left-1 w-4 h-4 rounded-full bg-white transition-transform ${tycEnabled ? 'translate-x-4' : ''}`} />
+        </button>
+        <div>
+          <p className="text-sm font-medium text-ink">
+            {tycEnabled ? 'Tus clientes deberán leer y aceptar antes de reservar' : 'Tus T&C no se muestran al reservar'}
+          </p>
+          <p className="text-xs text-ink-muted mt-0.5">
+            {tycEnabled
+              ? 'Tus términos y condiciones aparecerán como un checkbox obligatorio en todos tus talleres.'
+              : 'Activá esta opción para que tus clientes lean y acepten tus términos antes de confirmar una reserva.'}
+          </p>
+        </div>
+      </div>
+
+      {/* Guardar */}
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={saving}
+          className="px-5 py-2 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary-strong transition-colors disabled:opacity-50"
+        >
+          {saving ? 'Guardando...' : 'Guardar'}
+        </button>
+        {saved && <span className="text-xs text-green-600 font-medium">Guardado</span>}
+      </div>
+    </div>
   );
 }
 
@@ -2205,6 +2369,7 @@ export default function Configuracion() {
 
         {tab === 'espacio'     && <TabEspacio     espacio={activeEspacio} refresh={refresh} />}
         {tab === 'identidad'   && <TabIdentidad   espacio={activeEspacio} refresh={refresh} />}
+        {tab === 'tyc'         && <TabTerminos    espacio={activeEspacio} refresh={refresh} />}
         {tab === 'cobros'      && <TabCobros      espacio={activeEspacio} refresh={refresh} />}
         {tab === 'suscripcion' && <TabSuscripcion espacio={activeEspacio} espacios={espacios} refresh={refresh} />}
       </div>

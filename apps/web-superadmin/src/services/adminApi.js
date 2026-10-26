@@ -14,6 +14,7 @@ const C_ESPACIOS  = 'demo_espacios';
 const C_WORKSHOPS = 'demo_workshops';
 const C_RESERVAS  = 'demo_reservas';
 const C_USUARIOS  = 'demo_usuarios';
+const C_RUBROS    = 'demo_rubros';
 
 // Emails que pueden ser super admin (se auto-registran en sa_admins)
 const SEED_ADMIN_EMAILS = ['superadmin@antologico.app'];
@@ -296,5 +297,131 @@ export const tenants = {
     if (userId) batch.delete(doc(firestore, C_USUARIOS, userId));
 
     await batch.commit();
+  },
+};
+
+// ─── Espacio propio del Super Admin (para testeo) ────────────────────────────
+export const adminEspacio = {
+  get: async (adminUid) => {
+    const q = query(
+      collection(firestore, C_ESPACIOS),
+      where('userId', '==', adminUid),
+      where('isSuperAdmin', '==', true)
+    );
+    const snap = await getDocs(q);
+    if (snap.empty) return null;
+    const d = snap.docs[0];
+    return { id: d.id, ...d.data() };
+  },
+
+  create: async (adminUid, email, nombre) => {
+    await ensurePlanesSeeded();
+    const planesSnap = await getDocs(collection(firestore, C_PLANES));
+    const estudio = planesSnap.docs.find(d => d.id === 'estudio')?.data();
+
+    const id = uid();
+    const espacio = {
+      userId: adminUid,
+      nombre: nombre || 'Espacio Admin',
+      estado: 'ACTIVO',
+      cancelacionPendiente: false,
+      isSuperAdmin: true,
+      logoUrl: null,
+      logoShape: 'round',
+      brandColors: null,
+      brandFont: null,
+      rubroPersonalizado: null,
+      plan: estudio ? { nombre: 'Estudio', ...estudio } : { nombre: 'Estudio' },
+      planId: 'estudio',
+      periodoFacturacion: 'mensual',
+      precioActual: 0,
+      proximaRenovacion: null,
+      slug: null,
+      createdAt: new Date().toISOString(),
+      trialStartedAt: null,
+    };
+    await setDoc(doc(firestore, C_ESPACIOS, id), espacio);
+
+    const userRef = doc(firestore, C_USUARIOS, adminUid);
+    const userSnap = await getDoc(userRef);
+    if (!userSnap.exists()) {
+      await setDoc(userRef, {
+        nombre: email.split('@')[0],
+        email,
+        onboardingComplete: true,
+        createdAt: new Date().toISOString(),
+      });
+    }
+
+    return { id, ...espacio };
+  },
+
+  update: async (id, payload) => {
+    const ref = doc(firestore, C_ESPACIOS, id);
+    await updateDoc(ref, payload);
+    const snap = await getDoc(ref);
+    return docToObj(snap);
+  },
+};
+
+// ─── Rubros (categorías de talleres) ─────────────────────────────────────────
+const SEED_RUBROS = [
+  'Arte y pintura', 'Baile y danza', 'Cocina y gastronomía',
+  'Diseño y creatividad', 'Fitness y deporte', 'Fotografía',
+  'Idiomas', 'Manualidades y DIY', 'Marketing y negocios',
+  'Meditación y mindfulness', 'Música', 'Teatro y actuación',
+  'Tecnología y programación', 'Yoga y bienestar',
+];
+
+let _rubrosSeeded = false;
+async function ensureRubrosSeeded() {
+  if (_rubrosSeeded) return;
+  const snap = await getDocs(collection(firestore, C_RUBROS));
+  if (snap.empty) {
+    const batch = writeBatch(firestore);
+    SEED_RUBROS.forEach((nombre, i) => {
+      const id = uid();
+      batch.set(doc(firestore, C_RUBROS, id), {
+        nombre,
+        order: i + 1,
+        activo: true,
+        createdAt: new Date().toISOString(),
+      });
+    });
+    await batch.commit();
+  }
+  _rubrosSeeded = true;
+}
+
+export const rubros = {
+  list: async () => {
+    await ensureRubrosSeeded();
+    const snap = await getDocs(collection(firestore, C_RUBROS));
+    return snapToList(snap).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  },
+
+  create: async (nombre) => {
+    await ensureRubrosSeeded();
+    const snap = await getDocs(collection(firestore, C_RUBROS));
+    const id = uid();
+    const data = {
+      nombre: nombre.trim(),
+      order: snap.size + 1,
+      activo: true,
+      createdAt: new Date().toISOString(),
+    };
+    await setDoc(doc(firestore, C_RUBROS, id), data);
+    return { id, ...data };
+  },
+
+  update: async (id, payload) => {
+    const ref = doc(firestore, C_RUBROS, id);
+    await updateDoc(ref, payload);
+    const snap = await getDoc(ref);
+    return docToObj(snap);
+  },
+
+  remove: async (id) => {
+    await deleteDoc(doc(firestore, C_RUBROS, id));
   },
 };

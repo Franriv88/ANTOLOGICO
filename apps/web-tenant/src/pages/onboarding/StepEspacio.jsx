@@ -2,56 +2,37 @@ import { useState, useEffect, useRef } from 'react';
 import { espacios as espacioApi } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { detectGeo } from '../../lib/geo';
+import { RUBROS, fetchRubros } from '../../lib/rubros';
 
 const INPUT_CLS =
   'w-full px-3 py-2 bg-surface-100 border border-border rounded-md text-sm text-ink ' +
   'focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary';
 const LABEL_CLS = 'block text-xs font-medium text-ink-muted mb-1';
 
-const RUBROS = [
-  'Arte y pintura',
-  'Baile y danza',
-  'Cocina y gastronomía',
-  'Diseño y creatividad',
-  'Fitness y deporte',
-  'Fotografía',
-  'Idiomas',
-  'Manualidades y DIY',
-  'Marketing y negocios',
-  'Meditación y mindfulness',
-  'Música',
-  'Teatro y actuación',
-  'Tecnología y programación',
-  'Yoga y bienestar',
-];
-
 export default function StepEspacio({ onNext, onBack, accumulated }) {
   const { user } = useAuth();
   const [nombre, setNombre]             = useState('');
   const [selectedRubro, setRubro]       = useState('');
-  const [rubroPersonalizado, setCustom] = useState('');
   const [loading, setLoading]           = useState(false);
   const [error, setError]               = useState('');
+  const [rubros, setRubros]             = useState(RUBROS);
   const geoRef = useRef(null);
 
   useEffect(() => { detectGeo().then(g => { geoRef.current = g; }); }, []);
-
-  const isOtro = selectedRubro === 'OTRO';
+  useEffect(() => { fetchRubros().then(setRubros); }, []);
 
   async function handleSubmit(e) {
     e.preventDefault();
     if (!nombre.trim())    { setError('El nombre del espacio es requerido'); return; }
     if (!selectedRubro)    { setError('Seleccioná un rubro'); return; }
-    if (isOtro && !rubroPersonalizado.trim()) { setError('Especificá tu rubro'); return; }
 
     setLoading(true);
     setError('');
     try {
-      const rubroFinal = isOtro ? rubroPersonalizado.trim() : selectedRubro;
       const key = await espacioApi.create({
         nombre:            nombre.trim(),
         rubroId:           null,
-        rubroPersonalizado: rubroFinal,
+        rubroPersonalizado: selectedRubro,
         userId:            user?.uid ?? null,
         telefono:          accumulated?.telefono ?? '',
         geo:               geoRef.current ?? null,
@@ -95,30 +76,11 @@ export default function StepEspacio({ onNext, onBack, accumulated }) {
           className={INPUT_CLS}
         >
           <option value="">Seleccioná un rubro…</option>
-          {RUBROS.map((r) => (
+          {rubros.map((r) => (
             <option key={r} value={r}>{r}</option>
           ))}
-          <option value="OTRO">Otro…</option>
         </select>
       </div>
-
-      {/* Campo "Otro" condicional */}
-      {isOtro && (
-        <div>
-          <label className={LABEL_CLS}>¿Cuál es tu rubro? *</label>
-          <input
-            type="text"
-            value={rubroPersonalizado}
-            onChange={(e) => { setCustom(e.target.value); setError(''); }}
-            placeholder="Ej: Cerámica artística, Astrología, Meditación…"
-            autoFocus
-            className={INPUT_CLS}
-          />
-          <p className="mt-1 text-xs text-ink-muted">
-            Lo revisaremos para agregarlo al catálogo oficial.
-          </p>
-        </div>
-      )}
 
       {error && (
         <p className="text-xs text-danger bg-danger/5 border border-danger/20 rounded px-3 py-2">

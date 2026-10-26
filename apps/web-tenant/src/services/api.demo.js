@@ -121,13 +121,22 @@ export const espacios = {
     return docToObj(snap);
   },
 
+  getBySlug: async (slug) => {
+    await ensureSeeded();
+    const q = query(collection(firestore, C_ESPACIOS), where('slug', '==', slug.toLowerCase()));
+    const snap = await getDocs(q);
+    if (snap.empty) return null;
+    const d = snap.docs[0];
+    return { id: d.id, ...d.data() };
+  },
+
   create: async (payload) => {
     await ensureSeeded();
     const id      = uid();
     const espacio = {
       estado: 'ACTIVO', cancelacionPendiente: false,
       logoUrl: null, logoShape: 'round', brandColors: null, brandFont: null,
-      rubro: null, plan: null, dominio_on_espacio: null,
+      rubro: null, plan: null, dominio_on_espacio: null, slug: null,
       createdAt: new Date().toISOString(),
       trialStartedAt: new Date().toISOString(),
       ...payload,
@@ -142,6 +151,25 @@ export const espacios = {
     await updateDoc(ref, stripBase64(payload));
     const snap = await getDoc(ref);
     return docToObj(snap);
+  },
+
+  checkSlug: async (slug, excludeEspacioId) => {
+    await ensureSeeded();
+    const q = query(collection(firestore, C_ESPACIOS), where('slug', '==', slug.toLowerCase()));
+    const snap = await getDocs(q);
+    if (snap.empty) return true;
+    return snap.docs.every(d => d.id === excludeEspacioId);
+  },
+
+  updateSlug: async (id, slug) => {
+    const normalized = slug.toLowerCase().replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    if (normalized.length < 3) throw new Error('El subdominio debe tener al menos 3 caracteres.');
+    if (normalized.length > 40) throw new Error('El subdominio no puede tener más de 40 caracteres.');
+    const reserved = ['www', 'app', 'api', 'admin', 'panel', 'mail', 'ftp', 'smtp', 'imap', 'pop', 'dns', 'ns1', 'ns2', 'cdn', 'staging', 'dev', 'test', 'demo', 'blog', 'help', 'support', 'status'];
+    if (reserved.includes(normalized)) throw new Error('Este subdominio está reservado.');
+    const available = await espacios.checkSlug(normalized, id);
+    if (!available) throw new Error('Este subdominio ya está en uso.');
+    return espacios.update(id, { slug: normalized });
   },
 
   updateIdentidad:      async (id, payload)       => espacios.update(id, payload),
@@ -280,7 +308,7 @@ export const reservas = {
     return snapToList(rSnap).filter(r => wsIds.has(r.workshopId));
   },
 
-  create: async (workshopId, { nombre, email, telefono, metodoPago = 'MERCADO_PAGO' }) => {
+  create: async (workshopId, { nombre, email, telefono, metodoPago = 'MERCADO_PAGO', grupoId }) => {
     await ensureSeeded();
 
     // Verificar si el usuario está bloqueado en este espacio
@@ -302,10 +330,10 @@ export const reservas = {
       estado:     'CONFIRMADA',
       metodoPago,
       estadoPago: metodoPago === 'MERCADO_PAGO' ? 'PAGADO' : 'PENDIENTE',
+      ...(grupoId ? { grupoId } : {}),
     };
     const batch = writeBatch(firestore);
     batch.set(doc(firestore, C_RESERVAS, id), reserva);
-    // Descuenta 1 cupo atómicamente — seguro con Promise.all multi-persona
     batch.update(doc(firestore, C_WORKSHOPS, workshopId), { cuposDisponibles: increment(-1) });
     await batch.commit();
     return { id, ...reserva };

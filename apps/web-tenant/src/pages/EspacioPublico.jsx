@@ -1282,7 +1282,7 @@ export default function EspacioPublico({ overrideEspacioId }) {
             <span>
               Obtén tu propio espacio{' '}
               <a
-                href="https://www.antologico.app/registro"
+                href="https://www.antologico.app"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-semibold underline underline-offset-2 hover:opacity-100 transition-opacity"
