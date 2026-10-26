@@ -58,6 +58,7 @@ function svgToPng(svg) {
 const files = [
   { name: 'icon-192.png',          svg: iconSVG(192, DARK_BG) },
   { name: 'icon-512.png',          svg: iconSVG(512, DARK_BG) },
+  { name: 'icon-1024.png',         svg: maskableSVG(1024, MASKABLE) },
   { name: 'apple-touch-icon.png',  svg: iconSVG(180, DARK_BG) },
   { name: 'icon-maskable-192.png', svg: maskableSVG(192, MASKABLE) },
   { name: 'icon-maskable-512.png', svg: maskableSVG(512, MASKABLE) },
