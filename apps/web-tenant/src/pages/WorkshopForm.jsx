@@ -55,7 +55,7 @@ import Layout from '../components/Layout';
 import TimeSelect from '../components/TimeSelect';
 import { workshops as api } from '../services/api';
 import { useEspacio } from '../context/EspacioContext';
-import { usePlanes } from '../hooks/usePlanes';
+import { usePlanes, normalizePlan } from '../hooks/usePlanes';
 import { TIPO_CONFIG, TIPOS } from '../lib/tipoWorkshop';
 import { DEMO_MODE } from '../lib/demo';
 
@@ -443,17 +443,26 @@ export default function WorkshopForm() {
   const isEdit = Boolean(id);
   const navigate = useNavigate();
   const { activeEspacio } = useEspacio();
-  // El plan embebido en activeEspacio viene del schema de Data Connect y NO incluye
-  // capabilities. Para la fuente de verdad real (configurable desde Super Admin),
-  // leemos el plan directamente de Firestore vía usePlanes() y lo matcheamos por id.
+  // El plan embebido en activeEspacio viene del schema de Data Connect (Firebase SQL)
+  // y NO incluye capabilities. Además su id es un UUID distinto a los ids literales
+  // ('esencial'/'profesional'/'estudio') de los planes en Firestore demo_planes,
+  // asi que matcheamos por NOMBRE que si es consistente entre ambos sistemas.
+  // Si por algún motivo no encontramos match en Firestore, caemos a normalizePlan()
+  // que infiere capabilities a partir del nombre historico.
   const planes = usePlanes();
-  const planActualId = activeEspacio?.plan?.id ?? null;
-  const planActual = planes && planActualId
-    ? planes.find(p => p.id === planActualId) ?? null
-    : null;
+  const planNombreActivo = activeEspacio?.plan?.nombre ?? null;
+  const planActual = (() => {
+    if (!planNombreActivo) return null;
+    if (!planes) return null; // todavía cargando
+    const nombreNorm = planNombreActivo.toLowerCase().trim();
+    const match = planes.find(p => (p.nombre || '').toLowerCase().trim() === nombreNorm);
+    if (match) return match;
+    // Fallback: construir un plan sintético con capabilities inferidas por nombre.
+    return normalizePlan({ nombre: planNombreActivo });
+  })();
   const planCaps = planActual?.capabilities;
-  // Mientras los planes todavía están cargando (null), ocultamos el selector
-  // para no mostrar accidentalmente "Imagen" a quien no lo tiene permitido.
+  // Si todavía no sabemos los planes O no tenemos capabilities confirmadas,
+  // ocultamos el selector para no mostrar "Imagen" indebidamente.
   const canUploadImage = DEMO_MODE
     || (planes != null && planCaps != null && planCaps.imagenEncabezado === true);
   const imgInputRef  = useRef(null);
