@@ -1,5 +1,5 @@
 import { useEffect, useState, useLayoutEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { espacios as espaciosApi, workshops as workshopsApi, reservas as reservasApi } from '../services/api';
 import { getSlotStatus } from '../lib/slotStatus';
 import { loginGoogle, loginEmail, register, logout, subscribeAuth, authErrorMsg, sendPasswordReset, checkRedirectResult, updateUserProfile } from '../services/userAuth';
@@ -818,6 +818,7 @@ export default function EspacioPublico({ overrideEspacioId }) {
     root.removeAttribute('data-theme');
     return () => { if (prev) root.setAttribute('data-theme', prev); };
   }, []);
+  const navigate = useNavigate();
   const params = useParams();
   const espacioId = overrideEspacioId || params.espacioId;
   const [espacio,   setEspacio]   = useState(null);
@@ -980,11 +981,15 @@ export default function EspacioPublico({ overrideEspacioId }) {
     }
   }
 
-  function handleLogout() {
-    logout();
+  async function handleLogout() {
+    await logout();
     setCurrentUser(null);
     setUserReservas([]);
     setBookedCounts({});
+    // Al salir desde el espacio del tenant, llevamos al alumno de vuelta a
+    // su home ("Mis espacios seguidos" = /inicio) en vez de dejarlo en la
+    // página del tenant deslogueado.
+    navigate('/inicio', { replace: true });
   }
 
   function handleConfirm(reservas) {
@@ -1309,7 +1314,12 @@ export default function EspacioPublico({ overrideEspacioId }) {
           currentUser={currentUser}
           brand={brand}
           onClose={() => setShowMisDatos(false)}
-          onLogout={() => { logout(); setShowMisDatos(false); }}
+          onLogout={async () => {
+            await logout();
+            setShowMisDatos(false);
+            setCurrentUser(null);
+            navigate('/inicio', { replace: true });
+          }}
           onSaved={(updated) => setCurrentUser(prev => ({ ...prev, profile: { ...prev.profile, ...updated } }))}
         />
       )}
