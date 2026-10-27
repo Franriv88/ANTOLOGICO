@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
+import { sendPasswordResetEmail } from 'firebase/auth';
 import { useAuth } from '../context/AuthContext';
+import { auth } from '../lib/firebase';
 import { adminEspacio } from '../services/adminApi';
 
 const TENANT_ORIGIN = 'https://www.antologico.app';
@@ -11,6 +13,24 @@ export default function MiEspacio() {
   const [creating, setCreating] = useState(false);
   const [nombre, setNombre]     = useState('Espacio Admin');
   const [error, setError]       = useState('');
+  const [resetting, setResetting]       = useState(false);
+  const [resetMessage, setResetMessage] = useState('');
+  const [resetError, setResetError]     = useState('');
+
+  async function handleSendPasswordReset() {
+    if (!admin?.email) return;
+    setResetting(true);
+    setResetMessage('');
+    setResetError('');
+    try {
+      await sendPasswordResetEmail(auth, admin.email);
+      setResetMessage(`Te mandamos un email a ${admin.email} con el link para configurar tu contraseña. Revisá también la carpeta de spam.`);
+    } catch (err) {
+      setResetError(err?.message || 'No pudimos enviar el email de reset.');
+    } finally {
+      setResetting(false);
+    }
+  }
 
   useEffect(() => {
     if (!admin) return;
@@ -141,23 +161,63 @@ export default function MiEspacio() {
             </a>
           </div>
 
-          {/* Aviso de sesión */}
-          <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-5 py-4">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B45309" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-            </svg>
-            <div className="text-xs text-ink-muted leading-relaxed">
-              <p className="mb-1">
-                Para usar el Panel de Tenant con este espacio, asegurate de estar logueado en <strong className="text-ink">antologico.app</strong> con el email:
-              </p>
-              <p className="font-mono text-sm text-ink font-medium bg-white/60 rounded px-2 py-1 inline-block">
-                {admin?.email}
-              </p>
-              <p className="mt-1.5">
-                Si tenés otra cuenta abierta allá, cerrá sesión primero e ingresá con este email.
-              </p>
+          {/* Cómo entrar al Panel de Tenant */}
+          <div className="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4">
+            <div className="flex items-start gap-3">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B45309" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              <div className="text-xs text-ink-muted leading-relaxed">
+                <p className="mb-2 text-ink font-semibold">¿Cómo ingreso al Panel de Tenant?</p>
+                <p className="mb-2">
+                  Firebase Auth es compartido entre el panel de Super Admin y el panel de Tenant,
+                  así que tu usuario y contraseña son los mismos. Ingresá en{' '}
+                  <strong className="text-ink">antologico.app</strong> con este email:
+                </p>
+                <p className="font-mono text-sm text-ink font-medium bg-white/60 rounded px-2 py-1 inline-block">
+                  {admin?.email}
+                </p>
+                <p className="mt-2.5">
+                  Si no te acordás de la contraseña (por ejemplo si entraste al Super Admin con Google),
+                  podés configurar o resetear la contraseña con el botón de abajo.
+                </p>
+              </div>
             </div>
+
+            {/* Acción: enviar email de reset */}
+            <div className="mt-4 ml-7 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={handleSendPasswordReset}
+                disabled={resetting}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-md text-xs font-semibold hover:bg-primary-strong transition-colors disabled:opacity-50"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,7 12,13 2,7"/>
+                </svg>
+                {resetting ? 'Enviando…' : 'Enviarme email para configurar contraseña'}
+              </button>
+              <a
+                href={`${TENANT_ORIGIN}/login`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs font-medium text-ink-muted hover:text-primary underline"
+              >
+                Ir a antologico.app →
+              </a>
+            </div>
+
+            {resetMessage && (
+              <p className="mt-3 ml-7 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-3 py-2">
+                {resetMessage}
+              </p>
+            )}
+            {resetError && (
+              <p className="mt-3 ml-7 text-xs text-danger bg-danger/5 border border-danger/20 rounded px-3 py-2">
+                {resetError}
+              </p>
+            )}
           </div>
 
           {/* Info del plan */}
