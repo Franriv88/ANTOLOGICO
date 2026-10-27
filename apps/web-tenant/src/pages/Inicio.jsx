@@ -11,6 +11,7 @@ import {
 import { getSlotStatus } from '../lib/slotStatus';
 import { LogoAntologico } from '../components/LogoAntologico';
 import MobileAppShell from '../components/MobileAppShell';
+import { FullScreenLoader } from '../components/AntologicoLoader';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -617,11 +618,7 @@ export default function Inicio() {
 
   // ── NOT AUTHENTICATED: Landing ──────────────────────────────────────────
   if (currentUser === undefined) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'linear-gradient(148deg, #E85D4A 0%, #C4412F 48%, #8C2E1F 100%)' }}>
-        <div className="w-8 h-8 rounded-full border-2 border-white border-t-transparent animate-spin" />
-      </div>
-    );
+    return <FullScreenLoader />;
   }
 
   if (!isAuthed) {

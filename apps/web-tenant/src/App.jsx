@@ -16,11 +16,12 @@ import MisReservas    from './pages/MisReservas';
 import MisDatos       from './pages/MisDatos';
 import Inicio         from './pages/Inicio';
 import AuthHandoff    from './pages/AuthHandoff';
+import { FullScreenLoader } from './components/AntologicoLoader';
 import * as api from './services/api';
 
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
-  if (loading) return null;
+  if (loading) return <FullScreenLoader />;
   return user ? children : <Navigate to="/login" replace />;
 }
 
@@ -50,7 +51,7 @@ function RequireDesktop({ children }) {
 // Redirige al onboarding si el profesional no tiene espacios todavía
 function RequireEspacio({ children }) {
   const { activeEspacio, loading } = useEspacio();
-  if (loading) return null;
+  if (loading) return <FullScreenLoader />;
   return activeEspacio ? children : <Navigate to="/onboarding" replace />;
 }
 
@@ -79,11 +80,7 @@ function SubdomainResolver() {
   }, [slug]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-[#FAF7F2] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[#E85D4A] border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
+    return <FullScreenLoader />;
   }
 
   if (notFound) {

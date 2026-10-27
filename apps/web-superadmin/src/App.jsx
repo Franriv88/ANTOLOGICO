@@ -10,10 +10,11 @@ import Promocion from './pages/Promocion';
 import MiEspacio from './pages/MiEspacio';
 import Rubros    from './pages/Rubros';
 import Cupones   from './pages/Cupones';
+import { FullScreenLoader } from './components/AntologicoLoader';
 
 function RequireAdmin({ children }) {
   const { admin, loading } = useAuth();
-  if (loading) return null;
+  if (loading) return <FullScreenLoader />;
   return admin ? children : <Navigate to="/login" replace />;
 }
 

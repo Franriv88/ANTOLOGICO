@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { subscribeAuth, loginGoogle, loginEmail, logout, authErrorMsg, checkRedirectResult, getAuthCurrentUser, updateUserProfile } from '../services/userAuth';
 import MobileAppShell from '../components/MobileAppShell';
+import { FullScreenLoader } from '../components/AntologicoLoader';
 
 const INPUT = 'w-full px-3 py-2 bg-white border border-[#D2C4A8] rounded-lg text-sm text-[#2B241A] focus:outline-none focus:ring-2 focus:ring-[#E85D4A] focus:ring-offset-1';
 const LABEL = 'block text-xs font-medium text-[#6B5F4C] mb-1';
@@ -104,7 +105,7 @@ export default function MisDatos() {
   }
 
   if (currentUser === undefined) {
-    return <div className="min-h-screen bg-[#FAF7F2] flex items-center justify-center"><span className="text-sm text-[#6B5F4C]">Cargando…</span></div>;
+    return <FullScreenLoader />;
   }
 
   if (!currentUser) {

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { signInWithCustomToken, signOut } from 'firebase/auth';
 import { auth } from '../lib/firebase';
+import { FullScreenLoader } from '../components/AntologicoLoader';
 
 // Esta pagina recibe un custom token de Firebase Auth via query param (?token=...)
 // generado desde el Panel Super Admin. Autentica la sesion local con ese token
@@ -44,14 +45,7 @@ export default function AuthHandoff() {
   }, [token, navigate]);
 
   if (status === 'loading') {
-    return (
-      <div className="min-h-screen bg-surface-0 flex items-center justify-center p-6">
-        <div className="flex flex-col items-center gap-4 max-w-sm text-center">
-          <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-ink-muted">Abriendo tu Panel de Tenant…</p>
-        </div>
-      </div>
-    );
+    return <FullScreenLoader message="Abriendo tu Panel de Tenant…" />;
   }
 
   return (
