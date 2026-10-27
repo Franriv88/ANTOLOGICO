@@ -1,6 +1,6 @@
 {
   "installCommand": "npm install -g pnpm@9.15.4 && cd ../.. && pnpm install",
-  "buildCommand": "pnpm run build:demo",
+  "buildCommand": "pnpm run build",
   "outputDirectory": "dist",
   "routes": [
     {
