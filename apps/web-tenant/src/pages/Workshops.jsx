@@ -343,6 +343,7 @@ export default function Workshops() {
             const headerImg = w.headerType === 'IMAGE' && w.headerValue
               ? w.headerValue
               : null;
+            const hasImage = !!headerImg;
             const isOculto = w.estado === 'BORRADOR';
             const isAgotado = w.cuposDisponibles === 0 && w.estado === 'PUBLICADO';
 
@@ -356,56 +357,94 @@ export default function Workshops() {
                 className="rounded-xl overflow-hidden flex flex-col border"
                 style={{ backgroundColor: '#ffffff', borderColor: cardBorderColor }}
               >
-                {/* Encabezado — imagen o color, alto */}
-                <div
-                  className="relative h-40 shrink-0"
-                  style={{
-                    backgroundColor: headerBg,
-                    ...(headerImg && {
+                {/* Encabezado: imagen grande con flotantes O franja fina + acciones en body */}
+                {hasImage ? (
+                  <div
+                    className="relative h-40 shrink-0"
+                    style={{
+                      backgroundColor: headerBg,
                       backgroundImage: `url(${headerImg})`,
                       backgroundSize: 'cover',
                       backgroundPosition: 'center',
-                    }),
-                  }}
-                >
-                  {/* Precio — badge top-left */}
-                  <div
-                    className="absolute top-3 left-3 px-3 py-1.5 rounded-lg font-mono font-bold text-sm text-white shadow-md"
-                    style={{ backgroundColor: 'rgba(0,0,0,0.52)', backdropFilter: 'blur(4px)' }}
+                    }}
                   >
-                    {formatPrecio(w.precio)}
-                  </div>
-
-                  {/* Botones top-right: editar + eliminar */}
-                  <div className="absolute top-3 right-3 flex gap-1.5">
-                    <button
-                      onClick={() => navigate(`/workshops/${w.id}/editar`)}
-                      title="Editar taller"
-                      className="w-8 h-8 flex items-center justify-center rounded-lg bg-black/35 hover:bg-black/55 text-white transition-colors shadow-md"
+                    <div
+                      className="absolute top-3 left-3 px-3 py-1.5 rounded-lg font-mono font-bold text-sm text-white shadow-md"
+                      style={{ backgroundColor: 'rgba(0,0,0,0.52)', backdropFilter: 'blur(4px)' }}
                     >
-                      <IconPencil />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteRequest(w.id, w.nombre)}
-                      title="Eliminar taller"
-                      className="w-8 h-8 flex items-center justify-center rounded-lg bg-black/35 hover:bg-black/55 text-white transition-colors shadow-md"
-                    >
-                      <IconTrash />
-                    </button>
+                      {formatPrecio(w.precio)}
+                    </div>
+                    <div className="absolute top-3 right-3 flex gap-1.5">
+                      <button
+                        onClick={() => navigate(`/workshops/${w.id}/editar`)}
+                        title="Editar taller"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-black/35 hover:bg-black/55 text-white transition-colors shadow-md"
+                      >
+                        <IconPencil />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteRequest(w.id, w.nombre)}
+                        title="Eliminar taller"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-black/35 hover:bg-black/55 text-white transition-colors shadow-md"
+                      >
+                        <IconTrash />
+                      </button>
+                    </div>
+                    {isOculto && (
+                      <span className="absolute bottom-2 left-3 text-xs bg-black/40 text-white/90 px-2 py-0.5 rounded font-medium">
+                        Oculto
+                      </span>
+                    )}
+                    {w.estado === 'CANCELADO' && (
+                      <span className="absolute bottom-2 left-3 text-xs bg-danger/70 text-white px-2 py-0.5 rounded font-medium">
+                        Cancelado
+                      </span>
+                    )}
                   </div>
+                ) : (
+                  /* Franja fina — toda la info/acciones viven en el body */
+                  <div className="h-2 shrink-0" style={{ backgroundColor: headerBg }} />
+                )}
 
-                  {/* Badges de estado */}
-                  {isOculto && (
-                    <span className="absolute bottom-2 left-3 text-xs bg-black/40 text-white/90 px-2 py-0.5 rounded font-medium">
-                      Oculto
-                    </span>
-                  )}
-                  {w.estado === 'CANCELADO' && (
-                    <span className="absolute bottom-2 left-3 text-xs bg-danger/70 text-white px-2 py-0.5 rounded font-medium">
-                      Cancelado
-                    </span>
-                  )}
-                </div>
+                {/* Barra de precio + acciones cuando NO hay imagen */}
+                {!hasImage && (
+                  <div className="px-4 pt-3 flex items-center justify-between gap-2">
+                    <div className="flex items-center flex-wrap gap-2">
+                      <span
+                        className="px-2.5 py-1 rounded-lg font-mono font-bold text-xs text-white"
+                        style={{ backgroundColor: headerBg }}
+                      >
+                        {formatPrecio(w.precio)}
+                      </span>
+                      {isOculto && (
+                        <span className="text-[11px] bg-ink/10 text-ink-muted px-2 py-0.5 rounded font-medium">
+                          Oculto
+                        </span>
+                      )}
+                      {w.estado === 'CANCELADO' && (
+                        <span className="text-[11px] bg-danger/10 text-danger px-2 py-0.5 rounded font-medium">
+                          Cancelado
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex gap-1.5 shrink-0">
+                      <button
+                        onClick={() => navigate(`/workshops/${w.id}/editar`)}
+                        title="Editar taller"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-ink-muted hover:bg-surface-100 hover:text-ink transition-colors"
+                      >
+                        <IconPencil />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteRequest(w.id, w.nombre)}
+                        title="Eliminar taller"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-ink-muted hover:bg-danger/8 hover:text-danger hover:border-danger/30 transition-colors"
+                      >
+                        <IconTrash />
+                      </button>
+                    </div>
+                  </div>
+                )}
 
                 {/* Cuerpo */}
                 <div className="flex flex-col flex-1 p-4 gap-2.5">

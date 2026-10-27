@@ -687,6 +687,7 @@ function WorkshopCard({ w, brand, onReservar, bookedCount, direcciones }) {
 
   const headerBg  = w.headerType === 'COLOR' && w.headerValue ? w.headerValue : brand.primary;
   const headerImg = w.headerType === 'IMAGE' && w.headerValue ? w.headerValue : null;
+  const hasImage  = !!headerImg;
 
   const cardOnLight = contrastText(brand.card) !== '#ffffff';
   const inkMain     = brand.textCard;
@@ -703,39 +704,61 @@ function WorkshopCard({ w, brand, onReservar, bookedCount, direcciones }) {
         ...(isAgotado && !isBooked ? { opacity: 0.55, filter: 'grayscale(30%)' } : {}),
       }}
     >
-      {/* Header */}
-      <div
-        className="relative h-36 shrink-0"
-        style={{
-          backgroundColor: headerBg,
-          ...(headerImg && {
+      {/* Header: imagen grande con elementos flotantes O franja fina + info en body */}
+      {hasImage ? (
+        <div
+          className="relative h-36 shrink-0"
+          style={{
+            backgroundColor: headerBg,
             backgroundImage: `url(${headerImg})`,
             backgroundSize: 'cover',
             backgroundPosition: `${w.headerImagePosition?.x ?? 50}% ${w.headerImagePosition?.y ?? 50}%`,
-          }),
-        }}
-      >
-        <div
-          className="absolute top-3 left-3 px-3 py-1.5 rounded-lg font-mono font-bold text-sm text-white shadow-md"
-          style={{ backgroundColor: 'rgba(0,0,0,0.52)', backdropFilter: 'blur(4px)' }}
+          }}
         >
-          {formatPrecio(w.precio)}
-        </div>
-        <div className="absolute top-3 right-3">
-          <PublicSlotBadge status={slotStatus} />
-        </div>
-        {isBooked && (
-          <div className="absolute bottom-3 left-3">
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold text-white shadow-sm" style={{ backgroundColor: 'rgba(5,150,105,0.85)', backdropFilter: 'blur(4px)' }}>
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              Ya reservaste
-            </span>
+          <div
+            className="absolute top-3 left-3 px-3 py-1.5 rounded-lg font-mono font-bold text-sm text-white shadow-md"
+            style={{ backgroundColor: 'rgba(0,0,0,0.52)', backdropFilter: 'blur(4px)' }}
+          >
+            {formatPrecio(w.precio)}
           </div>
-        )}
-      </div>
+          <div className="absolute top-3 right-3">
+            <PublicSlotBadge status={slotStatus} />
+          </div>
+          {isBooked && (
+            <div className="absolute bottom-3 left-3">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold text-white shadow-sm" style={{ backgroundColor: 'rgba(5,150,105,0.85)', backdropFilter: 'blur(4px)' }}>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Ya reservaste
+              </span>
+            </div>
+          )}
+        </div>
+      ) : (
+        /* Franja fina de color — el cuerpo gana todo el espacio */
+        <div className="h-2 shrink-0" style={{ backgroundColor: headerBg }} />
+      )}
 
       {/* Body */}
       <div className="p-4 flex flex-col gap-1.5 flex-1">
+        {/* Chips de precio/slot/ya reservaste — solo cuando NO hay imagen */}
+        {!hasImage && (
+          <div className="flex items-center flex-wrap gap-2 mb-1">
+            <span
+              className="px-2.5 py-1 rounded-lg font-mono font-bold text-xs text-white"
+              style={{ backgroundColor: headerBg }}
+            >
+              {formatPrecio(w.precio)}
+            </span>
+            <PublicSlotBadge status={slotStatus} />
+            {isBooked && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold text-emerald-700 bg-emerald-100 border border-emerald-200">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Ya reservaste
+              </span>
+            )}
+          </div>
+        )}
+
         <h3 className="font-bold text-base leading-snug" style={{ color: inkMain }}>{w.nombre}</h3>
         <p className="text-xs font-mono capitalize" style={{ color: inkMuted }}>
           {formatFecha(w.fecha)} · {formatHora(w.fecha)}
