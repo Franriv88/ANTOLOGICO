@@ -143,8 +143,8 @@ mutation CreateWorkshop(
 ) @auth(level: USER) @transaction {
   query @redact {
     espacio(id: $espacioId) @check(expr: "this != null", message: "Espacio no encontrado") {
-      profesional @check(expr: "this.uid == auth.uid", message: "Sin permiso") {
-        uid
+      profesional {
+        uid @check(expr: "this == auth.uid", message: "Sin permiso")
       }
     }
   }
@@ -192,8 +192,8 @@ mutation UpdateWorkshop(
 ) @auth(level: USER) @transaction {
   query @redact {
     espacio(id: $espacioId) @check(expr: "this != null", message: "Espacio no encontrado") {
-      profesional @check(expr: "this.uid == auth.uid", message: "Sin permiso") {
-        uid
+      profesional {
+        uid @check(expr: "this == auth.uid", message: "Sin permiso")
       }
     }
   }
@@ -246,8 +246,8 @@ mutation UpdateWorkshopEstado(
 mutation DeleteWorkshop($id: UUID!, $espacioId: UUID!) @auth(level: USER) @transaction {
   query @redact {
     espacio(id: $espacioId) @check(expr: "this != null", message: "Espacio no encontrado") {
-      profesional @check(expr: "this.uid == auth.uid", message: "Sin permiso") {
-        uid
+      profesional {
+        uid @check(expr: "this == auth.uid", message: "Sin permiso")
       }
     }
   }
