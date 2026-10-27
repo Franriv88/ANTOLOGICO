@@ -15,6 +15,7 @@ import EspacioPublico from './pages/EspacioPublico';
 import MisReservas    from './pages/MisReservas';
 import MisDatos       from './pages/MisDatos';
 import Inicio         from './pages/Inicio';
+import AuthHandoff    from './pages/AuthHandoff';
 import * as api from './services/api';
 
 function RequireAuth({ children }) {
@@ -141,6 +142,7 @@ export default function App() {
             <Route path="/" element={<RootPage />} />
             <Route path="/login"    element={<DevLogin />} />
             <Route path="/registro" element={<DevLogin mode="register" />} />
+            <Route path="/auth/handoff" element={<AuthHandoff />} />
             <Route path="/p/:espacioId" element={<EspacioPublico />} />
             <Route path="/inicio"       element={<Inicio />} />
             <Route path="/mis-reservas" element={<MisReservas />} />

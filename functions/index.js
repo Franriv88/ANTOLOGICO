@@ -274,6 +274,42 @@ exports.resendVerificationCode = onCall(
   }
 );
 
+// ── Super Admin: generar custom token para entrar al Panel Tenant ───────────
+// El super admin apreta "Abrir Panel Tenant" en Mi Espacio y necesita loguearse
+// en antologico.app con su mismo uid, sin tener que escribir contraseña.
+// Esta funcion verifica que sea super admin y le devuelve un custom token de
+// Firebase Auth que el frontend consume via signInWithCustomToken.
+exports.createTenantSessionToken = onCall(
+  { region: 'us-central1' },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'Debés estar autenticado.');
+    }
+    const uid = request.auth.uid;
+    const adminSnap = await db.collection('sa_admins').doc(uid).get();
+    if (!adminSnap.exists) {
+      throw new HttpsError('permission-denied', 'Solo super admins pueden hacer esto.');
+    }
+    // Marcamos la cuenta como verificada (es un super admin confirmado) para
+    // que al entrar al Panel Tenant AuthContext cree su documento profesional.
+    try {
+      const u = await admin.auth().getUser(uid);
+      if (!u.emailVerified) {
+        await admin.auth().updateUser(uid, { emailVerified: true });
+      }
+    } catch (e) {
+      console.warn('createTenantSessionToken: no se pudo marcar emailVerified', e);
+    }
+    try {
+      const token = await admin.auth().createCustomToken(uid);
+      return { token };
+    } catch (err) {
+      console.error('createTenantSessionToken createCustomToken error', err);
+      throw new HttpsError('internal', err.message || 'No se pudo generar el token.');
+    }
+  }
+);
+
 // ── Super Admin: eliminar cuenta de Firebase Auth de un tenant ──────────────
 // Llamada desde el panel de Super Admin cuando elimina un tenant. Verifica que
 // quien llama sea super admin (existe en sa_admins) y luego borra la cuenta
