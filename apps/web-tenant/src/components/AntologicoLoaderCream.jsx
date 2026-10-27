@@ -164,7 +164,7 @@ export function AntologicoLoaderCream({
                   </text>
                 ) : (
                   <g transform={ICON_WRAPPER_TRANSFORM}>
-                    <IconPaths type={node.icon} />
+                    <IconPaths type={node.icon} strokeColor="#FFFFFF" fillColor="#FFFFFF" accentColor="#B8923A" />
                   </g>
                 )}
               </g>
@@ -176,11 +176,17 @@ export function AntologicoLoaderCream({
   );
 }
 
-// Íconos tomados del SVG original (stroke blanco), ya centrados ~(12,12)
-// en coord locales. El wrapper exterior los ubica sobre cada nodo.
-function IconPaths({ type }) {
+// Íconos tomados del SVG original, ya centrados ~(12,12) en coord locales.
+// El wrapper exterior los ubica sobre cada nodo. Admite colores customizados
+// para reutilizar los mismos íconos en el loader de fondo coral.
+export function IconPaths({
+  type,
+  strokeColor = '#FFFFFF',
+  fillColor = '#FFFFFF',
+  accentColor = '#B8923A',
+}) {
   const common = {
-    fill: 'none', stroke: '#FFFFFF',
+    fill: 'none', stroke: strokeColor,
     strokeWidth: '1.8', strokeLinecap: 'round', strokeLinejoin: 'round',
   };
   switch (type) {
@@ -188,7 +194,7 @@ function IconPaths({ type }) {
       return (
         <g {...common}>
           <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.7-.8 1.7-1.7 0-.4-.2-.8-.4-1.1-.3-.3-.4-.7-.4-1.1 0-.9.8-1.7 1.7-1.7h2c3.1 0 5.6-2.5 5.6-5.6C22 6 17.5 2 12 2z" />
-          <g fill="#FFFFFF" stroke="none">
+          <g fill={fillColor} stroke="none">
             <circle cx="13.5" cy="6.5" r="1.4" />
             <circle cx="17.5" cy="10.5" r="1.4" />
             <circle cx="8.5" cy="7.5" r="1.4" />
@@ -212,8 +218,8 @@ function IconPaths({ type }) {
             <path d="M11.8 7.6c.8-.5 1.6-.5 2.2.2M16 7.8c.6-.7 1.4-.7 2.2-.2M12.8 12.6c1.3-1 3.1-1 4.4 0" />
           </g>
           <g transform="rotate(-12 9 13.5)">
-            <path d="M4 8c3-1.2 7-1.2 10 0 .4 4.8-.6 9.6-5 11.5C4.6 17.6 3.6 12.8 4 8z" fill="#FFFFFF" />
-            <path d="M5.6 11c.7-.7 1.5-.7 2.2 0M10.2 11c.7-.7 1.5-.7 2.2 0M6.3 14.2c1.4 1.6 3.4 1.6 4.8 0" stroke="#B8923A" strokeWidth="1.5" />
+            <path d="M4 8c3-1.2 7-1.2 10 0 .4 4.8-.6 9.6-5 11.5C4.6 17.6 3.6 12.8 4 8z" fill={fillColor} />
+            <path d="M5.6 11c.7-.7 1.5-.7 2.2 0M10.2 11c.7-.7 1.5-.7 2.2 0M6.3 14.2c1.4 1.6 3.4 1.6 4.8 0" stroke={accentColor} strokeWidth="1.5" />
           </g>
         </g>
       );
@@ -235,7 +241,7 @@ function IconPaths({ type }) {
     case 'zen':
       return (
         <g {...common}>
-          <g fill="#FFFFFF" stroke="none">
+          <g fill={fillColor} stroke="none">
             <circle cx="12" cy="4.2" r="2.3" />
             <path d="M9.6 7.2c-1 .2-1.6 1-1.9 2L6 14.2c-.2.6.2 1.2.8 1.3.5.1 1-.2 1.2-.7L9.6 10.6 10 13.6h4l.4-3 1.6 4.2c.2.5.7.8 1.2.7.6-.1 1-.7.8-1.3l-1.7-5c-.3-1-.9-1.8-1.9-2z" />
             <path d="M3 17.6c0-2 4-3.4 9-3.4s9 1.4 9 3.4-4 2.6-9 2.6-9-.6-9-2.6z" />
@@ -245,7 +251,7 @@ function IconPaths({ type }) {
     case 'nib':
       return (
         <g {...common}>
-          <g fill="#FFFFFF" stroke="none">
+          <g fill={fillColor} stroke="none">
             <circle cx="13" cy="3.5" r="2.1" />
             <path d="M12.2 6.3c-.9.2-1.4 1-1.3 1.9l.4 3.3-4.3 6.2c-.3.5 0 1.1.6 1.1h8.9c.6 0 .9-.6.6-1.1L13.9 11.4l.1-3.2c0-1-.7-1.9-1.8-1.9z" />
           </g>
