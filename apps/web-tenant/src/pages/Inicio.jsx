@@ -11,7 +11,8 @@ import {
 import { getSlotStatus } from '../lib/slotStatus';
 import { LogoAntologico } from '../components/LogoAntologico';
 import MobileAppShell from '../components/MobileAppShell';
-import { FullScreenLoader, AntologicoSpinner } from '../components/AntologicoLoader';
+import { FullScreenLoader } from '../components/AntologicoLoader';
+import { AntologicoLoaderCream } from '../components/AntologicoLoaderCream';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -361,7 +362,7 @@ function QRScannerModal({ onClose, onFound, userId }) {
           </div>
           {phase === 'starting' && (
             <div className="flex flex-col items-center justify-center py-6 gap-3">
-              <AntologicoSpinner size={160} />
+              <AntologicoLoaderCream size={260} />
               <p className="text-sm text-[#6B5F4C]">Activando cámara…</p>
             </div>
           )}
@@ -514,7 +515,7 @@ function EspacioDetail({ espacio, userId, onBack, onUnfollow }) {
       </div>
       {loading && (
         <div className="flex items-center justify-center py-8">
-          <AntologicoSpinner size={180} />
+          <AntologicoLoaderCream size={300} />
         </div>
       )}
       {!loading && wsList?.length === 0 && <div className="text-center py-10"><p className="text-sm text-[#6B5F4C]">Este espacio no tiene talleres publicados aún.</p></div>}
@@ -720,7 +721,7 @@ export default function Inicio() {
 
         {espacios === null && (
           <div className="flex items-center justify-center py-8">
-            <AntologicoSpinner size={200} />
+            <AntologicoLoaderCream size={320} />
           </div>
         )}
 

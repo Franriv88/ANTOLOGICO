@@ -4,7 +4,7 @@ import jsQR from 'jsqr';
 import { reservas as reservasApi, workshops as workshopsApi, espacios as espaciosApi } from '../services/api';
 import { loginGoogle, loginEmail, register, logout, subscribeAuth, authErrorMsg, sendPasswordReset, checkRedirectResult, getAuthCurrentUser, followEspacio, unfollowEspacio, getEspaciosSeguidos, syncFollowedToFirestore } from '../services/userAuth';
 import MobileAppShell from '../components/MobileAppShell';
-import { AntologicoSpinner } from '../components/AntologicoLoader';
+import { AntologicoLoaderCream } from '../components/AntologicoLoaderCream';
 
 // ── Espacios seguidos (localStorage) ─────────────────────────────────────────
 const LS_KEY = 'ant_espacios_seguidos';
@@ -301,7 +301,7 @@ function QRScannerModal({ onClose, userId }) {
 
           {phase === 'starting' && (
             <div className="flex flex-col items-center justify-center py-6 gap-3">
-              <AntologicoSpinner size={160} />
+              <AntologicoLoaderCream size={260} />
               <p className="text-sm text-[#6B5F4C]">Activando cámara…</p>
             </div>
           )}
@@ -618,7 +618,7 @@ export default function MisReservas() {
         {/* Loading auth */}
         {currentUser === undefined && (
           <div className="flex items-center justify-center py-10">
-            <AntologicoSpinner size={200} />
+            <AntologicoLoaderCream size={320} />
           </div>
         )}
 
@@ -633,7 +633,7 @@ export default function MisReservas() {
 
             {loadingR && (
               <div className="flex items-center justify-center py-8">
-                <AntologicoSpinner size={180} />
+                <AntologicoLoaderCream size={300} />
               </div>
             )}
 
