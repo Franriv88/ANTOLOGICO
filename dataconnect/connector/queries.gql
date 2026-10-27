@@ -1,3 +1,18 @@
+# ─── Reservas ────────────────────────────────────────────────────────────────
+
+query ListReservasByEspacio($espacioId: UUID!) @auth(level: USER, insecureReason: "El espacioId proviene de ListMyEspacios que ya filtra por auth.uid.") {
+  reservas(
+    where: {
+      workshop: { espacioId: { eq: $espacioId } }
+    }
+    orderBy: [{ fechaReserva: DESC }]
+  ) {
+    id estado fechaReserva comprobanteUrl pagoExternoId createdAt
+    usuario { uid nombre email }
+    workshop { id nombre fecha cuposTotales cuposDisponibles espacioId }
+  }
+}
+
 # ─── Profesional ─────────────────────────────────────────────────────────────
 
 query GetMyProfile @auth(level: USER) {

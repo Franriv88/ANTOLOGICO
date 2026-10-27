@@ -293,7 +293,40 @@ mutation ReactivarSuscripcionEspacio($id: UUID!) @auth(level: USER) {
   )
 }
 
-# ─── Reservas (se completa en el paso 4) ─────────────────────────────────────
+# ─── Reservas ────────────────────────────────────────────────────────────────
+
+# Cancela una reserva y libera el cupo atómicamente.
+# El tenant pasa el workshopId para que la operación sea atómica en dos pasos.
+# Ambas verificaciones (reserva y workshop) deben pertenecer a auth.uid.
+mutation CancelarReserva($id: UUID!, $workshopId: UUID!) @auth(level: USER) @transaction {
+  query @redact {
+    reserva(id: $id)
+      @check(expr: "this != null", message: "Reserva no encontrada") {
+      estado
+        @check(expr: "this != 'CANCELADA'", message: "La reserva ya está cancelada")
+      workshop {
+        espacio {
+          profesional {
+            uid @check(expr: "this == auth.uid", message: "Sin permiso para cancelar esta reserva")
+          }
+        }
+      }
+    }
+  }
+  reserva_update(
+    id: $id
+    data: { estado: CANCELADA updatedAt_expr: "request.time" }
+  )
+  workshop_update(
+    first: {
+      where: {
+        id: { eq: $workshopId }
+        espacio: { profesionalUid: { eq_expr: "auth.uid" } }
+      }
+    }
+    data: { cuposDisponibles_update: { inc: 1 } updatedAt_expr: "request.time" }
+  )
+}
 
 mutation DecrementarCupo($workshopId: UUID!) @auth(level: USER, insecureReason: "Cualquier usuario autenticado puede reservar un cupo. La transacción valida disponibilidad antes de decrementar.") @transaction {
   query @redact {

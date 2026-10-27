@@ -220,7 +220,7 @@ export default function Reservas() {
 
   async function handleCancel() {
     if (!cancelTarget) return;
-    await api.reservas.cancel(cancelTarget.id);
+    await api.reservas.cancel(cancelTarget.id, cancelTarget.workshopId);
     setReservas(prev =>
       prev.map(r => r.id === cancelTarget.id ? { ...r, estado: 'CANCELADA' } : r),
     );
@@ -312,44 +312,55 @@ export default function Reservas() {
       {filtered.length === 0 ? (
         <EmptyState hasReservas={reservas.length > 0} />
       ) : (
-        <div className="bg-surface-100 rounded-xl border border-border overflow-x-auto">
-          <table className="w-full text-sm min-w-[640px]">
+        <div className="bg-surface-100 rounded-2xl border border-border overflow-x-auto shadow-sm">
+          <table className="w-full text-sm min-w-[760px]">
             <thead>
-              <tr className="border-b border-border bg-surface-200/50">
-                <th className="text-left px-4 py-3 text-xs font-medium text-ink-muted uppercase tracking-wide">
+              <tr className="border-b border-border">
+                <th className="text-left pl-5 pr-3 py-3.5 text-[11px] font-semibold text-ink-muted uppercase tracking-wider">
+                  #Reserva
+                </th>
+                <th className="text-left px-3 py-3.5 text-[11px] font-semibold text-ink-muted uppercase tracking-wider">
                   Participante
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-ink-muted uppercase tracking-wide">
+                <th className="text-left px-3 py-3.5 text-[11px] font-semibold text-ink-muted uppercase tracking-wider">
                   Taller
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-ink-muted uppercase tracking-wide whitespace-nowrap">
-                  Fecha reserva
+                <th className="text-left px-3 py-3.5 text-[11px] font-semibold text-ink-muted uppercase tracking-wider whitespace-nowrap">
+                  Fecha
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-ink-muted uppercase tracking-wide">
+                <th className="text-left px-3 py-3.5 text-[11px] font-semibold text-ink-muted uppercase tracking-wider">
                   Estado
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-ink-muted uppercase tracking-wide">
+                <th className="text-left px-3 py-3.5 text-[11px] font-semibold text-ink-muted uppercase tracking-wider">
                   Pago
                 </th>
-                <th className="px-4 py-3" />
+                <th className="px-3 py-3.5" />
               </tr>
             </thead>
-            <tbody>
-              {filtered.map((r, i) => {
+            <tbody className="divide-y divide-border/50">
+              {filtered.map((r) => {
                 const ws = wsMap[r.workshopId];
-                const isLast = i === filtered.length - 1;
+                const code = (r.grupoId || r.id).slice(-8).toUpperCase();
                 return (
                   <tr
                     key={r.id}
-                    className={`hover:bg-surface-200/30 transition-colors ${!isLast ? 'border-b border-border/60' : ''}`}
+                    className="hover:bg-surface-200/40 transition-colors group"
                   >
-                    <td className="px-4 py-3">
+                    <td className="pl-5 pr-3 py-3.5">
+                      <span className="font-mono text-xs text-primary/80 bg-primary/5 border border-primary/10 rounded-md px-2 py-1">
+                        {code}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3.5">
                       <div className="flex items-start gap-2">
-                        <div>
-                          <p className="font-medium text-ink">{r.nombre}</p>
-                          <p className="text-xs text-ink-muted">{r.email}</p>
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                          <span className="text-xs font-semibold text-primary">{(r.nombre || '?')[0].toUpperCase()}</span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-medium text-ink text-[13px] leading-tight truncate">{r.nombre}</p>
+                          <p className="text-[11px] text-ink-muted truncate">{r.email}</p>
                           {r.telefono && (
-                            <p className="text-xs text-ink-muted font-mono">{r.telefono}</p>
+                            <p className="text-[11px] text-ink-muted font-mono">{r.telefono}</p>
                           )}
                         </div>
                         {bloqueados.includes(r.email?.toLowerCase()) && (
@@ -359,28 +370,28 @@ export default function Reservas() {
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3 max-w-[180px]">
-                      <p className="text-ink truncate">{ws?.nombre ?? '—'}</p>
+                    <td className="px-3 py-3.5 max-w-[160px]">
+                      <p className="text-ink text-[13px] truncate font-medium">{ws?.nombre ?? '—'}</p>
                       {ws && (
-                        <p className="text-xs text-ink-muted capitalize">{ws.tipo?.toLowerCase()}</p>
+                        <p className="text-[11px] text-ink-muted capitalize">{ws.tipo?.toLowerCase()}</p>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-ink-muted whitespace-nowrap">
-                      {formatDate(r.fecha_reserva)}
+                    <td className="px-3 py-3.5 whitespace-nowrap">
+                      <p className="text-[13px] text-ink">{formatDate(r.fecha_reserva)}</p>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-3.5">
                       <StateBadge estado={r.estado} />
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-3.5">
                       <PagoBadge metodoPago={r.metodoPago} estadoPago={r.estadoPago} />
                     </td>
-                    <td className="pl-1 pr-4 py-3">
-                      <div className="flex items-center justify-end gap-2">
+                    <td className="pl-1 pr-4 py-3.5">
+                      <div className="flex items-center justify-end gap-1.5 opacity-70 group-hover:opacity-100 transition-opacity">
                         {r.estado === 'CONFIRMADA' && r.metodoPago === 'EFECTIVO' && r.estadoPago === 'PENDIENTE' && (
                           <button
                             onClick={() => handleMarkPaid(r.id)}
                             disabled={markingPaid === r.id}
-                            className="flex items-center gap-1 text-xs text-primary hover:opacity-70 transition-opacity disabled:opacity-40 px-2 py-1 rounded-lg hover:bg-primary/5 whitespace-nowrap"
+                            className="flex items-center gap-1 text-xs text-[#10B981] hover:bg-[#10B981]/10 transition-colors disabled:opacity-40 px-2.5 py-1.5 rounded-lg whitespace-nowrap"
                           >
                             {markingPaid === r.id ? '…' : (
                               <>
@@ -393,7 +404,7 @@ export default function Reservas() {
                         {r.estado === 'CONFIRMADA' && (
                           <button
                             onClick={() => setCancelTarget({ id: r.id, nombre: r.nombre, workshopId: r.workshopId })}
-                            className="flex items-center gap-1 text-xs text-ink-muted hover:text-danger transition-colors px-2 py-1 rounded-lg hover:bg-danger/5 whitespace-nowrap"
+                            className="flex items-center gap-1 text-xs text-ink-muted hover:text-danger hover:bg-danger/5 transition-colors px-2.5 py-1.5 rounded-lg whitespace-nowrap"
                           >
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
                             Cancelar

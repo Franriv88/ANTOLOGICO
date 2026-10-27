@@ -12,6 +12,12 @@ export const EstadoProfesional = {
   INACTIVO: "INACTIVO",
 }
 
+export const EstadoReserva = {
+  PENDIENTE: "PENDIENTE",
+  CONFIRMADA: "CONFIRMADA",
+  CANCELADA: "CANCELADA",
+}
+
 export const EstadoWorkshop = {
   BORRADOR: "BORRADOR",
   PUBLICADO: "PUBLICADO",
@@ -84,16 +90,16 @@ export function updateEspacioIdentidad(dcOrVars, vars) {
   return executeMutation(updateEspacioIdentidadRef(dcInstance, inputVars));
 }
 
-export const updateEspacioRef = (dcOrVars, vars) => {
+export const updateEspacioCobrosRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
-  return mutationRef(dcInstance, 'UpdateEspacio', inputVars);
+  return mutationRef(dcInstance, 'UpdateEspacioCobros', inputVars);
 }
-updateEspacioRef.operationName = 'UpdateEspacio';
+updateEspacioCobrosRef.operationName = 'UpdateEspacioCobros';
 
-export function updateEspacio(dcOrVars, vars) {
+export function updateEspacioCobros(dcOrVars, vars) {
   const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
-  return executeMutation(updateEspacioRef(dcInstance, inputVars));
+  return executeMutation(updateEspacioCobrosRef(dcInstance, inputVars));
 }
 
 export const updateEspacioRedesRef = (dcOrVars, vars) => {
@@ -108,16 +114,16 @@ export function updateEspacioRedes(dcOrVars, vars) {
   return executeMutation(updateEspacioRedesRef(dcInstance, inputVars));
 }
 
-export const updateEspacioCobrosRef = (dcOrVars, vars) => {
+export const updateEspacioRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
-  return mutationRef(dcInstance, 'UpdateEspacioCobros', inputVars);
+  return mutationRef(dcInstance, 'UpdateEspacio', inputVars);
 }
-updateEspacioCobrosRef.operationName = 'UpdateEspacioCobros';
+updateEspacioRef.operationName = 'UpdateEspacio';
 
-export function updateEspacioCobros(dcOrVars, vars) {
+export function updateEspacio(dcOrVars, vars) {
   const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
-  return executeMutation(updateEspacioCobrosRef(dcInstance, inputVars));
+  return executeMutation(updateEspacioRef(dcInstance, inputVars));
 }
 
 export const createWorkshopRef = (dcOrVars, vars) => {
@@ -192,6 +198,18 @@ export function reactivarSuscripcionEspacio(dcOrVars, vars) {
   return executeMutation(reactivarSuscripcionEspacioRef(dcInstance, inputVars));
 }
 
+export const cancelarReservaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'CancelarReserva', inputVars);
+}
+cancelarReservaRef.operationName = 'CancelarReserva';
+
+export function cancelarReserva(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(cancelarReservaRef(dcInstance, inputVars));
+}
+
 export const decrementarCupoRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
@@ -202,6 +220,19 @@ decrementarCupoRef.operationName = 'DecrementarCupo';
 export function decrementarCupo(dcOrVars, vars) {
   const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
   return executeMutation(decrementarCupoRef(dcInstance, inputVars));
+}
+
+export const listReservasByEspacioRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'ListReservasByEspacio', inputVars);
+}
+listReservasByEspacioRef.operationName = 'ListReservasByEspacio';
+
+export function listReservasByEspacio(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(listReservasByEspacioRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 
 export const getMyProfileRef = (dc) => {

@@ -14,6 +14,13 @@ const EstadoProfesional = {
 }
 exports.EstadoProfesional = EstadoProfesional;
 
+const EstadoReserva = {
+  PENDIENTE: "PENDIENTE",
+  CONFIRMADA: "CONFIRMADA",
+  CANCELADA: "CANCELADA",
+}
+exports.EstadoReserva = EstadoReserva;
+
 const EstadoWorkshop = {
   BORRADOR: "BORRADOR",
   PUBLICADO: "PUBLICADO",
@@ -96,6 +103,34 @@ exports.updateEspacioIdentidadRef = updateEspacioIdentidadRef;
 exports.updateEspacioIdentidad = function updateEspacioIdentidad(dcOrVars, vars) {
   const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
   return executeMutation(updateEspacioIdentidadRef(dcInstance, inputVars));
+}
+;
+
+const updateEspacioCobrosRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'UpdateEspacioCobros', inputVars);
+}
+updateEspacioCobrosRef.operationName = 'UpdateEspacioCobros';
+exports.updateEspacioCobrosRef = updateEspacioCobrosRef;
+
+exports.updateEspacioCobros = function updateEspacioCobros(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(updateEspacioCobrosRef(dcInstance, inputVars));
+}
+;
+
+const updateEspacioRedesRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'UpdateEspacioRedes', inputVars);
+}
+updateEspacioRedesRef.operationName = 'UpdateEspacioRedes';
+exports.updateEspacioRedesRef = updateEspacioRedesRef;
+
+exports.updateEspacioRedes = function updateEspacioRedes(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(updateEspacioRedesRef(dcInstance, inputVars));
 }
 ;
 
@@ -197,6 +232,20 @@ exports.reactivarSuscripcionEspacio = function reactivarSuscripcionEspacio(dcOrV
 }
 ;
 
+const cancelarReservaRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'CancelarReserva', inputVars);
+}
+cancelarReservaRef.operationName = 'CancelarReserva';
+exports.cancelarReservaRef = cancelarReservaRef;
+
+exports.cancelarReserva = function cancelarReserva(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(cancelarReservaRef(dcInstance, inputVars));
+}
+;
+
 const decrementarCupoRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
@@ -208,6 +257,21 @@ exports.decrementarCupoRef = decrementarCupoRef;
 exports.decrementarCupo = function decrementarCupo(dcOrVars, vars) {
   const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
   return executeMutation(decrementarCupoRef(dcInstance, inputVars));
+}
+;
+
+const listReservasByEspacioRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'ListReservasByEspacio', inputVars);
+}
+listReservasByEspacioRef.operationName = 'ListReservasByEspacio';
+exports.listReservasByEspacioRef = listReservasByEspacioRef;
+
+exports.listReservasByEspacio = function listReservasByEspacio(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(listReservasByEspacioRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 ;
 

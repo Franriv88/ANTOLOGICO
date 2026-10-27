@@ -19,6 +19,8 @@ import {
   updateWorkshopEstado,
   deleteWorkshop,
   upsertProfesional,
+  listReservasByEspacio,
+  cancelarReserva,
 } from '../dataconnect-generated';
 
 export const profesionales = {
@@ -30,10 +32,28 @@ export const profesionales = {
 
 export const reservas = {
   list: async () => [],
-  listByEspacio: async () => [],
+  listByEspacio: async (espacioId) => {
+    const { data } = await listReservasByEspacio({ espacioId });
+    return (data?.reservas ?? []).map(r => ({
+      id:          r.id,
+      workshopId:  r.workshop.id,
+      nombre:      r.usuario.nombre,
+      email:       r.usuario.email,
+      usuarioUid:  r.usuario.uid,
+      estado:      r.estado,
+      fechaReserva: r.fechaReserva,
+      metodoPago:  null,
+      estadoPago:  null,
+      grupoId:     null,
+      workshop:    r.workshop,
+    }));
+  },
   create: async () => { throw new Error('Reservas aún no implementadas en Firebase'); },
   markPaid: async () => { throw new Error('Reservas aún no implementadas en Firebase'); },
-  cancel: async () => { throw new Error('Reservas aún no implementadas en Firebase'); },
+  cancel: async (id, workshopId) => {
+    const result = await cancelarReserva({ id, workshopId });
+    if (result.errors?.length) throw new Error(result.errors.map(e => e.message).join(' | '));
+  },
 };
 
 

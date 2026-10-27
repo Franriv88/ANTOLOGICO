@@ -12,7 +12,7 @@ For each operation, there is a wrapper hook that can be used to call the operati
 
 Here are all of the hooks that get generated:
 ```ts
-import { useUpsertProfesional, useUpdateEspacioPlanId, useCreateEspacio, useUpdateEspacioIdentidad, useUpdateEspacio, useCreateWorkshop, useUpdateWorkshop, useUpdateWorkshopEstado, useDeleteWorkshop, useSolicitarCancelacionEspacio } from '@antologico/dataconnect/react';
+import { useUpsertProfesional, useUpdateEspacioPlanId, useCreateEspacio, useUpdateEspacioIdentidad, useUpdateEspacioCobros, useUpdateEspacioRedes, useUpdateEspacio, useCreateWorkshop, useUpdateWorkshop, useUpdateWorkshopEstado } from '@antologico/dataconnect/react';
 // The types of these hooks are available in react/index.d.ts
 
 const { data, isPending, isSuccess, isError, error } = useUpsertProfesional(upsertProfesionalVars);
@@ -23,6 +23,10 @@ const { data, isPending, isSuccess, isError, error } = useCreateEspacio(createEs
 
 const { data, isPending, isSuccess, isError, error } = useUpdateEspacioIdentidad(updateEspacioIdentidadVars);
 
+const { data, isPending, isSuccess, isError, error } = useUpdateEspacioCobros(updateEspacioCobrosVars);
+
+const { data, isPending, isSuccess, isError, error } = useUpdateEspacioRedes(updateEspacioRedesVars);
+
 const { data, isPending, isSuccess, isError, error } = useUpdateEspacio(updateEspacioVars);
 
 const { data, isPending, isSuccess, isError, error } = useCreateWorkshop(createWorkshopVars);
@@ -30,10 +34,6 @@ const { data, isPending, isSuccess, isError, error } = useCreateWorkshop(createW
 const { data, isPending, isSuccess, isError, error } = useUpdateWorkshop(updateWorkshopVars);
 
 const { data, isPending, isSuccess, isError, error } = useUpdateWorkshopEstado(updateWorkshopEstadoVars);
-
-const { data, isPending, isSuccess, isError, error } = useDeleteWorkshop(deleteWorkshopVars);
-
-const { data, isPending, isSuccess, isError, error } = useSolicitarCancelacionEspacio(solicitarCancelacionEspacioVars);
 
 ```
 
@@ -72,7 +72,7 @@ If a user is not using a supported framework, they can use the generated SDK dir
 Here's an example of how to use it with the first 5 operations:
 
 ```js
-import { upsertProfesional, updateEspacioPlanId, createEspacio, updateEspacioIdentidad, updateEspacio, createWorkshop, updateWorkshop, updateWorkshopEstado, deleteWorkshop, solicitarCancelacionEspacio } from '@antologico/dataconnect';
+import { upsertProfesional, updateEspacioPlanId, createEspacio, updateEspacioIdentidad, updateEspacioCobros, updateEspacioRedes, updateEspacio, createWorkshop, updateWorkshop, updateWorkshopEstado } from '@antologico/dataconnect';
 
 
 // Operation UpsertProfesional:  For variables, look at type UpsertProfesionalVars in ../index.d.ts
@@ -87,6 +87,12 @@ const { data } = await CreateEspacio(dataConnect, createEspacioVars);
 // Operation UpdateEspacioIdentidad:  For variables, look at type UpdateEspacioIdentidadVars in ../index.d.ts
 const { data } = await UpdateEspacioIdentidad(dataConnect, updateEspacioIdentidadVars);
 
+// Operation UpdateEspacioCobros:  For variables, look at type UpdateEspacioCobrosVars in ../index.d.ts
+const { data } = await UpdateEspacioCobros(dataConnect, updateEspacioCobrosVars);
+
+// Operation UpdateEspacioRedes:  For variables, look at type UpdateEspacioRedesVars in ../index.d.ts
+const { data } = await UpdateEspacioRedes(dataConnect, updateEspacioRedesVars);
+
 // Operation UpdateEspacio:  For variables, look at type UpdateEspacioVars in ../index.d.ts
 const { data } = await UpdateEspacio(dataConnect, updateEspacioVars);
 
@@ -98,12 +104,6 @@ const { data } = await UpdateWorkshop(dataConnect, updateWorkshopVars);
 
 // Operation UpdateWorkshopEstado:  For variables, look at type UpdateWorkshopEstadoVars in ../index.d.ts
 const { data } = await UpdateWorkshopEstado(dataConnect, updateWorkshopEstadoVars);
-
-// Operation DeleteWorkshop:  For variables, look at type DeleteWorkshopVars in ../index.d.ts
-const { data } = await DeleteWorkshop(dataConnect, deleteWorkshopVars);
-
-// Operation SolicitarCancelacionEspacio:  For variables, look at type SolicitarCancelacionEspacioVars in ../index.d.ts
-const { data } = await SolicitarCancelacionEspacio(dataConnect, solicitarCancelacionEspacioVars);
 
 
 ```
