@@ -1,12 +1,17 @@
 // Runtime: Node 22 · firebase-functions v7 · firebase-admin v14 (upgrade 2026-10-28)
+// Usamos la API modular de firebase-admin v14 (los namespaces `admin.firestore()`,
+// `auth` ya no están disponibles como funciones en v14).
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { defineSecret } = require('firebase-functions/params');
-const admin = require('firebase-admin');
+const { initializeApp } = require('firebase-admin/app');
+const { getFirestore, FieldValue } = require('firebase-admin/firestore');
+const { getAuth } = require('firebase-admin/auth');
 const nodemailer = require('nodemailer');
 
-admin.initializeApp();
-const db = admin.firestore();
+initializeApp();
+const db = getFirestore();
+const auth = getAuth();
 
 const smtpPass    = defineSecret('SMTP_PASS');
 const vercelToken = defineSecret('VERCEL_TOKEN');
@@ -155,7 +160,7 @@ exports.sendVerificationCode = onCall(
     }
 
     const uid = request.auth.uid;
-    const user = await admin.auth().getUser(uid);
+    const user = await auth.getUser(uid);
 
     if (user.emailVerified) {
       throw new HttpsError('already-exists', 'El email ya está verificado.');
@@ -227,11 +232,11 @@ exports.verifyCode = onCall(
     }
 
     if (data.code !== code) {
-      await ref.update({ attempts: admin.firestore.FieldValue.increment(1) });
+      await ref.update({ attempts: FieldValue.increment(1) });
       throw new HttpsError('permission-denied', 'Código incorrecto.');
     }
 
-    await admin.auth().updateUser(uid, { emailVerified: true });
+    await auth.updateUser(uid, { emailVerified: true });
     await ref.delete();
 
     return { success: true, verified: true };
@@ -250,7 +255,7 @@ exports.resendVerificationCode = onCall(
     const ref = db.collection(COLLECTION).doc(uid);
     await ref.delete().catch(() => {});
 
-    const user = await admin.auth().getUser(uid);
+    const user = await auth.getUser(uid);
     if (user.emailVerified) {
       throw new HttpsError('already-exists', 'El email ya está verificado.');
     }
@@ -294,15 +299,15 @@ exports.createTenantSessionToken = onCall(
     // Marcamos la cuenta como verificada (es un super admin confirmado) para
     // que al entrar al Panel Tenant AuthContext cree su documento profesional.
     try {
-      const u = await admin.auth().getUser(uid);
+      const u = await auth.getUser(uid);
       if (!u.emailVerified) {
-        await admin.auth().updateUser(uid, { emailVerified: true });
+        await auth.updateUser(uid, { emailVerified: true });
       }
     } catch (e) {
       console.warn('createTenantSessionToken: no se pudo marcar emailVerified', e);
     }
     try {
-      const token = await admin.auth().createCustomToken(uid);
+      const token = await auth.createCustomToken(uid);
       return { token };
     } catch (err) {
       console.error('createTenantSessionToken createCustomToken error', err);
@@ -334,7 +339,7 @@ exports.deleteTenantAuth = onCall(
     }
 
     try {
-      await admin.auth().deleteUser(uid);
+      await auth.deleteUser(uid);
       return { success: true };
     } catch (err) {
       if (err && err.code === 'auth/user-not-found') {
@@ -361,7 +366,7 @@ exports.purgeUnverifiedUsers = onSchedule(
     let scanned = 0;
     let pageToken;
     do {
-      const page = await admin.auth().listUsers(1000, pageToken);
+      const page = await auth.listUsers(1000, pageToken);
       pageToken = page.pageToken;
       for (const user of page.users) {
         scanned++;
@@ -372,7 +377,7 @@ exports.purgeUnverifiedUsers = onSchedule(
         if (!Number.isFinite(createdAt)) continue;
         if (now - createdAt < UNVERIFIED_TTL_MS) continue;
         try {
-          await admin.auth().deleteUser(user.uid);
+          await auth.deleteUser(user.uid);
           await db.collection(COLLECTION).doc(user.uid).delete().catch(() => {});
           deleted++;
         } catch (e) {
@@ -412,7 +417,7 @@ exports.notifyTenantNewBooking = onCall(
     let tenantEmail;
     let tenantName;
     try {
-      const tenantUser = await admin.auth().getUser(tenantUid);
+      const tenantUser = await auth.getUser(tenantUid);
       tenantEmail = tenantUser.email;
       tenantName = tenantUser.displayName;
       console.log('tenant email:', tenantEmail);
