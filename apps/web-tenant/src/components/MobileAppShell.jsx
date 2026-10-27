@@ -2,7 +2,10 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { IconAntologico } from './LogoAntologico';
 
-const PROMO_URL = 'https://www.antologico.app';
+// El query param ?from=mobile-cta sirve para que la landing muestre una
+// pantalla específica de "necesitás una computadora" cuando el usuario llega
+// aquí desde el footer del app mobile.
+const PROMO_URL = 'https://www.antologico.app/?from=mobile-cta';
 
 const NAV_ITEMS = [
   { to: '/inicio',       label: 'Inicio',       icon: 'home' },

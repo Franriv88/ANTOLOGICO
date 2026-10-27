@@ -109,6 +109,55 @@ const PERIODOS = [
   { id: 'anual',      label: 'Anual' },
 ];
 
+// ── Aviso para usuarios mobile que llegan buscando crear cuenta profesional ──
+function MobileNoticeScreen({ onDismiss }) {
+  return (
+    <div
+      className="min-h-screen flex flex-col items-center justify-center px-6 py-10 text-center"
+      style={{ background: 'linear-gradient(148deg, #E85D4A 0%, #C4412F 48%, #8C2E1F 100%)' }}
+    >
+      <div className="w-full max-w-sm bg-white/95 backdrop-blur rounded-2xl p-7 shadow-2xl">
+        <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#E85D4A" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2"/>
+            <line x1="8" y1="21" x2="16" y2="21"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
+          </svg>
+        </div>
+        <h1 className="font-display text-xl text-ink mb-3 leading-tight">
+          Configurá tu espacio desde una computadora
+        </h1>
+        <p className="text-sm text-ink-muted mb-6 leading-relaxed">
+          Para crear tu cuenta profesional y publicar talleres necesitás una
+          pantalla más grande. Abrí{' '}
+          <span className="font-mono text-ink font-semibold">antologico.app</span>{' '}
+          desde tu computadora para empezar.
+        </p>
+        <div className="flex flex-col gap-2">
+          <button
+            onClick={() => {
+              try { navigator.clipboard?.writeText('https://www.antologico.app'); } catch { /* ignore */ }
+            }}
+            className="w-full py-2.5 bg-primary text-white rounded-lg text-sm font-semibold hover:bg-primary-strong transition-colors"
+          >
+            Copiar enlace para enviar a mi compu
+          </button>
+          <button
+            onClick={onDismiss}
+            className="w-full py-2.5 text-xs text-ink-muted hover:text-ink underline"
+          >
+            Igual quiero ver la landing
+          </button>
+        </div>
+      </div>
+      <p className="mt-6 text-xs text-white/70">
+        ¿Sos alumno/a?{' '}
+        <a href="/inicio" className="underline font-medium text-white">Ir a mi inicio</a>
+      </p>
+    </div>
+  );
+}
+
 export default function Landing() {
   useForceLightMode();
   const heroRef  = useRef(null);
@@ -119,6 +168,23 @@ export default function Landing() {
   const planes = usePlanes();
   const promo  = usePromo();
   const promoActiva = isPromoActiva(promo);
+
+  // Si el usuario llega desde el footer "Creá tu cuenta profesional" del app
+  // mobile (query param ?from=mobile-cta) y está en un dispositivo mobile,
+  // le mostramos una pantalla que le avisa que el registro y la configuración
+  // del espacio tienen que hacerse desde una computadora.
+  const [showMobileNotice, setShowMobileNotice] = useState(false);
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const fromMobileCTA = params.get('from') === 'mobile-cta';
+      const isMobile = window.matchMedia('(max-width: 768px)').matches;
+      if (fromMobileCTA && isMobile) setShowMobileNotice(true);
+    } catch { /* ignore */ }
+  }, []);
+  if (showMobileNotice) {
+    return <MobileNoticeScreen onDismiss={() => setShowMobileNotice(false)} />;
+  }
 
   useEffect(() => {
     if (planes && selectedPlan === null) {

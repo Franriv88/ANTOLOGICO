@@ -1272,34 +1272,13 @@ export default function EspacioPublico({ overrideEspacioId }) {
         </div>
       )}
 
-      {/* Footer */}
-      {(() => {
-        const footerText = contrastText(brand.primary) === '#ffffff' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.5)';
-        const footerStrong = contrastText(brand.primary);
-        return (
-          <div
-            className="fixed bottom-0 left-0 right-0 z-40 py-4 text-sm flex flex-col items-center gap-2"
-            style={{
-              backgroundColor: brand.primary,
-              color: footerText,
-            }}
-          >
-            <SocialIconsRow redesSociales={espacio.redesSociales} size={22} />
-            <span>
-              Obtén tu propio espacio{' '}
-              <a
-                href="https://www.antologico.app"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-semibold underline underline-offset-2 hover:opacity-100 transition-opacity"
-                style={{ color: footerStrong }}
-              >
-                Antológico
-              </a>
-            </span>
-          </div>
-        );
-      })()}
+      {/* Footer con redes sociales del tenant (sin CTA de Antológico) */}
+      <div
+        className="fixed bottom-0 left-0 right-0 z-40 py-4 flex items-center justify-center"
+        style={{ backgroundColor: brand.primary }}
+      >
+        <SocialIconsRow redesSociales={espacio.redesSociales} size={22} />
+      </div>
 
       {/* Modal Mis datos (editable) */}
       {showMisDatos && currentUser && (
