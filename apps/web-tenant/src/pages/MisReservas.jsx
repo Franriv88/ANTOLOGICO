@@ -4,6 +4,7 @@ import jsQR from 'jsqr';
 import { reservas as reservasApi, workshops as workshopsApi, espacios as espaciosApi } from '../services/api';
 import { loginGoogle, loginEmail, register, logout, subscribeAuth, authErrorMsg, sendPasswordReset, checkRedirectResult, getAuthCurrentUser, followEspacio, unfollowEspacio, getEspaciosSeguidos, syncFollowedToFirestore } from '../services/userAuth';
 import MobileAppShell from '../components/MobileAppShell';
+import { AntologicoSpinner } from '../components/AntologicoLoader';
 
 // ── Espacios seguidos (localStorage) ─────────────────────────────────────────
 const LS_KEY = 'ant_espacios_seguidos';
@@ -299,8 +300,8 @@ function QRScannerModal({ onClose, userId }) {
           </div>
 
           {phase === 'starting' && (
-            <div className="flex flex-col items-center justify-center py-10 gap-3">
-              <div className="w-8 h-8 rounded-full border-2 border-[#E85D4A] border-t-transparent animate-spin" />
+            <div className="flex flex-col items-center justify-center py-6 gap-3">
+              <AntologicoSpinner size={160} />
               <p className="text-sm text-[#6B5F4C]">Activando cámara…</p>
             </div>
           )}
@@ -616,8 +617,8 @@ export default function MisReservas() {
 
         {/* Loading auth */}
         {currentUser === undefined && (
-          <div className="flex items-center justify-center py-16">
-            <div className="w-7 h-7 rounded-full border-2 border-[#E85D4A] border-t-transparent animate-spin" />
+          <div className="flex items-center justify-center py-10">
+            <AntologicoSpinner size={200} />
           </div>
         )}
 
@@ -631,8 +632,8 @@ export default function MisReservas() {
             <EspaciosSeguidos userId={currentUser.user?.uid} />
 
             {loadingR && (
-              <div className="flex items-center justify-center py-12">
-                <div className="w-6 h-6 rounded-full border-2 border-[#E85D4A] border-t-transparent animate-spin" />
+              <div className="flex items-center justify-center py-8">
+                <AntologicoSpinner size={180} />
               </div>
             )}
 

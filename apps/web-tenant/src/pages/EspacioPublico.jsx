@@ -8,6 +8,7 @@ import { SocialIconsRow } from '../components/SocialIcons';
 import { trackReserva } from '../lib/analytics';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../lib/firebase';
+import { FullScreenLoader } from '../components/AntologicoLoader';
 
 const MP_WORKER_URL = 'https://antologico-mp.franriv2388.workers.dev';
 // SlotBadge no se usa aquí — reemplazado por PublicSlotBadge con fondo sólido
@@ -987,14 +988,7 @@ export default function EspacioPublico({ overrideEspacioId }) {
   }
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-[#FAF8F4] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 rounded-full border-2 border-[#E85D4A] border-t-transparent animate-spin" />
-          <p className="text-sm text-[#6B5F4C]">Cargando…</p>
-        </div>
-      </div>
-    );
+    return <FullScreenLoader />;
   }
 
   if (notFound) {

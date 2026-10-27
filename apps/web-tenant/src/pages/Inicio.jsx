@@ -11,7 +11,7 @@ import {
 import { getSlotStatus } from '../lib/slotStatus';
 import { LogoAntologico } from '../components/LogoAntologico';
 import MobileAppShell from '../components/MobileAppShell';
-import { FullScreenLoader } from '../components/AntologicoLoader';
+import { FullScreenLoader, AntologicoSpinner } from '../components/AntologicoLoader';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -359,7 +359,12 @@ function QRScannerModal({ onClose, onFound, userId }) {
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
-          {phase === 'starting' && <div className="flex flex-col items-center justify-center py-10 gap-3"><div className="w-8 h-8 rounded-full border-2 border-[#E85D4A] border-t-transparent animate-spin" /><p className="text-sm text-[#6B5F4C]">Activando cámara…</p></div>}
+          {phase === 'starting' && (
+            <div className="flex flex-col items-center justify-center py-6 gap-3">
+              <AntologicoSpinner size={160} />
+              <p className="text-sm text-[#6B5F4C]">Activando cámara…</p>
+            </div>
+          )}
           {phase === 'error' && <div className="py-6 text-center"><p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4">{errMsg}</p><button onClick={handleClose} className="px-4 py-2 rounded-xl text-sm font-semibold bg-[#E85D4A] text-white">Cerrar</button></div>}
           {(phase === 'scanning' || phase === 'starting') && (
             <div className="relative rounded-2xl overflow-hidden bg-black aspect-square">
@@ -507,7 +512,11 @@ function EspacioDetail({ espacio, userId, onBack, onUnfollow }) {
         <Link to={`/p/${espacio.id}`} className="flex-1 text-center py-2 rounded-xl text-xs font-semibold border border-[#D2C4A8] text-[#2B241A] hover:bg-[#F0EAE0] transition-colors">Ver página pública</Link>
         <button onClick={handleUnfollow} disabled={unfollowing} className="px-3 py-2 rounded-xl text-xs font-semibold border border-red-200 text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50">Dejar de seguir</button>
       </div>
-      {loading && <div className="flex items-center justify-center py-12"><div className="w-6 h-6 rounded-full border-2 border-[#E85D4A] border-t-transparent animate-spin" /></div>}
+      {loading && (
+        <div className="flex items-center justify-center py-8">
+          <AntologicoSpinner size={180} />
+        </div>
+      )}
       {!loading && wsList?.length === 0 && <div className="text-center py-10"><p className="text-sm text-[#6B5F4C]">Este espacio no tiene talleres publicados aún.</p></div>}
       {!loading && upcoming.length > 0 && (
         <section className="mb-6">
@@ -710,7 +719,9 @@ export default function Inicio() {
         </p>
 
         {espacios === null && (
-          <div className="flex items-center justify-center py-12"><div className="w-6 h-6 rounded-full border-2 border-[#E85D4A] border-t-transparent animate-spin" /></div>
+          <div className="flex items-center justify-center py-8">
+            <AntologicoSpinner size={200} />
+          </div>
         )}
 
         {espacios && espacios.length === 0 && (
