@@ -18,8 +18,13 @@ const C_USUARIOS  = 'demo_usuarios';
 const C_RUBROS    = 'demo_rubros';
 const C_CUPONES   = 'demo_cupones';
 
-// Emails que pueden ser super admin (se auto-registran en sa_admins)
-const SEED_ADMIN_EMAILS = ['superadmin@antologico.app'];
+// Emails que pueden ser super admin (se auto-registran en sa_admins al loguearse).
+// Agregá acá cualquier email real que querés que sea super admin — basta con que
+// Firebase Auth lo autentique (contraseña o Google) y queda habilitado.
+const SEED_ADMIN_EMAILS = [
+  'frivasv2388@gmail.com',
+  'superadmin@antologico.app', // alias, lo dejamos por compatibilidad
+];
 
 function uid() {
   return crypto.randomUUID
