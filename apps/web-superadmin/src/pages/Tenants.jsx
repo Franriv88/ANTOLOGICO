@@ -1,7 +1,17 @@
 import { useEffect, useState } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 import { tenants as tenantsApi, planes as planesApi, userManagement } from '../services/adminApi';
 import ConfirmModal from '../components/ConfirmModal';
 import { AntologicoLoaderCream } from '../components/AntologicoLoaderCream';
+
+const TENANT_ORIGIN = 'https://www.antologico.app';
+
+/** Construye la URL pública de un espacio (subdominio si tiene slug, sino /p/:id). */
+function espacioPublicUrl(espacio) {
+  if (!espacio) return null;
+  if (espacio.slug) return `https://${espacio.slug}.antologico.app`;
+  return `${TENANT_ORIGIN}/p/${espacio.id}`;
+}
 
 const INPUT_CLS = 'w-full px-3 py-2 bg-surface-100 border border-border rounded-md text-sm text-ink focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary';
 
@@ -193,7 +203,68 @@ function TenantDetailModal({ group, planes, onClose }) {
           )}
           <DetailRow label="Cliente desde">{formatFecha(u.createdAt || group.createdAt)}</DetailRow>
           <DetailRow label="Último ingreso">{formatDateTime(u.lastLoginAt)}</DetailRow>
+
+          {/* QRs de todos los espacios del tenant */}
+          <EspaciosQRs espacios={[p, ...group.extras]} />
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Sección de QRs por espacio dentro del detalle del tenant ─────────────────
+
+function EspaciosQRs({ espacios }) {
+  const items = (espacios || []).filter(Boolean);
+  if (items.length === 0) return null;
+
+  return (
+    <div className="mt-5 pt-5 border-t border-border">
+      <h4 className="text-xs font-semibold text-ink uppercase tracking-wide mb-3">
+        {items.length === 1 ? 'QR del espacio' : `QRs de los espacios (${items.length})`}
+      </h4>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {items.map(e => {
+          const url = espacioPublicUrl(e);
+          return (
+            <div key={e.id} className="bg-surface-0 border border-border rounded-xl p-3 flex items-center gap-3">
+              <div className="bg-white p-1.5 rounded-md shrink-0 border border-border/60">
+                {url ? (
+                  <QRCodeSVG value={url} size={76} bgColor="#FFFFFF" fgColor="#1A1611" level="M" marginSize={0} />
+                ) : (
+                  <div className="w-[76px] h-[76px] flex items-center justify-center text-[10px] text-ink-muted text-center">
+                    Sin URL
+                  </div>
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-ink leading-tight truncate">{e.nombre || 'Espacio sin nombre'}</p>
+                {url && (
+                  <>
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[11px] font-mono text-primary hover:underline break-all mt-1 inline-block"
+                      title={url}
+                    >
+                      {url.replace(/^https?:\/\//, '')}
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        try { navigator.clipboard.writeText(url); } catch { /* ignore */ }
+                      }}
+                      className="block mt-1.5 text-[10px] text-ink-muted hover:text-primary"
+                    >
+                      Copiar enlace
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
