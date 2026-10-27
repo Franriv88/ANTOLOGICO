@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { subscribeAuth, loginGoogle, loginEmail, logout, authErrorMsg, checkRedirectResult, getAuthCurrentUser, updateUserProfile } from '../services/userAuth';
 import MobileAppShell from '../components/MobileAppShell';
 import { FullScreenLoader } from '../components/AntologicoLoader';
@@ -65,6 +66,7 @@ function AuthPanel({ onSuccess }) {
 }
 
 export default function MisDatos() {
+  const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(() => {
     const u = getAuthCurrentUser();
     return u ? { user: u, profile: {} } : undefined;
@@ -117,7 +119,11 @@ export default function MisDatos() {
       title="Antológico"
       subtitle="Mi perfil"
       isAuthed
-      onLogout={async () => { await logout(); setCurrentUser(null); }}
+      onLogout={async () => {
+        await logout();
+        setCurrentUser(null);
+        navigate('/inicio', { replace: true });
+      }}
     >
       <div className="flex-1 p-6">
         <div className="max-w-sm mx-auto">

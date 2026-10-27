@@ -511,6 +511,7 @@ export default function MisReservas() {
     root.removeAttribute('data-theme');
     return () => { if (prev) root.setAttribute('data-theme', prev); };
   }, []);
+  const navigate = useNavigate();
   const [currentUser,  setCurrentUser]  = useState(() => {
     const u = getAuthCurrentUser();
     return u ? { user: u, profile: {} } : undefined;
@@ -571,10 +572,11 @@ export default function MisReservas() {
     setReservas(prev => prev.map(r => r.id === reservaId ? { ...r, estado: 'CANCELADA' } : r));
   }
 
-  function handleLogout() {
-    logout();
+  async function handleLogout() {
+    await logout();
     setCurrentUser(null);
     setReservas([]);
+    navigate('/inicio', { replace: true });
   }
 
   // Sort: upcoming first, then past, then cancelled

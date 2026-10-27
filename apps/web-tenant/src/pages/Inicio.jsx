@@ -615,7 +615,12 @@ export default function Inicio() {
     syncFollowedToFirestore(user.uid).catch(() => {});
     setRefreshKey(r => r + 1);
   }
-  function handleLogout() { logout(); setCurrentUser(null); setEspacios(null); }
+  async function handleLogout() {
+    await logout();
+    setCurrentUser(null);
+    setEspacios(null);
+    navigate('/inicio', { replace: true });
+  }
   function handleQRFound(espacioId) {
     setRefreshKey(r => r + 1);
     navigate(`/p/${espacioId}`);
