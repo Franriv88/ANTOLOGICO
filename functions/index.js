@@ -1,3 +1,4 @@
+// Runtime: Node 22 · firebase-functions v7 · firebase-admin v14 (upgrade 2026-10-28)
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { defineSecret } = require('firebase-functions/params');
