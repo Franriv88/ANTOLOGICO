@@ -55,9 +55,8 @@ import Layout from '../components/Layout';
 import TimeSelect from '../components/TimeSelect';
 import { workshops as api } from '../services/api';
 import { useEspacio } from '../context/EspacioContext';
-import { usePlanes, normalizePlan } from '../hooks/usePlanes';
+import { usePlanes } from '../hooks/usePlanes';
 import { TIPO_CONFIG, TIPOS } from '../lib/tipoWorkshop';
-import { DEMO_MODE } from '../lib/demo';
 
 function compressHeaderImage(file) {
   return new Promise(resolve => {
@@ -444,53 +443,29 @@ export default function WorkshopForm() {
   const navigate = useNavigate();
   const { activeEspacio } = useEspacio();
   // === Resolución de permisos del plan =======================================
-  // El plan embebido en activeEspacio viene del schema de Data Connect y NO
-  // incluye capabilities. Para la fuente de verdad real (configurable desde
-  // Super Admin) leemos los planes de Firestore via usePlanes() y matcheamos
-  // por NOMBRE (los ids son UUID vs literales 'esencial'/'profesional'/'estudio'
-  // y nunca matchean).
+  // Fuente de verdad: capabilities configuradas en Super Admin (demo_planes
+  // en Firestore). Matcheamos por NOMBRE porque los ids son UUID (Data Connect)
+  // vs literales ('esencial'/'profesional'/'estudio') y nunca matchean.
+  // IMPORTANTE: NO usamos DEMO_MODE acá, para que la validación del plan
+  // siempre se respete independientemente del modo (produccion o demo).
   const planes = usePlanes();
   const planNombreActivo = (activeEspacio?.plan?.nombre || '').trim();
   const nombreNorm = planNombreActivo.toLowerCase();
 
-  // Fuente 1: el plan en Firestore (con capabilities configuradas en Super Admin)
   const planFromFirestore = planes && nombreNorm
     ? planes.find(p => (p.nombre || '').toLowerCase().trim() === nombreNorm)
     : null;
 
-  // Fuente 2: fallback por nombre histórico (si Firestore no tiene el plan)
   const nombrePermiteImagen = nombreNorm.includes('profesional') || nombreNorm.includes('estudio');
 
-  // Decisión final: Firestore manda si existe, sino usamos el fallback.
-  // Mientras planes está null (cargando), devolvemos false para no mostrar
-  // "Imagen" accidentalmente.
   let canUploadImage;
-  if (DEMO_MODE) {
-    canUploadImage = true;
-  } else if (planes == null) {
+  if (planes == null) {
     canUploadImage = false; // todavía cargando los planes
   } else if (planFromFirestore?.capabilities) {
     canUploadImage = planFromFirestore.capabilities.imagenEncabezado === true;
   } else {
     canUploadImage = nombrePermiteImagen;
   }
-
-  // Log temporal de diagnóstico — leer en DevTools > Consola.
-  // Si imagenEncabezado aparece como true para plan Esencial, el problema está
-  // en los datos del plan en Firestore demo_planes.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.log('[WorkshopForm] plan debug', {
-      planNombreActivo,
-      planFromFirestore,
-      capabilitiesFromFirestore: planFromFirestore?.capabilities,
-      nombrePermiteImagen,
-      canUploadImage,
-      planesLoaded: planes != null,
-      allPlanes: planes?.map(p => ({ id: p.id, nombre: p.nombre, imagenEncabezado: p.capabilities?.imagenEncabezado })),
-    });
-  }, [planNombreActivo, planFromFirestore, nombrePermiteImagen, canUploadImage, planes]);
   const imgInputRef  = useRef(null);
   const dragStateRef = useRef(null); // { startX, startY, startPosX, startPosY }
 
