@@ -168,6 +168,7 @@ const EMPTY = {
   tipo: null,
   descripcion: '',
   cuposTotales: '',
+  _reservasExistentes: 0,
   precio: '',
   fecha: '',
   hora: '09:00',
@@ -508,6 +509,7 @@ export default function WorkshopForm() {
           tipo:                w.tipo ?? null,
           descripcion:         w.descripcion ?? '',
           cuposTotales:        String(w.cuposTotales),
+          _reservasExistentes: (w.cuposTotales ?? 0) - (w.cuposDisponibles ?? 0),
           precio:              String(w.precio),
           fecha:               existingFecha,
           hora:                localTimeStr(w.fecha),
@@ -612,6 +614,8 @@ export default function WorkshopForm() {
     if (!form.nombre.trim()) errs.nombre = 'El nombre es requerido';
     if (!form.cuposTotales || isNaN(form.cuposTotales) || Number(form.cuposTotales) < 1)
       errs.cuposTotales = 'Debe ser mayor a 0';
+    else if (isEdit && Number(form.cuposTotales) < form._reservasExistentes)
+      errs.cuposTotales = `No podés reducir los cupos por debajo de las reservas ya realizadas (${form._reservasExistentes})`;
     if (!form.precio || isNaN(form.precio) || Number(form.precio) < 0)
       errs.precio = 'Precio inválido';
     if (!form.fecha) errs.fecha = 'La fecha es requerida';
@@ -627,7 +631,9 @@ export default function WorkshopForm() {
     try {
       const cuposTotales     = Number(form.cuposTotales);
       const estadoFinal      = form._estadoAction === 'OCULTAR' ? 'BORRADOR' : 'PUBLICADO';
-      const cuposDisponibles = form._estadoAction === 'AGOTAR' ? 0 : cuposTotales;
+      const cuposDisponibles = form._estadoAction === 'AGOTAR'
+        ? 0
+        : cuposTotales - (isEdit ? form._reservasExistentes : 0);
 
       // Defensa server-side (del lado del cliente): aunque el selector no se
       // muestra cuando el plan no permite imagen, si por algún camino el estado
