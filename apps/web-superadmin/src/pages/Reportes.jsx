@@ -6,6 +6,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
 import { planes as planesApi, tenants as tenantsApi, usuarios as usuariosApi } from '../services/adminApi';
+import { AntologicoLoaderCream } from '../components/AntologicoLoaderCream';
 
 const CORAL  = '#E85D4A';
 const OCRE   = '#B98527';
@@ -160,7 +161,11 @@ export default function Reportes() {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <p className="text-sm text-ink-muted">Calculando métricas…</p>;
+  if (loading) return (
+    <div className="flex items-center justify-center py-16">
+      <AntologicoLoaderCream size={300} />
+    </div>
+  );
 
   const { mrr, trialing, total, totalEspacios, espaciosActivos, totalUsuarios, distPlanes, porMes } = data;
 

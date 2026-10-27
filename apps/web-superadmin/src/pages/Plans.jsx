@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { planes as planesApi, promoApi, configApi, PLAN_CAPABILITIES, EMPTY_CAPABILITIES } from '../services/adminApi';
 import ConfirmModal from '../components/ConfirmModal';
+import { AntologicoLoaderCream } from '../components/AntologicoLoaderCream';
 
 const EMPTY = {
   nombre: '',
@@ -368,7 +369,11 @@ export default function Plans() {
   const editingPlan = editing ? (list ?? []).find(p => p.id === editing) : null;
   const pStatus = promoStatus(promo);
 
-  if (loading) return <p className="text-sm text-ink-muted">Cargando planes…</p>;
+  if (loading) return (
+    <div className="flex items-center justify-center py-16">
+      <AntologicoLoaderCream size={300} />
+    </div>
+  );
 
   return (
     <>

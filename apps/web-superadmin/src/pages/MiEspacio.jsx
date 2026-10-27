@@ -4,6 +4,7 @@ import { httpsCallable } from 'firebase/functions';
 import { useAuth } from '../context/AuthContext';
 import { auth, functions } from '../lib/firebase';
 import { adminEspacio } from '../services/adminApi';
+import { AntologicoLoaderCream } from '../components/AntologicoLoaderCream';
 
 const TENANT_ORIGIN = 'https://www.antologico.app';
 
@@ -87,8 +88,8 @@ export default function MiEspacio() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-6 h-6 border-2 border-[#B98527] border-t-transparent rounded-full animate-spin" />
+      <div className="flex items-center justify-center py-16">
+        <AntologicoLoaderCream size={300} />
       </div>
     );
   }

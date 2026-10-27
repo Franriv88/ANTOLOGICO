@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { promoApi, promoCodes as promoCodesApi, tenants as tenantsApi, planes as planesApi } from '../services/adminApi';
+import { AntologicoLoaderCream } from '../components/AntologicoLoaderCream';
 
 const FMT = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
 const fmt = n => FMT.format(n);
@@ -149,7 +150,11 @@ export default function Promocion() {
     setTenantsList(prev => prev.map(t => t.id === espacioId ? { ...t, descuentoEspecial: null } : t));
   }
 
-  if (loading) return <p className="text-sm text-ink-muted p-6">Cargando…</p>;
+  if (loading) return (
+    <div className="flex items-center justify-center py-16">
+      <AntologicoLoaderCream size={300} />
+    </div>
+  );
 
   const dto    = Number(form.descuento) || 0;
   const status = promoStatus(promo);

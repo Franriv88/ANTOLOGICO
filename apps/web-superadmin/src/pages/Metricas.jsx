@@ -7,6 +7,7 @@ import {
 } from 'recharts';
 import { tenants as tenantsApi, metricas as metricasApi, usuarios as usuariosApi } from '../services/adminApi';
 import ArgentinaMap from '../components/ArgentinaMap';
+import { AntologicoLoaderCream } from '../components/AntologicoLoaderCream';
 
 const CORAL = '#E85D4A';
 const OCRE  = '#B98527';
@@ -217,7 +218,11 @@ export default function Metricas() {
     }).finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <p className="text-sm text-ink-muted">Calculando métricas…</p>;
+  if (loading) return (
+    <div className="flex items-center justify-center py-16">
+      <AntologicoLoaderCream size={300} />
+    </div>
+  );
 
   const {
     totalReservas, totalWorkshops, wsActivos, revenue, totalUsuarios,

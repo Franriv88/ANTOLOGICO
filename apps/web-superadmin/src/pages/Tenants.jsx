@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { tenants as tenantsApi, planes as planesApi, userManagement } from '../services/adminApi';
 import ConfirmModal from '../components/ConfirmModal';
+import { AntologicoLoaderCream } from '../components/AntologicoLoaderCream';
 
 const INPUT_CLS = 'w-full px-3 py-2 bg-surface-100 border border-border rounded-md text-sm text-ink focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary';
 
@@ -324,7 +325,11 @@ export default function Tenants() {
     setBlockTarget(null);
   }
 
-  if (loading) return <p className="text-sm text-ink-muted">Cargando tenants…</p>;
+  if (loading) return (
+    <div className="flex items-center justify-center py-16">
+      <AntologicoLoaderCream size={300} />
+    </div>
+  );
 
   const flat     = list ?? [];
   const groups   = buildGroups(flat);
