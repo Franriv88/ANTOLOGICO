@@ -534,12 +534,12 @@ export default function Inicio() {
     return () => { if (prev) root.setAttribute('data-theme', prev); };
   }, []);
 
+  const navigate = useNavigate();
   const [currentUser,  setCurrentUser]  = useState(() => {
     const u = getAuthCurrentUser();
     return u ? { user: u, profile: {} } : undefined;
   });
   const [espacios,     setEspacios]     = useState(null);
-  const [selectedId,   setSelectedId]   = useState(null);
   const [showScanner,  setShowScanner]  = useState(false);
   const [authSheet,    setAuthSheet]    = useState(null); // 'login' | 'register' | null
   const [refreshKey,   setRefreshKey]   = useState(0);
@@ -598,17 +598,21 @@ export default function Inicio() {
     return () => { cancelled = true; };
   }, [currentUser?.user?.uid, profileReady, refreshKey]);
 
-  function handleUnfollow(espacioId) { setSelectedId(null); setEspacios(prev => prev?.filter(e => e.id !== espacioId) ?? []); }
   function handleAuthSuccess({ user, profile }) {
     setCurrentUser({ user, profile: profile ?? {} });
     setProfileReady(true);
     syncFollowedToFirestore(user.uid).catch(() => {});
     setRefreshKey(r => r + 1);
   }
-  function handleLogout() { logout(); setCurrentUser(null); setEspacios(null); setSelectedId(null); }
-  function handleQRFound(espacioId) { setRefreshKey(r => r + 1); setSelectedId(espacioId); }
+  function handleLogout() { logout(); setCurrentUser(null); setEspacios(null); }
+  function handleQRFound(espacioId) {
+    setRefreshKey(r => r + 1);
+    navigate(`/p/${espacioId}`);
+  }
+  function handleSelectEspacio(espacioId) {
+    navigate(`/p/${espacioId}`);
+  }
 
-  const selectedEspacio = espacios?.find(e => e.id === selectedId) ?? null;
   const isAuthed = !!currentUser;
 
   // ── NOT AUTHENTICATED: Landing ──────────────────────────────────────────
@@ -712,7 +716,7 @@ export default function Inicio() {
           <div className="flex items-center justify-center py-12"><div className="w-6 h-6 rounded-full border-2 border-[#E85D4A] border-t-transparent animate-spin" /></div>
         )}
 
-        {espacios && espacios.length === 0 && !selectedId && (
+        {espacios && espacios.length === 0 && (
           <div className="text-center py-12">
             <div className="w-16 h-16 rounded-full bg-[#F0EAE0] flex items-center justify-center mx-auto mb-4">
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9B9083" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -732,15 +736,11 @@ export default function Inicio() {
           </div>
         )}
 
-        {selectedEspacio && (
-          <EspacioDetail espacio={selectedEspacio} userId={currentUser.user?.uid} onBack={() => setSelectedId(null)} onUnfollow={handleUnfollow} />
-        )}
-
-        {espacios && espacios.length > 0 && !selectedId && (
+        {espacios && espacios.length > 0 && (
           <>
             <h2 className="text-xs font-semibold text-[#9B9083] uppercase tracking-wide mb-3">Mis espacios</h2>
             <div className="grid grid-cols-3 gap-3 mb-6">
-              {espacios.map(esp => <EspacioCard key={esp.id} espacio={esp} onSelect={setSelectedId} />)}
+              {espacios.map(esp => <EspacioCard key={esp.id} espacio={esp} onSelect={handleSelectEspacio} />)}
               <button onClick={() => setShowScanner(true)}
                 className="flex flex-col items-center justify-center gap-2 p-3 rounded-2xl border-2 border-dashed border-[#D2C4A8] hover:border-[#E85D4A] hover:bg-[#E85D4A]/5 transition-colors min-h-[120px]">
                 <div className="w-10 h-10 rounded-full bg-[#F0EAE0] flex items-center justify-center">

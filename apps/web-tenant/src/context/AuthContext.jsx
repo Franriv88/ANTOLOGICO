@@ -22,7 +22,17 @@ export function AuthProvider({ children }) {
               email:  firebaseUser.email,
             });
           } catch (e) {
-            console.error('upsertProfesional:', e);
+            // El schema actual de Data Connect no hace upsert real: si ya existe
+            // un profesional con ese email, dispara ALREADY_EXISTS. Es esperable
+            // en cada login (el documento ya existía), así que lo silenciamos.
+            // Cualquier otro error sí lo logueamos.
+            const isAlreadyExists =
+              e?.message?.includes('ALREADY_EXISTS') ||
+              e?.message?.includes('profesionales_email_uidx') ||
+              e?.errors?.some?.(err => err?.extensions?.code === 'ALREADY_EXISTS');
+            if (!isAlreadyExists) {
+              console.error('upsertProfesional:', e);
+            }
           }
         }
         setUser(firebaseUser);
