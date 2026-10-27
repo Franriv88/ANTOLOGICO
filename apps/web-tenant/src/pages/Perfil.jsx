@@ -97,7 +97,14 @@ export default function Perfil() {
     });
   }, [user]);
 
-  const isGoogle = profile?.authMethod === 'google';
+  // Detectamos Google por los providers vinculados en Firebase Auth, no solo
+  // por el campo guardado en el perfil (que puede quedar desactualizado si el
+  // usuario vinculó una cuenta Google después de registrarse con email).
+  const hasGoogleProvider = !!user?.providerData?.some(p => p?.providerId === 'google.com');
+  const isGoogle = hasGoogleProvider || profile?.authMethod === 'google';
+  // Preferimos la foto de Firebase Auth (siempre viene de Google si está
+  // vinculado); como fallback usamos la que puede haber en el perfil.
+  const avatarUrl = user?.photoURL || profile?.photoURL || null;
 
   async function handleSaveProfile(e) {
     e.preventDefault();
@@ -181,8 +188,13 @@ export default function Perfil() {
 
         {/* ── Avatar + auth method ── */}
         <div className="flex items-center gap-4 mb-8">
-          {isGoogle && profile?.photoURL ? (
-            <img src={profile.photoURL} alt="" className="w-16 h-16 rounded-full object-cover border-2 border-border" />
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt=""
+              referrerPolicy="no-referrer"
+              className="w-16 h-16 rounded-full object-cover border-2 border-border"
+            />
           ) : (
             <div className="w-16 h-16 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center">
               <span className="text-2xl font-bold text-primary">

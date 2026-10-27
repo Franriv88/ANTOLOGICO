@@ -146,8 +146,13 @@ function TenantDetailModal({ group, planes, onClose }) {
       <div className="relative bg-surface-100 border border-border rounded-2xl w-full max-w-md shadow-2xl max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="p-6 pb-4 border-b border-border flex items-start gap-4">
-          {u.authMethod === 'google' && u.photoURL ? (
-            <img src={u.photoURL} alt="" className="w-14 h-14 rounded-full object-cover border-2 border-border shrink-0" />
+          {u.photoURL ? (
+            <img
+              src={u.photoURL}
+              alt=""
+              referrerPolicy="no-referrer"
+              className="w-14 h-14 rounded-full object-cover border-2 border-border shrink-0"
+            />
           ) : (
             <div className="w-14 h-14 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center shrink-0">
               <span className="text-xl font-bold text-primary">
