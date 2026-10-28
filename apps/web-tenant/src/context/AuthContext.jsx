@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from '../lib/firebase';
-import { upsertProfesional } from '../dataconnect-generated';
+import { upsertProfesional, reassignProfesionalUid } from '../dataconnect-generated';
 
 const AuthContext = createContext(null);
 
@@ -22,11 +22,6 @@ export function AuthProvider({ children }) {
               email:  firebaseUser.email,
             });
           } catch (e) {
-            // upsertProfesional puede fallar con ALREADY_EXISTS en dos casos:
-            // 1) el profesional ya existe (login repetido) — completamente normal
-            // 2) onAuthStateChanged dispara dos veces seguidas (Google sign-in /
-            //    React StrictMode): la primera INSERT tiene éxito, la segunda
-            //    falla porque el email ya existe. Ambos casos son inocuos.
             const errStr = (() => { try { return JSON.stringify(e); } catch { return String(e); } })();
             const isAlreadyExists =
               errStr.includes('ALREADY_EXISTS') ||
@@ -35,7 +30,14 @@ export function AuthProvider({ children }) {
                 err?.extensions?.code === 'ALREADY_EXISTS' ||
                 err?.message?.includes('profesionales_email_uidx')
               );
-            if (!isAlreadyExists) {
+            if (isAlreadyExists) {
+              try {
+                await reassignProfesionalUid({ nombre: firebaseUser.displayName || firebaseUser.email });
+                console.log('[Auth] reassignProfesionalUid OK — UID actualizado');
+              } catch (reassignErr) {
+                console.error('[Auth] reassignProfesionalUid failed:', reassignErr);
+              }
+            } else {
               console.error('upsertProfesional:', e);
             }
           }

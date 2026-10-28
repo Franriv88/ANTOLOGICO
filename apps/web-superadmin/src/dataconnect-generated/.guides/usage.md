@@ -14,11 +14,14 @@ If a user is not using a supported framework, they can use the generated SDK dir
 Here's an example of how to use it with the first 5 operations:
 
 ```js
-import { upsertProfesional, updateEspacioPlanId, createEspacio, updateEspacioIdentidad, updateEspacioCobros, updateEspacioRedes, updateEspacio, createWorkshop, updateWorkshop, updateWorkshopEstado } from '@antologico/dataconnect';
+import { upsertProfesional, reassignProfesionalUid, updateEspacioPlanId, createEspacio, updateEspacioIdentidad, updateEspacioCobros, updateEspacioRedes, updateEspacio, createWorkshop, updateWorkshop } from '@antologico/dataconnect';
 
 
 // Operation UpsertProfesional:  For variables, look at type UpsertProfesionalVars in ../index.d.ts
 const { data } = await UpsertProfesional(dataConnect, upsertProfesionalVars);
+
+// Operation ReassignProfesionalUid:  For variables, look at type ReassignProfesionalUidVars in ../index.d.ts
+const { data } = await ReassignProfesionalUid(dataConnect, reassignProfesionalUidVars);
 
 // Operation UpdateEspacioPlanId:  For variables, look at type UpdateEspacioPlanIdVars in ../index.d.ts
 const { data } = await UpdateEspacioPlanId(dataConnect, updateEspacioPlanIdVars);
@@ -43,9 +46,6 @@ const { data } = await CreateWorkshop(dataConnect, createWorkshopVars);
 
 // Operation UpdateWorkshop:  For variables, look at type UpdateWorkshopVars in ../index.d.ts
 const { data } = await UpdateWorkshop(dataConnect, updateWorkshopVars);
-
-// Operation UpdateWorkshopEstado:  For variables, look at type UpdateWorkshopEstadoVars in ../index.d.ts
-const { data } = await UpdateWorkshopEstado(dataConnect, updateWorkshopEstadoVars);
 
 
 ```

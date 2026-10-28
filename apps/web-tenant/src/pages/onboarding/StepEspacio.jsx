@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { espacios as espacioApi } from '../../services/api';
-import { upsertProfesional } from '../../dataconnect-generated';
+import { upsertProfesional, reassignProfesionalUid } from '../../dataconnect-generated';
 import { auth } from '../../lib/firebase';
 import { RUBROS, fetchRubros } from '../../lib/rubros';
 
@@ -35,13 +35,23 @@ export default function StepEspacio({ onNext, onBack, accumulated }) {
           console.log('[StepEspacio] upsertProfesional OK:', upsertResult);
         } catch (upsertErr) {
           const s = (() => { try { return JSON.stringify(upsertErr); } catch { return String(upsertErr); } })();
-          console.error('[StepEspacio] upsertProfesional FAILED:', s);
-          if (!s.includes('ALREADY_EXISTS') && !s.includes('profesionales_email_uidx')) {
+          const isAlreadyExists = s.includes('ALREADY_EXISTS') || s.includes('profesionales_email_uidx');
+          if (isAlreadyExists) {
+            try {
+              await reassignProfesionalUid({ nombre: u.displayName || u.email });
+              console.log('[StepEspacio] reassignProfesionalUid OK — UID actualizado');
+            } catch (reassignErr) {
+              console.error('[StepEspacio] reassignProfesionalUid FAILED:', reassignErr);
+              setError('Error al actualizar perfil. Contactá soporte.');
+              setLoading(false);
+              return;
+            }
+          } else {
+            console.error('[StepEspacio] upsertProfesional FAILED:', s);
             setError('Error al registrar perfil: ' + (upsertErr?.message || s));
             setLoading(false);
             return;
           }
-          console.warn('[StepEspacio] ALREADY_EXISTS detectado — la fila existe con otro UID, el FK fallará');
         }
       } else {
         console.error('[StepEspacio] No hay usuario autenticado!');

@@ -64,6 +64,20 @@ exports.upsertProfesional = function upsertProfesional(dcOrVars, vars) {
 }
 ;
 
+const reassignProfesionalUidRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'ReassignProfesionalUid', inputVars);
+}
+reassignProfesionalUidRef.operationName = 'ReassignProfesionalUid';
+exports.reassignProfesionalUidRef = reassignProfesionalUidRef;
+
+exports.reassignProfesionalUid = function reassignProfesionalUid(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(reassignProfesionalUidRef(dcInstance, inputVars));
+}
+;
+
 const updateEspacioPlanIdRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
