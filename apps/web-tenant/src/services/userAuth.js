@@ -60,14 +60,22 @@ async function ensureProfile(user) {
       lastLoginAt: now,
     });
   } else {
-    await saveProfile(user.uid, { lastLoginAt: now });
+    const patch = { lastLoginAt: now };
+    if (!existing.createdAt) patch.createdAt = now;
+    if (!existing.authMethod) patch.authMethod = 'google';
+    await saveProfile(user.uid, patch);
   }
   return { user, profile: await fetchProfile(user.uid) };
 }
 
 export async function loginEmail(email, password) {
   const { user } = await signInWithEmailAndPassword(auth, email, password);
-  await saveProfile(user.uid, { lastLoginAt: new Date().toISOString() });
+  const existing = await fetchProfile(user.uid);
+  const now = new Date().toISOString();
+  const patch = { lastLoginAt: now };
+  if (!existing.createdAt) patch.createdAt = now;
+  if (!existing.authMethod) patch.authMethod = 'email';
+  await saveProfile(user.uid, patch);
   trackLogin({ method: 'email' });
   return { user, profile: await fetchProfile(user.uid) };
 }
