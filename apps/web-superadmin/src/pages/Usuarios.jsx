@@ -80,7 +80,7 @@ const GENERO_LABELS = {
   'prefiero-no-decirlo': 'Prefiero no decirlo',
 };
 
-function UserDetailModal({ user, onClose, onReset, onAnonymize, onDelete, isDuplicate }) {
+function UserDetailModal({ user, onClose, onReset, onAnonymize }) {
   const u = user;
   const generoLabel = GENERO_LABELS[u.genero] || u.genero || 'Prefiero no decirlo';
   const isAnonymized = u.estado === 'ANONIMIZADO';
@@ -188,17 +188,6 @@ function UserDetailModal({ user, onClose, onReset, onAnonymize, onDelete, isDupl
                 </svg>
                 Anonimizar datos del usuario
               </button>
-              {isDuplicate && (
-                <button
-                  onClick={() => onDelete(u)}
-                  className="w-full py-2.5 border border-danger/30 rounded-xl text-sm font-medium text-danger hover:bg-danger/5 transition-colors flex items-center justify-center gap-2"
-                >
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                  </svg>
-                  Eliminar perfil duplicado
-                </button>
-              )}
             </div>
           )}
         </div>
@@ -324,8 +313,6 @@ export default function Usuarios() {
   const [resetTarget, setResetTarget] = useState(null);
   const [anonTarget, setAnonTarget] = useState(null);
   const [anonLoading, setAnonLoading] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState(null);
-  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     usuariosApi.list()
@@ -350,20 +337,6 @@ export default function Usuarios() {
     }
     setAnonLoading(false);
     setAnonTarget(null);
-  }
-
-  async function confirmDelete() {
-    if (!deleteTarget) return;
-    setDeleteLoading(true);
-    try {
-      await usuariosApi.deleteProfile(deleteTarget.uid);
-      setList(prev => prev.filter(u => u.uid !== deleteTarget.uid));
-      setDetailTarget(null);
-    } catch (err) {
-      console.error(err);
-    }
-    setDeleteLoading(false);
-    setDeleteTarget(null);
   }
 
   if (loading) return (
@@ -401,25 +374,11 @@ export default function Usuarios() {
           onClose={() => setDetailTarget(null)}
           onReset={(u) => { setDetailTarget(null); setResetTarget(u); }}
           onAnonymize={(u) => { setDetailTarget(null); setAnonTarget(u); }}
-          onDelete={(u) => { setDetailTarget(null); setDeleteTarget(u); }}
-          isDuplicate={detailTarget.email && duplicateEmails.has(detailTarget.email.toLowerCase()) && detailTarget.estado !== 'ANONIMIZADO'}
         />
       )}
 
       {resetTarget && (
         <ResetModal user={resetTarget} onClose={() => setResetTarget(null)} />
-      )}
-
-      {deleteTarget && (
-        <ConfirmModal
-          title="Eliminar perfil de Firestore"
-          text={`Se eliminará permanentemente el documento de "${deleteTarget.nombre || deleteTarget.email}" (UID: ${deleteTarget.uid.slice(0, 12)}…). Usá esto para limpiar perfiles huérfanos de pruebas anteriores. Esta acción no se puede deshacer.`}
-          confirmText={deleteLoading ? 'Eliminando…' : 'Sí, eliminar'}
-          danger
-          confirmDisabled={deleteLoading}
-          onConfirm={confirmDelete}
-          onClose={() => !deleteLoading && setDeleteTarget(null)}
-        />
       )}
 
       {anonTarget && (
@@ -594,15 +553,6 @@ export default function Usuarios() {
                               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
                               </svg>
-                            </button>
-                          )}
-                          {(isDuplicate || isAnonymized) && (
-                            <button
-                              onClick={() => setDeleteTarget(u)}
-                              title="Eliminar perfil de Firestore"
-                              className="text-xs py-1 px-2.5 border border-danger/30 rounded text-danger hover:bg-danger/5 transition-colors whitespace-nowrap"
-                            >
-                              Eliminar
                             </button>
                           )}
                         </div>
