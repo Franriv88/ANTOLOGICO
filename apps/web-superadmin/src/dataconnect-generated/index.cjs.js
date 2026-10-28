@@ -274,6 +274,20 @@ exports.decrementarCupo = function decrementarCupo(dcOrVars, vars) {
 }
 ;
 
+const createReservaConUsuarioRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'CreateReservaConUsuario', inputVars);
+}
+createReservaConUsuarioRef.operationName = 'CreateReservaConUsuario';
+exports.createReservaConUsuarioRef = createReservaConUsuarioRef;
+
+exports.createReservaConUsuario = function createReservaConUsuario(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(createReservaConUsuarioRef(dcInstance, inputVars));
+}
+;
+
 const listReservasByEspacioRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
@@ -466,6 +480,21 @@ exports.listPublicWorkshopsByEspacio = function listPublicWorkshopsByEspacio(dcO
   
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(listPublicWorkshopsByEspacioRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const listMyReservasRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'ListMyReservas');
+}
+listMyReservasRef.operationName = 'ListMyReservas';
+exports.listMyReservasRef = listMyReservasRef;
+
+exports.listMyReservas = function listMyReservas(dcOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(listMyReservasRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 ;
 

@@ -67,6 +67,20 @@ export interface CreateEspacioVariables {
   rubroPersonalizado?: string | null;
 }
 
+export interface CreateReservaConUsuarioData {
+  usuario_upsert: Usuario_Key;
+  reserva_insert: Reserva_Key;
+  workshop_update?: Workshop_Key | null;
+}
+
+export interface CreateReservaConUsuarioVariables {
+  nombre: string;
+  email: string;
+  workshopId: UUIDString;
+  estado: EstadoReserva;
+  pagoExternoId?: string | null;
+}
+
 export interface CreateWorkshopData {
   workshop_insert: Workshop_Key;
 }
@@ -283,6 +297,25 @@ export interface ListMyEspaciosData {
       sslActivo: boolean;
     };
   } & Espacio_Key)[];
+}
+
+export interface ListMyReservasData {
+  reservas: ({
+    id: UUIDString;
+    estado: EstadoReserva;
+    fechaReserva: TimestampString;
+    comprobanteUrl?: string | null;
+    pagoExternoId?: string | null;
+    createdAt: TimestampString;
+    workshop: {
+      id: UUIDString;
+      nombre: string;
+      fecha: TimestampString;
+      cuposTotales: number;
+      cuposDisponibles: number;
+      espacioId: UUIDString;
+    } & Workshop_Key;
+  } & Reserva_Key)[];
 }
 
 export interface ListMyWorkshopsByEstadoData {
@@ -809,6 +842,18 @@ export const decrementarCupoRef: DecrementarCupoRef;
 export function decrementarCupo(vars: DecrementarCupoVariables): MutationPromise<DecrementarCupoData, DecrementarCupoVariables>;
 export function decrementarCupo(dc: DataConnect, vars: DecrementarCupoVariables): MutationPromise<DecrementarCupoData, DecrementarCupoVariables>;
 
+interface CreateReservaConUsuarioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CreateReservaConUsuarioVariables): MutationRef<CreateReservaConUsuarioData, CreateReservaConUsuarioVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: CreateReservaConUsuarioVariables): MutationRef<CreateReservaConUsuarioData, CreateReservaConUsuarioVariables>;
+  operationName: string;
+}
+export const createReservaConUsuarioRef: CreateReservaConUsuarioRef;
+
+export function createReservaConUsuario(vars: CreateReservaConUsuarioVariables): MutationPromise<CreateReservaConUsuarioData, CreateReservaConUsuarioVariables>;
+export function createReservaConUsuario(dc: DataConnect, vars: CreateReservaConUsuarioVariables): MutationPromise<CreateReservaConUsuarioData, CreateReservaConUsuarioVariables>;
+
 interface ListReservasByEspacioRef {
   /* Allow users to create refs without passing in DataConnect */
   (vars: ListReservasByEspacioVariables): QueryRef<ListReservasByEspacioData, ListReservasByEspacioVariables>;
@@ -964,6 +1009,18 @@ export const listPublicWorkshopsByEspacioRef: ListPublicWorkshopsByEspacioRef;
 
 export function listPublicWorkshopsByEspacio(vars: ListPublicWorkshopsByEspacioVariables, options?: ExecuteQueryOptions): QueryPromise<ListPublicWorkshopsByEspacioData, ListPublicWorkshopsByEspacioVariables>;
 export function listPublicWorkshopsByEspacio(dc: DataConnect, vars: ListPublicWorkshopsByEspacioVariables, options?: ExecuteQueryOptions): QueryPromise<ListPublicWorkshopsByEspacioData, ListPublicWorkshopsByEspacioVariables>;
+
+interface ListMyReservasRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListMyReservasData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<ListMyReservasData, undefined>;
+  operationName: string;
+}
+export const listMyReservasRef: ListMyReservasRef;
+
+export function listMyReservas(options?: ExecuteQueryOptions): QueryPromise<ListMyReservasData, undefined>;
+export function listMyReservas(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListMyReservasData, undefined>;
 
 interface ListPublicWorkshopsRef {
   /* Allow users to create refs without passing in DataConnect */

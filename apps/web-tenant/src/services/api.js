@@ -24,6 +24,8 @@ import {
   getPublicEspacio,
   getPublicEspacios,
   listPublicWorkshopsByEspacio,
+  createReservaConUsuario,
+  listMyReservas,
 } from '../dataconnect-generated';
 
 export const profesionales = {
@@ -51,8 +53,38 @@ export const reservas = {
       workshop:    r.workshop,
     }));
   },
-  create: async () => { throw new Error('Reservas aún no implementadas en Firebase'); },
-  markPaid: async () => { throw new Error('Reservas aún no implementadas en Firebase'); },
+  create: async (workshopId, { nombre, email, metodoPago, mpPaymentId }) => {
+    const estado = (metodoPago === 'MERCADO_PAGO') ? 'CONFIRMADA' : 'PENDIENTE';
+    const result = await createReservaConUsuario({
+      nombre,
+      email,
+      workshopId,
+      estado,
+      pagoExternoId: mpPaymentId || null,
+    });
+    if (result.errors?.length) throw new Error(result.errors.map(e => e.message).join(' | '));
+    return {
+      id:          result.data?.reserva_insert?.id,
+      workshopId,
+      nombre,
+      email,
+      estado,
+      metodoPago:  metodoPago || null,
+      estadoPago:  metodoPago === 'MERCADO_PAGO' ? 'PAGADO' : 'PENDIENTE',
+    };
+  },
+  listByEmail: async () => {
+    const { data } = await listMyReservas();
+    return (data?.reservas ?? []).map(r => ({
+      id:          r.id,
+      workshopId:  r.workshop.id,
+      estado:      r.estado,
+      fechaReserva: r.fechaReserva,
+      pagoExternoId: r.pagoExternoId,
+      workshop:    r.workshop,
+    }));
+  },
+  markPaid: async () => {},
   cancel: async (id, workshopId) => {
     const result = await cancelarReserva({ id, workshopId });
     if (result.errors?.length) throw new Error(result.errors.map(e => e.message).join(' | '));

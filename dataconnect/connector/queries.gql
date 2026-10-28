@@ -185,6 +185,16 @@ query ListPublicWorkshopsByEspacio($espacioId: UUID!) @auth(level: PUBLIC, insec
   }
 }
 
+query ListMyReservas @auth(level: USER) {
+  reservas(
+    where: { usuario: { uid: { eq_expr: "auth.uid" } } }
+    orderBy: [{ fechaReserva: DESC }]
+  ) {
+    id estado fechaReserva comprobanteUrl pagoExternoId createdAt
+    workshop { id nombre fecha cuposTotales cuposDisponibles espacioId }
+  }
+}
+
 query ListPublicWorkshops @auth(level: PUBLIC, insecureReason: "Talleres publicados son el discovery público del marketplace — deben ser visibles sin login.") {
   workshops(
     where: { estado: { eq: PUBLICADO } }

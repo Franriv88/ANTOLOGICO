@@ -23,6 +23,7 @@ This README will guide you through the process of using the generated JavaScript
   - [*GetPublicEspacio*](#getpublicespacio)
   - [*GetPublicEspacios*](#getpublicespacios)
   - [*ListPublicWorkshopsByEspacio*](#listpublicworkshopsbyespacio)
+  - [*ListMyReservas*](#listmyreservas)
   - [*ListPublicWorkshops*](#listpublicworkshops)
 - [**Mutations**](#mutations)
   - [*UpsertProfesional*](#upsertprofesional)
@@ -41,6 +42,7 @@ This README will guide you through the process of using the generated JavaScript
   - [*ReactivarSuscripcionEspacio*](#reactivarsuscripcionespacio)
   - [*CancelarReserva*](#cancelarreserva)
   - [*DecrementarCupo*](#decrementarcupo)
+  - [*CreateReservaConUsuario*](#createreservaconusuario)
 
 # Accessing the connector
 A connector is a collection of Queries and Mutations. One SDK is generated for each connector - this SDK is generated for the connector `antologico`. You can find more information about connectors in the [Data Connect documentation](https://firebase.google.com/docs/data-connect#how-does).
@@ -1664,6 +1666,112 @@ console.log(data.workshops);
 executeQuery(ref).then((response) => {
   const data = response.data;
   console.log(data.workshops);
+});
+```
+
+## ListMyReservas
+You can execute the `ListMyReservas` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+listMyReservas(options?: ExecuteQueryOptions): QueryPromise<ListMyReservasData, undefined>;
+
+interface ListMyReservasRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<ListMyReservasData, undefined>;
+}
+export const listMyReservasRef: ListMyReservasRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+listMyReservas(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListMyReservasData, undefined>;
+
+interface ListMyReservasRef {
+  ...
+  (dc: DataConnect): QueryRef<ListMyReservasData, undefined>;
+}
+export const listMyReservasRef: ListMyReservasRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the listMyReservasRef:
+```typescript
+const name = listMyReservasRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `ListMyReservas` query has no variables.
+### Return Type
+Recall that executing the `ListMyReservas` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `ListMyReservasData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface ListMyReservasData {
+  reservas: ({
+    id: UUIDString;
+    estado: EstadoReserva;
+    fechaReserva: TimestampString;
+    comprobanteUrl?: string | null;
+    pagoExternoId?: string | null;
+    createdAt: TimestampString;
+    workshop: {
+      id: UUIDString;
+      nombre: string;
+      fecha: TimestampString;
+      cuposTotales: number;
+      cuposDisponibles: number;
+      espacioId: UUIDString;
+    } & Workshop_Key;
+  } & Reserva_Key)[];
+}
+```
+### Using `ListMyReservas`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, listMyReservas } from '@antologico/dataconnect';
+
+
+// Call the `listMyReservas()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await listMyReservas();
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await listMyReservas(dataConnect);
+
+console.log(data.reservas);
+
+// Or, you can use the `Promise` API.
+listMyReservas().then((response) => {
+  const data = response.data;
+  console.log(data.reservas);
+});
+```
+
+### Using `ListMyReservas`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, listMyReservasRef } from '@antologico/dataconnect';
+
+
+// Call the `listMyReservasRef()` function to get a reference to the query.
+const ref = listMyReservasRef();
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = listMyReservasRef(dataConnect);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.reservas);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.reservas);
 });
 ```
 
@@ -3691,6 +3799,137 @@ console.log(data.workshop_update);
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
+  console.log(data.workshop_update);
+});
+```
+
+## CreateReservaConUsuario
+You can execute the `CreateReservaConUsuario` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+createReservaConUsuario(vars: CreateReservaConUsuarioVariables): MutationPromise<CreateReservaConUsuarioData, CreateReservaConUsuarioVariables>;
+
+interface CreateReservaConUsuarioRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CreateReservaConUsuarioVariables): MutationRef<CreateReservaConUsuarioData, CreateReservaConUsuarioVariables>;
+}
+export const createReservaConUsuarioRef: CreateReservaConUsuarioRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+createReservaConUsuario(dc: DataConnect, vars: CreateReservaConUsuarioVariables): MutationPromise<CreateReservaConUsuarioData, CreateReservaConUsuarioVariables>;
+
+interface CreateReservaConUsuarioRef {
+  ...
+  (dc: DataConnect, vars: CreateReservaConUsuarioVariables): MutationRef<CreateReservaConUsuarioData, CreateReservaConUsuarioVariables>;
+}
+export const createReservaConUsuarioRef: CreateReservaConUsuarioRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the createReservaConUsuarioRef:
+```typescript
+const name = createReservaConUsuarioRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `CreateReservaConUsuario` mutation requires an argument of type `CreateReservaConUsuarioVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface CreateReservaConUsuarioVariables {
+  nombre: string;
+  email: string;
+  workshopId: UUIDString;
+  estado: EstadoReserva;
+  pagoExternoId?: string | null;
+}
+```
+### Return Type
+Recall that executing the `CreateReservaConUsuario` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `CreateReservaConUsuarioData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface CreateReservaConUsuarioData {
+  usuario_upsert: Usuario_Key;
+  reserva_insert: Reserva_Key;
+  workshop_update?: Workshop_Key | null;
+}
+```
+### Using `CreateReservaConUsuario`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, createReservaConUsuario, CreateReservaConUsuarioVariables } from '@antologico/dataconnect';
+
+// The `CreateReservaConUsuario` mutation requires an argument of type `CreateReservaConUsuarioVariables`:
+const createReservaConUsuarioVars: CreateReservaConUsuarioVariables = {
+  nombre: ..., 
+  email: ..., 
+  workshopId: ..., 
+  estado: ..., 
+  pagoExternoId: ..., // optional
+};
+
+// Call the `createReservaConUsuario()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await createReservaConUsuario(createReservaConUsuarioVars);
+// Variables can be defined inline as well.
+const { data } = await createReservaConUsuario({ nombre: ..., email: ..., workshopId: ..., estado: ..., pagoExternoId: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await createReservaConUsuario(dataConnect, createReservaConUsuarioVars);
+
+console.log(data.usuario_upsert);
+console.log(data.reserva_insert);
+console.log(data.workshop_update);
+
+// Or, you can use the `Promise` API.
+createReservaConUsuario(createReservaConUsuarioVars).then((response) => {
+  const data = response.data;
+  console.log(data.usuario_upsert);
+  console.log(data.reserva_insert);
+  console.log(data.workshop_update);
+});
+```
+
+### Using `CreateReservaConUsuario`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, createReservaConUsuarioRef, CreateReservaConUsuarioVariables } from '@antologico/dataconnect';
+
+// The `CreateReservaConUsuario` mutation requires an argument of type `CreateReservaConUsuarioVariables`:
+const createReservaConUsuarioVars: CreateReservaConUsuarioVariables = {
+  nombre: ..., 
+  email: ..., 
+  workshopId: ..., 
+  estado: ..., 
+  pagoExternoId: ..., // optional
+};
+
+// Call the `createReservaConUsuarioRef()` function to get a reference to the mutation.
+const ref = createReservaConUsuarioRef(createReservaConUsuarioVars);
+// Variables can be defined inline as well.
+const ref = createReservaConUsuarioRef({ nombre: ..., email: ..., workshopId: ..., estado: ..., pagoExternoId: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = createReservaConUsuarioRef(dataConnect, createReservaConUsuarioVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.usuario_upsert);
+console.log(data.reserva_insert);
+console.log(data.workshop_update);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.usuario_upsert);
+  console.log(data.reserva_insert);
   console.log(data.workshop_update);
 });
 ```

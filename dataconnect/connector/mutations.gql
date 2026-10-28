@@ -356,3 +356,37 @@ mutation DecrementarCupo($workshopId: UUID!) @auth(level: USER, insecureReason: 
     data: { cuposDisponibles_update: { dec: 1 } }
   )
 }
+
+# Crea una reserva atómicamente: upsert usuario, insertar reserva, decrementar cupo.
+# Usado desde la página pública cuando un usuario paga (MP o Efectivo).
+mutation CreateReservaConUsuario(
+  $nombre:        String!
+  $email:         String!
+  $workshopId:    UUID!
+  $estado:        EstadoReserva!
+  $pagoExternoId: String
+) @auth(level: USER) @transaction {
+  query @redact {
+    workshop(id: $workshopId) @check(expr: "this != null", message: "Taller no encontrado") {
+      cuposDisponibles @check(expr: "this > 0", message: "No hay cupos disponibles")
+    }
+  }
+  usuario_upsert(data: {
+    uid_expr:       "auth.uid"
+    nombre:         $nombre
+    email:          $email
+    updatedAt_expr: "request.time"
+  })
+  reserva_insert(data: {
+    usuarioUid_expr: "auth.uid"
+    workshopId:      $workshopId
+    estado:          $estado
+    pagoExternoId:   $pagoExternoId
+    createdAt_expr:  "request.time"
+    updatedAt_expr:  "request.time"
+  })
+  workshop_update(
+    id: $workshopId
+    data: { cuposDisponibles_update: { dec: 1 } }
+  )
+}

@@ -355,7 +355,7 @@ function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, tyc, on
     try {
       const grupoId = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
       const pendingData = { workshopId: workshop.id, nombres: nombres.map(n => n.trim()), email: email.trim(), telefono: telefono.trim(), cantidad, grupoId };
-      sessionStorage.setItem('mp_pending_booking', JSON.stringify(pendingData));
+      localStorage.setItem('mp_pending_booking', JSON.stringify(pendingData));
 
       const currentUrl = window.location.href.split('?')[0];
       const res = await fetch(`${MP_WORKER_URL}/crear-preferencia`, {
@@ -881,10 +881,10 @@ export default function EspacioPublico({ overrideEspacioId }) {
     url.searchParams.delete('merchant_account_id');
     window.history.replaceState({}, '', url);
 
-    const raw = sessionStorage.getItem('mp_pending_booking');
+    const raw = localStorage.getItem('mp_pending_booking');
     if (!raw) return;
     const pending = JSON.parse(raw);
-    sessionStorage.removeItem('mp_pending_booking');
+    localStorage.removeItem('mp_pending_booking');
     const paymentId = params.get('payment_id') || params.get('collection_id') || '';
 
     if (mpStatus === 'approved') {
