@@ -1,7 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { espacios as espacioApi } from '../../services/api';
-import { useAuth } from '../../context/AuthContext';
-import { detectGeo } from '../../lib/geo';
 import { RUBROS, fetchRubros } from '../../lib/rubros';
 
 const INPUT_CLS =
@@ -10,15 +8,12 @@ const INPUT_CLS =
 const LABEL_CLS = 'block text-xs font-medium text-ink-muted mb-1';
 
 export default function StepEspacio({ onNext, onBack, accumulated }) {
-  const { user } = useAuth();
   const [nombre, setNombre]             = useState('');
   const [selectedRubro, setRubro]       = useState('');
   const [loading, setLoading]           = useState(false);
   const [error, setError]               = useState('');
   const [rubros, setRubros]             = useState(RUBROS);
-  const geoRef = useRef(null);
 
-  useEffect(() => { detectGeo().then(g => { geoRef.current = g; }); }, []);
   useEffect(() => { fetchRubros().then(setRubros); }, []);
 
   async function handleSubmit(e) {
@@ -30,12 +25,9 @@ export default function StepEspacio({ onNext, onBack, accumulated }) {
     setError('');
     try {
       const key = await espacioApi.create({
-        nombre:            nombre.trim(),
-        rubroId:           null,
+        nombre:             nombre.trim(),
+        rubroId:            null,
         rubroPersonalizado: selectedRubro,
-        userId:            user?.uid ?? null,
-        telefono:          accumulated?.telefono ?? '',
-        geo:               geoRef.current ?? null,
       });
       onNext({ espacioId: key.id, espacioNombre: nombre.trim() });
     } catch (err) {
