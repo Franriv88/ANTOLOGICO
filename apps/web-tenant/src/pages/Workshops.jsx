@@ -187,16 +187,20 @@ export default function Workshops() {
   }, [brand.displayFont, brand.bodyFont]);
 
   async function load() {
-    if (!activeEspacio) return;
+    console.log('[Workshops] load() activeEspacio:', activeEspacio);
+    if (!activeEspacio) { console.warn('[Workshops] activeEspacio is null, skipping'); return; }
     try {
       setLoading(true);
       setError('');
+      console.log('[Workshops] calling api.list with espacioId:', activeEspacio.id, 'params:', { estado, q });
       const data = await api.list(activeEspacio.id, {
         ...(estado && { estado }),
         ...(q && { q }),
       });
+      console.log('[Workshops] api.list returned:', data?.length, 'items', data);
       setItems(data);
     } catch (e) {
+      console.error('[Workshops] api.list ERROR:', e);
       setError(e.message);
     } finally {
       setLoading(false);

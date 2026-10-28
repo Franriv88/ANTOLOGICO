@@ -59,7 +59,9 @@ export const reservas = {
 
 export const espacios = {
   list: async () => {
-    const { data } = await listMyEspacios();
+    const result = await listMyEspacios();
+    console.log('[api] listMyEspacios raw result:', result);
+    const { data } = result;
     return data.espacios;
   },
   get: async (id) => {
@@ -118,7 +120,9 @@ export const workshops = {
       const { data } = await listMyWorkshopsByEstado({ espacioId, estado: params.estado });
       return data.workshops ?? [];
     }
-    const { data } = await listMyWorkshops({ espacioId });
+    const result = await listMyWorkshops({ espacioId });
+    console.log('[api] listMyWorkshops raw result:', result);
+    const { data } = result;
     return data.workshops ?? [];
   },
   get: async (id) => {
