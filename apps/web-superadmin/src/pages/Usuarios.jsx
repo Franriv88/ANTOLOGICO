@@ -80,7 +80,7 @@ const GENERO_LABELS = {
   'prefiero-no-decirlo': 'Prefiero no decirlo',
 };
 
-function UserDetailModal({ user, onClose, onReset, onAnonymize }) {
+function UserDetailModal({ user, onClose, onReset, onAnonymize, onDelete, isDuplicate }) {
   const u = user;
   const generoLabel = GENERO_LABELS[u.genero] || u.genero || 'Prefiero no decirlo';
   const isAnonymized = u.estado === 'ANONIMIZADO';
@@ -188,6 +188,17 @@ function UserDetailModal({ user, onClose, onReset, onAnonymize }) {
                 </svg>
                 Anonimizar datos del usuario
               </button>
+              {isDuplicate && (
+                <button
+                  onClick={() => onDelete(u)}
+                  className="w-full py-2.5 border border-danger/30 rounded-xl text-sm font-medium text-danger hover:bg-danger/5 transition-colors flex items-center justify-center gap-2"
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                  Eliminar perfil duplicado
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -313,6 +324,8 @@ export default function Usuarios() {
   const [resetTarget, setResetTarget] = useState(null);
   const [anonTarget, setAnonTarget] = useState(null);
   const [anonLoading, setAnonLoading] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     usuariosApi.list()
@@ -339,6 +352,20 @@ export default function Usuarios() {
     setAnonTarget(null);
   }
 
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    setDeleteLoading(true);
+    try {
+      await usuariosApi.deleteProfile(deleteTarget.uid);
+      setList(prev => prev.filter(u => u.uid !== deleteTarget.uid));
+      setDetailTarget(null);
+    } catch (err) {
+      console.error(err);
+    }
+    setDeleteLoading(false);
+    setDeleteTarget(null);
+  }
+
   if (loading) return (
     <div className="flex items-center justify-center py-16">
       <AntologicoLoaderCream size={300} />
@@ -346,13 +373,25 @@ export default function Usuarios() {
   );
 
   const all = list ?? [];
+
+  const emailCount = {};
+  all.forEach(u => {
+    if (u.email && u.estado !== 'ANONIMIZADO') {
+      const key = u.email.toLowerCase();
+      emailCount[key] = (emailCount[key] || 0) + 1;
+    }
+  });
+  const duplicateEmails = new Set(Object.entries(emailCount).filter(([, c]) => c > 1).map(([e]) => e));
+
   const byType = filterTipo === 'todos' ? all
     : filterTipo === 'tenant' ? all.filter(u => u.tipo === 'tenant')
+    : filterTipo === 'duplicados' ? all.filter(u => u.email && duplicateEmails.has(u.email.toLowerCase()) && u.estado !== 'ANONIMIZADO')
     : all.filter(u => u.tipo === 'alumno');
   const filtered = byType.filter(u => matchUser(u, search));
 
   const countTenants = all.filter(u => u.tipo === 'tenant').length;
   const countAlumnos = all.filter(u => u.tipo === 'alumno').length;
+  const countDuplicados = all.filter(u => u.email && duplicateEmails.has(u.email.toLowerCase()) && u.estado !== 'ANONIMIZADO').length;
 
   return (
     <>
@@ -362,11 +401,25 @@ export default function Usuarios() {
           onClose={() => setDetailTarget(null)}
           onReset={(u) => { setDetailTarget(null); setResetTarget(u); }}
           onAnonymize={(u) => { setDetailTarget(null); setAnonTarget(u); }}
+          onDelete={(u) => { setDetailTarget(null); setDeleteTarget(u); }}
+          isDuplicate={detailTarget.email && duplicateEmails.has(detailTarget.email.toLowerCase()) && detailTarget.estado !== 'ANONIMIZADO'}
         />
       )}
 
       {resetTarget && (
         <ResetModal user={resetTarget} onClose={() => setResetTarget(null)} />
+      )}
+
+      {deleteTarget && (
+        <ConfirmModal
+          title="Eliminar perfil de Firestore"
+          text={`Se eliminará permanentemente el documento de "${deleteTarget.nombre || deleteTarget.email}" (UID: ${deleteTarget.uid.slice(0, 12)}…). Usá esto para limpiar perfiles huérfanos de pruebas anteriores. Esta acción no se puede deshacer.`}
+          confirmText={deleteLoading ? 'Eliminando…' : 'Sí, eliminar'}
+          danger
+          confirmDisabled={deleteLoading}
+          onConfirm={confirmDelete}
+          onClose={() => !deleteLoading && setDeleteTarget(null)}
+        />
       )}
 
       {anonTarget && (
@@ -415,6 +468,7 @@ export default function Usuarios() {
               { key: 'todos', label: 'Todos' },
               { key: 'tenant', label: 'Tenants' },
               { key: 'alumno', label: 'Alumnos' },
+              ...(countDuplicados > 0 ? [{ key: 'duplicados', label: `Duplicados (${countDuplicados})` }] : []),
             ].map(f => (
               <button
                 key={f.key}
@@ -454,11 +508,12 @@ export default function Usuarios() {
               <tbody>
                 {filtered.map(u => {
                   const isAnonymized = u.estado === 'ANONIMIZADO';
+                  const isDuplicate = u.email && duplicateEmails.has(u.email.toLowerCase()) && !isAnonymized;
                   return (
                     <tr
                       key={u.uid}
                       onClick={() => setDetailTarget(u)}
-                      className={`border-b border-border/50 hover:bg-surface-200/20 transition-colors cursor-pointer ${isAnonymized ? 'opacity-50' : ''}`}
+                      className={`border-b border-border/50 hover:bg-surface-200/20 transition-colors cursor-pointer ${isAnonymized ? 'opacity-50' : ''} ${isDuplicate ? 'bg-amber-50/40' : ''}`}
                     >
                       {/* Usuario */}
                       <td className="px-4 py-3">
@@ -471,12 +526,19 @@ export default function Usuarios() {
                             </div>
                           )}
                           <div className="min-w-0">
-                            <p className="font-medium text-ink leading-tight truncate max-w-[200px]">
-                              {isAnonymized
-                                ? <span className="italic text-ink-muted">Datos eliminados</span>
-                                : [u.nombre, u.apellido].filter(Boolean).join(' ') || '—'
-                              }
-                            </p>
+                            <div className="flex items-center gap-1.5">
+                              <p className="font-medium text-ink leading-tight truncate max-w-[200px]">
+                                {isAnonymized
+                                  ? <span className="italic text-ink-muted">Datos eliminados</span>
+                                  : [u.nombre, u.apellido].filter(Boolean).join(' ') || '—'
+                                }
+                              </p>
+                              {isDuplicate && (
+                                <span className="text-[9px] font-bold bg-amber-100 text-amber-700 border border-amber-200 rounded px-1.5 py-0.5 leading-tight shrink-0">
+                                  DUPLICADO
+                                </span>
+                              )}
+                            </div>
                             <p className="text-xs text-ink-muted font-mono mt-0.5 truncate max-w-[200px]">{u.email}</p>
                           </div>
                         </div>
@@ -532,6 +594,15 @@ export default function Usuarios() {
                               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
                               </svg>
+                            </button>
+                          )}
+                          {(isDuplicate || isAnonymized) && (
+                            <button
+                              onClick={() => setDeleteTarget(u)}
+                              title="Eliminar perfil de Firestore"
+                              className="text-xs py-1 px-2.5 border border-danger/30 rounded text-danger hover:bg-danger/5 transition-colors whitespace-nowrap"
+                            >
+                              Eliminar
                             </button>
                           )}
                         </div>

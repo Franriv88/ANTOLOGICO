@@ -348,6 +348,10 @@ export const usuarios = {
 
     return anon;
   },
+
+  deleteProfile: async (uid) => {
+    await deleteDoc(doc(firestore, C_USUARIOS, uid));
+  },
 };
 
 // ─── Métricas (workshops + reservas) ─────────────────────────────────────────
