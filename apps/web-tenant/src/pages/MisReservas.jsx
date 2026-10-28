@@ -586,6 +586,13 @@ export default function MisReservas() {
       {showScanner && <QRScannerModal onClose={() => setShowScanner(false)} userId={currentUser?.user?.uid} />}
 
       <div className="max-w-lg mx-auto px-4 py-8 w-full">
+        {/* DEBUG TEMPORAL — eliminar después de verificar */}
+        {currentUser && (
+          <div style={{background:'#fef3c7',padding:'8px 12px',borderRadius:8,fontSize:12,marginBottom:12,wordBreak:'break-all'}}>
+            <strong>DEBUG UID:</strong> {currentUser.user?.uid}<br/>
+            <strong>Reservas cargadas:</strong> {reservas.length}
+          </div>
+        )}
         {/* Not authenticated */}
         {currentUser === null && (
           <>
