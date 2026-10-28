@@ -28,17 +28,26 @@ export default function StepEspacio({ onNext, onBack, accumulated }) {
     try {
       // Garantizar que la fila del profesional existe antes del FK insert.
       const u = auth.currentUser;
+      console.log('[StepEspacio] auth.currentUser uid:', u?.uid, 'email:', u?.email);
       if (u) {
         try {
-          await upsertProfesional({ nombre: u.displayName || u.email, email: u.email });
+          const upsertResult = await upsertProfesional({ nombre: u.displayName || u.email, email: u.email });
+          console.log('[StepEspacio] upsertProfesional OK:', upsertResult);
         } catch (upsertErr) {
           const s = (() => { try { return JSON.stringify(upsertErr); } catch { return String(upsertErr); } })();
+          console.error('[StepEspacio] upsertProfesional FAILED:', s);
           if (!s.includes('ALREADY_EXISTS') && !s.includes('profesionales_email_uidx')) {
             setError('Error al registrar perfil: ' + (upsertErr?.message || s));
             setLoading(false);
             return;
           }
+          console.warn('[StepEspacio] ALREADY_EXISTS detectado — la fila existe con otro UID, el FK fallará');
         }
+      } else {
+        console.error('[StepEspacio] No hay usuario autenticado!');
+        setError('No hay sesión activa. Recargá la página e intentá de nuevo.');
+        setLoading(false);
+        return;
       }
 
       const key = await espacioApi.create({
