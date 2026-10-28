@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { espacios as espacioApi } from '../../services/api';
+import { upsertProfesional } from '../../dataconnect-generated';
+import { auth } from '../../lib/firebase';
 import { RUBROS, fetchRubros } from '../../lib/rubros';
 
 const INPUT_CLS =
@@ -24,6 +26,14 @@ export default function StepEspacio({ onNext, onBack, accumulated }) {
     setLoading(true);
     setError('');
     try {
+      // Garantizar que la fila del profesional existe antes del FK insert.
+      // Si ya existe (login repetido) el upsert simplemente la actualiza.
+      const u = auth.currentUser;
+      if (u) {
+        await upsertProfesional({ nombre: u.displayName || u.email, email: u.email })
+          .catch(() => {});
+      }
+
       const key = await espacioApi.create({
         nombre:             nombre.trim(),
         rubroId:            null,
