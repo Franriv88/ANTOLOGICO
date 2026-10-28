@@ -8,11 +8,11 @@
     "pnpm": ">=9.0.0"
   },
   "scripts": {
-    "dev:web":      "pnpm --filter @antologico/web-tenant dev",
-    "build:demo":   "pnpm --filter @antologico/web-tenant build:demo",
-    "emulators":    "firebase emulators:start --only auth,dataconnect --import=./emulator-data --export-on-exit=./emulator-data",
-    "reset:dev":    "node -e \"const fs=require('fs');['emulator-data','dataconnect/.dataconnect/pgliteData'].forEach(p=>{try{fs.rmSync(p,{recursive:true,force:true});console.log('Borrado: '+p)}catch(e){}});console.log('Listo. Ejecuta pnpm emulators para reiniciar limpio.');\"",
-    "seed":         "node scripts/seed-auth-emulator.mjs"
+    "dev:web": "pnpm --filter @antologico/web-tenant dev",
+    "build:demo": "pnpm --filter @antologico/web-tenant build:demo",
+    "emulators": "firebase emulators:start --only auth,dataconnect --import=./emulator-data --export-on-exit=./emulator-data",
+    "reset:dev": "node -e \"const fs=require('fs');['emulator-data','dataconnect/.dataconnect/pgliteData'].forEach(p=>{try{fs.rmSync(p,{recursive:true,force:true});console.log('Borrado: '+p)}catch(e){}});console.log('Listo. Ejecuta pnpm emulators para reiniciar limpio.');\"",
+    "seed": "node scripts/seed-auth-emulator.mjs"
   },
   "devDependencies": {
     "prettier": "^3.3.3"

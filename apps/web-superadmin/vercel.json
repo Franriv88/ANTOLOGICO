@@ -1,4 +1,5 @@
 {
+  "buildCommand": "cd ../.. && pnpm install && cd apps/web-superadmin && npx vite build",
   "outputDirectory": "dist",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }

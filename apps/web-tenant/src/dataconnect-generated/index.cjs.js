@@ -498,6 +498,21 @@ exports.listMyReservas = function listMyReservas(dcOrOptions, options) {
 }
 ;
 
+const adminCheckReservasRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'AdminCheckReservas');
+}
+adminCheckReservasRef.operationName = 'AdminCheckReservas';
+exports.adminCheckReservasRef = adminCheckReservasRef;
+
+exports.adminCheckReservas = function adminCheckReservas(dcOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(adminCheckReservasRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
 const listPublicWorkshopsRef = (dc) => {
   const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
   dcInstance._useGeneratedSdk();

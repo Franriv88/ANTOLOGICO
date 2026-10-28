@@ -47,6 +47,10 @@ export enum TipoWorkshop {
 
 
 
+export interface AdminCheckReservasData {
+  check?: unknown[] | null;
+}
+
 export interface CancelarReservaData {
   reserva_update?: Reserva_Key | null;
   workshop_update?: Workshop_Key | null;
@@ -1036,6 +1040,18 @@ export const listMyReservasRef: ListMyReservasRef;
 
 export function listMyReservas(options?: ExecuteQueryOptions): QueryPromise<ListMyReservasData, undefined>;
 export function listMyReservas(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListMyReservasData, undefined>;
+
+interface AdminCheckReservasRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<AdminCheckReservasData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<AdminCheckReservasData, undefined>;
+  operationName: string;
+}
+export const adminCheckReservasRef: AdminCheckReservasRef;
+
+export function adminCheckReservas(options?: ExecuteQueryOptions): QueryPromise<AdminCheckReservasData, undefined>;
+export function adminCheckReservas(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<AdminCheckReservasData, undefined>;
 
 interface ListPublicWorkshopsRef {
   /* Allow users to create refs without passing in DataConnect */
