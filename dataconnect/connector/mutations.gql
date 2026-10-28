@@ -12,9 +12,16 @@ mutation UpsertProfesional($nombre: String!, $email: String!) @auth(level: USER)
 # Reasigna el UID de un profesional existente cuando el usuario borró su cuenta
 # Firebase Auth y se re-registró con el mismo email (obtiene un UID nuevo).
 # Seguro: auth.token.email garantiza que solo el dueño del email puede reclamar la fila.
+# CTE actualiza FKs dependientes (espacios) antes de cambiar el PK del profesional.
 mutation ReassignProfesionalUid($nombre: String!) @auth(level: USER) {
   reassigned: _execute(
-    sql: """UPDATE profesionales SET uid = $1, nombre = $2, updated_at = NOW() WHERE email = $3"""
+    sql: """
+      WITH moved AS (
+        UPDATE espacios SET profesional_uid = $1
+        WHERE profesional_uid = (SELECT uid FROM profesionales WHERE email = $3)
+      )
+      UPDATE profesionales SET uid = $1, nombre = $2, updated_at = NOW() WHERE email = $3
+    """
     params: [{_expr: "auth.uid"}, $nombre, {_expr: "auth.token.email"}]
   )
 }
