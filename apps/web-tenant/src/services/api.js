@@ -102,6 +102,12 @@ export const espacios = {
     const { data } = await reactivarSuscripcionEspacio({ id });
     return data.espacio_update;
   },
+  getUsuariosBloqueados: async () => {
+    // TODO: migrar blacklist a Data Connect (tabla dedicada)
+    return [];
+  },
+  blockUser: async () => {},
+  unblockUser: async () => {},
   getPublic: async (id) => {
     const { data } = await getPublicEspacio({ id });
     return data.espacios[0] ?? null;
