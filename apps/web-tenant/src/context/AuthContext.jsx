@@ -22,14 +22,19 @@ export function AuthProvider({ children }) {
               email:  firebaseUser.email,
             });
           } catch (e) {
-            // El schema actual de Data Connect no hace upsert real: si ya existe
-            // un profesional con ese email, dispara ALREADY_EXISTS. Es esperable
-            // en cada login (el documento ya existía), así que lo silenciamos.
-            // Cualquier otro error sí lo logueamos.
+            // upsertProfesional puede fallar con ALREADY_EXISTS en dos casos:
+            // 1) el profesional ya existe (login repetido) — completamente normal
+            // 2) onAuthStateChanged dispara dos veces seguidas (Google sign-in /
+            //    React StrictMode): la primera INSERT tiene éxito, la segunda
+            //    falla porque el email ya existe. Ambos casos son inocuos.
+            const errStr = (() => { try { return JSON.stringify(e); } catch { return String(e); } })();
             const isAlreadyExists =
-              e?.message?.includes('ALREADY_EXISTS') ||
-              e?.message?.includes('profesionales_email_uidx') ||
-              e?.errors?.some?.(err => err?.extensions?.code === 'ALREADY_EXISTS');
+              errStr.includes('ALREADY_EXISTS') ||
+              errStr.includes('profesionales_email_uidx') ||
+              e?.graphQLErrors?.some?.(err =>
+                err?.extensions?.code === 'ALREADY_EXISTS' ||
+                err?.message?.includes('profesionales_email_uidx')
+              );
             if (!isAlreadyExists) {
               console.error('upsertProfesional:', e);
             }
