@@ -836,6 +836,7 @@ export default function EspacioPublico({ overrideEspacioId }) {
   const [showMisDatos,   setShowMisDatos]   = useState(false);
   const [view,           setView]           = useState('talleres'); // 'talleres' | 'mis-reservas'
   const [cancelConfirm,  setCancelConfirm]  = useState(null); // reservaId en espera de confirmación
+  const espacioReservas = userReservas.filter(r => r.espacio?.id === espacioId || r.workshop?.espacioId === espacioId);
 
   useEffect(() => {
     async function load() {
@@ -1044,7 +1045,7 @@ export default function EspacioPublico({ overrideEspacioId }) {
           tenantId={espacioId}
           cobrosLinks={espacio?.cobros?.links ?? []}
           tyc={espacio.tycEnabled && espacio.terminosCondiciones ? espacio.terminosCondiciones : null}
-          prefill={currentUser ? { nombre: currentUser.profile?.nombre ?? '', email: currentUser.user?.email ?? '', telefono: currentUser.profile?.telefono ?? '' } : undefined}
+          prefill={currentUser ? { nombre: currentUser.profile?.nombre || currentUser.user?.displayName || '', email: currentUser.user?.email ?? '', telefono: currentUser.profile?.telefono ?? '' } : undefined}
           onConfirm={handleConfirm}
           onClose={() => setBooking(null)}
         />
@@ -1205,10 +1206,10 @@ export default function EspacioPublico({ overrideEspacioId }) {
         </div>
       )}
 
-      {/* Vista: Mis reservas */}
+      {/* Vista: Mis reservas (solo de este espacio) */}
       {view === 'mis-reservas' && (
         <div className="max-w-2xl mx-auto px-4 py-10">
-          <h2 className="font-display text-xl mb-4" style={{ color: contrastText(brand.bg) }}>Mis reservas</h2>
+          <h2 className="font-display text-xl mb-4" style={{ color: contrastText(brand.bg) }}>Mis Reservas en {espacio?.nombre ?? 'este espacio'}</h2>
           {!currentUser ? (
             <div className="text-center py-12">
               <p className="text-sm mb-4" style={{ color: contrastText(brand.bg) === '#ffffff' ? 'rgba(255,255,255,0.65)' : '#6B5F4C' }}>Iniciá sesión para ver tus reservas.</p>
@@ -1220,13 +1221,13 @@ export default function EspacioPublico({ overrideEspacioId }) {
                 Ingresar
               </button>
             </div>
-          ) : userReservas.length === 0 ? (
+          ) : espacioReservas.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-sm" style={{ color: contrastText(brand.bg) === '#ffffff' ? 'rgba(255,255,255,0.65)' : '#6B5F4C' }}>Todavía no tenés reservas.</p>
+              <p className="text-sm" style={{ color: contrastText(brand.bg) === '#ffffff' ? 'rgba(255,255,255,0.65)' : '#6B5F4C' }}>No tenés reservas en este espacio.</p>
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              {userReservas.map(r => {
+              {espacioReservas.map(r => {
                 const ws = r.workshop;
                 const hBg = ws?.headerType === 'COLOR' && ws?.headerValue ? ws.headerValue : brand.primary;
                 const isCancelada = r.estado === 'CANCELADA';

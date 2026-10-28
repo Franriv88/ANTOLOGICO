@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import jsQR from 'jsqr';
-import { reservas as reservasApi, workshops as workshopsApi, espacios as espaciosApi } from '../services/api';
-import { loginGoogle, loginEmail, register, logout, subscribeAuth, authErrorMsg, sendPasswordReset, checkRedirectResult, getAuthCurrentUser, followEspacio, unfollowEspacio, getEspaciosSeguidos, syncFollowedToFirestore } from '../services/userAuth';
+import { reservas as reservasApi, espacios as espaciosApi } from '../services/api';
+import { loginGoogle, loginEmail, register, logout, subscribeAuth, authErrorMsg, sendPasswordReset, checkRedirectResult, getAuthCurrentUser, followEspacio, getEspaciosSeguidos, syncFollowedToFirestore } from '../services/userAuth';
 import MobileAppShell from '../components/MobileAppShell';
 import { AntologicoLoaderCream } from '../components/AntologicoLoaderCream';
 
@@ -15,10 +15,6 @@ function addFollowed(id) {
   const prev = getFollowed();
   if (!prev.includes(id)) localStorage.setItem(LS_KEY, JSON.stringify([...prev, id]));
 }
-function removeFollowed(id) {
-  localStorage.setItem(LS_KEY, JSON.stringify(getFollowed().filter(x => x !== id)));
-}
-
 function contrastText(hex) {
   if (!hex?.startsWith('#') || hex.length < 7) return '#ffffff';
   const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
@@ -379,59 +375,6 @@ function QRScannerModal({ onClose, userId }) {
   );
 }
 
-// ── EspaciosSeguidos ──────────────────────────────────────────────────────────
-
-function EspaciosSeguidos({ userId, onUnfollow }) {
-  const [items,   setItems]   = useState(null);
-  const [refresh, setRefresh] = useState(0);
-
-  useEffect(() => {
-    async function load() {
-      const ids = userId
-        ? await getEspaciosSeguidos(userId).catch(() => getFollowed())
-        : getFollowed();
-      if (ids.length === 0) { setItems([]); return; }
-      const list = await espaciosApi.getPublicBatch(ids).catch(() => []);
-      setItems(list.filter(Boolean));
-    }
-    load();
-  }, [userId, refresh]);
-
-  async function handleUnfollow(id) {
-    if (userId) {
-      await unfollowEspacio(userId, id).catch(() => {});
-    } else {
-      removeFollowed(id);
-    }
-    onUnfollow?.();
-    setRefresh(r => r + 1);
-  }
-
-  if (items === null || items.length === 0) return null;
-
-  return (
-    <section className="mb-8">
-      <h2 className="text-xs font-semibold text-[#9B9083] uppercase tracking-wide mb-3">Espacios seguidos</h2>
-      <div className="flex flex-col gap-2">
-        {items.map(esp => (
-          <div key={esp.id} className="flex items-center justify-between gap-3 bg-white border border-[#EDE8DE] rounded-xl px-4 py-3">
-            <Link to={`/p/${esp.id}`} className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-[#E85D4A] hover:underline truncate">{esp.nombre}</p>
-              {esp.rubro?.nombre && <p className="text-xs text-[#9B9083] truncate">{esp.rubro.nombre}</p>}
-            </Link>
-            <button
-              onClick={() => handleUnfollow(esp.id)}
-              title="Dejar de seguir"
-              className="shrink-0 text-xs text-[#9B9083] hover:text-red-500 border border-[#D2C4A8] hover:border-red-300 rounded-lg px-2.5 py-1 transition-colors">
-              Dejar
-            </button>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 // ── ReservaCard ───────────────────────────────────────────────────────────────
 
 function ReservaCard({ reserva, onCancel }) {
@@ -512,6 +455,9 @@ export default function MisReservas() {
     return () => { if (prev) root.setAttribute('data-theme', prev); };
   }, []);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const filterEspacioId = searchParams.get('espacio');
+  const filterEspacioNombre = searchParams.get('nombre');
   const [currentUser,  setCurrentUser]  = useState(() => {
     const u = getAuthCurrentUser();
     return u ? { user: u, profile: {} } : undefined;
@@ -560,8 +506,12 @@ export default function MisReservas() {
     navigate('/inicio', { replace: true });
   }
 
+  const filtered = filterEspacioId
+    ? reservas.filter(r => r.espacio?.id === filterEspacioId || r.workshop?.espacioId === filterEspacioId)
+    : reservas;
+
   // Sort: upcoming first, then past, then cancelled
-  const sorted = [...reservas].sort((a, b) => {
+  const sorted = [...filtered].sort((a, b) => {
     const score = r => r.estado === 'CANCELADA' ? 2 : isPast(r.workshop?.fecha) ? 1 : 0;
     const diff  = score(a) - score(b);
     if (diff !== 0) return diff;
@@ -574,10 +524,14 @@ export default function MisReservas() {
   const past      = sorted.filter(r => r.estado !== 'CANCELADA' && isPast(r.workshop?.fecha));
   const cancelled = sorted.filter(r => r.estado === 'CANCELADA');
 
+  const subtitleText = filterEspacioNombre
+    ? `Mis Reservas en ${filterEspacioNombre}`
+    : 'Mis reservas';
+
   return (
     <MobileAppShell
       title="Antológico"
-      subtitle="Mis reservas"
+      subtitle={subtitleText}
       isAuthed={!!currentUser}
       onLogout={handleLogout}
       showQR
@@ -586,23 +540,13 @@ export default function MisReservas() {
       {showScanner && <QRScannerModal onClose={() => setShowScanner(false)} userId={currentUser?.user?.uid} />}
 
       <div className="max-w-lg mx-auto px-4 py-8 w-full">
-        {/* DEBUG TEMPORAL — eliminar después de verificar */}
-        {currentUser && (
-          <div style={{background:'#fef3c7',padding:'8px 12px',borderRadius:8,fontSize:12,marginBottom:12,wordBreak:'break-all'}}>
-            <strong>DEBUG UID:</strong> {currentUser.user?.uid}<br/>
-            <strong>Reservas cargadas:</strong> {reservas.length}
-          </div>
-        )}
         {/* Not authenticated */}
         {currentUser === null && (
-          <>
-            <EspaciosSeguidos />
-            <AuthPanel onSuccess={({ user, profile }) => {
-              setCurrentUser({ user, profile: profile ?? {} });
-              loadReservas(user.email ?? profile?.email ?? '');
-              syncFollowedToFirestore(user.uid).catch(() => {});
-            }} />
-          </>
+          <AuthPanel onSuccess={({ user, profile }) => {
+            setCurrentUser({ user, profile: profile ?? {} });
+            loadReservas(user.email ?? profile?.email ?? '');
+            syncFollowedToFirestore(user.uid).catch(() => {});
+          }} />
         )}
 
         {/* Loading auth */}
@@ -619,23 +563,29 @@ export default function MisReservas() {
               Hola, <span className="font-semibold text-[#2B241A]">{currentUser.profile?.nombre?.split(' ')[0] ?? currentUser.user?.email}</span>
             </p>
 
-            <EspaciosSeguidos userId={currentUser.user?.uid} />
-
             {loadingR && (
               <div className="flex items-center justify-center py-8">
                 <AntologicoLoaderCream size={300} />
               </div>
             )}
 
-            {!loadingR && reservas.length === 0 && (
+            {!loadingR && filtered.length === 0 && (
               <div className="text-center py-16">
                 <div className="w-14 h-14 rounded-full bg-[#F0EAE0] flex items-center justify-center mx-auto mb-4">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#9B9083" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
                   </svg>
                 </div>
-                <p className="text-sm text-[#6B5F4C] mb-1">No tenés reservas todavía.</p>
-                <p className="text-xs text-[#9B9083]">Cuando reserves un taller, lo vas a ver acá.</p>
+                <p className="text-sm text-[#6B5F4C] mb-1">
+                  {filterEspacioNombre
+                    ? `No tenés reservas en ${filterEspacioNombre}.`
+                    : 'No tenés reservas todavía.'}
+                </p>
+                <p className="text-xs text-[#9B9083]">
+                  {filterEspacioNombre
+                    ? 'Cuando reserves un taller de este espacio, lo vas a ver acá.'
+                    : 'Cuando reserves un taller, lo vas a ver acá.'}
+                </p>
               </div>
             )}
 
