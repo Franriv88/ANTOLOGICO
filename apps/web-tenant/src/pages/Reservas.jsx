@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useEspacio } from '../context/EspacioContext';
 import * as api from '../services/api';
 import Layout from '../components/Layout';
@@ -68,13 +68,77 @@ function EmptyState({ hasReservas }) {
     <div className="text-center py-16">
       <p className="text-sm text-ink-muted">
         {hasReservas
-          ? 'No hay reservas que coincidan con la búsqueda.'
+          ? 'No hay reservas que coincidan con los filtros.'
           : 'Todavía no hay reservas para este espacio.'}
       </p>
       {!hasReservas && (
         <p className="text-xs text-ink-muted mt-1">
           Las reservas aparecerán aquí cuando los participantes se inscriban a tus talleres.
         </p>
+      )}
+    </div>
+  );
+}
+
+const ChevronDown = () => (
+  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="6 9 12 15 18 9"/>
+  </svg>
+);
+
+function ColumnFilter({ label, options, selected, onSelect, align = 'left' }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function close(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    }
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [open]);
+
+  const hasFilter = selected !== null && selected !== undefined && selected !== '';
+
+  return (
+    <div ref={ref} className="relative inline-flex">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className={`inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider transition-colors ${
+          hasFilter ? 'text-primary' : 'text-ink-muted hover:text-ink'
+        }`}
+      >
+        {label}
+        <ChevronDown />
+      </button>
+      {open && (
+        <div
+          className={`absolute top-full mt-1.5 z-30 bg-surface-100 border border-border rounded-xl shadow-lg py-1.5 min-w-[160px] ${
+            align === 'right' ? 'right-0' : 'left-0'
+          }`}
+        >
+          <button
+            onClick={() => { onSelect(''); setOpen(false); }}
+            className={`w-full text-left px-3.5 py-2 text-xs transition-colors ${
+              !hasFilter ? 'text-primary font-semibold bg-primary/5' : 'text-ink-muted hover:bg-surface-200'
+            }`}
+          >
+            Todos
+          </button>
+          {options.map(opt => (
+            <button
+              key={opt.value}
+              onClick={() => { onSelect(opt.value); setOpen(false); }}
+              className={`w-full text-left px-3.5 py-2 text-xs transition-colors flex items-center gap-2 ${
+                selected === opt.value ? 'text-primary font-semibold bg-primary/5' : 'text-ink hover:bg-surface-200'
+              }`}
+            >
+              {opt.badge && <span className="shrink-0">{opt.badge}</span>}
+              {opt.label}
+            </button>
+          ))}
+        </div>
       )}
     </div>
   );
@@ -154,10 +218,13 @@ export default function Reservas() {
   const [reservas,  setReservas]    = useState([]);
   const [loading,   setLoading]     = useState(true);
   const [filterWs,  setFilterWs]    = useState('');
+  const [filterEstado, setFilterEstado] = useState('');
+  const [filterPago,   setFilterPago]   = useState('');
+  const [filterFecha,  setFilterFecha]  = useState('');
   const [search,    setSearch]      = useState('');
   const [cancelTarget,   setCancelTarget]  = useState(null);
   const [markingPaid,    setMarkingPaid]   = useState(null);
-  const [blockTarget,    setBlockTarget]   = useState(null); // { email, isBloqueado }
+  const [blockTarget,    setBlockTarget]   = useState(null);
   const [blockingEmail,  setBlockingEmail] = useState(null);
   const [bloqueados,     setBloqueados]    = useState([]);
 
@@ -188,6 +255,26 @@ export default function Reservas() {
   const filtered = useMemo(() => {
     let list = reservas;
     if (filterWs) list = list.filter(r => r.workshopId === filterWs);
+    if (filterEstado) list = list.filter(r => r.estado === filterEstado);
+    if (filterPago) {
+      list = list.filter(r => {
+        if (filterPago === 'MERCADO_PAGO') return r.metodoPago === 'MERCADO_PAGO';
+        if (filterPago === 'EFECTIVO_PAGADO') return r.metodoPago === 'EFECTIVO' && r.estadoPago === 'PAGADO';
+        if (filterPago === 'EFECTIVO_PENDIENTE') return r.metodoPago === 'EFECTIVO' && r.estadoPago === 'PENDIENTE';
+        return true;
+      });
+    }
+    if (filterFecha) {
+      const now = new Date();
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      list = list.filter(r => {
+        const d = new Date(r.fecha_reserva);
+        if (filterFecha === 'hoy') return d >= startOfDay;
+        if (filterFecha === '7dias') return d >= new Date(startOfDay - 7 * 86400000);
+        if (filterFecha === '30dias') return d >= new Date(startOfDay - 30 * 86400000);
+        return true;
+      });
+    }
     if (search) {
       const q = search.toLowerCase();
       list = list.filter(r =>
@@ -195,7 +282,9 @@ export default function Reservas() {
       );
     }
     return [...list].sort((a, b) => new Date(b.fecha_reserva) - new Date(a.fecha_reserva));
-  }, [reservas, filterWs, search]);
+  }, [reservas, filterWs, filterEstado, filterPago, filterFecha, search]);
+
+  const activeFilterCount = [filterWs, filterEstado, filterPago, filterFecha].filter(Boolean).length;
 
   const stats = useMemo(() => ({
     total:       reservas.length,
@@ -280,33 +369,29 @@ export default function Reservas() {
         <StatCard label="Efectivo pendiente" value={stats.efectivoPendiente}  accent={stats.efectivoPendiente > 0 ? 'amber' : undefined} />
       </div>
 
-      {/* Filters */}
-      <div className="flex gap-3 mb-5">
-        <select
-          value={filterWs}
-          onChange={e => setFilterWs(e.target.value)}
-          className="px-3 py-2 bg-surface-100 border border-border rounded-lg text-sm text-ink focus:outline-none focus:border-primary"
-        >
-          <option value="">Todos los talleres</option>
-          {workshops.map(w => (
-            <option key={w.id} value={w.id}>{w.nombre}</option>
-          ))}
-        </select>
+      {/* Search + active filters */}
+      <div className="flex items-center gap-3 mb-5">
         <input
           type="text"
           placeholder="Buscar por nombre o email…"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="flex-1 px-3 py-2 bg-surface-100 border border-border rounded-lg text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:border-primary"
+          className="flex-1 max-w-md px-3 py-2 bg-surface-100 border border-border rounded-lg text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:border-primary"
         />
+        {(activeFilterCount > 0 || search) && (
+          <p className="text-xs text-ink-muted whitespace-nowrap">
+            {filtered.length} resultado{filtered.length !== 1 ? 's' : ''}
+          </p>
+        )}
+        {activeFilterCount > 0 && (
+          <button
+            onClick={() => { setFilterWs(''); setFilterEstado(''); setFilterPago(''); setFilterFecha(''); }}
+            className="text-xs text-primary hover:text-primary-strong transition-colors whitespace-nowrap"
+          >
+            Limpiar filtros
+          </button>
+        )}
       </div>
-
-      {/* Results count */}
-      {(filterWs || search) && (
-        <p className="text-xs text-ink-muted mb-3">
-          {filtered.length} resultado{filtered.length !== 1 ? 's' : ''}
-        </p>
-      )}
 
       {/* Table */}
       {filtered.length === 0 ? (
@@ -322,17 +407,48 @@ export default function Reservas() {
                 <th className="text-left px-3 py-3.5 text-[11px] font-semibold text-ink-muted uppercase tracking-wider">
                   Participante
                 </th>
-                <th className="text-left px-3 py-3.5 text-[11px] font-semibold text-ink-muted uppercase tracking-wider">
-                  Taller
+                <th className="text-left px-3 py-3.5">
+                  <ColumnFilter
+                    label="Taller"
+                    selected={filterWs}
+                    onSelect={setFilterWs}
+                    options={workshops.map(w => ({ value: w.id, label: w.nombre }))}
+                  />
                 </th>
-                <th className="text-left px-3 py-3.5 text-[11px] font-semibold text-ink-muted uppercase tracking-wider whitespace-nowrap">
-                  Fecha
+                <th className="text-left px-3 py-3.5 whitespace-nowrap">
+                  <ColumnFilter
+                    label="Fecha"
+                    selected={filterFecha}
+                    onSelect={setFilterFecha}
+                    options={[
+                      { value: 'hoy', label: 'Hoy' },
+                      { value: '7dias', label: 'Últimos 7 días' },
+                      { value: '30dias', label: 'Últimos 30 días' },
+                    ]}
+                  />
                 </th>
-                <th className="text-left px-3 py-3.5 text-[11px] font-semibold text-ink-muted uppercase tracking-wider">
-                  Estado
+                <th className="text-left px-3 py-3.5">
+                  <ColumnFilter
+                    label="Estado"
+                    selected={filterEstado}
+                    onSelect={setFilterEstado}
+                    options={[
+                      { value: 'CONFIRMADA', label: 'Confirmada', badge: <span className="w-2 h-2 rounded-full bg-[#10B981] inline-block" /> },
+                      { value: 'CANCELADA', label: 'Cancelada', badge: <span className="w-2 h-2 rounded-full bg-danger inline-block" /> },
+                    ]}
+                  />
                 </th>
-                <th className="text-left px-3 py-3.5 text-[11px] font-semibold text-ink-muted uppercase tracking-wider">
-                  Pago
+                <th className="text-left px-3 py-3.5">
+                  <ColumnFilter
+                    label="Pago"
+                    selected={filterPago}
+                    onSelect={setFilterPago}
+                    options={[
+                      { value: 'MERCADO_PAGO', label: 'Mercado Pago', badge: <span className="w-2 h-2 rounded-full bg-blue-500 inline-block" /> },
+                      { value: 'EFECTIVO_PAGADO', label: 'Efectivo · Pagado', badge: <span className="w-2 h-2 rounded-full bg-[#10B981] inline-block" /> },
+                      { value: 'EFECTIVO_PENDIENTE', label: 'Efectivo · Pendiente', badge: <span className="w-2 h-2 rounded-full bg-[#B98527] inline-block" /> },
+                    ]}
+                  />
                 </th>
                 <th className="px-3 py-3.5" />
               </tr>

@@ -10,6 +10,7 @@ import Promocion from './pages/Promocion';
 import MiEspacio from './pages/MiEspacio';
 import Rubros    from './pages/Rubros';
 import Cupones   from './pages/Cupones';
+import Usuarios  from './pages/Usuarios';
 import { FullScreenLoader } from './components/AntologicoLoader';
 
 function RequireAdmin({ children }) {
@@ -40,6 +41,7 @@ export default function App() {
           <Route path="/mi-espacio" element={<AdminPage><MiEspacio /></AdminPage>} />
           <Route path="/rubros"    element={<AdminPage><Rubros /></AdminPage>} />
           <Route path="/cupones"   element={<AdminPage><Cupones /></AdminPage>} />
+          <Route path="/usuarios" element={<AdminPage><Usuarios /></AdminPage>} />
           <Route path="*"          element={<Navigate to="/tenants" replace />} />
         </Routes>
       </BrowserRouter>

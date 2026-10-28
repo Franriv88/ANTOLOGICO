@@ -10,6 +10,7 @@ const NAV = [
   { to: '/metricas',   label: 'Métricas' },
   { to: '/rubros',     label: 'Rubros' },
   { to: '/cupones',    label: 'Cupones' },
+  { to: '/usuarios',   label: 'Usuarios' },
   { to: '/mi-espacio', label: 'Mi Espacio' },
 ];
 

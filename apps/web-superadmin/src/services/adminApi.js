@@ -286,11 +286,67 @@ export const userManagement = {
   sendPasswordReset: (email) => sendPasswordResetEmail(auth, email),
 };
 
-// ─── Usuarios finales (reservantes) ──────────────────────────────────────────
+// ─── Usuarios (todos: tenants + alumnos) ─────────────────────────────────────
 export const usuarios = {
   count: async () => {
     const snap = await getDocs(collection(firestore, C_USUARIOS));
     return snap.size;
+  },
+
+  list: async () => {
+    const [usuariosSnap, espaciosSnap] = await Promise.all([
+      getDocs(collection(firestore, C_USUARIOS)),
+      getDocs(collection(firestore, C_ESPACIOS)),
+    ]);
+
+    const espaciosByUserId = {};
+    espaciosSnap.docs.forEach(d => {
+      const data = d.data();
+      if (data.userId) {
+        if (!espaciosByUserId[data.userId]) espaciosByUserId[data.userId] = [];
+        espaciosByUserId[data.userId].push({ id: d.id, nombre: data.nombre, planId: data.planId || data.selectedPlan });
+      }
+    });
+
+    return usuariosSnap.docs.map(d => {
+      const data = d.data();
+      const espacios = espaciosByUserId[d.id] || [];
+      return {
+        uid: d.id,
+        ...data,
+        tipo: espacios.length > 0 ? 'tenant' : 'alumno',
+        espacios,
+      };
+    });
+  },
+
+  anonymize: async (uid) => {
+    const ref = doc(firestore, C_USUARIOS, uid);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) throw new Error('Usuario no encontrado');
+
+    const anon = {
+      nombre: '[Datos eliminados]',
+      apellido: '',
+      email: `anon_${uid.slice(0, 8)}@deleted.antologico`,
+      telefono: '',
+      photoURL: '',
+      fechaNac: null,
+      genero: null,
+      redesSociales: null,
+      espaciosSeguidos: [],
+      anonymizedAt: new Date().toISOString(),
+      estado: 'ANONIMIZADO',
+    };
+    await updateDoc(ref, anon);
+
+    try {
+      await httpsCallable(functions, 'deleteTenantAuth')({ uid });
+    } catch (err) {
+      console.error('deleteTenantAuth (anonymize) failed:', err);
+    }
+
+    return anon;
   },
 };
 
