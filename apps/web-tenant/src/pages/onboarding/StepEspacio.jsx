@@ -28,33 +28,27 @@ export default function StepEspacio({ onNext, onBack, accumulated }) {
     try {
       // Garantizar que la fila del profesional existe antes del FK insert.
       const u = auth.currentUser;
-      console.log('[StepEspacio] auth.currentUser uid:', u?.uid, 'email:', u?.email);
       if (u) {
         try {
-          const upsertResult = await upsertProfesional({ nombre: u.displayName || u.email, email: u.email });
-          console.log('[StepEspacio] upsertProfesional OK:', upsertResult);
+          await upsertProfesional({ nombre: u.displayName || u.email, email: u.email });
         } catch (upsertErr) {
           const s = (() => { try { return JSON.stringify(upsertErr); } catch { return String(upsertErr); } })();
           const isAlreadyExists = s.includes('ALREADY_EXISTS') || s.includes('profesionales_email_uidx');
           if (isAlreadyExists) {
             try {
               await reassignProfesionalUid({ nombre: u.displayName || u.email });
-              console.log('[StepEspacio] reassignProfesionalUid OK — UID actualizado');
             } catch (reassignErr) {
-              console.error('[StepEspacio] reassignProfesionalUid FAILED:', reassignErr);
               setError('Error al actualizar perfil. Contactá soporte.');
               setLoading(false);
               return;
             }
           } else {
-            console.error('[StepEspacio] upsertProfesional FAILED:', s);
             setError('Error al registrar perfil: ' + (upsertErr?.message || s));
             setLoading(false);
             return;
           }
         }
       } else {
-        console.error('[StepEspacio] No hay usuario autenticado!');
         setError('No hay sesión activa. Recargá la página e intentá de nuevo.');
         setLoading(false);
         return;

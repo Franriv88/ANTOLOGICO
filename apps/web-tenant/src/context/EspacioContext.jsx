@@ -22,19 +22,15 @@ export function EspacioProvider({ children }) {
       return;
     }
     setLoading(true);
-    console.log('[EspacioCtx] fetching espacios for uid:', user.uid);
     espacioApi.list(user.uid)
       .then((list) => {
-        console.log('[EspacioCtx] listMyEspacios returned:', list?.length, 'espacios', list);
         setEspacios(list);
         setActive((prev) => {
           const match = prev ? list.find((e) => e.id === prev.id) : null;
-          const chosen = match ?? list[0] ?? null;
-          console.log('[EspacioCtx] activeEspacio set to:', chosen?.id, chosen?.nombre);
-          return chosen;
+          return match ?? list[0] ?? null;
         });
       })
-      .catch((err) => { console.error('[EspacioCtx] listMyEspacios ERROR:', err); })
+      .catch(console.error)
       .finally(() => setLoading(false));
   }, [user, authLoading]);
 
@@ -43,9 +39,7 @@ export function EspacioProvider({ children }) {
     setLoading(true);
     try {
       let list = await espacioApi.list(user.uid);
-      console.log('[EspacioCtx] refresh: listMyEspacios returned', list?.length, 'espacios', list);
       if (list.length === 0 && fallback) {
-        console.warn('[EspacioCtx] refresh: using fallback:', fallback);
         list = [fallback];
       }
       flushSync(() => {
