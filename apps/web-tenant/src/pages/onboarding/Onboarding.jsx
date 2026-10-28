@@ -29,15 +29,10 @@ export default function Onboarding() {
   }
 
   async function finish({ planId, periodo = 'mensual' } = {}) {
-    if (planId && data.espacioId) {
+    const isUuid = (s) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+    if (planId && data.espacioId && isUuid(planId)) {
       try {
-        const planesSnap = await import('firebase/firestore').then(({ getDoc, doc }) =>
-          import('../../lib/firebase').then(({ firestore }) =>
-            getDoc(doc(firestore, 'demo_planes', planId))
-          )
-        );
-        const plan = planesSnap.exists() ? { id: planesSnap.id, ...planesSnap.data() } : null;
-        await espacioApi.updatePlan(data.espacioId, planId, plan, periodo);
+        await espacioApi.updatePlan(data.espacioId, planId);
       } catch (e) {
         console.error('Error al guardar el plan:', e);
       }

@@ -657,8 +657,6 @@ export default function WorkshopForm() {
         scheduleData:      buildScheduleData(form),
         headerType:          effectiveHeaderType,
         headerValue:         effectiveHeaderValue,
-        headerImagePosition: form.headerImagePosition ?? { x: 50, y: 50 },
-        direccionId:         form.direccionId         || null,
         metodosPago:         form.metodosPago.length  ? form.metodosPago : null,
       };
 
