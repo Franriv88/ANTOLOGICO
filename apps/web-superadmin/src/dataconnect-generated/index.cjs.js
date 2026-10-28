@@ -424,6 +424,51 @@ exports.getMyWorkshop = function getMyWorkshop(dcOrVars, varsOrOptions, options)
 }
 ;
 
+const getPublicEspacioRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetPublicEspacio', inputVars);
+}
+getPublicEspacioRef.operationName = 'GetPublicEspacio';
+exports.getPublicEspacioRef = getPublicEspacioRef;
+
+exports.getPublicEspacio = function getPublicEspacio(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getPublicEspacioRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const getPublicEspaciosRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetPublicEspacios', inputVars);
+}
+getPublicEspaciosRef.operationName = 'GetPublicEspacios';
+exports.getPublicEspaciosRef = getPublicEspaciosRef;
+
+exports.getPublicEspacios = function getPublicEspacios(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getPublicEspaciosRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const listPublicWorkshopsByEspacioRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'ListPublicWorkshopsByEspacio', inputVars);
+}
+listPublicWorkshopsByEspacioRef.operationName = 'ListPublicWorkshopsByEspacio';
+exports.listPublicWorkshopsByEspacioRef = listPublicWorkshopsByEspacioRef;
+
+exports.listPublicWorkshopsByEspacio = function listPublicWorkshopsByEspacio(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(listPublicWorkshopsByEspacioRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
 const listPublicWorkshopsRef = (dc) => {
   const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
   dcInstance._useGeneratedSdk();

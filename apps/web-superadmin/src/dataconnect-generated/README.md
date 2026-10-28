@@ -18,6 +18,9 @@ This README will guide you through the process of using the generated JavaScript
   - [*ListMyWorkshopsByEstado*](#listmyworkshopsbyestado)
   - [*SearchMyWorkshops*](#searchmyworkshops)
   - [*GetMyWorkshop*](#getmyworkshop)
+  - [*GetPublicEspacio*](#getpublicespacio)
+  - [*GetPublicEspacios*](#getpublicespacios)
+  - [*ListPublicWorkshopsByEspacio*](#listpublicworkshopsbyespacio)
   - [*ListPublicWorkshops*](#listpublicworkshops)
 - [**Mutations**](#mutations)
   - [*UpsertProfesional*](#upsertprofesional)
@@ -1265,6 +1268,389 @@ const ref = getMyWorkshopRef({ id: ..., });
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
 const ref = getMyWorkshopRef(dataConnect, getMyWorkshopVars);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.workshops);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.workshops);
+});
+```
+
+## GetPublicEspacio
+You can execute the `GetPublicEspacio` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+getPublicEspacio(vars: GetPublicEspacioVariables, options?: ExecuteQueryOptions): QueryPromise<GetPublicEspacioData, GetPublicEspacioVariables>;
+
+interface GetPublicEspacioRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetPublicEspacioVariables): QueryRef<GetPublicEspacioData, GetPublicEspacioVariables>;
+}
+export const getPublicEspacioRef: GetPublicEspacioRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+getPublicEspacio(dc: DataConnect, vars: GetPublicEspacioVariables, options?: ExecuteQueryOptions): QueryPromise<GetPublicEspacioData, GetPublicEspacioVariables>;
+
+interface GetPublicEspacioRef {
+  ...
+  (dc: DataConnect, vars: GetPublicEspacioVariables): QueryRef<GetPublicEspacioData, GetPublicEspacioVariables>;
+}
+export const getPublicEspacioRef: GetPublicEspacioRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the getPublicEspacioRef:
+```typescript
+const name = getPublicEspacioRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `GetPublicEspacio` query requires an argument of type `GetPublicEspacioVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface GetPublicEspacioVariables {
+  id: UUIDString;
+}
+```
+### Return Type
+Recall that executing the `GetPublicEspacio` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `GetPublicEspacioData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface GetPublicEspacioData {
+  espacios: ({
+    id: UUIDString;
+    nombre: string;
+    estado: EstadoEspacio;
+    logoUrl?: string | null;
+    logoShape?: string | null;
+    logoScale?: number | null;
+    brandColors?: unknown | null;
+    brandFont?: string | null;
+    redesSociales?: unknown | null;
+    rubro?: {
+      id: UUIDString;
+      nombre: string;
+    } & Rubro_Key;
+    rubroPersonalizado?: string | null;
+    profesional: {
+      uid: string;
+      nombre: string;
+    } & Profesional_Key;
+  } & Espacio_Key)[];
+}
+```
+### Using `GetPublicEspacio`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, getPublicEspacio, GetPublicEspacioVariables } from '@antologico/dataconnect';
+
+// The `GetPublicEspacio` query requires an argument of type `GetPublicEspacioVariables`:
+const getPublicEspacioVars: GetPublicEspacioVariables = {
+  id: ..., 
+};
+
+// Call the `getPublicEspacio()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await getPublicEspacio(getPublicEspacioVars);
+// Variables can be defined inline as well.
+const { data } = await getPublicEspacio({ id: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await getPublicEspacio(dataConnect, getPublicEspacioVars);
+
+console.log(data.espacios);
+
+// Or, you can use the `Promise` API.
+getPublicEspacio(getPublicEspacioVars).then((response) => {
+  const data = response.data;
+  console.log(data.espacios);
+});
+```
+
+### Using `GetPublicEspacio`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, getPublicEspacioRef, GetPublicEspacioVariables } from '@antologico/dataconnect';
+
+// The `GetPublicEspacio` query requires an argument of type `GetPublicEspacioVariables`:
+const getPublicEspacioVars: GetPublicEspacioVariables = {
+  id: ..., 
+};
+
+// Call the `getPublicEspacioRef()` function to get a reference to the query.
+const ref = getPublicEspacioRef(getPublicEspacioVars);
+// Variables can be defined inline as well.
+const ref = getPublicEspacioRef({ id: ..., });
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = getPublicEspacioRef(dataConnect, getPublicEspacioVars);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.espacios);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.espacios);
+});
+```
+
+## GetPublicEspacios
+You can execute the `GetPublicEspacios` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+getPublicEspacios(vars: GetPublicEspaciosVariables, options?: ExecuteQueryOptions): QueryPromise<GetPublicEspaciosData, GetPublicEspaciosVariables>;
+
+interface GetPublicEspaciosRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetPublicEspaciosVariables): QueryRef<GetPublicEspaciosData, GetPublicEspaciosVariables>;
+}
+export const getPublicEspaciosRef: GetPublicEspaciosRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+getPublicEspacios(dc: DataConnect, vars: GetPublicEspaciosVariables, options?: ExecuteQueryOptions): QueryPromise<GetPublicEspaciosData, GetPublicEspaciosVariables>;
+
+interface GetPublicEspaciosRef {
+  ...
+  (dc: DataConnect, vars: GetPublicEspaciosVariables): QueryRef<GetPublicEspaciosData, GetPublicEspaciosVariables>;
+}
+export const getPublicEspaciosRef: GetPublicEspaciosRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the getPublicEspaciosRef:
+```typescript
+const name = getPublicEspaciosRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `GetPublicEspacios` query requires an argument of type `GetPublicEspaciosVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface GetPublicEspaciosVariables {
+  ids: UUIDString[];
+}
+```
+### Return Type
+Recall that executing the `GetPublicEspacios` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `GetPublicEspaciosData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface GetPublicEspaciosData {
+  espacios: ({
+    id: UUIDString;
+    nombre: string;
+    estado: EstadoEspacio;
+    logoUrl?: string | null;
+    logoShape?: string | null;
+    logoScale?: number | null;
+    brandColors?: unknown | null;
+    brandFont?: string | null;
+    redesSociales?: unknown | null;
+    rubro?: {
+      id: UUIDString;
+      nombre: string;
+    } & Rubro_Key;
+    rubroPersonalizado?: string | null;
+    profesional: {
+      uid: string;
+      nombre: string;
+    } & Profesional_Key;
+  } & Espacio_Key)[];
+}
+```
+### Using `GetPublicEspacios`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, getPublicEspacios, GetPublicEspaciosVariables } from '@antologico/dataconnect';
+
+// The `GetPublicEspacios` query requires an argument of type `GetPublicEspaciosVariables`:
+const getPublicEspaciosVars: GetPublicEspaciosVariables = {
+  ids: ..., 
+};
+
+// Call the `getPublicEspacios()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await getPublicEspacios(getPublicEspaciosVars);
+// Variables can be defined inline as well.
+const { data } = await getPublicEspacios({ ids: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await getPublicEspacios(dataConnect, getPublicEspaciosVars);
+
+console.log(data.espacios);
+
+// Or, you can use the `Promise` API.
+getPublicEspacios(getPublicEspaciosVars).then((response) => {
+  const data = response.data;
+  console.log(data.espacios);
+});
+```
+
+### Using `GetPublicEspacios`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, getPublicEspaciosRef, GetPublicEspaciosVariables } from '@antologico/dataconnect';
+
+// The `GetPublicEspacios` query requires an argument of type `GetPublicEspaciosVariables`:
+const getPublicEspaciosVars: GetPublicEspaciosVariables = {
+  ids: ..., 
+};
+
+// Call the `getPublicEspaciosRef()` function to get a reference to the query.
+const ref = getPublicEspaciosRef(getPublicEspaciosVars);
+// Variables can be defined inline as well.
+const ref = getPublicEspaciosRef({ ids: ..., });
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = getPublicEspaciosRef(dataConnect, getPublicEspaciosVars);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.espacios);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.espacios);
+});
+```
+
+## ListPublicWorkshopsByEspacio
+You can execute the `ListPublicWorkshopsByEspacio` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+listPublicWorkshopsByEspacio(vars: ListPublicWorkshopsByEspacioVariables, options?: ExecuteQueryOptions): QueryPromise<ListPublicWorkshopsByEspacioData, ListPublicWorkshopsByEspacioVariables>;
+
+interface ListPublicWorkshopsByEspacioRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ListPublicWorkshopsByEspacioVariables): QueryRef<ListPublicWorkshopsByEspacioData, ListPublicWorkshopsByEspacioVariables>;
+}
+export const listPublicWorkshopsByEspacioRef: ListPublicWorkshopsByEspacioRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+listPublicWorkshopsByEspacio(dc: DataConnect, vars: ListPublicWorkshopsByEspacioVariables, options?: ExecuteQueryOptions): QueryPromise<ListPublicWorkshopsByEspacioData, ListPublicWorkshopsByEspacioVariables>;
+
+interface ListPublicWorkshopsByEspacioRef {
+  ...
+  (dc: DataConnect, vars: ListPublicWorkshopsByEspacioVariables): QueryRef<ListPublicWorkshopsByEspacioData, ListPublicWorkshopsByEspacioVariables>;
+}
+export const listPublicWorkshopsByEspacioRef: ListPublicWorkshopsByEspacioRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the listPublicWorkshopsByEspacioRef:
+```typescript
+const name = listPublicWorkshopsByEspacioRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `ListPublicWorkshopsByEspacio` query requires an argument of type `ListPublicWorkshopsByEspacioVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface ListPublicWorkshopsByEspacioVariables {
+  espacioId: UUIDString;
+}
+```
+### Return Type
+Recall that executing the `ListPublicWorkshopsByEspacio` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `ListPublicWorkshopsByEspacioData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface ListPublicWorkshopsByEspacioData {
+  workshops: ({
+    id: UUIDString;
+    nombre: string;
+    tipo?: TipoWorkshop | null;
+    descripcion?: string | null;
+    cuposTotales: number;
+    cuposDisponibles: number;
+    precio: number;
+    fecha: TimestampString;
+    duracionHoras?: number | null;
+    duracionMinutos?: number | null;
+    experienciaPrevia?: boolean | null;
+    scheduleData?: unknown | null;
+    headerType: HeaderType;
+    headerValue?: string | null;
+    metodosPago?: unknown | null;
+    estado: EstadoWorkshop;
+    createdAt: TimestampString;
+  } & Workshop_Key)[];
+}
+```
+### Using `ListPublicWorkshopsByEspacio`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, listPublicWorkshopsByEspacio, ListPublicWorkshopsByEspacioVariables } from '@antologico/dataconnect';
+
+// The `ListPublicWorkshopsByEspacio` query requires an argument of type `ListPublicWorkshopsByEspacioVariables`:
+const listPublicWorkshopsByEspacioVars: ListPublicWorkshopsByEspacioVariables = {
+  espacioId: ..., 
+};
+
+// Call the `listPublicWorkshopsByEspacio()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await listPublicWorkshopsByEspacio(listPublicWorkshopsByEspacioVars);
+// Variables can be defined inline as well.
+const { data } = await listPublicWorkshopsByEspacio({ espacioId: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await listPublicWorkshopsByEspacio(dataConnect, listPublicWorkshopsByEspacioVars);
+
+console.log(data.workshops);
+
+// Or, you can use the `Promise` API.
+listPublicWorkshopsByEspacio(listPublicWorkshopsByEspacioVars).then((response) => {
+  const data = response.data;
+  console.log(data.workshops);
+});
+```
+
+### Using `ListPublicWorkshopsByEspacio`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, listPublicWorkshopsByEspacioRef, ListPublicWorkshopsByEspacioVariables } from '@antologico/dataconnect';
+
+// The `ListPublicWorkshopsByEspacio` query requires an argument of type `ListPublicWorkshopsByEspacioVariables`:
+const listPublicWorkshopsByEspacioVars: ListPublicWorkshopsByEspacioVariables = {
+  espacioId: ..., 
+};
+
+// Call the `listPublicWorkshopsByEspacioRef()` function to get a reference to the query.
+const ref = listPublicWorkshopsByEspacioRef(listPublicWorkshopsByEspacioVars);
+// Variables can be defined inline as well.
+const ref = listPublicWorkshopsByEspacioRef({ espacioId: ..., });
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = listPublicWorkshopsByEspacioRef(dataConnect, listPublicWorkshopsByEspacioVars);
 
 // Call `executeQuery()` on the reference to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.

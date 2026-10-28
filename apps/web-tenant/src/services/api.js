@@ -21,6 +21,9 @@ import {
   upsertProfesional,
   listReservasByEspacio,
   cancelarReserva,
+  getPublicEspacio,
+  getPublicEspacios,
+  listPublicWorkshopsByEspacio,
 } from '../dataconnect-generated';
 
 export const profesionales = {
@@ -99,6 +102,15 @@ export const espacios = {
     const { data } = await reactivarSuscripcionEspacio({ id });
     return data.espacio_update;
   },
+  getPublic: async (id) => {
+    const { data } = await getPublicEspacio({ id });
+    return data.espacios[0] ?? null;
+  },
+  getPublicBatch: async (ids) => {
+    if (!ids.length) return [];
+    const { data } = await getPublicEspacios({ ids });
+    return data.espacios ?? [];
+  },
 };
 
 export const rubros = {
@@ -142,5 +154,9 @@ export const workshops = {
   remove: async (id, espacioId) => {
     const { data } = await deleteWorkshop({ id, espacioId });
     return data.workshop_delete;
+  },
+  listPublic: async (espacioId) => {
+    const { data } = await listPublicWorkshopsByEspacio({ espacioId });
+    return data.workshops ?? [];
   },
 };

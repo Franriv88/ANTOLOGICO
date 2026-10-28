@@ -145,6 +145,46 @@ query GetMyWorkshop($id: UUID!) @auth(level: USER) {
 
 # ─── Público ──────────────────────────────────────────────────────────────────
 
+query GetPublicEspacio($id: UUID!) @auth(level: PUBLIC, insecureReason: "Cualquier usuario (autenticado o no) debe poder ver la info básica de un espacio para seguirlo o reservar.") {
+  espacios(
+    where: { id: { eq: $id }, estado: { eq: ACTIVO } }
+    limit: 1
+  ) {
+    id nombre estado
+    logoUrl logoShape logoScale brandColors brandFont redesSociales
+    rubro { id nombre }
+    rubroPersonalizado
+    profesional { uid nombre }
+  }
+}
+
+query GetPublicEspacios($ids: [UUID!]!) @auth(level: PUBLIC, insecureReason: "Carga batch de espacios seguidos por un usuario — todos son datos públicos del marketplace.") {
+  espacios(
+    where: { id: { in: $ids }, estado: { eq: ACTIVO } }
+  ) {
+    id nombre estado
+    logoUrl logoShape logoScale brandColors brandFont redesSociales
+    rubro { id nombre }
+    rubroPersonalizado
+    profesional { uid nombre }
+  }
+}
+
+query ListPublicWorkshopsByEspacio($espacioId: UUID!) @auth(level: PUBLIC, insecureReason: "Talleres publicados de un espacio son visibles sin login — página pública del tenant.") {
+  workshops(
+    where: {
+      espacioId: { eq: $espacioId }
+      estado: { eq: PUBLICADO }
+    }
+    orderBy: [{ fecha: ASC }]
+  ) {
+    id nombre tipo descripcion
+    cuposTotales cuposDisponibles precio fecha
+    duracionHoras duracionMinutos experienciaPrevia scheduleData
+    headerType headerValue metodosPago estado createdAt
+  }
+}
+
 query ListPublicWorkshops @auth(level: PUBLIC, insecureReason: "Talleres publicados son el discovery público del marketplace — deben ser visibles sin login.") {
   workshops(
     where: { estado: { eq: PUBLICADO } }

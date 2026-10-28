@@ -391,7 +391,7 @@ function EspaciosSeguidos({ userId, onUnfollow }) {
         ? await getEspaciosSeguidos(userId).catch(() => getFollowed())
         : getFollowed();
       if (ids.length === 0) { setItems([]); return; }
-      const list = await Promise.all(ids.map(id => espaciosApi.get(id).catch(() => null)));
+      const list = await espaciosApi.getPublicBatch(ids).catch(() => []);
       setItems(list.filter(Boolean));
     }
     load();

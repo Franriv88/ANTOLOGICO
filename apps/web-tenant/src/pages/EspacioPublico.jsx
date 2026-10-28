@@ -841,8 +841,8 @@ export default function EspacioPublico({ overrideEspacioId }) {
     async function load() {
       try {
         const [esp, ws] = await Promise.all([
-          espaciosApi.get(espacioId),
-          workshopsApi.list(espacioId, { estado: 'PUBLICADO' }),
+          espaciosApi.getPublic(espacioId),
+          workshopsApi.listPublic(espacioId),
         ]);
         if (!esp) { setNotFound(true); return; }
         setEspacio(esp);

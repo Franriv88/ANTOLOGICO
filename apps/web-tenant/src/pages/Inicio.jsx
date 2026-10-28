@@ -467,7 +467,7 @@ function EspacioDetail({ espacio, userId, onBack, onUnfollow }) {
   const { primary } = parseBrand(espacio);
 
   useEffect(() => {
-    workshopsApi.list(espacio.id, { estado: 'PUBLICADO' })
+    workshopsApi.listPublic(espacio.id)
       .then(list => {
         const now = Date.now();
         setWsList(list.sort((a, b) => {
@@ -598,7 +598,7 @@ export default function Inicio() {
       }
 
       if (ids.length === 0) { setEspacios([]); return; }
-      const list = await Promise.all(ids.map(id => espaciosApi.get(id).catch(() => null)));
+      const list = await espaciosApi.getPublicBatch(ids).catch(() => []);
       if (cancelled) return;
       setEspacios(list.filter(Boolean));
     }

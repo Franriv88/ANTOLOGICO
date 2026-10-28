@@ -27,6 +27,9 @@ You can also follow the instructions from the [Data Connect documentation](https
   - [*ListMyWorkshopsByEstado*](#listmyworkshopsbyestado)
   - [*SearchMyWorkshops*](#searchmyworkshops)
   - [*GetMyWorkshop*](#getmyworkshop)
+  - [*GetPublicEspacio*](#getpublicespacio)
+  - [*GetPublicEspacios*](#getpublicespacios)
+  - [*ListPublicWorkshopsByEspacio*](#listpublicworkshopsbyespacio)
   - [*ListPublicWorkshops*](#listpublicworkshops)
 - [**Mutations**](#mutations)
   - [*UpsertProfesional*](#upsertprofesional)
@@ -1063,6 +1066,308 @@ export default function GetMyWorkshopComponent() {
   const dataConnect = getDataConnect(connectorConfig);
   const options = { staleTime: 5 * 1000 };
   const query = useGetMyWorkshop(dataConnect, getMyWorkshopVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Query.
+  if (query.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (query.isError) {
+    return <div>Error: {query.error.message}</div>;
+  }
+
+  // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
+  if (query.isSuccess) {
+    console.log(query.data.workshops);
+  }
+  return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## GetPublicEspacio
+You can execute the `GetPublicEspacio` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
+
+```javascript
+useGetPublicEspacio(dc: DataConnect, vars: GetPublicEspacioVariables, options?: useDataConnectQueryOptions<GetPublicEspacioData>): UseDataConnectQueryResult<GetPublicEspacioData, GetPublicEspacioVariables>;
+```
+You can also pass in a `DataConnect` instance to the Query hook function.
+```javascript
+useGetPublicEspacio(vars: GetPublicEspacioVariables, options?: useDataConnectQueryOptions<GetPublicEspacioData>): UseDataConnectQueryResult<GetPublicEspacioData, GetPublicEspacioVariables>;
+```
+
+### Variables
+The `GetPublicEspacio` Query requires an argument of type `GetPublicEspacioVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface GetPublicEspacioVariables {
+  id: UUIDString;
+}
+```
+### Return Type
+Recall that calling the `GetPublicEspacio` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
+
+To check the status of a Query, use the `UseQueryResult.status` field. You can also check for pending / success / error status using the `UseQueryResult.isPending`, `UseQueryResult.isSuccess`, and `UseQueryResult.isError` fields.
+
+To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `GetPublicEspacio` Query is of type `GetPublicEspacioData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface GetPublicEspacioData {
+  espacios: ({
+    id: UUIDString;
+    nombre: string;
+    estado: EstadoEspacio;
+    logoUrl?: string | null;
+    logoShape?: string | null;
+    logoScale?: number | null;
+    brandColors?: unknown | null;
+    brandFont?: string | null;
+    redesSociales?: unknown | null;
+    rubro?: {
+      id: UUIDString;
+      nombre: string;
+    } & Rubro_Key;
+    rubroPersonalizado?: string | null;
+    profesional: {
+      uid: string;
+      nombre: string;
+    } & Profesional_Key;
+  } & Espacio_Key)[];
+}
+```
+
+To learn more about the `UseQueryResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery).
+
+### Using `GetPublicEspacio`'s Query hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, GetPublicEspacioVariables } from '@antologico/dataconnect';
+import { useGetPublicEspacio } from '@antologico/dataconnect/react'
+
+export default function GetPublicEspacioComponent() {
+  // The `useGetPublicEspacio` Query hook requires an argument of type `GetPublicEspacioVariables`:
+  const getPublicEspacioVars: GetPublicEspacioVariables = {
+    id: ..., 
+  };
+
+  // You don't have to do anything to "execute" the Query.
+  // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
+  const query = useGetPublicEspacio(getPublicEspacioVars);
+  // Variables can be defined inline as well.
+  const query = useGetPublicEspacio({ id: ..., });
+
+  // You can also pass in a `DataConnect` instance to the Query hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const query = useGetPublicEspacio(dataConnect, getPublicEspacioVars);
+
+  // You can also pass in a `useDataConnectQueryOptions` object to the Query hook function.
+  const options = { staleTime: 5 * 1000 };
+  const query = useGetPublicEspacio(getPublicEspacioVars, options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectQueryOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = { staleTime: 5 * 1000 };
+  const query = useGetPublicEspacio(dataConnect, getPublicEspacioVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Query.
+  if (query.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (query.isError) {
+    return <div>Error: {query.error.message}</div>;
+  }
+
+  // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
+  if (query.isSuccess) {
+    console.log(query.data.espacios);
+  }
+  return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## GetPublicEspacios
+You can execute the `GetPublicEspacios` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
+
+```javascript
+useGetPublicEspacios(dc: DataConnect, vars: GetPublicEspaciosVariables, options?: useDataConnectQueryOptions<GetPublicEspaciosData>): UseDataConnectQueryResult<GetPublicEspaciosData, GetPublicEspaciosVariables>;
+```
+You can also pass in a `DataConnect` instance to the Query hook function.
+```javascript
+useGetPublicEspacios(vars: GetPublicEspaciosVariables, options?: useDataConnectQueryOptions<GetPublicEspaciosData>): UseDataConnectQueryResult<GetPublicEspaciosData, GetPublicEspaciosVariables>;
+```
+
+### Variables
+The `GetPublicEspacios` Query requires an argument of type `GetPublicEspaciosVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface GetPublicEspaciosVariables {
+  ids: UUIDString[];
+}
+```
+### Return Type
+Recall that calling the `GetPublicEspacios` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
+
+To check the status of a Query, use the `UseQueryResult.status` field. You can also check for pending / success / error status using the `UseQueryResult.isPending`, `UseQueryResult.isSuccess`, and `UseQueryResult.isError` fields.
+
+To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `GetPublicEspacios` Query is of type `GetPublicEspaciosData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface GetPublicEspaciosData {
+  espacios: ({
+    id: UUIDString;
+    nombre: string;
+    estado: EstadoEspacio;
+    logoUrl?: string | null;
+    logoShape?: string | null;
+    logoScale?: number | null;
+    brandColors?: unknown | null;
+    brandFont?: string | null;
+    redesSociales?: unknown | null;
+    rubro?: {
+      id: UUIDString;
+      nombre: string;
+    } & Rubro_Key;
+    rubroPersonalizado?: string | null;
+    profesional: {
+      uid: string;
+      nombre: string;
+    } & Profesional_Key;
+  } & Espacio_Key)[];
+}
+```
+
+To learn more about the `UseQueryResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery).
+
+### Using `GetPublicEspacios`'s Query hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, GetPublicEspaciosVariables } from '@antologico/dataconnect';
+import { useGetPublicEspacios } from '@antologico/dataconnect/react'
+
+export default function GetPublicEspaciosComponent() {
+  // The `useGetPublicEspacios` Query hook requires an argument of type `GetPublicEspaciosVariables`:
+  const getPublicEspaciosVars: GetPublicEspaciosVariables = {
+    ids: ..., 
+  };
+
+  // You don't have to do anything to "execute" the Query.
+  // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
+  const query = useGetPublicEspacios(getPublicEspaciosVars);
+  // Variables can be defined inline as well.
+  const query = useGetPublicEspacios({ ids: ..., });
+
+  // You can also pass in a `DataConnect` instance to the Query hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const query = useGetPublicEspacios(dataConnect, getPublicEspaciosVars);
+
+  // You can also pass in a `useDataConnectQueryOptions` object to the Query hook function.
+  const options = { staleTime: 5 * 1000 };
+  const query = useGetPublicEspacios(getPublicEspaciosVars, options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectQueryOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = { staleTime: 5 * 1000 };
+  const query = useGetPublicEspacios(dataConnect, getPublicEspaciosVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Query.
+  if (query.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (query.isError) {
+    return <div>Error: {query.error.message}</div>;
+  }
+
+  // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
+  if (query.isSuccess) {
+    console.log(query.data.espacios);
+  }
+  return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## ListPublicWorkshopsByEspacio
+You can execute the `ListPublicWorkshopsByEspacio` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
+
+```javascript
+useListPublicWorkshopsByEspacio(dc: DataConnect, vars: ListPublicWorkshopsByEspacioVariables, options?: useDataConnectQueryOptions<ListPublicWorkshopsByEspacioData>): UseDataConnectQueryResult<ListPublicWorkshopsByEspacioData, ListPublicWorkshopsByEspacioVariables>;
+```
+You can also pass in a `DataConnect` instance to the Query hook function.
+```javascript
+useListPublicWorkshopsByEspacio(vars: ListPublicWorkshopsByEspacioVariables, options?: useDataConnectQueryOptions<ListPublicWorkshopsByEspacioData>): UseDataConnectQueryResult<ListPublicWorkshopsByEspacioData, ListPublicWorkshopsByEspacioVariables>;
+```
+
+### Variables
+The `ListPublicWorkshopsByEspacio` Query requires an argument of type `ListPublicWorkshopsByEspacioVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface ListPublicWorkshopsByEspacioVariables {
+  espacioId: UUIDString;
+}
+```
+### Return Type
+Recall that calling the `ListPublicWorkshopsByEspacio` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
+
+To check the status of a Query, use the `UseQueryResult.status` field. You can also check for pending / success / error status using the `UseQueryResult.isPending`, `UseQueryResult.isSuccess`, and `UseQueryResult.isError` fields.
+
+To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `ListPublicWorkshopsByEspacio` Query is of type `ListPublicWorkshopsByEspacioData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface ListPublicWorkshopsByEspacioData {
+  workshops: ({
+    id: UUIDString;
+    nombre: string;
+    tipo?: TipoWorkshop | null;
+    descripcion?: string | null;
+    cuposTotales: number;
+    cuposDisponibles: number;
+    precio: number;
+    fecha: TimestampString;
+    duracionHoras?: number | null;
+    duracionMinutos?: number | null;
+    experienciaPrevia?: boolean | null;
+    scheduleData?: unknown | null;
+    headerType: HeaderType;
+    headerValue?: string | null;
+    metodosPago?: unknown | null;
+    estado: EstadoWorkshop;
+    createdAt: TimestampString;
+  } & Workshop_Key)[];
+}
+```
+
+To learn more about the `UseQueryResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery).
+
+### Using `ListPublicWorkshopsByEspacio`'s Query hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, ListPublicWorkshopsByEspacioVariables } from '@antologico/dataconnect';
+import { useListPublicWorkshopsByEspacio } from '@antologico/dataconnect/react'
+
+export default function ListPublicWorkshopsByEspacioComponent() {
+  // The `useListPublicWorkshopsByEspacio` Query hook requires an argument of type `ListPublicWorkshopsByEspacioVariables`:
+  const listPublicWorkshopsByEspacioVars: ListPublicWorkshopsByEspacioVariables = {
+    espacioId: ..., 
+  };
+
+  // You don't have to do anything to "execute" the Query.
+  // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
+  const query = useListPublicWorkshopsByEspacio(listPublicWorkshopsByEspacioVars);
+  // Variables can be defined inline as well.
+  const query = useListPublicWorkshopsByEspacio({ espacioId: ..., });
+
+  // You can also pass in a `DataConnect` instance to the Query hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const query = useListPublicWorkshopsByEspacio(dataConnect, listPublicWorkshopsByEspacioVars);
+
+  // You can also pass in a `useDataConnectQueryOptions` object to the Query hook function.
+  const options = { staleTime: 5 * 1000 };
+  const query = useListPublicWorkshopsByEspacio(listPublicWorkshopsByEspacioVars, options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectQueryOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = { staleTime: 5 * 1000 };
+  const query = useListPublicWorkshopsByEspacio(dataConnect, listPublicWorkshopsByEspacioVars, options);
 
   // Then, you can render your component dynamically based on the status of the Query.
   if (query.isPending) {

@@ -197,6 +197,60 @@ export interface GetMyWorkshopVariables {
   id: UUIDString;
 }
 
+export interface GetPublicEspacioData {
+  espacios: ({
+    id: UUIDString;
+    nombre: string;
+    estado: EstadoEspacio;
+    logoUrl?: string | null;
+    logoShape?: string | null;
+    logoScale?: number | null;
+    brandColors?: unknown | null;
+    brandFont?: string | null;
+    redesSociales?: unknown | null;
+    rubro?: {
+      id: UUIDString;
+      nombre: string;
+    } & Rubro_Key;
+    rubroPersonalizado?: string | null;
+    profesional: {
+      uid: string;
+      nombre: string;
+    } & Profesional_Key;
+  } & Espacio_Key)[];
+}
+
+export interface GetPublicEspacioVariables {
+  id: UUIDString;
+}
+
+export interface GetPublicEspaciosData {
+  espacios: ({
+    id: UUIDString;
+    nombre: string;
+    estado: EstadoEspacio;
+    logoUrl?: string | null;
+    logoShape?: string | null;
+    logoScale?: number | null;
+    brandColors?: unknown | null;
+    brandFont?: string | null;
+    redesSociales?: unknown | null;
+    rubro?: {
+      id: UUIDString;
+      nombre: string;
+    } & Rubro_Key;
+    rubroPersonalizado?: string | null;
+    profesional: {
+      uid: string;
+      nombre: string;
+    } & Profesional_Key;
+  } & Espacio_Key)[];
+}
+
+export interface GetPublicEspaciosVariables {
+  ids: UUIDString[];
+}
+
 export interface ListMyEspaciosData {
   espacios: ({
     id: UUIDString;
@@ -292,6 +346,32 @@ export interface ListPlanesData {
     precioAnual: number;
     features: unknown;
   } & Plan_Key)[];
+}
+
+export interface ListPublicWorkshopsByEspacioData {
+  workshops: ({
+    id: UUIDString;
+    nombre: string;
+    tipo?: TipoWorkshop | null;
+    descripcion?: string | null;
+    cuposTotales: number;
+    cuposDisponibles: number;
+    precio: number;
+    fecha: TimestampString;
+    duracionHoras?: number | null;
+    duracionMinutos?: number | null;
+    experienciaPrevia?: boolean | null;
+    scheduleData?: unknown | null;
+    headerType: HeaderType;
+    headerValue?: string | null;
+    metodosPago?: unknown | null;
+    estado: EstadoWorkshop;
+    createdAt: TimestampString;
+  } & Workshop_Key)[];
+}
+
+export interface ListPublicWorkshopsByEspacioVariables {
+  espacioId: UUIDString;
 }
 
 export interface ListPublicWorkshopsData {
@@ -848,6 +928,42 @@ export const getMyWorkshopRef: GetMyWorkshopRef;
 
 export function getMyWorkshop(vars: GetMyWorkshopVariables, options?: ExecuteQueryOptions): QueryPromise<GetMyWorkshopData, GetMyWorkshopVariables>;
 export function getMyWorkshop(dc: DataConnect, vars: GetMyWorkshopVariables, options?: ExecuteQueryOptions): QueryPromise<GetMyWorkshopData, GetMyWorkshopVariables>;
+
+interface GetPublicEspacioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetPublicEspacioVariables): QueryRef<GetPublicEspacioData, GetPublicEspacioVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetPublicEspacioVariables): QueryRef<GetPublicEspacioData, GetPublicEspacioVariables>;
+  operationName: string;
+}
+export const getPublicEspacioRef: GetPublicEspacioRef;
+
+export function getPublicEspacio(vars: GetPublicEspacioVariables, options?: ExecuteQueryOptions): QueryPromise<GetPublicEspacioData, GetPublicEspacioVariables>;
+export function getPublicEspacio(dc: DataConnect, vars: GetPublicEspacioVariables, options?: ExecuteQueryOptions): QueryPromise<GetPublicEspacioData, GetPublicEspacioVariables>;
+
+interface GetPublicEspaciosRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetPublicEspaciosVariables): QueryRef<GetPublicEspaciosData, GetPublicEspaciosVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetPublicEspaciosVariables): QueryRef<GetPublicEspaciosData, GetPublicEspaciosVariables>;
+  operationName: string;
+}
+export const getPublicEspaciosRef: GetPublicEspaciosRef;
+
+export function getPublicEspacios(vars: GetPublicEspaciosVariables, options?: ExecuteQueryOptions): QueryPromise<GetPublicEspaciosData, GetPublicEspaciosVariables>;
+export function getPublicEspacios(dc: DataConnect, vars: GetPublicEspaciosVariables, options?: ExecuteQueryOptions): QueryPromise<GetPublicEspaciosData, GetPublicEspaciosVariables>;
+
+interface ListPublicWorkshopsByEspacioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ListPublicWorkshopsByEspacioVariables): QueryRef<ListPublicWorkshopsByEspacioData, ListPublicWorkshopsByEspacioVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: ListPublicWorkshopsByEspacioVariables): QueryRef<ListPublicWorkshopsByEspacioData, ListPublicWorkshopsByEspacioVariables>;
+  operationName: string;
+}
+export const listPublicWorkshopsByEspacioRef: ListPublicWorkshopsByEspacioRef;
+
+export function listPublicWorkshopsByEspacio(vars: ListPublicWorkshopsByEspacioVariables, options?: ExecuteQueryOptions): QueryPromise<ListPublicWorkshopsByEspacioData, ListPublicWorkshopsByEspacioVariables>;
+export function listPublicWorkshopsByEspacio(dc: DataConnect, vars: ListPublicWorkshopsByEspacioVariables, options?: ExecuteQueryOptions): QueryPromise<ListPublicWorkshopsByEspacioData, ListPublicWorkshopsByEspacioVariables>;
 
 interface ListPublicWorkshopsRef {
   /* Allow users to create refs without passing in DataConnect */
