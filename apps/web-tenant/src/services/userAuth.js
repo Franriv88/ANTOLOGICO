@@ -2,6 +2,7 @@ import {
   GoogleAuthProvider,
   EmailAuthProvider,
   signInWithPopup,
+  getAdditionalUserInfo,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   reauthenticateWithCredential,
@@ -32,10 +33,12 @@ export async function fetchProfile(uid) {
 // signInWithRedirect está roto en iOS Safari 14+ (ITP bloquea cookies de terceros).
 // signInWithPopup funciona en todos los navegadores cuando viene de un gesto del usuario.
 export async function loginGoogle() {
-  const { user } = await signInWithPopup(auth, googleProvider);
-  const result = await ensureProfile(user);
-  trackLogin({ method: 'google' });
-  return result;
+  const credential = await signInWithPopup(auth, googleProvider);
+  const isNewUser = getAdditionalUserInfo(credential)?.isNewUser ?? false;
+  const result = await ensureProfile(credential.user);
+  if (isNewUser) trackRegistro({ method: 'google' });
+  else trackLogin({ method: 'google' });
+  return { ...result, isNewUser };
 }
 
 // Mantenemos la función como no-op por compatibilidad con los useEffect existentes
@@ -165,13 +168,14 @@ export async function changeEmail(currentPassword, newEmail) {
 
 export function authErrorMsg(code) {
   return (
-    code === 'auth/wrong-password'       ? 'Contraseña incorrecta' :
-    code === 'auth/user-not-found'       ? 'No existe una cuenta con ese email' :
-    code === 'auth/email-already-in-use' ? 'Ya existe una cuenta con ese email' :
-    code === 'auth/weak-password'        ? 'La contraseña debe tener al menos 8 caracteres, una letra, un número y un símbolo' :
-    code === 'auth/invalid-email'        ? 'Email inválido' :
-    code === 'auth/popup-closed-by-user' ? 'Cerraste la ventana de Google' :
-    code === 'auth/popup-blocked'        ? 'El navegador bloqueó la ventana. Permitir popups e intentar de nuevo.' :
+    code === 'auth/wrong-password'          ? 'Contraseña incorrecta' :
+    code === 'auth/user-not-found'          ? 'No existe una cuenta con ese email. ¿Querés crear una?' :
+    code === 'auth/invalid-credential'      ? 'Email o contraseña incorrectos' :
+    code === 'auth/email-already-in-use'    ? 'Ya existe una cuenta con ese email' :
+    code === 'auth/weak-password'           ? 'La contraseña debe tener al menos 8 caracteres, una letra, un número y un símbolo' :
+    code === 'auth/invalid-email'           ? 'Email inválido' :
+    code === 'auth/popup-closed-by-user'    ? 'Cerraste la ventana de Google' :
+    code === 'auth/popup-blocked'           ? 'El navegador bloqueó la ventana. Permitir popups e intentar de nuevo.' :
     code === 'auth/cancelled-popup-request' ? 'Cerraste la ventana de Google' :
     'Error al autenticar. Intentá de nuevo.'
   );

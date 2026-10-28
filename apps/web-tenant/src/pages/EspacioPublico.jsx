@@ -89,7 +89,7 @@ function AuthModal({ brand, onClose, onSuccess }) {
     setLoading('google'); setError('');
     try {
       const result = await loginGoogle();
-      if (result) onSuccess(result); // null = mobile redirect, page will reload
+      if (result) onSuccess(result);
     } catch (e) { setError(authErrorMsg(e.code)); setLoading(false); }
   }
 
@@ -107,7 +107,14 @@ function AuthModal({ brand, onClose, onSuccess }) {
         setVerifyEmail(email.trim());
         setLoading(false);
       }
-    } catch (e) { setError(authErrorMsg(e.code)); setLoading(false); }
+    } catch (e) {
+      if (tab === 'login' && (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential')) {
+        setError('NO_ACCOUNT');
+      } else {
+        setError(authErrorMsg(e.code));
+      }
+      setLoading(false);
+    }
   }
 
   async function handleReset(e) {
@@ -260,7 +267,17 @@ function AuthModal({ brand, onClose, onSuccess }) {
                 </button>
               )}
             </div>
-            {error && <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 clear-both">{error}</p>}
+            {error === 'NO_ACCOUNT' ? (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5 clear-both">
+                <p className="text-xs text-amber-800 mb-1.5">No existe una cuenta con ese email.</p>
+                <button type="button" onClick={() => { setTab('register'); setError(''); }}
+                  className="text-xs font-semibold underline" style={{ color: brand.button }}>
+                  Crear cuenta →
+                </button>
+              </div>
+            ) : error ? (
+              <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 clear-both">{error}</p>
+            ) : null}
             <button type="submit" disabled={!!loading}
               className="w-full py-2.5 rounded-xl text-sm font-bold transition-opacity disabled:opacity-50 mt-1 clear-both"
               style={{ backgroundColor: brand.button, color: contrastText(brand.button) }}>
