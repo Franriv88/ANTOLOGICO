@@ -542,26 +542,7 @@ export default function MisReservas() {
     setLoadingR(true);
     try {
       const list = await reservasApi.listByEmail(email);
-      // Enrich with workshop + espacio data
-      const wsIds  = [...new Set(list.map(r => r.workshopId))];
-      const wsMap  = {};
-      await Promise.all(wsIds.map(async id => {
-        const ws = await workshopsApi.get(id);
-        if (ws) wsMap[id] = ws;
-      }));
-
-      const espIds = [...new Set(Object.values(wsMap).map(w => w?.espacioId).filter(Boolean))];
-      const espMap = {};
-      await Promise.all(espIds.map(async id => {
-        const esp = await espaciosApi.get(id);
-        if (esp) espMap[id] = esp;
-      }));
-
-      setReservas(list.map(r => ({
-        ...r,
-        workshop: wsMap[r.workshopId] ?? null,
-        espacio:  espMap[wsMap[r.workshopId]?.espacioId] ?? null,
-      })));
+      setReservas(list);
     } finally {
       setLoadingR(false);
     }

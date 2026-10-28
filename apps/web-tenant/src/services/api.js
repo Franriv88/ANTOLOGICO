@@ -82,6 +82,7 @@ export const reservas = {
       fechaReserva: r.fechaReserva,
       pagoExternoId: r.pagoExternoId,
       workshop:    r.workshop,
+      espacio:     r.workshop.espacio ?? null,
     }));
   },
   markPaid: async () => {},

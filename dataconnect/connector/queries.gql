@@ -191,7 +191,14 @@ query ListMyReservas @auth(level: USER) {
     orderBy: [{ fechaReserva: DESC }]
   ) {
     id estado fechaReserva comprobanteUrl pagoExternoId createdAt
-    workshop { id nombre fecha cuposTotales cuposDisponibles espacioId }
+    workshop {
+      id nombre fecha cuposTotales cuposDisponibles espacioId
+      headerType headerValue
+      espacio {
+        id nombre logoUrl logoShape logoScale brandColors brandFont
+        rubro { id nombre }
+      }
+    }
   }
 }
 

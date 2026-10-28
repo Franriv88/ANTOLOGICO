@@ -314,6 +314,21 @@ export interface ListMyReservasData {
       cuposTotales: number;
       cuposDisponibles: number;
       espacioId: UUIDString;
+      headerType: HeaderType;
+      headerValue?: string | null;
+      espacio: {
+        id: UUIDString;
+        nombre: string;
+        logoUrl?: string | null;
+        logoShape?: string | null;
+        logoScale?: number | null;
+        brandColors?: unknown | null;
+        brandFont?: string | null;
+        rubro?: {
+          id: UUIDString;
+          nombre: string;
+        } & Rubro_Key;
+      } & Espacio_Key;
     } & Workshop_Key;
   } & Reserva_Key)[];
 }

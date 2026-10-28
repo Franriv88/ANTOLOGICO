@@ -934,13 +934,7 @@ export default function EspacioPublico({ overrideEspacioId }) {
     if (!email) return;
     try {
       const list = await reservasApi.listByEmail(email);
-      const wsIds = [...new Set(list.map(r => r.workshopId))];
-      const wsMap = {};
-      await Promise.all(wsIds.map(async id => {
-        const ws = await workshopsApi.get(id);
-        if (ws) wsMap[id] = ws;
-      }));
-      setUserReservas(list.map(r => ({ ...r, workshop: wsMap[r.workshopId] ?? null })));
+      setUserReservas(list);
       const counts = {};
       list.filter(r => r.estado !== 'CANCELADA').forEach(r => {
         counts[r.workshopId] = (counts[r.workshopId] ?? 0) + 1;
