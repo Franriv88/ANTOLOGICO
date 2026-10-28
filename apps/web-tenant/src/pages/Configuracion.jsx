@@ -456,8 +456,7 @@ function CompartirEspacio({ espacio, refresh }) {
   const [slugSaved, setSlugSaved]   = useState(false);
   const [slugEditing, setSlugEditing] = useState(false);
 
-  const subdomainUrl = slug ? `https://${slug}.antologico.app` : null;
-  const publicUrl = subdomainUrl || `${window.location.origin}/p/${espacio.id}`;
+  const publicUrl = `https://www.antologico.app/p/${espacio.id}`;
   const logoUrl   = espacio.logoUrl ?? null;
   const QR_SIZE   = 200;
   const LOGO_SIZE = Math.round(QR_SIZE * 0.22);

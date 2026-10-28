@@ -339,7 +339,12 @@ function QRScannerModal({ onClose, onFound, userId }) {
       setFound({ url: raw, espacioId, nombre });
       setFollowed(true);
       setPhase('found');
-    } catch { setErrMsg('El QR escaneado no contiene una URL válida.'); setPhase('error'); }
+    } catch (err) {
+      const msg = err instanceof TypeError && err.message.includes('URL')
+        ? 'El QR escaneado no contiene una URL válida.'
+        : 'No se pudo verificar el espacio. Intentá de nuevo.';
+      setErrMsg(msg); setPhase('error');
+    }
   }
 
   function handleGo() {

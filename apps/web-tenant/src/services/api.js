@@ -141,6 +141,15 @@ export const espacios = {
   },
   blockUser: async () => {},
   unblockUser: async () => {},
+  getBySlug: async (slug) => {
+    const { collection, query, where, getDocs } = await import('firebase/firestore');
+    const { firestore } = await import('../lib/firebase.js');
+    const q = query(collection(firestore, 'demo_espacios'), where('slug', '==', slug.toLowerCase()));
+    const snap = await getDocs(q);
+    if (snap.empty) return null;
+    const d = snap.docs[0];
+    return { id: d.id, ...d.data() };
+  },
   getPublic: async (id) => {
     const { data } = await getPublicEspacio({ id });
     return data.espacios[0] ?? null;
