@@ -356,6 +356,8 @@ export default function Tenants() {
   const [loading,      setLoading]      = useState(true);
   const [saving,       setSaving]       = useState(null);
   const [search,       setSearch]       = useState('');
+  const [filterAuth,   setFilterAuth]   = useState('todos');
+  const [filterEstado, setFilterEstado] = useState('todos');
   const [blockTarget,  setBlockTarget]  = useState(null);
   const [resetTarget,  setResetTarget]  = useState(null);
   const [trialTarget,  setTrialTarget]  = useState(null);
@@ -411,7 +413,28 @@ export default function Tenants() {
 
   const flat     = list ?? [];
   const groups   = buildGroups(flat);
-  const filtered = groups.filter(g => matchGroup(g, search));
+
+  function groupEstado(g) {
+    if (g.bloqueado) return 'bloqueado';
+    if (g.trialStartedAt && !g.primary.planId && !g.primary.selectedPlan) {
+      const elapsed = Math.floor((Date.now() - new Date(g.trialStartedAt)) / 86_400_000);
+      if (elapsed >= 14) return 'falto';
+    }
+    return 'activo';
+  }
+
+  const filtered = groups.filter(g => {
+    if (!matchGroup(g, search)) return false;
+    if (filterAuth !== 'todos') {
+      const method = g.usuario?.authMethod ?? '';
+      if (filterAuth === 'google' && method !== 'google') return false;
+      if (filterAuth === 'email'  && method !== 'email')  return false;
+    }
+    if (filterEstado !== 'todos') {
+      if (groupEstado(g) !== filterEstado) return false;
+    }
+    return true;
+  });
 
   return (
     <>
@@ -467,14 +490,57 @@ export default function Tenants() {
           </div>
         </div>
 
-        <div className="mb-5">
+        <div className="flex flex-wrap items-center gap-3 mb-5">
           <input
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Buscar por nombre de espacio, email, rubro…"
-            className="w-full max-w-lg px-4 py-2.5 bg-surface-100 border border-border rounded-xl text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:border-primary"
+            className="flex-1 min-w-[240px] max-w-lg px-4 py-2.5 bg-surface-100 border border-border rounded-xl text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:border-primary"
           />
+
+          <div className="flex items-center gap-1 bg-surface-100 border border-border rounded-xl p-1">
+            <span className="text-[10px] font-semibold text-ink-muted uppercase tracking-wide px-2">Auth</span>
+            {[
+              { key: 'todos',  label: 'Todos' },
+              { key: 'google', label: 'Google' },
+              { key: 'email',  label: 'Email' },
+            ].map(f => (
+              <button
+                key={f.key}
+                onClick={() => setFilterAuth(f.key)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  filterAuth === f.key
+                    ? 'bg-primary text-white'
+                    : 'text-ink-muted hover:text-ink hover:bg-surface-200'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-1 bg-surface-100 border border-border rounded-xl p-1">
+            <span className="text-[10px] font-semibold text-ink-muted uppercase tracking-wide px-2">Estado</span>
+            {[
+              { key: 'todos',     label: 'Todos' },
+              { key: 'activo',    label: 'Activo' },
+              { key: 'bloqueado', label: 'Bloqueado' },
+              { key: 'falto',     label: 'Falto de pago' },
+            ].map(f => (
+              <button
+                key={f.key}
+                onClick={() => setFilterEstado(f.key)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                  filterEstado === f.key
+                    ? 'bg-primary text-white'
+                    : 'text-ink-muted hover:text-ink hover:bg-surface-200'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {filtered.length === 0 ? (

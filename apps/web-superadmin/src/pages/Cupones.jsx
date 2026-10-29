@@ -198,7 +198,7 @@ export default function Cupones() {
           {inactivos.length > 0 && (
             <section>
               <h2 className="text-xs font-semibold text-ink-muted uppercase tracking-wide mb-3">Inactivos</h2>
-              <CuponTable items={inactivos} onToggle={handleToggle} onDelete={setDeleteTarget} dimmed />
+              <CuponTable items={inactivos} onToggle={handleToggle} onDelete={setDeleteTarget} />
             </section>
           )}
         </div>
@@ -207,9 +207,26 @@ export default function Cupones() {
   );
 }
 
-function CuponTable({ items, onToggle, onDelete, dimmed }) {
+function cuponVencimiento(c) {
+  if (!c.createdAt || !c.duracionMeses) return null;
+  const d = new Date(c.createdAt);
+  d.setMonth(d.getMonth() + Number(c.duracionMeses));
+  return d;
+}
+
+function VencimientoBadge({ cupon }) {
+  const exp = cuponVencimiento(cupon);
+  if (!exp) return <span className="text-xs text-ink-muted">—</span>;
+  const diff = Math.ceil((exp - Date.now()) / 86_400_000);
+  if (diff <= 0) return <span className="text-xs font-medium text-danger">Vencido</span>;
+  if (diff <= 7) return <span className="text-xs font-medium text-danger">{diff}d restantes</span>;
+  if (diff <= 30) return <span className="text-xs font-medium text-amber-600">{diff}d restantes</span>;
+  return <span className="text-xs text-ink-muted">{diff}d restantes</span>;
+}
+
+function CuponTable({ items, onToggle, onDelete }) {
   return (
-    <div className={`bg-surface-0 border border-border rounded-xl overflow-hidden ${dimmed ? 'opacity-60' : ''}`}>
+    <div className="bg-surface-0 border border-border rounded-xl overflow-hidden">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-border bg-surface-100">
@@ -217,6 +234,8 @@ function CuponTable({ items, onToggle, onDelete, dimmed }) {
             <th className="text-left px-4 py-2.5 text-xs font-semibold text-ink-muted">Descuento</th>
             <th className="text-left px-4 py-2.5 text-xs font-semibold text-ink-muted">Duración</th>
             <th className="text-left px-4 py-2.5 text-xs font-semibold text-ink-muted">Usos</th>
+            <th className="text-left px-4 py-2.5 text-xs font-semibold text-ink-muted">Estado</th>
+            <th className="text-left px-4 py-2.5 text-xs font-semibold text-ink-muted">Vencimiento</th>
             <th className="px-4 py-2.5" />
           </tr>
         </thead>
@@ -236,6 +255,16 @@ function CuponTable({ items, onToggle, onDelete, dimmed }) {
               </td>
               <td className="px-4 py-3 text-ink-muted font-mono text-xs">
                 {c.usosActuales ?? 0}{c.maxUsos ? ` / ${c.maxUsos}` : ''}
+              </td>
+              <td className="px-4 py-3">
+                {c.activo ? (
+                  <span className="text-xs font-medium bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-full px-2.5 py-0.5 whitespace-nowrap">Activo</span>
+                ) : (
+                  <span className="text-xs font-medium bg-surface-200 text-ink-muted border border-border rounded-full px-2.5 py-0.5 whitespace-nowrap">Inactivo</span>
+                )}
+              </td>
+              <td className="px-4 py-3">
+                <VencimientoBadge cupon={c} />
               </td>
               <td className="px-4 py-3">
                 <div className="flex items-center gap-2 justify-end">

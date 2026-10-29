@@ -5,7 +5,7 @@ import { useTheme } from '../hooks/useTheme';
 
 const NAV = [
   { to: '/tenants',    label: 'Tenants' },
-  { to: '/planes',     label: 'Planes' },
+  { to: '/planes',     label: 'Planes y Promociones' },
   { to: '/reportes',   label: 'Reportes' },
   { to: '/metricas',   label: 'Métricas' },
   { to: '/rubros',     label: 'Rubros' },

@@ -612,3 +612,5 @@ export default function Instructivo() {
     </>
   );
 }
+
+export { InstructivoModal };
