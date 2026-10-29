@@ -3,6 +3,36 @@ import { usuarios as usuariosApi, userManagement } from '../services/adminApi';
 import ConfirmModal from '../components/ConfirmModal';
 import { AntologicoLoaderCream } from '../components/AntologicoLoaderCream';
 
+function FilterGroup({ label, value, onChange, options }) {
+  const [animKey, setAnimKey] = useState(null);
+  return (
+    <div className="flex items-center gap-1 bg-surface-100 border border-border rounded-xl p-1">
+      <span className="text-[10px] font-bold text-ink-muted uppercase tracking-wider px-2 select-none">{label}</span>
+      {options.map(f => {
+        const active = value === f.key;
+        return (
+          <button
+            key={f.key}
+            onClick={() => { if (f.key !== value) { setAnimKey(f.key); onChange(f.key); } }}
+            onAnimationEnd={() => setAnimKey(null)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              active
+                ? 'bg-primary text-white shadow-sm'
+                : 'text-ink-muted hover:text-ink hover:bg-surface-200'
+            }`}
+            style={active && animKey === f.key ? {
+              animation: 'filterStretch .35s cubic-bezier(.34,1.56,.64,1)',
+            } : undefined}
+          >
+            {f.label}
+          </button>
+        );
+      })}
+      <style>{`@keyframes filterStretch{0%{transform:scaleX(1)}30%{transform:scaleX(1.18) scaleY(.92)}60%{transform:scaleX(.96) scaleY(1.04)}100%{transform:scaleX(1) scaleY(1)}}`}</style>
+    </div>
+  );
+}
+
 const INPUT_CLS = 'w-full px-3 py-2 bg-surface-100 border border-border rounded-md text-sm text-ink focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary';
 const LABEL_CLS = 'block text-xs font-medium text-ink-muted mb-1';
 
@@ -309,6 +339,8 @@ export default function Usuarios() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterTipo, setFilterTipo] = useState('todos');
+  const [filterAuth, setFilterAuth] = useState('todos');
+  const [filterEstado, setFilterEstado] = useState('todos');
   const [detailTarget, setDetailTarget] = useState(null);
   const [resetTarget, setResetTarget] = useState(null);
   const [anonTarget, setAnonTarget] = useState(null);
@@ -360,7 +392,19 @@ export default function Usuarios() {
     : filterTipo === 'tenant' ? all.filter(u => u.tipo === 'tenant')
     : filterTipo === 'duplicados' ? all.filter(u => u.email && duplicateEmails.has(u.email.toLowerCase()) && u.estado !== 'ANONIMIZADO')
     : all.filter(u => u.tipo === 'alumno');
-  const filtered = byType.filter(u => matchUser(u, search));
+  const filtered = byType.filter(u => {
+    if (!matchUser(u, search)) return false;
+    if (filterAuth !== 'todos') {
+      const method = u.authMethod ?? '';
+      if (filterAuth === 'google' && method !== 'google') return false;
+      if (filterAuth === 'email' && method !== 'email') return false;
+    }
+    if (filterEstado !== 'todos') {
+      if (filterEstado === 'anonimizado' && u.estado !== 'ANONIMIZADO') return false;
+      if (filterEstado === 'activo' && u.estado === 'ANONIMIZADO') return false;
+    }
+    return true;
+  });
 
   const countTenants = all.filter(u => u.tipo === 'tenant').length;
   const countAlumnos = all.filter(u => u.tipo === 'alumno').length;
@@ -414,34 +458,33 @@ export default function Usuarios() {
         </div>
 
         {/* Filtros */}
-        <div className="flex items-center gap-3 mb-5">
+        <div className="flex flex-wrap items-center gap-3 mb-5">
           <input
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Buscar por nombre, email, UID, teléfono…"
-            className="flex-1 max-w-lg px-4 py-2.5 bg-surface-100 border border-border rounded-xl text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:border-primary"
+            className="flex-1 min-w-[240px] max-w-lg px-4 py-2.5 bg-surface-100 border border-border rounded-xl text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:border-primary"
           />
-          <div className="flex items-center gap-1 bg-surface-100 border border-border rounded-xl p-1">
-            {[
-              { key: 'todos', label: 'Todos' },
-              { key: 'tenant', label: 'Tenants' },
-              { key: 'alumno', label: 'Alumnos' },
-              ...(countDuplicados > 0 ? [{ key: 'duplicados', label: `Duplicados (${countDuplicados})` }] : []),
-            ].map(f => (
-              <button
-                key={f.key}
-                onClick={() => setFilterTipo(f.key)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                  filterTipo === f.key
-                    ? 'bg-primary text-white'
-                    : 'text-ink-muted hover:text-ink hover:bg-surface-200'
-                }`}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
+
+          <FilterGroup label="TIPO" value={filterTipo} onChange={setFilterTipo} options={[
+            { key: 'todos', label: 'Todos' },
+            { key: 'tenant', label: 'Tenants' },
+            { key: 'alumno', label: 'Alumnos' },
+            ...(countDuplicados > 0 ? [{ key: 'duplicados', label: `Duplicados (${countDuplicados})` }] : []),
+          ]} />
+
+          <FilterGroup label="AUTH" value={filterAuth} onChange={setFilterAuth} options={[
+            { key: 'todos',  label: 'Todos' },
+            { key: 'google', label: 'Google' },
+            { key: 'email',  label: 'Email' },
+          ]} />
+
+          <FilterGroup label="ESTADO" value={filterEstado} onChange={setFilterEstado} options={[
+            { key: 'todos',       label: 'Todos' },
+            { key: 'activo',      label: 'Activo' },
+            { key: 'anonimizado', label: 'Anonimizado' },
+          ]} />
         </div>
 
         {filtered.length === 0 ? (

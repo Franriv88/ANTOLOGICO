@@ -1,8 +1,38 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { tenants as tenantsApi, planes as planesApi, userManagement } from '../services/adminApi';
 import ConfirmModal from '../components/ConfirmModal';
 import { AntologicoLoaderCream } from '../components/AntologicoLoaderCream';
+
+function FilterGroup({ label, value, onChange, options }) {
+  const [animKey, setAnimKey] = useState(null);
+  return (
+    <div className="flex items-center gap-1 bg-surface-100 border border-border rounded-xl p-1">
+      <span className="text-[10px] font-bold text-ink-muted uppercase tracking-wider px-2 select-none">{label}</span>
+      {options.map(f => {
+        const active = value === f.key;
+        return (
+          <button
+            key={f.key}
+            onClick={() => { if (f.key !== value) { setAnimKey(f.key); onChange(f.key); } }}
+            onAnimationEnd={() => setAnimKey(null)}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              active
+                ? 'bg-primary text-white shadow-sm'
+                : 'text-ink-muted hover:text-ink hover:bg-surface-200'
+            }`}
+            style={active && animKey === f.key ? {
+              animation: 'filterStretch .35s cubic-bezier(.34,1.56,.64,1)',
+            } : undefined}
+          >
+            {f.label}
+          </button>
+        );
+      })}
+      <style>{`@keyframes filterStretch{0%{transform:scaleX(1)}30%{transform:scaleX(1.18) scaleY(.92)}60%{transform:scaleX(.96) scaleY(1.04)}100%{transform:scaleX(1) scaleY(1)}}`}</style>
+    </div>
+  );
+}
 
 const TENANT_ORIGIN = 'https://www.antologico.app';
 
@@ -499,48 +529,18 @@ export default function Tenants() {
             className="flex-1 min-w-[240px] max-w-lg px-4 py-2.5 bg-surface-100 border border-border rounded-xl text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:border-primary"
           />
 
-          <div className="flex items-center gap-1 bg-surface-100 border border-border rounded-xl p-1">
-            <span className="text-[10px] font-semibold text-ink-muted uppercase tracking-wide px-2">Auth</span>
-            {[
-              { key: 'todos',  label: 'Todos' },
-              { key: 'google', label: 'Google' },
-              { key: 'email',  label: 'Email' },
-            ].map(f => (
-              <button
-                key={f.key}
-                onClick={() => setFilterAuth(f.key)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                  filterAuth === f.key
-                    ? 'bg-primary text-white'
-                    : 'text-ink-muted hover:text-ink hover:bg-surface-200'
-                }`}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
+          <FilterGroup label="AUTH" value={filterAuth} onChange={setFilterAuth} options={[
+            { key: 'todos',  label: 'Todos' },
+            { key: 'google', label: 'Google' },
+            { key: 'email',  label: 'Email' },
+          ]} />
 
-          <div className="flex items-center gap-1 bg-surface-100 border border-border rounded-xl p-1">
-            <span className="text-[10px] font-semibold text-ink-muted uppercase tracking-wide px-2">Estado</span>
-            {[
-              { key: 'todos',     label: 'Todos' },
-              { key: 'activo',    label: 'Activo' },
-              { key: 'bloqueado', label: 'Bloqueado' },
-              { key: 'falto',     label: 'Falto de pago' },
-            ].map(f => (
-              <button
-                key={f.key}
-                onClick={() => setFilterEstado(f.key)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                  filterEstado === f.key
-                    ? 'bg-primary text-white'
-                    : 'text-ink-muted hover:text-ink hover:bg-surface-200'
-                }`}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
+          <FilterGroup label="ESTADO" value={filterEstado} onChange={setFilterEstado} options={[
+            { key: 'todos',     label: 'Todos' },
+            { key: 'activo',    label: 'Activo' },
+            { key: 'bloqueado', label: 'Bloqueado' },
+            { key: 'falto',     label: 'Falto de pago' },
+          ]} />
         </div>
 
         {filtered.length === 0 ? (
