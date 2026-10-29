@@ -554,53 +554,59 @@ export default function Layout({ children }) {
           </div>
         ) : null}
 
-        {/* Navegación */}
-        <nav className="flex-1 min-h-0 overflow-y-auto scrollbar-brand py-4 flex flex-col gap-0.5 px-3">
-          {NAV.map(({ to, label, disabled }) =>
-            disabled ? (
-              <span
-                key={to}
-                className="px-3 py-2 rounded-md text-sm text-ink-muted cursor-default select-none"
-              >
-                {label}
-              </span>
-            ) : (
-              <NavLink
-                key={to}
-                to={to}
-                className={({ isActive }) =>
-                  `px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                    isActive
-                      ? 'bg-primary/10 text-primary'
-                      : 'text-ink hover:bg-surface-200'
-                  }`
-                }
-              >
-                {label}
-              </NavLink>
-            )
-          )}
-        </nav>
+        {/* Navegación + Instructivo centrado */}
+        <div className="flex-1 min-h-0 overflow-y-auto scrollbar-brand flex flex-col px-3">
+          <nav className="py-4 flex flex-col gap-0.5">
+            {NAV.map(({ to, label, disabled }) =>
+              disabled ? (
+                <span
+                  key={to}
+                  className="px-3 py-2 rounded-md text-sm text-ink-muted cursor-default select-none"
+                >
+                  {label}
+                </span>
+              ) : (
+                <NavLink
+                  key={to}
+                  to={to}
+                  className={({ isActive }) =>
+                    `px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      isActive
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-ink hover:bg-surface-200'
+                    }`
+                  }
+                >
+                  {label}
+                </NavLink>
+              )
+            )}
+          </nav>
 
-        {/* Theme toggle */}
-        <div className="px-3 pt-3 pb-2 shrink-0 flex items-center gap-2">
-          <ThemeToggleButton isDark={isDark} onClick={toggleTheme} />
-          <span className="text-[11px] text-ink-muted">
-            {isDark ? 'Claro' : 'Oscuro'}
-          </span>
+          <div className="flex-1" />
+
+          {/* Instructivo — centrado verticalmente */}
+          <div className="pb-3">
+            <button
+              onClick={() => setShowInstructivo(true)}
+              className="flex items-center gap-2 w-full px-3 py-2.5 rounded-lg text-xs font-medium text-ink-muted border border-border bg-surface-100 hover:bg-surface-200 hover:text-ink hover:border-ink-muted/30 transition-colors"
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+              </svg>
+              Instructivo
+            </button>
+          </div>
+
+          <div className="flex-1" />
         </div>
 
-        {/* Instructivo */}
-        <div className="px-3 pb-2 shrink-0">
-          <button
-            onClick={() => setShowInstructivo(true)}
-            className="flex items-center gap-2 w-full px-3 py-2.5 rounded-lg text-xs font-medium text-ink-muted border border-border bg-surface-100 hover:bg-surface-200 hover:text-ink hover:border-ink-muted/30 transition-colors"
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
-              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
-            </svg>
-            Instructivo
-          </button>
+        {/* Theme toggle — centrado horizontal */}
+        <div className="px-3 pt-2 pb-2 shrink-0 flex flex-col items-center gap-1">
+          <ThemeToggleButton isDark={isDark} onClick={toggleTheme} />
+          <span className="text-[10px] text-ink-muted">
+            {isDark ? 'Claro' : 'Oscuro'}
+          </span>
         </div>
 
         {/* Ver página pública */}
