@@ -29,17 +29,17 @@ function ThemeToggleButton({ isDark, onClick, variant = 'default' }) {
 
   const bg = isDarkSidebar
     ? '#1a1611'
-    : isDark ? '#221d16' : '#d8cebb';
+    : isDark ? '#221d16' : '#f5f0e8';
 
   const shadowRest = isDarkSidebar
     ? '0 6px 12px -2px rgba(0,0,0,.5), inset 0 -1px 2px -1px rgba(0,0,0,.3), 0 -4px 8px -1px rgba(255,255,255,.06), inset 0 1px 2px -1px rgba(255,255,255,.15), inset 0 0 4px 1px rgba(255,255,255,.05), inset 0 8px 14px 0 rgba(255,255,255,.04)'
     : isDark
       ? '0 6px 12px -2px rgba(0,0,0,.5), inset 0 -1px 2px -1px rgba(0,0,0,.3), 0 -4px 8px -1px rgba(255,255,255,.06), inset 0 1px 2px -1px rgba(255,255,255,.15), inset 0 0 4px 1px rgba(255,255,255,.05), inset 0 8px 14px 0 rgba(255,255,255,.04)'
-      : '0 6px 12px -2px rgba(0,0,0,.12), inset 0 -1px 2px -1px rgba(0,0,0,.08), 0 -4px 8px -1px rgba(255,255,255,.7), inset 0 1px 2px -1px rgba(255,255,255,.9), inset 0 0 4px 1px rgba(255,255,255,.6), inset 0 8px 14px 0 rgba(255,255,255,.25)';
+      : '0 6px 12px -2px rgba(0,0,0,.08), inset 0 -1px 2px -1px rgba(0,0,0,.04), 0 -4px 8px -1px rgba(255,255,255,.9), inset 0 1px 2px -1px rgba(255,255,255,1), inset 0 0 4px 1px rgba(255,255,255,.7), inset 0 8px 14px 0 rgba(255,255,255,.35)';
 
   const shadowPressed = isDarkSidebar || isDark
     ? '0 2px 4px -1px rgba(0,0,0,.3), inset 0 -4px 12px 1px rgba(255,255,255,.06), 0 -2px 4px -1px rgba(255,255,255,.04), inset 0 4px 10px 0 rgba(0,0,0,.5), inset 0 0 6px 1px rgba(255,255,255,.03)'
-    : '0 2px 4px -1px rgba(0,0,0,.08), inset 0 -4px 12px 1px rgba(255,255,255,.8), 0 -2px 4px -1px rgba(255,255,255,.5), inset 0 4px 10px 0 rgba(0,0,0,.12), inset 0 0 6px 1px rgba(255,255,255,.4)';
+    : '0 2px 4px -1px rgba(0,0,0,.05), inset 0 -4px 12px 1px rgba(255,255,255,.9), 0 -2px 4px -1px rgba(255,255,255,.6), inset 0 4px 10px 0 rgba(0,0,0,.06), inset 0 0 6px 1px rgba(255,255,255,.5)';
 
   function handleClick() {
     setPressed(true);

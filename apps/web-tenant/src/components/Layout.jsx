@@ -386,15 +386,15 @@ const IconLogout = () => (
 function ThemeToggleButton({ isDark, onClick }) {
   const [pressed, setPressed] = useState(false);
 
-  const bg = isDark ? '#221d16' : '#d8cebb';
+  const bg = isDark ? '#221d16' : '#f5f0e8';
 
   const shadowRest = isDark
     ? '0 6px 12px -2px rgba(0,0,0,.5), inset 0 -1px 2px -1px rgba(0,0,0,.3), 0 -4px 8px -1px rgba(255,255,255,.06), inset 0 1px 2px -1px rgba(255,255,255,.15), inset 0 0 4px 1px rgba(255,255,255,.05), inset 0 8px 14px 0 rgba(255,255,255,.04)'
-    : '0 6px 12px -2px rgba(0,0,0,.12), inset 0 -1px 2px -1px rgba(0,0,0,.08), 0 -4px 8px -1px rgba(255,255,255,.7), inset 0 1px 2px -1px rgba(255,255,255,.9), inset 0 0 4px 1px rgba(255,255,255,.6), inset 0 8px 14px 0 rgba(255,255,255,.25)';
+    : '0 6px 12px -2px rgba(0,0,0,.08), inset 0 -1px 2px -1px rgba(0,0,0,.04), 0 -4px 8px -1px rgba(255,255,255,.9), inset 0 1px 2px -1px rgba(255,255,255,1), inset 0 0 4px 1px rgba(255,255,255,.7), inset 0 8px 14px 0 rgba(255,255,255,.35)';
 
   const shadowPressed = isDark
     ? '0 2px 4px -1px rgba(0,0,0,.3), inset 0 -4px 12px 1px rgba(255,255,255,.06), 0 -2px 4px -1px rgba(255,255,255,.04), inset 0 4px 10px 0 rgba(0,0,0,.5), inset 0 0 6px 1px rgba(255,255,255,.03)'
-    : '0 2px 4px -1px rgba(0,0,0,.08), inset 0 -4px 12px 1px rgba(255,255,255,.8), 0 -2px 4px -1px rgba(255,255,255,.5), inset 0 4px 10px 0 rgba(0,0,0,.12), inset 0 0 6px 1px rgba(255,255,255,.4)';
+    : '0 2px 4px -1px rgba(0,0,0,.05), inset 0 -4px 12px 1px rgba(255,255,255,.9), 0 -2px 4px -1px rgba(255,255,255,.6), inset 0 4px 10px 0 rgba(0,0,0,.06), inset 0 0 6px 1px rgba(255,255,255,.5)';
 
   function handleClick() {
     setPressed(true);
@@ -601,8 +601,8 @@ export default function Layout({ children }) {
           <div className="flex-1" />
         </div>
 
-        {/* Theme toggle — centrado horizontal */}
-        <div className="px-3 pt-2 pb-2 shrink-0 flex flex-col items-center gap-1">
+        {/* Theme toggle — centrado entre Instructivo y Ver página */}
+        <div className="shrink-0 flex flex-col items-center gap-1 py-3">
           <ThemeToggleButton isDark={isDark} onClick={toggleTheme} />
           <span className="text-[10px] text-ink-muted">
             {isDark ? 'Claro' : 'Oscuro'}
