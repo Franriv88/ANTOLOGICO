@@ -26,20 +26,7 @@ const IconLogout = () => (
 function ThemeToggleButton({ isDark, onClick, variant = 'default' }) {
   const isDarkSidebar = variant === 'sidebar';
   const [pressed, setPressed] = useState(false);
-
-  const bg = isDarkSidebar
-    ? '#1a1611'
-    : isDark ? '#221d16' : '#f5f0e8';
-
-  const shadowRest = isDarkSidebar
-    ? '0 6px 12px -2px rgba(0,0,0,.5), inset 0 -1px 2px -1px rgba(0,0,0,.3), 0 -4px 8px -1px rgba(255,255,255,.06), inset 0 1px 2px -1px rgba(255,255,255,.15), inset 0 0 4px 1px rgba(255,255,255,.05), inset 0 8px 14px 0 rgba(255,255,255,.04)'
-    : isDark
-      ? '0 6px 12px -2px rgba(0,0,0,.5), inset 0 -1px 2px -1px rgba(0,0,0,.3), 0 -4px 8px -1px rgba(255,255,255,.06), inset 0 1px 2px -1px rgba(255,255,255,.15), inset 0 0 4px 1px rgba(255,255,255,.05), inset 0 8px 14px 0 rgba(255,255,255,.04)'
-      : '0 6px 12px -2px rgba(0,0,0,.08), inset 0 -1px 2px -1px rgba(0,0,0,.04), 0 -4px 8px -1px rgba(255,255,255,.9), inset 0 1px 2px -1px rgba(255,255,255,1), inset 0 0 4px 1px rgba(255,255,255,.7), inset 0 8px 14px 0 rgba(255,255,255,.35)';
-
-  const shadowPressed = isDarkSidebar || isDark
-    ? '0 2px 4px -1px rgba(0,0,0,.3), inset 0 -4px 12px 1px rgba(255,255,255,.06), 0 -2px 4px -1px rgba(255,255,255,.04), inset 0 4px 10px 0 rgba(0,0,0,.5), inset 0 0 6px 1px rgba(255,255,255,.03)'
-    : '0 2px 4px -1px rgba(0,0,0,.05), inset 0 -4px 12px 1px rgba(255,255,255,.9), 0 -2px 4px -1px rgba(255,255,255,.6), inset 0 4px 10px 0 rgba(0,0,0,.06), inset 0 0 6px 1px rgba(255,255,255,.5)';
+  const dark = isDarkSidebar || isDark;
 
   function handleClick() {
     setPressed(true);
@@ -51,18 +38,35 @@ function ThemeToggleButton({ isDark, onClick, variant = 'default' }) {
     <button
       onClick={handleClick}
       title={isDark ? 'Modo claro' : 'Modo oscuro'}
-      className="relative w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0 cursor-pointer select-none"
+      className="relative w-10 h-10 rounded-full flex items-center justify-center shrink-0 cursor-pointer select-none"
       style={{
-        background: bg,
-        boxShadow: pressed ? shadowPressed : shadowRest,
-        transition: 'box-shadow 300ms cubic-bezier(0.23, 1, 0.32, 1)',
+        background: dark
+          ? 'linear-gradient(145deg, #2e271d, #1a1611)'
+          : 'linear-gradient(145deg, #fefcf8, #ebe4d6)',
+        boxShadow: pressed
+          ? (dark
+            ? '0 1px 2px rgba(0,0,0,.4), inset 0 2px 4px rgba(0,0,0,.4)'
+            : '0 1px 2px rgba(0,0,0,.06), inset 0 2px 4px rgba(0,0,0,.08)')
+          : (dark
+            ? '4px 4px 10px rgba(0,0,0,.6), -3px -3px 8px rgba(255,255,255,.05)'
+            : '4px 4px 10px rgba(0,0,0,.1), -3px -3px 8px rgba(255,255,255,.9)'),
+        transition: 'box-shadow 300ms cubic-bezier(0.23, 1, 0.32, 1), transform 300ms cubic-bezier(0.23, 1, 0.32, 1)',
+        transform: pressed ? 'scale(0.92)' : 'scale(1)',
       }}
     >
       <div
+        className="absolute inset-[3px] rounded-full pointer-events-none"
         style={{
+          background: dark
+            ? 'linear-gradient(160deg, rgba(255,255,255,.06) 0%, transparent 50%)'
+            : 'linear-gradient(160deg, rgba(255,255,255,.8) 0%, transparent 50%)',
+        }}
+      />
+      <div
+        style={{
+          position: 'relative',
           transition: 'transform 300ms cubic-bezier(0.23, 1, 0.32, 1)',
-          transform: `rotate(${isDark ? '0' : '90'}deg) scale(${pressed ? 0.82 : 1})`,
-          filter: 'blur(0.3px)',
+          transform: `rotate(${isDark ? '0' : '90'}deg)`,
         }}
       >
         {isDark ? (
@@ -78,14 +82,6 @@ function ThemeToggleButton({ isDark, onClick, variant = 'default' }) {
           </svg>
         )}
       </div>
-      <div
-        className="absolute inset-0 rounded-[10px] pointer-events-none"
-        style={{
-          background: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.12) 0%, transparent 70%)',
-          opacity: pressed ? 0 : 1,
-          transition: 'opacity 300ms ease',
-        }}
-      />
     </button>
   );
 }

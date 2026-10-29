@@ -1,35 +1,57 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useLayoutEffect, useCallback } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { tenants as tenantsApi, planes as planesApi, userManagement } from '../services/adminApi';
 import ConfirmModal from '../components/ConfirmModal';
 import { AntologicoLoaderCream } from '../components/AntologicoLoaderCream';
 
 function FilterGroup({ label, value, onChange, options }) {
-  const [animKey, setAnimKey] = useState(null);
+  const containerRef = useRef(null);
+  const [pill, setPill] = useState({ left: 0, width: 0 });
+  const [ready, setReady] = useState(false);
+
+  const measure = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const active = container.querySelector('[data-active="true"]');
+    if (!active) return;
+    const cRect = container.getBoundingClientRect();
+    const aRect = active.getBoundingClientRect();
+    setPill({ left: aRect.left - cRect.left, width: aRect.width });
+    if (!ready) setReady(true);
+  }, [value, ready]);
+
+  useLayoutEffect(measure, [measure]);
+
   return (
-    <div className="flex items-center gap-1 bg-surface-100 border border-border rounded-xl p-1">
+    <div ref={containerRef} className="relative flex items-center gap-1 bg-surface-100 border border-border rounded-xl p-1">
       <span className="text-[10px] font-bold text-ink-muted uppercase tracking-wider px-2 select-none">{label}</span>
+      <div
+        className="absolute rounded-lg bg-primary shadow-sm pointer-events-none"
+        style={{
+          left: pill.left,
+          width: pill.width,
+          top: 4,
+          bottom: 4,
+          transition: ready ? 'left .3s cubic-bezier(.4,.0,.2,1), width .3s cubic-bezier(.4,.0,.2,1)' : 'none',
+        }}
+      />
       {options.map(f => {
         const active = value === f.key;
         return (
           <button
             key={f.key}
-            onClick={() => { if (f.key !== value) { setAnimKey(f.key); onChange(f.key); } }}
-            onAnimationEnd={() => setAnimKey(null)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+            data-active={active || undefined}
+            onClick={() => { if (f.key !== value) onChange(f.key); }}
+            className={`relative z-[1] px-3 py-1.5 rounded-lg text-xs font-medium transition-colors duration-200 ${
               active
-                ? 'bg-primary text-white shadow-sm'
+                ? 'text-white'
                 : 'text-ink-muted hover:text-ink hover:bg-surface-200'
             }`}
-            style={active && animKey === f.key ? {
-              animation: 'filterStretch .35s cubic-bezier(.34,1.56,.64,1)',
-            } : undefined}
           >
             {f.label}
           </button>
         );
       })}
-      <style>{`@keyframes filterStretch{0%{transform:scaleX(1)}30%{transform:scaleX(1.18) scaleY(.92)}60%{transform:scaleX(.96) scaleY(1.04)}100%{transform:scaleX(1) scaleY(1)}}`}</style>
     </div>
   );
 }
