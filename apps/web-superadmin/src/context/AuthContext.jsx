@@ -1,9 +1,9 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { auth } from '../lib/firebase';
+import { httpsCallable } from 'firebase/functions';
+import { auth, functions } from '../lib/firebase';
 import { admins } from '../services/adminApi';
 
-// undefined = cargando, null = no auth, object = admin autenticado
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
@@ -19,6 +19,14 @@ export function AuthProvider({ children }) {
       }
       const isAdmin = await admins.check(firebaseUser.uid, firebaseUser.email);
       if (isAdmin) {
+        try {
+          const { data } = await httpsCallable(functions, 'ensureAdminClaim')();
+          if (!data.alreadySet) {
+            await firebaseUser.getIdToken(true);
+          }
+        } catch (err) {
+          console.error('ensureAdminClaim failed:', err);
+        }
         setAdmin(firebaseUser);
         setDenied(false);
       } else {

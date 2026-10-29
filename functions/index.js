@@ -316,6 +316,29 @@ exports.createTenantSessionToken = onCall(
   }
 );
 
+// ── Super Admin: setear custom claim admin en el token ─────────────────────
+// Llamada al login del super admin. Verifica Firestore sa_admins y setea
+// admin=true en el JWT para que Data Connect acepte queries @auth(expr: "auth.token.admin == true").
+exports.ensureAdminClaim = onCall(
+  { region: 'us-central1' },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'Debés estar autenticado.');
+    }
+    const uid = request.auth.uid;
+    const adminSnap = await db.collection('sa_admins').doc(uid).get();
+    if (!adminSnap.exists) {
+      throw new HttpsError('permission-denied', 'No sos super admin.');
+    }
+    const user = await auth.getUser(uid);
+    if (user.customClaims?.admin) {
+      return { success: true, alreadySet: true };
+    }
+    await auth.setCustomUserClaims(uid, { ...(user.customClaims || {}), admin: true });
+    return { success: true };
+  }
+);
+
 // ── Super Admin: eliminar cuenta de Firebase Auth de un tenant ──────────────
 // Llamada desde el panel de Super Admin cuando elimina un tenant. Verifica que
 // quien llama sea super admin (existe en sa_admins) y luego borra la cuenta
@@ -393,22 +416,23 @@ exports.purgeUnverifiedUsers = onSchedule(
 exports.notifyTenantNewBooking = onCall(
   { secrets: [smtpPass], region: 'us-central1' },
   async (request) => {
-    const { espacioId, workshopName, clientName, clientEmail, clientPhone, metodoPago, cantidad } = request.data || {};
-    console.log('notifyTenantNewBooking called', { espacioId, workshopName, clientName, clientEmail, metodoPago, cantidad });
+    const { espacioId, tenantUid: tenantUidParam, workshopName, clientName, clientEmail, clientPhone, metodoPago, cantidad } = request.data || {};
+    console.log('notifyTenantNewBooking called', { espacioId, tenantUidParam, workshopName, clientName, clientEmail, metodoPago, cantidad });
 
     if (!espacioId || !workshopName || !clientName || !clientEmail) {
       console.error('Missing required fields');
       throw new HttpsError('invalid-argument', 'Faltan datos de la reserva.');
     }
 
-    const espSnap = await db.collection('demo_espacios').doc(espacioId).get();
-    console.log('espacio exists:', espSnap.exists, 'id:', espacioId);
-    if (!espSnap.exists) {
-      throw new HttpsError('not-found', 'Espacio no encontrado.');
+    let tenantUid = tenantUidParam;
+    if (!tenantUid) {
+      const espSnap = await db.collection('demo_espacios').doc(espacioId).get();
+      console.log('espacio exists (Firestore fallback):', espSnap.exists, 'id:', espacioId);
+      if (!espSnap.exists) {
+        throw new HttpsError('not-found', 'Espacio no encontrado. Pasá tenantUid directamente.');
+      }
+      tenantUid = espSnap.data()?.userId;
     }
-
-    const espacio = espSnap.data();
-    const tenantUid = espacio.userId;
     console.log('tenantUid:', tenantUid);
     if (!tenantUid) {
       throw new HttpsError('not-found', 'El espacio no tiene dueño asignado.');

@@ -11,19 +11,28 @@ import { firestore, auth, functions } from '../lib/firebase';
 
 const C_ADMINS    = 'sa_admins';
 const C_PLANES    = 'demo_planes';
-const C_ESPACIOS  = 'demo_espacios';
-const C_WORKSHOPS = 'demo_workshops';
-const C_RESERVAS  = 'demo_reservas';
 const C_USUARIOS  = 'demo_usuarios';
 const C_RUBROS    = 'demo_rubros';
 const C_CUPONES   = 'demo_cupones';
 
+// ─── Data Connect (fuente única de verdad para datos relacionales) ──────────
+import {
+  adminListAllEspacios,
+  adminListAllWorkshops,
+  adminListAllReservas,
+  adminUpdateEspacio,
+  adminDeleteEspacio,
+  adminDeleteProfesional,
+  adminUpsertProfesional,
+  adminEnsureProfesional,
+  adminCreateEspacioMigrate,
+  adminCreateWorkshopMigrate,
+} from '../dataconnect-generated';
+
 // Emails que pueden ser super admin (se auto-registran en sa_admins al loguearse).
-// Agregá acá cualquier email real que querés que sea super admin — basta con que
-// Firebase Auth lo autentique (contraseña o Google) y queda habilitado.
 const SEED_ADMIN_EMAILS = [
   'frivasv2388@gmail.com',
-  'superadmin@antologico.app', // alias, lo dejamos por compatibilidad
+  'superadmin@antologico.app',
 ];
 
 function uid() {
@@ -40,9 +49,7 @@ function snapToList(snap) {
   return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
-// ─── Capabilities estandar (lo que el frontend REALMENTE valida) ─────────────
-// Cada plan tiene estos flags en Firestore. El frontend los lee para habilitar
-// o deshabilitar funcionalidad real (no son solo texto de marketing).
+// ─── Capabilities estandar ─────────────────────────────────────────────────
 export const PLAN_CAPABILITIES = [
   { key: 'imagenEncabezado',   label: 'Imagen de encabezado en talleres', desc: 'Permite subir una imagen de portada. Si está apagado, solo color.' },
   { key: 'talleresIlimitados', label: 'Talleres ilimitados',              desc: 'Si está apagado, respeta "Máx. talleres".' },
@@ -54,7 +61,7 @@ export const PLAN_CAPABILITIES = [
 
 export const EMPTY_CAPABILITIES = PLAN_CAPABILITIES.reduce((acc, c) => { acc[c.key] = false; return acc; }, {});
 
-// ─── Planes iniciales (siembra automática si demo_planes está vacío) ──────────
+// ─── Planes iniciales ──────────────────────────────────────────────────────
 const SEED_PLANES = [
   {
     id: 'esencial',
@@ -126,7 +133,6 @@ async function ensurePlanesSeeded() {
     });
     await batch.commit();
   } else {
-    // Parchar planes existentes que no tengan order, descuentos o capabilities
     const batch = writeBatch(firestore);
     let changed = false;
     snap.docs.forEach((d, i) => {
@@ -138,8 +144,6 @@ async function ensurePlanesSeeded() {
         patch.descuentoTrimestral = seed.descuentoTrimestral;
       if (data.descuentoAnual == null && seed?.descuentoAnual != null)
         patch.descuentoAnual = seed.descuentoAnual;
-      // Migración de capabilities: si no existe el campo, inferimos del seed
-      // (si matchea por id) o del nombre del plan (Profesional/Estudio => todo true).
       if (data.capabilities == null) {
         if (seed?.capabilities) {
           patch.capabilities = seed.capabilities;
@@ -171,7 +175,6 @@ export const admins = {
   check: async (uid, email) => {
     const snap = await getDoc(doc(firestore, C_ADMINS, uid));
     if (snap.exists()) return true;
-    // Auto-seed si el email está en la lista blanca
     if (SEED_ADMIN_EMAILS.includes(email)) {
       await setDoc(doc(firestore, C_ADMINS, uid), { email, createdAt: new Date().toISOString() });
       return true;
@@ -286,7 +289,7 @@ export const userManagement = {
   sendPasswordReset: (email) => sendPasswordResetEmail(auth, email),
 };
 
-// ─── Usuarios (todos: tenants + alumnos) ─────────────────────────────────────
+// ─── Usuarios (perfiles — sigue en Firestore) ───────────────────────────────
 export const usuarios = {
   count: async () => {
     const snap = await getDocs(collection(firestore, C_USUARIOS));
@@ -294,23 +297,25 @@ export const usuarios = {
   },
 
   list: async () => {
-    const [usuariosSnap, espaciosSnap] = await Promise.all([
+    // Perfiles de Firestore + cross-ref espacios de Data Connect
+    const [usuariosSnap, dcResult] = await Promise.all([
       getDocs(collection(firestore, C_USUARIOS)),
-      getDocs(collection(firestore, C_ESPACIOS)),
+      adminListAllEspacios(),
     ]);
 
-    const espaciosByUserId = {};
-    espaciosSnap.docs.forEach(d => {
-      const data = d.data();
-      if (data.userId) {
-        if (!espaciosByUserId[data.userId]) espaciosByUserId[data.userId] = [];
-        espaciosByUserId[data.userId].push({ id: d.id, nombre: data.nombre, planId: data.planId || data.selectedPlan });
+    const dcEspacios = dcResult.data?.espacios ?? [];
+    const espaciosByUid = {};
+    dcEspacios.forEach(e => {
+      const uid = e.profesional?.uid;
+      if (uid) {
+        if (!espaciosByUid[uid]) espaciosByUid[uid] = [];
+        espaciosByUid[uid].push({ id: e.id, nombre: e.nombre, planId: e.plan?.id });
       }
     });
 
     return usuariosSnap.docs.map(d => {
       const data = d.data();
-      const espacios = espaciosByUserId[d.id] || [];
+      const espacios = espaciosByUid[d.id] || [];
       return {
         uid: d.id,
         ...data,
@@ -354,77 +359,129 @@ export const usuarios = {
   },
 };
 
-// ─── Métricas (workshops + reservas) ─────────────────────────────────────────
+// ─── Métricas (Data Connect) ────────────────────────────────────────────────
 export const metricas = {
   workshops: async () => {
-    const snap = await getDocs(collection(firestore, C_WORKSHOPS));
-    return snapToList(snap);
+    const { data } = await adminListAllWorkshops();
+    return (data.workshops ?? []).map(w => ({
+      id: w.id,
+      nombre: w.nombre,
+      tipo: w.tipo,
+      estado: w.estado,
+      cuposTotales: w.cuposTotales,
+      cuposDisponibles: w.cuposDisponibles,
+      precio: w.precio,
+      fecha: w.fecha,
+      createdAt: w.createdAt,
+      espacioId: w.espacio?.id,
+      espacioNombre: w.espacio?.nombre,
+    }));
   },
   reservas: async () => {
-    const snap = await getDocs(collection(firestore, C_RESERVAS));
-    return snapToList(snap);
+    const { data } = await adminListAllReservas();
+    return (data.reservas ?? []).map(r => ({
+      id: r.id,
+      estado: r.estado,
+      fechaReserva: r.fechaReserva,
+      pagoExternoId: r.pagoExternoId,
+      createdAt: r.createdAt,
+      usuarioNombre: r.usuario?.nombre,
+      usuarioEmail: r.usuario?.email,
+      workshopId: r.workshop?.id,
+      workshopNombre: r.workshop?.nombre,
+      espacioId: r.workshop?.espacio?.id,
+      espacioNombre: r.workshop?.espacio?.nombre,
+    }));
   },
 };
 
-// ─── Tenants (espacios) ───────────────────────────────────────────────────────
+// ─── Tenants (Data Connect + perfiles de Firestore) ─────────────────────────
 export const tenants = {
   list: async () => {
-    const [espaciosSnap, usuariosSnap] = await Promise.all([
-      getDocs(collection(firestore, C_ESPACIOS)),
+    const [dcResult, usuariosSnap] = await Promise.all([
+      adminListAllEspacios(),
       getDocs(collection(firestore, C_USUARIOS)),
     ]);
 
-    const usuariosByUid = {};
-    usuariosSnap.docs.forEach(d => { usuariosByUid[d.id] = d.data(); });
+    const perfiles = {};
+    usuariosSnap.docs.forEach(d => { perfiles[d.id] = d.data(); });
 
-    return espaciosSnap.docs.map(d => {
-      const espacio = { id: d.id, ...d.data() };
-      const usuario = espacio.userId ? usuariosByUid[espacio.userId] : null;
-      return { ...espacio, usuario };
+    const dcEspacios = dcResult.data?.espacios ?? [];
+
+    return dcEspacios.map(e => {
+      const profUid = e.profesional?.uid;
+      const profile = profUid ? perfiles[profUid] : null;
+      return {
+        id:                   e.id,
+        nombre:               e.nombre,
+        estado:               e.estado,
+        cancelacionPendiente: e.cancelacionPendiente,
+        createdAt:            e.createdAt,
+        updatedAt:            e.updatedAt,
+        slug:                 e.slug,
+        bloqueado:            e.bloqueado ?? false,
+        trialStartedAt:       e.trialStartedAt ?? e.createdAt,
+        isSuperAdmin:         e.isSuperAdmin ?? false,
+        logoUrl:              e.logoUrl,
+        logoShape:            e.logoShape,
+        logoScale:            e.logoScale,
+        brandColors:          e.brandColors,
+        brandFont:            e.brandFont,
+        redesSociales:        e.redesSociales,
+        cobros:               e.cobros,
+        userId:               profUid,
+        rubro:                e.rubro,
+        rubroPersonalizado:   e.rubroPersonalizado,
+        planId:               e.plan?.id,
+        selectedPlan:         e.plan?.id,
+        plan:                 e.plan,
+        usuario: profile ? {
+          ...profile,
+          nombre: profile.nombre || e.profesional?.nombre,
+          email:  profile.email  || e.profesional?.email,
+        } : e.profesional ? {
+          nombre: e.profesional.nombre,
+          email:  e.profesional.email,
+        } : null,
+      };
     });
   },
 
   update: async (id, payload) => {
-    const ref = doc(firestore, C_ESPACIOS, id);
-    await updateDoc(ref, payload);
-    const snap = await getDoc(ref);
-    return docToObj(snap);
+    await adminUpdateEspacio({
+      id,
+      bloqueado:      payload.bloqueado,
+      trialStartedAt: payload.trialStartedAt,
+      slug:           payload.slug,
+      estado:         payload.estado,
+    });
   },
 
   resetTrial: async (espacioIds) => {
     const now = new Date().toISOString();
     await Promise.all(
-      espacioIds.map(id => updateDoc(doc(firestore, C_ESPACIOS, id), { trialStartedAt: now }))
+      espacioIds.map(id => adminUpdateEspacio({ id, trialStartedAt: now }))
     );
     return now;
   },
 
-  // Elimina todos los espacios del tenant + sus workshops y reservas en cascada,
-  // y además borra la cuenta de Firebase Auth (via Cloud Function con Admin SDK)
-  // para que el email del tenant quede libre y pueda registrarse de nuevo.
   remove: async (espacioIds, userId) => {
-    const batch = writeBatch(firestore);
-
     for (const espacioId of espacioIds) {
-      // Workshops de este espacio
-      const wsSnap = await getDocs(query(collection(firestore, C_WORKSHOPS), where('espacioId', '==', espacioId)));
-      for (const wsDoc of wsSnap.docs) {
-        // Reservas de cada workshop
-        const resSnap = await getDocs(query(collection(firestore, C_RESERVAS), where('workshopId', '==', wsDoc.id)));
-        resSnap.docs.forEach(r => batch.delete(r.ref));
-        batch.delete(wsDoc.ref);
-      }
-      batch.delete(doc(firestore, C_ESPACIOS, espacioId));
+      await adminDeleteEspacio({ id: espacioId });
     }
 
-    // Perfil de usuario (demo_usuarios)
-    if (userId) batch.delete(doc(firestore, C_USUARIOS, userId));
+    if (userId) {
+      try {
+        await adminDeleteProfesional({ uid: userId });
+      } catch (err) {
+        console.warn('adminDeleteProfesional failed (may not exist):', err);
+      }
+    }
 
-    await batch.commit();
+    if (userId) {
+      await deleteDoc(doc(firestore, C_USUARIOS, userId)).catch(() => {});
+    }
 
-    // Finalmente, eliminar la cuenta de Firebase Auth para liberar el email.
-    // Si falla acá no revertimos Firestore (el tenant ya quedó eliminado como
-    // registro), pero avisamos al UI.
     if (userId) {
       try {
         await httpsCallable(functions, 'deleteTenantAuth')({ uid: userId });
@@ -439,15 +496,13 @@ export const tenants = {
 // ─── Espacio propio del Super Admin (para testeo) ────────────────────────────
 export const adminEspacio = {
   get: async (adminUid) => {
-    const q = query(
-      collection(firestore, C_ESPACIOS),
-      where('userId', '==', adminUid),
-      where('isSuperAdmin', '==', true)
-    );
-    const snap = await getDocs(q);
-    if (snap.empty) return null;
-    const d = snap.docs[0];
-    return { id: d.id, ...d.data() };
+    try {
+      const { data } = await adminListAllEspacios();
+      const list = data.espacios ?? [];
+      return list.find(e => e.profesional?.uid === adminUid && e.isSuperAdmin) || null;
+    } catch {
+      return null;
+    }
   },
 
   create: async (adminUid, email, nombre) => {
@@ -456,6 +511,7 @@ export const adminEspacio = {
     const estudio = planesSnap.docs.find(d => d.id === 'estudio')?.data();
 
     const id = uid();
+    const C_ESPACIOS = 'demo_espacios';
     const espacio = {
       userId: adminUid,
       nombre: nombre || 'Espacio Admin',
@@ -493,6 +549,7 @@ export const adminEspacio = {
   },
 
   update: async (id, payload) => {
+    const C_ESPACIOS = 'demo_espacios';
     const ref = doc(firestore, C_ESPACIOS, id);
     await updateDoc(ref, payload);
     const snap = await getDoc(ref);
@@ -591,5 +648,97 @@ export const cupones = {
 
   remove: async (id) => {
     await deleteDoc(doc(firestore, C_CUPONES, id));
+  },
+};
+
+// ─── Migración Firestore → Data Connect (una sola vez) ─────────────────────
+const C_FS_ESPACIOS  = 'demo_espacios';
+const C_FS_WORKSHOPS = 'demo_workshops';
+
+export const migration = {
+  readFirestoreEspacios: async () => {
+    const snap = await getDocs(collection(firestore, C_FS_ESPACIOS));
+    return snap.docs.map(d => ({ firestoreId: d.id, ...d.data() }));
+  },
+
+  readFirestoreWorkshops: async (espacioFirestoreId) => {
+    const snap = await getDocs(
+      query(collection(firestore, C_FS_ESPACIOS, espacioFirestoreId, 'workshops'))
+    );
+    if (snap.empty) {
+      const globalSnap = await getDocs(
+        query(collection(firestore, C_FS_WORKSHOPS), where('espacioId', '==', espacioFirestoreId))
+      );
+      return globalSnap.docs.map(d => ({ firestoreId: d.id, ...d.data() }));
+    }
+    return snap.docs.map(d => ({ firestoreId: d.id, ...d.data() }));
+  },
+
+  migrateEspacio: async (fsEspacio) => {
+    const userId = fsEspacio.userId;
+    if (!userId) throw new Error('Espacio sin userId');
+
+    const userSnap = await getDoc(doc(firestore, C_USUARIOS, userId));
+    const profile = userSnap.exists() ? userSnap.data() : {};
+    const profNombre = profile.nombre || fsEspacio.nombre || 'Sin nombre';
+    const profEmail  = profile.email  || `${userId}@unknown.antologico`;
+
+    await adminEnsureProfesional({ uid: userId, nombre: profNombre, email: profEmail });
+
+    const result = await adminCreateEspacioMigrate({
+      profesionalUid:    userId,
+      nombre:            fsEspacio.nombre || 'Sin nombre',
+      rubroPersonalizado: fsEspacio.rubroPersonalizado || fsEspacio.rubro || null,
+      slug:              fsEspacio.slug || null,
+      logoUrl:           fsEspacio.logoUrl || null,
+      logoShape:         fsEspacio.logoShape || null,
+      logoScale:         fsEspacio.logoScale || null,
+      brandColors:       fsEspacio.brandColors || null,
+      brandFont:         fsEspacio.brandFont || null,
+      redesSociales:     fsEspacio.redesSociales || null,
+      cobros:            fsEspacio.cobros || null,
+      estado:            'ACTIVO',
+    });
+
+    return result;
+  },
+
+  migrateWorkshop: async (dcEspacioId, fsWorkshop) => {
+    const parseFecha = (f) => {
+      if (!f) return new Date().toISOString();
+      if (f.toDate) return f.toDate().toISOString();
+      if (typeof f === 'string') return f;
+      return new Date(f).toISOString();
+    };
+
+    await adminCreateWorkshopMigrate({
+      espacioId:         dcEspacioId,
+      nombre:            fsWorkshop.nombre || 'Sin nombre',
+      tipo:              fsWorkshop.tipo || null,
+      descripcion:       fsWorkshop.descripcion || null,
+      cuposTotales:      fsWorkshop.cuposTotales ?? 10,
+      cuposDisponibles:  fsWorkshop.cuposDisponibles ?? fsWorkshop.cuposTotales ?? 10,
+      precio:            fsWorkshop.precio ?? 0,
+      fecha:             parseFecha(fsWorkshop.fecha),
+      duracionHoras:     fsWorkshop.duracionHoras || null,
+      duracionMinutos:   fsWorkshop.duracionMinutos || null,
+      experienciaPrevia: fsWorkshop.experienciaPrevia || null,
+      scheduleData:      fsWorkshop.scheduleData || null,
+      headerType:        fsWorkshop.headerType || null,
+      headerValue:       fsWorkshop.headerValue || null,
+      metodosPago:       fsWorkshop.metodosPago || null,
+      estado:            fsWorkshop.estado || 'BORRADOR',
+    });
+  },
+
+  deleteEspacio8: async () => {
+    const { data } = await adminListAllEspacios();
+    const espacio8 = (data.espacios ?? []).find(e => e.nombre === '8');
+    if (!espacio8) throw new Error('Espacio "8" no encontrado en Data Connect');
+    await adminDeleteEspacio({ id: espacio8.id });
+    if (espacio8.profesional?.uid) {
+      try { await adminDeleteProfesional({ uid: espacio8.profesional.uid }); } catch { /* may be shared */ }
+    }
+    return espacio8.id;
   },
 };

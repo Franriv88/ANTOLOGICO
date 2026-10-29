@@ -31,7 +31,9 @@ You can also follow the instructions from the [Data Connect documentation](https
   - [*GetPublicEspacios*](#getpublicespacios)
   - [*ListPublicWorkshopsByEspacio*](#listpublicworkshopsbyespacio)
   - [*ListMyReservas*](#listmyreservas)
-  - [*AdminCheckReservas*](#admincheckreservas)
+  - [*AdminListAllEspacios*](#adminlistallespacios)
+  - [*AdminListAllWorkshops*](#adminlistallworkshops)
+  - [*AdminListAllReservas*](#adminlistallreservas)
   - [*ListPublicWorkshops*](#listpublicworkshops)
 - [**Mutations**](#mutations)
   - [*UpsertProfesional*](#upsertprofesional)
@@ -49,6 +51,13 @@ You can also follow the instructions from the [Data Connect documentation](https
   - [*SolicitarCancelacionEspacio*](#solicitarcancelacionespacio)
   - [*ReactivarSuscripcionEspacio*](#reactivarsuscripcionespacio)
   - [*CancelarReserva*](#cancelarreserva)
+  - [*AdminUpdateEspacio*](#adminupdateespacio)
+  - [*AdminDeleteEspacio*](#admindeleteespacio)
+  - [*AdminDeleteProfesional*](#admindeleteprofesional)
+  - [*AdminUpsertProfesional*](#adminupsertprofesional)
+  - [*AdminEnsureProfesional*](#adminensureprofesional)
+  - [*AdminCreateEspacioMigrate*](#admincreateespaciomigrate)
+  - [*AdminCreateWorkshopMigrate*](#admincreateworkshopmigrate)
   - [*DecrementarCupo*](#decrementarcupo)
   - [*CreateReservaConUsuario*](#createreservaconusuario)
 
@@ -1488,57 +1497,92 @@ export default function ListMyReservasComponent() {
 }
 ```
 
-## AdminCheckReservas
-You can execute the `AdminCheckReservas` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
+## AdminListAllEspacios
+You can execute the `AdminListAllEspacios` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
 
 ```javascript
-useAdminCheckReservas(dc: DataConnect, options?: useDataConnectQueryOptions<AdminCheckReservasData>): UseDataConnectQueryResult<AdminCheckReservasData, undefined>;
+useAdminListAllEspacios(dc: DataConnect, options?: useDataConnectQueryOptions<AdminListAllEspaciosData>): UseDataConnectQueryResult<AdminListAllEspaciosData, undefined>;
 ```
 You can also pass in a `DataConnect` instance to the Query hook function.
 ```javascript
-useAdminCheckReservas(options?: useDataConnectQueryOptions<AdminCheckReservasData>): UseDataConnectQueryResult<AdminCheckReservasData, undefined>;
+useAdminListAllEspacios(options?: useDataConnectQueryOptions<AdminListAllEspaciosData>): UseDataConnectQueryResult<AdminListAllEspaciosData, undefined>;
 ```
 
 ### Variables
-The `AdminCheckReservas` Query has no variables.
+The `AdminListAllEspacios` Query has no variables.
 ### Return Type
-Recall that calling the `AdminCheckReservas` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
+Recall that calling the `AdminListAllEspacios` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
 
 To check the status of a Query, use the `UseQueryResult.status` field. You can also check for pending / success / error status using the `UseQueryResult.isPending`, `UseQueryResult.isSuccess`, and `UseQueryResult.isError` fields.
 
-To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `AdminCheckReservas` Query is of type `AdminCheckReservasData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `AdminListAllEspacios` Query is of type `AdminListAllEspaciosData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
-export interface AdminCheckReservasData {
-  check?: unknown[] | null;
+export interface AdminListAllEspaciosData {
+  espacios: ({
+    id: UUIDString;
+    nombre: string;
+    estado: EstadoEspacio;
+    cancelacionPendiente: boolean;
+    createdAt: TimestampString;
+    updatedAt: TimestampString;
+    slug?: string | null;
+    bloqueado: boolean;
+    trialStartedAt?: TimestampString | null;
+    isSuperAdmin: boolean;
+    logoUrl?: string | null;
+    logoShape?: string | null;
+    logoScale?: number | null;
+    brandColors?: unknown | null;
+    brandFont?: string | null;
+    redesSociales?: unknown | null;
+    cobros?: unknown | null;
+    profesional: {
+      uid: string;
+      nombre: string;
+      email: string;
+    } & Profesional_Key;
+    rubro?: {
+      id: UUIDString;
+      nombre: string;
+    } & Rubro_Key;
+    rubroPersonalizado?: string | null;
+    plan?: {
+      id: UUIDString;
+      nombre: string;
+      precioMensual: number;
+      precioAnual: number;
+      features: unknown;
+    } & Plan_Key;
+  } & Espacio_Key)[];
 }
 ```
 
 To learn more about the `UseQueryResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery).
 
-### Using `AdminCheckReservas`'s Query hook function
+### Using `AdminListAllEspacios`'s Query hook function
 
 ```javascript
 import { getDataConnect } from 'firebase/data-connect';
 import { connectorConfig } from '@antologico/dataconnect';
-import { useAdminCheckReservas } from '@antologico/dataconnect/react'
+import { useAdminListAllEspacios } from '@antologico/dataconnect/react'
 
-export default function AdminCheckReservasComponent() {
+export default function AdminListAllEspaciosComponent() {
   // You don't have to do anything to "execute" the Query.
   // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
-  const query = useAdminCheckReservas();
+  const query = useAdminListAllEspacios();
 
   // You can also pass in a `DataConnect` instance to the Query hook function.
   const dataConnect = getDataConnect(connectorConfig);
-  const query = useAdminCheckReservas(dataConnect);
+  const query = useAdminListAllEspacios(dataConnect);
 
   // You can also pass in a `useDataConnectQueryOptions` object to the Query hook function.
   const options = { staleTime: 5 * 1000 };
-  const query = useAdminCheckReservas(options);
+  const query = useAdminListAllEspacios(options);
 
   // You can also pass both a `DataConnect` instance and a `useDataConnectQueryOptions` object.
   const dataConnect = getDataConnect(connectorConfig);
   const options = { staleTime: 5 * 1000 };
-  const query = useAdminCheckReservas(dataConnect, options);
+  const query = useAdminListAllEspacios(dataConnect, options);
 
   // Then, you can render your component dynamically based on the status of the Query.
   if (query.isPending) {
@@ -1551,7 +1595,184 @@ export default function AdminCheckReservasComponent() {
 
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
-    console.log(query.data.check);
+    console.log(query.data.espacios);
+  }
+  return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## AdminListAllWorkshops
+You can execute the `AdminListAllWorkshops` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
+
+```javascript
+useAdminListAllWorkshops(dc: DataConnect, options?: useDataConnectQueryOptions<AdminListAllWorkshopsData>): UseDataConnectQueryResult<AdminListAllWorkshopsData, undefined>;
+```
+You can also pass in a `DataConnect` instance to the Query hook function.
+```javascript
+useAdminListAllWorkshops(options?: useDataConnectQueryOptions<AdminListAllWorkshopsData>): UseDataConnectQueryResult<AdminListAllWorkshopsData, undefined>;
+```
+
+### Variables
+The `AdminListAllWorkshops` Query has no variables.
+### Return Type
+Recall that calling the `AdminListAllWorkshops` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
+
+To check the status of a Query, use the `UseQueryResult.status` field. You can also check for pending / success / error status using the `UseQueryResult.isPending`, `UseQueryResult.isSuccess`, and `UseQueryResult.isError` fields.
+
+To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `AdminListAllWorkshops` Query is of type `AdminListAllWorkshopsData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface AdminListAllWorkshopsData {
+  workshops: ({
+    id: UUIDString;
+    nombre: string;
+    tipo?: TipoWorkshop | null;
+    estado: EstadoWorkshop;
+    cuposTotales: number;
+    cuposDisponibles: number;
+    precio: number;
+    fecha: TimestampString;
+    createdAt: TimestampString;
+    espacio: {
+      id: UUIDString;
+      nombre: string;
+      profesional: {
+        uid: string;
+        nombre: string;
+        email: string;
+      } & Profesional_Key;
+    } & Espacio_Key;
+  } & Workshop_Key)[];
+}
+```
+
+To learn more about the `UseQueryResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery).
+
+### Using `AdminListAllWorkshops`'s Query hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig } from '@antologico/dataconnect';
+import { useAdminListAllWorkshops } from '@antologico/dataconnect/react'
+
+export default function AdminListAllWorkshopsComponent() {
+  // You don't have to do anything to "execute" the Query.
+  // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
+  const query = useAdminListAllWorkshops();
+
+  // You can also pass in a `DataConnect` instance to the Query hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const query = useAdminListAllWorkshops(dataConnect);
+
+  // You can also pass in a `useDataConnectQueryOptions` object to the Query hook function.
+  const options = { staleTime: 5 * 1000 };
+  const query = useAdminListAllWorkshops(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectQueryOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = { staleTime: 5 * 1000 };
+  const query = useAdminListAllWorkshops(dataConnect, options);
+
+  // Then, you can render your component dynamically based on the status of the Query.
+  if (query.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (query.isError) {
+    return <div>Error: {query.error.message}</div>;
+  }
+
+  // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
+  if (query.isSuccess) {
+    console.log(query.data.workshops);
+  }
+  return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## AdminListAllReservas
+You can execute the `AdminListAllReservas` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
+
+```javascript
+useAdminListAllReservas(dc: DataConnect, options?: useDataConnectQueryOptions<AdminListAllReservasData>): UseDataConnectQueryResult<AdminListAllReservasData, undefined>;
+```
+You can also pass in a `DataConnect` instance to the Query hook function.
+```javascript
+useAdminListAllReservas(options?: useDataConnectQueryOptions<AdminListAllReservasData>): UseDataConnectQueryResult<AdminListAllReservasData, undefined>;
+```
+
+### Variables
+The `AdminListAllReservas` Query has no variables.
+### Return Type
+Recall that calling the `AdminListAllReservas` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
+
+To check the status of a Query, use the `UseQueryResult.status` field. You can also check for pending / success / error status using the `UseQueryResult.isPending`, `UseQueryResult.isSuccess`, and `UseQueryResult.isError` fields.
+
+To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `AdminListAllReservas` Query is of type `AdminListAllReservasData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface AdminListAllReservasData {
+  reservas: ({
+    id: UUIDString;
+    estado: EstadoReserva;
+    fechaReserva: TimestampString;
+    pagoExternoId?: string | null;
+    createdAt: TimestampString;
+    usuario: {
+      uid: string;
+      nombre: string;
+      email: string;
+    } & Usuario_Key;
+    workshop: {
+      id: UUIDString;
+      nombre: string;
+      fecha: TimestampString;
+      espacio: {
+        id: UUIDString;
+        nombre: string;
+      } & Espacio_Key;
+    } & Workshop_Key;
+  } & Reserva_Key)[];
+}
+```
+
+To learn more about the `UseQueryResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery).
+
+### Using `AdminListAllReservas`'s Query hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig } from '@antologico/dataconnect';
+import { useAdminListAllReservas } from '@antologico/dataconnect/react'
+
+export default function AdminListAllReservasComponent() {
+  // You don't have to do anything to "execute" the Query.
+  // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
+  const query = useAdminListAllReservas();
+
+  // You can also pass in a `DataConnect` instance to the Query hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const query = useAdminListAllReservas(dataConnect);
+
+  // You can also pass in a `useDataConnectQueryOptions` object to the Query hook function.
+  const options = { staleTime: 5 * 1000 };
+  const query = useAdminListAllReservas(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectQueryOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = { staleTime: 5 * 1000 };
+  const query = useAdminListAllReservas(dataConnect, options);
+
+  // Then, you can render your component dynamically based on the status of the Query.
+  if (query.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (query.isError) {
+    return <div>Error: {query.error.message}</div>;
+  }
+
+  // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
+  if (query.isSuccess) {
+    console.log(query.data.reservas);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
 }
@@ -3181,6 +3402,732 @@ export default function CancelarReservaComponent() {
   if (mutation.isSuccess) {
     console.log(mutation.data.reserva_update);
     console.log(mutation.data.workshop_update);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## AdminUpdateEspacio
+You can execute the `AdminUpdateEspacio` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useAdminUpdateEspacio(options?: useDataConnectMutationOptions<AdminUpdateEspacioData, FirebaseError, AdminUpdateEspacioVariables>): UseDataConnectMutationResult<AdminUpdateEspacioData, AdminUpdateEspacioVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useAdminUpdateEspacio(dc: DataConnect, options?: useDataConnectMutationOptions<AdminUpdateEspacioData, FirebaseError, AdminUpdateEspacioVariables>): UseDataConnectMutationResult<AdminUpdateEspacioData, AdminUpdateEspacioVariables>;
+```
+
+### Variables
+The `AdminUpdateEspacio` Mutation requires an argument of type `AdminUpdateEspacioVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface AdminUpdateEspacioVariables {
+  id: UUIDString;
+  bloqueado?: boolean | null;
+  trialStartedAt?: TimestampString | null;
+  slug?: string | null;
+  estado?: EstadoEspacio | null;
+}
+```
+### Return Type
+Recall that calling the `AdminUpdateEspacio` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `AdminUpdateEspacio` Mutation is of type `AdminUpdateEspacioData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface AdminUpdateEspacioData {
+  espacio_update?: Espacio_Key | null;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `AdminUpdateEspacio`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, AdminUpdateEspacioVariables } from '@antologico/dataconnect';
+import { useAdminUpdateEspacio } from '@antologico/dataconnect/react'
+
+export default function AdminUpdateEspacioComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useAdminUpdateEspacio();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useAdminUpdateEspacio(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useAdminUpdateEspacio(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useAdminUpdateEspacio(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useAdminUpdateEspacio` Mutation requires an argument of type `AdminUpdateEspacioVariables`:
+  const adminUpdateEspacioVars: AdminUpdateEspacioVariables = {
+    id: ..., 
+    bloqueado: ..., // optional
+    trialStartedAt: ..., // optional
+    slug: ..., // optional
+    estado: ..., // optional
+  };
+  mutation.mutate(adminUpdateEspacioVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ id: ..., bloqueado: ..., trialStartedAt: ..., slug: ..., estado: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(adminUpdateEspacioVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.espacio_update);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## AdminDeleteEspacio
+You can execute the `AdminDeleteEspacio` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useAdminDeleteEspacio(options?: useDataConnectMutationOptions<AdminDeleteEspacioData, FirebaseError, AdminDeleteEspacioVariables>): UseDataConnectMutationResult<AdminDeleteEspacioData, AdminDeleteEspacioVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useAdminDeleteEspacio(dc: DataConnect, options?: useDataConnectMutationOptions<AdminDeleteEspacioData, FirebaseError, AdminDeleteEspacioVariables>): UseDataConnectMutationResult<AdminDeleteEspacioData, AdminDeleteEspacioVariables>;
+```
+
+### Variables
+The `AdminDeleteEspacio` Mutation requires an argument of type `AdminDeleteEspacioVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface AdminDeleteEspacioVariables {
+  id: UUIDString;
+}
+```
+### Return Type
+Recall that calling the `AdminDeleteEspacio` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `AdminDeleteEspacio` Mutation is of type `AdminDeleteEspacioData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface AdminDeleteEspacioData {
+  deletedData?: number | null;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `AdminDeleteEspacio`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, AdminDeleteEspacioVariables } from '@antologico/dataconnect';
+import { useAdminDeleteEspacio } from '@antologico/dataconnect/react'
+
+export default function AdminDeleteEspacioComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useAdminDeleteEspacio();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useAdminDeleteEspacio(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useAdminDeleteEspacio(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useAdminDeleteEspacio(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useAdminDeleteEspacio` Mutation requires an argument of type `AdminDeleteEspacioVariables`:
+  const adminDeleteEspacioVars: AdminDeleteEspacioVariables = {
+    id: ..., 
+  };
+  mutation.mutate(adminDeleteEspacioVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ id: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(adminDeleteEspacioVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.deletedData);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## AdminDeleteProfesional
+You can execute the `AdminDeleteProfesional` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useAdminDeleteProfesional(options?: useDataConnectMutationOptions<AdminDeleteProfesionalData, FirebaseError, AdminDeleteProfesionalVariables>): UseDataConnectMutationResult<AdminDeleteProfesionalData, AdminDeleteProfesionalVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useAdminDeleteProfesional(dc: DataConnect, options?: useDataConnectMutationOptions<AdminDeleteProfesionalData, FirebaseError, AdminDeleteProfesionalVariables>): UseDataConnectMutationResult<AdminDeleteProfesionalData, AdminDeleteProfesionalVariables>;
+```
+
+### Variables
+The `AdminDeleteProfesional` Mutation requires an argument of type `AdminDeleteProfesionalVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface AdminDeleteProfesionalVariables {
+  uid: string;
+}
+```
+### Return Type
+Recall that calling the `AdminDeleteProfesional` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `AdminDeleteProfesional` Mutation is of type `AdminDeleteProfesionalData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface AdminDeleteProfesionalData {
+  profesional_delete?: Profesional_Key | null;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `AdminDeleteProfesional`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, AdminDeleteProfesionalVariables } from '@antologico/dataconnect';
+import { useAdminDeleteProfesional } from '@antologico/dataconnect/react'
+
+export default function AdminDeleteProfesionalComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useAdminDeleteProfesional();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useAdminDeleteProfesional(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useAdminDeleteProfesional(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useAdminDeleteProfesional(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useAdminDeleteProfesional` Mutation requires an argument of type `AdminDeleteProfesionalVariables`:
+  const adminDeleteProfesionalVars: AdminDeleteProfesionalVariables = {
+    uid: ..., 
+  };
+  mutation.mutate(adminDeleteProfesionalVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ uid: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(adminDeleteProfesionalVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.profesional_delete);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## AdminUpsertProfesional
+You can execute the `AdminUpsertProfesional` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useAdminUpsertProfesional(options?: useDataConnectMutationOptions<AdminUpsertProfesionalData, FirebaseError, AdminUpsertProfesionalVariables>): UseDataConnectMutationResult<AdminUpsertProfesionalData, AdminUpsertProfesionalVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useAdminUpsertProfesional(dc: DataConnect, options?: useDataConnectMutationOptions<AdminUpsertProfesionalData, FirebaseError, AdminUpsertProfesionalVariables>): UseDataConnectMutationResult<AdminUpsertProfesionalData, AdminUpsertProfesionalVariables>;
+```
+
+### Variables
+The `AdminUpsertProfesional` Mutation requires an argument of type `AdminUpsertProfesionalVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface AdminUpsertProfesionalVariables {
+  uid: string;
+  nombre: string;
+  email: string;
+}
+```
+### Return Type
+Recall that calling the `AdminUpsertProfesional` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `AdminUpsertProfesional` Mutation is of type `AdminUpsertProfesionalData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface AdminUpsertProfesionalData {
+  profesional_upsert: Profesional_Key;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `AdminUpsertProfesional`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, AdminUpsertProfesionalVariables } from '@antologico/dataconnect';
+import { useAdminUpsertProfesional } from '@antologico/dataconnect/react'
+
+export default function AdminUpsertProfesionalComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useAdminUpsertProfesional();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useAdminUpsertProfesional(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useAdminUpsertProfesional(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useAdminUpsertProfesional(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useAdminUpsertProfesional` Mutation requires an argument of type `AdminUpsertProfesionalVariables`:
+  const adminUpsertProfesionalVars: AdminUpsertProfesionalVariables = {
+    uid: ..., 
+    nombre: ..., 
+    email: ..., 
+  };
+  mutation.mutate(adminUpsertProfesionalVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ uid: ..., nombre: ..., email: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(adminUpsertProfesionalVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.profesional_upsert);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## AdminEnsureProfesional
+You can execute the `AdminEnsureProfesional` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useAdminEnsureProfesional(options?: useDataConnectMutationOptions<AdminEnsureProfesionalData, FirebaseError, AdminEnsureProfesionalVariables>): UseDataConnectMutationResult<AdminEnsureProfesionalData, AdminEnsureProfesionalVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useAdminEnsureProfesional(dc: DataConnect, options?: useDataConnectMutationOptions<AdminEnsureProfesionalData, FirebaseError, AdminEnsureProfesionalVariables>): UseDataConnectMutationResult<AdminEnsureProfesionalData, AdminEnsureProfesionalVariables>;
+```
+
+### Variables
+The `AdminEnsureProfesional` Mutation requires an argument of type `AdminEnsureProfesionalVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface AdminEnsureProfesionalVariables {
+  uid: string;
+  nombre: string;
+  email: string;
+}
+```
+### Return Type
+Recall that calling the `AdminEnsureProfesional` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `AdminEnsureProfesional` Mutation is of type `AdminEnsureProfesionalData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface AdminEnsureProfesionalData {
+  result?: number | null;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `AdminEnsureProfesional`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, AdminEnsureProfesionalVariables } from '@antologico/dataconnect';
+import { useAdminEnsureProfesional } from '@antologico/dataconnect/react'
+
+export default function AdminEnsureProfesionalComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useAdminEnsureProfesional();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useAdminEnsureProfesional(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useAdminEnsureProfesional(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useAdminEnsureProfesional(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useAdminEnsureProfesional` Mutation requires an argument of type `AdminEnsureProfesionalVariables`:
+  const adminEnsureProfesionalVars: AdminEnsureProfesionalVariables = {
+    uid: ..., 
+    nombre: ..., 
+    email: ..., 
+  };
+  mutation.mutate(adminEnsureProfesionalVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ uid: ..., nombre: ..., email: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(adminEnsureProfesionalVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.result);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## AdminCreateEspacioMigrate
+You can execute the `AdminCreateEspacioMigrate` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useAdminCreateEspacioMigrate(options?: useDataConnectMutationOptions<AdminCreateEspacioMigrateData, FirebaseError, AdminCreateEspacioMigrateVariables>): UseDataConnectMutationResult<AdminCreateEspacioMigrateData, AdminCreateEspacioMigrateVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useAdminCreateEspacioMigrate(dc: DataConnect, options?: useDataConnectMutationOptions<AdminCreateEspacioMigrateData, FirebaseError, AdminCreateEspacioMigrateVariables>): UseDataConnectMutationResult<AdminCreateEspacioMigrateData, AdminCreateEspacioMigrateVariables>;
+```
+
+### Variables
+The `AdminCreateEspacioMigrate` Mutation requires an argument of type `AdminCreateEspacioMigrateVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface AdminCreateEspacioMigrateVariables {
+  profesionalUid: string;
+  nombre: string;
+  rubroPersonalizado?: string | null;
+  slug?: string | null;
+  logoUrl?: string | null;
+  logoShape?: string | null;
+  logoScale?: number | null;
+  brandColors?: unknown | null;
+  brandFont?: string | null;
+  redesSociales?: unknown | null;
+  cobros?: unknown | null;
+  estado?: EstadoEspacio | null;
+}
+```
+### Return Type
+Recall that calling the `AdminCreateEspacioMigrate` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `AdminCreateEspacioMigrate` Mutation is of type `AdminCreateEspacioMigrateData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface AdminCreateEspacioMigrateData {
+  espacio_insert: Espacio_Key;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `AdminCreateEspacioMigrate`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, AdminCreateEspacioMigrateVariables } from '@antologico/dataconnect';
+import { useAdminCreateEspacioMigrate } from '@antologico/dataconnect/react'
+
+export default function AdminCreateEspacioMigrateComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useAdminCreateEspacioMigrate();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useAdminCreateEspacioMigrate(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useAdminCreateEspacioMigrate(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useAdminCreateEspacioMigrate(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useAdminCreateEspacioMigrate` Mutation requires an argument of type `AdminCreateEspacioMigrateVariables`:
+  const adminCreateEspacioMigrateVars: AdminCreateEspacioMigrateVariables = {
+    profesionalUid: ..., 
+    nombre: ..., 
+    rubroPersonalizado: ..., // optional
+    slug: ..., // optional
+    logoUrl: ..., // optional
+    logoShape: ..., // optional
+    logoScale: ..., // optional
+    brandColors: ..., // optional
+    brandFont: ..., // optional
+    redesSociales: ..., // optional
+    cobros: ..., // optional
+    estado: ..., // optional
+  };
+  mutation.mutate(adminCreateEspacioMigrateVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ profesionalUid: ..., nombre: ..., rubroPersonalizado: ..., slug: ..., logoUrl: ..., logoShape: ..., logoScale: ..., brandColors: ..., brandFont: ..., redesSociales: ..., cobros: ..., estado: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(adminCreateEspacioMigrateVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.espacio_insert);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## AdminCreateWorkshopMigrate
+You can execute the `AdminCreateWorkshopMigrate` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useAdminCreateWorkshopMigrate(options?: useDataConnectMutationOptions<AdminCreateWorkshopMigrateData, FirebaseError, AdminCreateWorkshopMigrateVariables>): UseDataConnectMutationResult<AdminCreateWorkshopMigrateData, AdminCreateWorkshopMigrateVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useAdminCreateWorkshopMigrate(dc: DataConnect, options?: useDataConnectMutationOptions<AdminCreateWorkshopMigrateData, FirebaseError, AdminCreateWorkshopMigrateVariables>): UseDataConnectMutationResult<AdminCreateWorkshopMigrateData, AdminCreateWorkshopMigrateVariables>;
+```
+
+### Variables
+The `AdminCreateWorkshopMigrate` Mutation requires an argument of type `AdminCreateWorkshopMigrateVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface AdminCreateWorkshopMigrateVariables {
+  espacioId: UUIDString;
+  nombre: string;
+  tipo?: TipoWorkshop | null;
+  descripcion?: string | null;
+  cuposTotales: number;
+  cuposDisponibles: number;
+  precio: number;
+  fecha: TimestampString;
+  duracionHoras?: number | null;
+  duracionMinutos?: number | null;
+  experienciaPrevia?: boolean | null;
+  scheduleData?: unknown | null;
+  headerType?: HeaderType | null;
+  headerValue?: string | null;
+  metodosPago?: unknown | null;
+  estado?: EstadoWorkshop | null;
+}
+```
+### Return Type
+Recall that calling the `AdminCreateWorkshopMigrate` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `AdminCreateWorkshopMigrate` Mutation is of type `AdminCreateWorkshopMigrateData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface AdminCreateWorkshopMigrateData {
+  workshop_insert: Workshop_Key;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `AdminCreateWorkshopMigrate`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, AdminCreateWorkshopMigrateVariables } from '@antologico/dataconnect';
+import { useAdminCreateWorkshopMigrate } from '@antologico/dataconnect/react'
+
+export default function AdminCreateWorkshopMigrateComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useAdminCreateWorkshopMigrate();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useAdminCreateWorkshopMigrate(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useAdminCreateWorkshopMigrate(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useAdminCreateWorkshopMigrate(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useAdminCreateWorkshopMigrate` Mutation requires an argument of type `AdminCreateWorkshopMigrateVariables`:
+  const adminCreateWorkshopMigrateVars: AdminCreateWorkshopMigrateVariables = {
+    espacioId: ..., 
+    nombre: ..., 
+    tipo: ..., // optional
+    descripcion: ..., // optional
+    cuposTotales: ..., 
+    cuposDisponibles: ..., 
+    precio: ..., 
+    fecha: ..., 
+    duracionHoras: ..., // optional
+    duracionMinutos: ..., // optional
+    experienciaPrevia: ..., // optional
+    scheduleData: ..., // optional
+    headerType: ..., // optional
+    headerValue: ..., // optional
+    metodosPago: ..., // optional
+    estado: ..., // optional
+  };
+  mutation.mutate(adminCreateWorkshopMigrateVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ espacioId: ..., nombre: ..., tipo: ..., descripcion: ..., cuposTotales: ..., cuposDisponibles: ..., precio: ..., fecha: ..., duracionHoras: ..., duracionMinutos: ..., experienciaPrevia: ..., scheduleData: ..., headerType: ..., headerValue: ..., metodosPago: ..., estado: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(adminCreateWorkshopMigrateVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.workshop_insert);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
 }

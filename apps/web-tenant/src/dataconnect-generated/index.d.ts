@@ -47,8 +47,180 @@ export enum TipoWorkshop {
 
 
 
-export interface AdminCheckReservasData {
-  check?: unknown[] | null;
+export interface AdminCreateEspacioMigrateData {
+  espacio_insert: Espacio_Key;
+}
+
+export interface AdminCreateEspacioMigrateVariables {
+  profesionalUid: string;
+  nombre: string;
+  rubroPersonalizado?: string | null;
+  slug?: string | null;
+  logoUrl?: string | null;
+  logoShape?: string | null;
+  logoScale?: number | null;
+  brandColors?: unknown | null;
+  brandFont?: string | null;
+  redesSociales?: unknown | null;
+  cobros?: unknown | null;
+  estado?: EstadoEspacio | null;
+}
+
+export interface AdminCreateWorkshopMigrateData {
+  workshop_insert: Workshop_Key;
+}
+
+export interface AdminCreateWorkshopMigrateVariables {
+  espacioId: UUIDString;
+  nombre: string;
+  tipo?: TipoWorkshop | null;
+  descripcion?: string | null;
+  cuposTotales: number;
+  cuposDisponibles: number;
+  precio: number;
+  fecha: TimestampString;
+  duracionHoras?: number | null;
+  duracionMinutos?: number | null;
+  experienciaPrevia?: boolean | null;
+  scheduleData?: unknown | null;
+  headerType?: HeaderType | null;
+  headerValue?: string | null;
+  metodosPago?: unknown | null;
+  estado?: EstadoWorkshop | null;
+}
+
+export interface AdminDeleteEspacioData {
+  deletedData?: number | null;
+}
+
+export interface AdminDeleteEspacioVariables {
+  id: UUIDString;
+}
+
+export interface AdminDeleteProfesionalData {
+  profesional_delete?: Profesional_Key | null;
+}
+
+export interface AdminDeleteProfesionalVariables {
+  uid: string;
+}
+
+export interface AdminEnsureProfesionalData {
+  result?: number | null;
+}
+
+export interface AdminEnsureProfesionalVariables {
+  uid: string;
+  nombre: string;
+  email: string;
+}
+
+export interface AdminListAllEspaciosData {
+  espacios: ({
+    id: UUIDString;
+    nombre: string;
+    estado: EstadoEspacio;
+    cancelacionPendiente: boolean;
+    createdAt: TimestampString;
+    updatedAt: TimestampString;
+    slug?: string | null;
+    bloqueado: boolean;
+    trialStartedAt?: TimestampString | null;
+    isSuperAdmin: boolean;
+    logoUrl?: string | null;
+    logoShape?: string | null;
+    logoScale?: number | null;
+    brandColors?: unknown | null;
+    brandFont?: string | null;
+    redesSociales?: unknown | null;
+    cobros?: unknown | null;
+    profesional: {
+      uid: string;
+      nombre: string;
+      email: string;
+    } & Profesional_Key;
+    rubro?: {
+      id: UUIDString;
+      nombre: string;
+    } & Rubro_Key;
+    rubroPersonalizado?: string | null;
+    plan?: {
+      id: UUIDString;
+      nombre: string;
+      precioMensual: number;
+      precioAnual: number;
+      features: unknown;
+    } & Plan_Key;
+  } & Espacio_Key)[];
+}
+
+export interface AdminListAllReservasData {
+  reservas: ({
+    id: UUIDString;
+    estado: EstadoReserva;
+    fechaReserva: TimestampString;
+    pagoExternoId?: string | null;
+    createdAt: TimestampString;
+    usuario: {
+      uid: string;
+      nombre: string;
+      email: string;
+    } & Usuario_Key;
+    workshop: {
+      id: UUIDString;
+      nombre: string;
+      fecha: TimestampString;
+      espacio: {
+        id: UUIDString;
+        nombre: string;
+      } & Espacio_Key;
+    } & Workshop_Key;
+  } & Reserva_Key)[];
+}
+
+export interface AdminListAllWorkshopsData {
+  workshops: ({
+    id: UUIDString;
+    nombre: string;
+    tipo?: TipoWorkshop | null;
+    estado: EstadoWorkshop;
+    cuposTotales: number;
+    cuposDisponibles: number;
+    precio: number;
+    fecha: TimestampString;
+    createdAt: TimestampString;
+    espacio: {
+      id: UUIDString;
+      nombre: string;
+      profesional: {
+        uid: string;
+        nombre: string;
+        email: string;
+      } & Profesional_Key;
+    } & Espacio_Key;
+  } & Workshop_Key)[];
+}
+
+export interface AdminUpdateEspacioData {
+  espacio_update?: Espacio_Key | null;
+}
+
+export interface AdminUpdateEspacioVariables {
+  id: UUIDString;
+  bloqueado?: boolean | null;
+  trialStartedAt?: TimestampString | null;
+  slug?: string | null;
+  estado?: EstadoEspacio | null;
+}
+
+export interface AdminUpsertProfesionalData {
+  profesional_upsert: Profesional_Key;
+}
+
+export interface AdminUpsertProfesionalVariables {
+  uid: string;
+  nombre: string;
+  email: string;
 }
 
 export interface CancelarReservaData {
@@ -849,6 +1021,90 @@ export const cancelarReservaRef: CancelarReservaRef;
 export function cancelarReserva(vars: CancelarReservaVariables): MutationPromise<CancelarReservaData, CancelarReservaVariables>;
 export function cancelarReserva(dc: DataConnect, vars: CancelarReservaVariables): MutationPromise<CancelarReservaData, CancelarReservaVariables>;
 
+interface AdminUpdateEspacioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: AdminUpdateEspacioVariables): MutationRef<AdminUpdateEspacioData, AdminUpdateEspacioVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: AdminUpdateEspacioVariables): MutationRef<AdminUpdateEspacioData, AdminUpdateEspacioVariables>;
+  operationName: string;
+}
+export const adminUpdateEspacioRef: AdminUpdateEspacioRef;
+
+export function adminUpdateEspacio(vars: AdminUpdateEspacioVariables): MutationPromise<AdminUpdateEspacioData, AdminUpdateEspacioVariables>;
+export function adminUpdateEspacio(dc: DataConnect, vars: AdminUpdateEspacioVariables): MutationPromise<AdminUpdateEspacioData, AdminUpdateEspacioVariables>;
+
+interface AdminDeleteEspacioRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: AdminDeleteEspacioVariables): MutationRef<AdminDeleteEspacioData, AdminDeleteEspacioVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: AdminDeleteEspacioVariables): MutationRef<AdminDeleteEspacioData, AdminDeleteEspacioVariables>;
+  operationName: string;
+}
+export const adminDeleteEspacioRef: AdminDeleteEspacioRef;
+
+export function adminDeleteEspacio(vars: AdminDeleteEspacioVariables): MutationPromise<AdminDeleteEspacioData, AdminDeleteEspacioVariables>;
+export function adminDeleteEspacio(dc: DataConnect, vars: AdminDeleteEspacioVariables): MutationPromise<AdminDeleteEspacioData, AdminDeleteEspacioVariables>;
+
+interface AdminDeleteProfesionalRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: AdminDeleteProfesionalVariables): MutationRef<AdminDeleteProfesionalData, AdminDeleteProfesionalVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: AdminDeleteProfesionalVariables): MutationRef<AdminDeleteProfesionalData, AdminDeleteProfesionalVariables>;
+  operationName: string;
+}
+export const adminDeleteProfesionalRef: AdminDeleteProfesionalRef;
+
+export function adminDeleteProfesional(vars: AdminDeleteProfesionalVariables): MutationPromise<AdminDeleteProfesionalData, AdminDeleteProfesionalVariables>;
+export function adminDeleteProfesional(dc: DataConnect, vars: AdminDeleteProfesionalVariables): MutationPromise<AdminDeleteProfesionalData, AdminDeleteProfesionalVariables>;
+
+interface AdminUpsertProfesionalRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: AdminUpsertProfesionalVariables): MutationRef<AdminUpsertProfesionalData, AdminUpsertProfesionalVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: AdminUpsertProfesionalVariables): MutationRef<AdminUpsertProfesionalData, AdminUpsertProfesionalVariables>;
+  operationName: string;
+}
+export const adminUpsertProfesionalRef: AdminUpsertProfesionalRef;
+
+export function adminUpsertProfesional(vars: AdminUpsertProfesionalVariables): MutationPromise<AdminUpsertProfesionalData, AdminUpsertProfesionalVariables>;
+export function adminUpsertProfesional(dc: DataConnect, vars: AdminUpsertProfesionalVariables): MutationPromise<AdminUpsertProfesionalData, AdminUpsertProfesionalVariables>;
+
+interface AdminEnsureProfesionalRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: AdminEnsureProfesionalVariables): MutationRef<AdminEnsureProfesionalData, AdminEnsureProfesionalVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: AdminEnsureProfesionalVariables): MutationRef<AdminEnsureProfesionalData, AdminEnsureProfesionalVariables>;
+  operationName: string;
+}
+export const adminEnsureProfesionalRef: AdminEnsureProfesionalRef;
+
+export function adminEnsureProfesional(vars: AdminEnsureProfesionalVariables): MutationPromise<AdminEnsureProfesionalData, AdminEnsureProfesionalVariables>;
+export function adminEnsureProfesional(dc: DataConnect, vars: AdminEnsureProfesionalVariables): MutationPromise<AdminEnsureProfesionalData, AdminEnsureProfesionalVariables>;
+
+interface AdminCreateEspacioMigrateRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: AdminCreateEspacioMigrateVariables): MutationRef<AdminCreateEspacioMigrateData, AdminCreateEspacioMigrateVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: AdminCreateEspacioMigrateVariables): MutationRef<AdminCreateEspacioMigrateData, AdminCreateEspacioMigrateVariables>;
+  operationName: string;
+}
+export const adminCreateEspacioMigrateRef: AdminCreateEspacioMigrateRef;
+
+export function adminCreateEspacioMigrate(vars: AdminCreateEspacioMigrateVariables): MutationPromise<AdminCreateEspacioMigrateData, AdminCreateEspacioMigrateVariables>;
+export function adminCreateEspacioMigrate(dc: DataConnect, vars: AdminCreateEspacioMigrateVariables): MutationPromise<AdminCreateEspacioMigrateData, AdminCreateEspacioMigrateVariables>;
+
+interface AdminCreateWorkshopMigrateRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: AdminCreateWorkshopMigrateVariables): MutationRef<AdminCreateWorkshopMigrateData, AdminCreateWorkshopMigrateVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: AdminCreateWorkshopMigrateVariables): MutationRef<AdminCreateWorkshopMigrateData, AdminCreateWorkshopMigrateVariables>;
+  operationName: string;
+}
+export const adminCreateWorkshopMigrateRef: AdminCreateWorkshopMigrateRef;
+
+export function adminCreateWorkshopMigrate(vars: AdminCreateWorkshopMigrateVariables): MutationPromise<AdminCreateWorkshopMigrateData, AdminCreateWorkshopMigrateVariables>;
+export function adminCreateWorkshopMigrate(dc: DataConnect, vars: AdminCreateWorkshopMigrateVariables): MutationPromise<AdminCreateWorkshopMigrateData, AdminCreateWorkshopMigrateVariables>;
+
 interface DecrementarCupoRef {
   /* Allow users to create refs without passing in DataConnect */
   (vars: DecrementarCupoVariables): MutationRef<DecrementarCupoData, DecrementarCupoVariables>;
@@ -1041,17 +1297,41 @@ export const listMyReservasRef: ListMyReservasRef;
 export function listMyReservas(options?: ExecuteQueryOptions): QueryPromise<ListMyReservasData, undefined>;
 export function listMyReservas(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<ListMyReservasData, undefined>;
 
-interface AdminCheckReservasRef {
+interface AdminListAllEspaciosRef {
   /* Allow users to create refs without passing in DataConnect */
-  (): QueryRef<AdminCheckReservasData, undefined>;
+  (): QueryRef<AdminListAllEspaciosData, undefined>;
   /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect): QueryRef<AdminCheckReservasData, undefined>;
+  (dc: DataConnect): QueryRef<AdminListAllEspaciosData, undefined>;
   operationName: string;
 }
-export const adminCheckReservasRef: AdminCheckReservasRef;
+export const adminListAllEspaciosRef: AdminListAllEspaciosRef;
 
-export function adminCheckReservas(options?: ExecuteQueryOptions): QueryPromise<AdminCheckReservasData, undefined>;
-export function adminCheckReservas(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<AdminCheckReservasData, undefined>;
+export function adminListAllEspacios(options?: ExecuteQueryOptions): QueryPromise<AdminListAllEspaciosData, undefined>;
+export function adminListAllEspacios(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<AdminListAllEspaciosData, undefined>;
+
+interface AdminListAllWorkshopsRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<AdminListAllWorkshopsData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<AdminListAllWorkshopsData, undefined>;
+  operationName: string;
+}
+export const adminListAllWorkshopsRef: AdminListAllWorkshopsRef;
+
+export function adminListAllWorkshops(options?: ExecuteQueryOptions): QueryPromise<AdminListAllWorkshopsData, undefined>;
+export function adminListAllWorkshops(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<AdminListAllWorkshopsData, undefined>;
+
+interface AdminListAllReservasRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<AdminListAllReservasData, undefined>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect): QueryRef<AdminListAllReservasData, undefined>;
+  operationName: string;
+}
+export const adminListAllReservasRef: AdminListAllReservasRef;
+
+export function adminListAllReservas(options?: ExecuteQueryOptions): QueryPromise<AdminListAllReservasData, undefined>;
+export function adminListAllReservas(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<AdminListAllReservasData, undefined>;
 
 interface ListPublicWorkshopsRef {
   /* Allow users to create refs without passing in DataConnect */

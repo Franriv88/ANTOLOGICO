@@ -926,6 +926,7 @@ export default function EspacioPublico({ overrideEspacioId }) {
 
             httpsCallable(functions, 'notifyTenantNewBooking')({
               espacioId,
+              tenantUid: espacio?.profesional?.uid,
               workshopName: ws.nombre,
               clientName: pending.nombres[0],
               clientEmail: pending.email,
@@ -1018,6 +1019,7 @@ export default function EspacioPublico({ overrideEspacioId }) {
     const first = reservas[0];
     httpsCallable(functions, 'notifyTenantNewBooking')({
       espacioId,
+      tenantUid: espacio?.profesional?.uid,
       workshopName: booking.nombre,
       clientName: first.nombre,
       clientEmail: first.email,

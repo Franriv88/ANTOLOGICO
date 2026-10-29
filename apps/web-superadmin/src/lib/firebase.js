@@ -12,7 +12,7 @@ const firebaseConfig = {
   appId:             import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-export const app       = initializeApp(firebaseConfig, 'superadmin');
+export const app       = initializeApp(firebaseConfig);
 export const auth      = getAuth(app);
 export const firestore = getFirestore(app);
 export const functions = getFunctions(app, 'us-central1');

@@ -345,6 +345,159 @@ mutation CancelarReserva($id: UUID!, $workshopId: UUID!) @auth(level: USER) @tra
   )
 }
 
+# ─── Admin (Super Admin) ─────────────────────────────────────────────────────
+
+mutation AdminUpdateEspacio(
+  $id:              UUID!
+  $bloqueado:       Boolean
+  $trialStartedAt:  Timestamp
+  $slug:            String
+  $estado:          EstadoEspacio
+) @auth(expr: "auth.token.admin == true") {
+  espacio_update(
+    id: $id
+    data: {
+      bloqueado:       $bloqueado
+      trialStartedAt:  $trialStartedAt
+      slug:            $slug
+      estado:          $estado
+      updatedAt_expr:  "request.time"
+    }
+  )
+}
+
+mutation AdminDeleteEspacio($id: UUID!) @auth(expr: "auth.token.admin == true") {
+  deletedData: _execute(
+    sql: """
+      WITH del_reservas AS (
+        DELETE FROM reservas WHERE workshop_id IN (SELECT id FROM workshops WHERE espacio_id = $1)
+      ),
+      del_workshops AS (
+        DELETE FROM workshops WHERE espacio_id = $1
+      ),
+      del_dominio AS (
+        DELETE FROM dominios WHERE espacio_id = $1
+      )
+      DELETE FROM espacios WHERE id = $1
+    """
+    params: [$id]
+  )
+}
+
+mutation AdminDeleteProfesional($uid: String!) @auth(expr: "auth.token.admin == true") {
+  profesional_delete(key: { uid: $uid })
+}
+
+mutation AdminUpsertProfesional(
+  $uid:    String!
+  $nombre: String!
+  $email:  String!
+) @auth(expr: "auth.token.admin == true") {
+  profesional_upsert(data: {
+    uid:           $uid
+    nombre:        $nombre
+    email:         $email
+    updatedAt_expr: "request.time"
+  })
+}
+
+# Versión robusta que maneja conflicto de email único:
+# si el email ya está en uso por otro uid, usa email basado en uid.
+mutation AdminEnsureProfesional(
+  $uid:    String!
+  $nombre: String!
+  $email:  String!
+) @auth(expr: "auth.token.admin == true") {
+  result: _execute(
+    sql: """
+      INSERT INTO profesionales (uid, nombre, email, estado, created_at, updated_at)
+      VALUES ($1, $2,
+        CASE WHEN EXISTS (SELECT 1 FROM profesionales WHERE email = $3 AND uid != $1)
+          THEN $1 || '@migrated.antologico.app'
+          ELSE $3
+        END,
+        'ACTIVO', NOW(), NOW()
+      )
+      ON CONFLICT (uid) DO UPDATE SET nombre = EXCLUDED.nombre, updated_at = NOW()
+    """
+    params: [$uid, $nombre, $email]
+  )
+}
+
+mutation AdminCreateEspacioMigrate(
+  $profesionalUid:    String!
+  $nombre:            String!
+  $rubroPersonalizado: String
+  $slug:              String
+  $logoUrl:           String
+  $logoShape:         String
+  $logoScale:         Float
+  $brandColors:       Any
+  $brandFont:         String
+  $redesSociales:     Any
+  $cobros:            Any
+  $estado:            EstadoEspacio
+) @auth(expr: "auth.token.admin == true") {
+  espacio_insert(data: {
+    profesionalUid:    $profesionalUid
+    nombre:            $nombre
+    rubroPersonalizado: $rubroPersonalizado
+    slug:              $slug
+    logoUrl:           $logoUrl
+    logoShape:         $logoShape
+    logoScale:         $logoScale
+    brandColors:       $brandColors
+    brandFont:         $brandFont
+    redesSociales:     $redesSociales
+    cobros:            $cobros
+    estado:            $estado
+    createdAt_expr:    "request.time"
+    updatedAt_expr:    "request.time"
+  })
+}
+
+mutation AdminCreateWorkshopMigrate(
+  $espacioId:         UUID!
+  $nombre:            String!
+  $tipo:              TipoWorkshop
+  $descripcion:       String
+  $cuposTotales:      Int!
+  $cuposDisponibles:  Int!
+  $precio:            Float!
+  $fecha:             Timestamp!
+  $duracionHoras:     Int
+  $duracionMinutos:   Int
+  $experienciaPrevia: Boolean
+  $scheduleData:      Any
+  $headerType:        HeaderType
+  $headerValue:       String
+  $metodosPago:       Any
+  $estado:            EstadoWorkshop
+) @auth(expr: "auth.token.admin == true") {
+  workshop_insert(data: {
+    espacioId:         $espacioId
+    nombre:            $nombre
+    tipo:              $tipo
+    descripcion:       $descripcion
+    cuposTotales:      $cuposTotales
+    cuposDisponibles:  $cuposDisponibles
+    precio:            $precio
+    fecha:             $fecha
+    duracionHoras:     $duracionHoras
+    duracionMinutos:   $duracionMinutos
+    experienciaPrevia: $experienciaPrevia
+    scheduleData:      $scheduleData
+    headerType:        $headerType
+    headerValue:       $headerValue
+    metodosPago:       $metodosPago
+    estado:            $estado
+    createdAt_expr:    "request.time"
+    updatedAt_expr:    "request.time"
+  })
+}
+
+# ─── Reservas (público) ─────────────────────────────────────────────────────
+
 mutation DecrementarCupo($workshopId: UUID!) @auth(level: USER, insecureReason: "Cualquier usuario autenticado puede reservar un cupo. La transacción valida disponibilidad antes de decrementar.") @transaction {
   query @redact {
     workshop(id: $workshopId) @check(expr: "this != null", message: "Taller no encontrado") {

@@ -260,6 +260,104 @@ exports.cancelarReserva = function cancelarReserva(dcOrVars, vars) {
 }
 ;
 
+const adminUpdateEspacioRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'AdminUpdateEspacio', inputVars);
+}
+adminUpdateEspacioRef.operationName = 'AdminUpdateEspacio';
+exports.adminUpdateEspacioRef = adminUpdateEspacioRef;
+
+exports.adminUpdateEspacio = function adminUpdateEspacio(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(adminUpdateEspacioRef(dcInstance, inputVars));
+}
+;
+
+const adminDeleteEspacioRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'AdminDeleteEspacio', inputVars);
+}
+adminDeleteEspacioRef.operationName = 'AdminDeleteEspacio';
+exports.adminDeleteEspacioRef = adminDeleteEspacioRef;
+
+exports.adminDeleteEspacio = function adminDeleteEspacio(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(adminDeleteEspacioRef(dcInstance, inputVars));
+}
+;
+
+const adminDeleteProfesionalRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'AdminDeleteProfesional', inputVars);
+}
+adminDeleteProfesionalRef.operationName = 'AdminDeleteProfesional';
+exports.adminDeleteProfesionalRef = adminDeleteProfesionalRef;
+
+exports.adminDeleteProfesional = function adminDeleteProfesional(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(adminDeleteProfesionalRef(dcInstance, inputVars));
+}
+;
+
+const adminUpsertProfesionalRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'AdminUpsertProfesional', inputVars);
+}
+adminUpsertProfesionalRef.operationName = 'AdminUpsertProfesional';
+exports.adminUpsertProfesionalRef = adminUpsertProfesionalRef;
+
+exports.adminUpsertProfesional = function adminUpsertProfesional(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(adminUpsertProfesionalRef(dcInstance, inputVars));
+}
+;
+
+const adminEnsureProfesionalRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'AdminEnsureProfesional', inputVars);
+}
+adminEnsureProfesionalRef.operationName = 'AdminEnsureProfesional';
+exports.adminEnsureProfesionalRef = adminEnsureProfesionalRef;
+
+exports.adminEnsureProfesional = function adminEnsureProfesional(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(adminEnsureProfesionalRef(dcInstance, inputVars));
+}
+;
+
+const adminCreateEspacioMigrateRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'AdminCreateEspacioMigrate', inputVars);
+}
+adminCreateEspacioMigrateRef.operationName = 'AdminCreateEspacioMigrate';
+exports.adminCreateEspacioMigrateRef = adminCreateEspacioMigrateRef;
+
+exports.adminCreateEspacioMigrate = function adminCreateEspacioMigrate(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(adminCreateEspacioMigrateRef(dcInstance, inputVars));
+}
+;
+
+const adminCreateWorkshopMigrateRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'AdminCreateWorkshopMigrate', inputVars);
+}
+adminCreateWorkshopMigrateRef.operationName = 'AdminCreateWorkshopMigrate';
+exports.adminCreateWorkshopMigrateRef = adminCreateWorkshopMigrateRef;
+
+exports.adminCreateWorkshopMigrate = function adminCreateWorkshopMigrate(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(adminCreateWorkshopMigrateRef(dcInstance, inputVars));
+}
+;
+
 const decrementarCupoRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
@@ -498,18 +596,48 @@ exports.listMyReservas = function listMyReservas(dcOrOptions, options) {
 }
 ;
 
-const adminCheckReservasRef = (dc) => {
+const adminListAllEspaciosRef = (dc) => {
   const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
   dcInstance._useGeneratedSdk();
-  return queryRef(dcInstance, 'AdminCheckReservas');
+  return queryRef(dcInstance, 'AdminListAllEspacios');
 }
-adminCheckReservasRef.operationName = 'AdminCheckReservas';
-exports.adminCheckReservasRef = adminCheckReservasRef;
+adminListAllEspaciosRef.operationName = 'AdminListAllEspacios';
+exports.adminListAllEspaciosRef = adminListAllEspaciosRef;
 
-exports.adminCheckReservas = function adminCheckReservas(dcOrOptions, options) {
+exports.adminListAllEspacios = function adminListAllEspacios(dcOrOptions, options) {
   
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
-  return executeQuery(adminCheckReservasRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+  return executeQuery(adminListAllEspaciosRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const adminListAllWorkshopsRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'AdminListAllWorkshops');
+}
+adminListAllWorkshopsRef.operationName = 'AdminListAllWorkshops';
+exports.adminListAllWorkshopsRef = adminListAllWorkshopsRef;
+
+exports.adminListAllWorkshops = function adminListAllWorkshops(dcOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(adminListAllWorkshopsRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const adminListAllReservasRef = (dc) => {
+  const { dc: dcInstance} = validateArgs(connectorConfig, dc, undefined);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'AdminListAllReservas');
+}
+adminListAllReservasRef.operationName = 'AdminListAllReservas';
+exports.adminListAllReservasRef = adminListAllReservasRef;
+
+exports.adminListAllReservas = function adminListAllReservas(dcOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
+  return executeQuery(adminListAllReservasRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 ;
 

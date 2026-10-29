@@ -136,9 +136,11 @@ function TenantDetailModal({ group, planes, onClose }) {
   const authLabel = u.authMethod === 'google' ? 'Google Sign-In' : u.authMethod === 'email' ? 'Email y contraseña' : '—';
   const rubro = p.rubroPersonalizado || p.rubro?.nombre || '—';
   const generoLabel = GENERO_LABELS[u.genero] || u.genero || 'Prefiero no decirlo';
-  const planRaw = p.selectedPlan || p.planId;
-  const planId = (planRaw === 'null' || planRaw === 'undefined' || !planRaw) ? null : planRaw;
-  const planNombre = planId ? (planes.find(pl => pl.id === planId)?.nombre ?? '—') : 'Sin plan';
+  const planNombre = p.plan?.nombre || ((() => {
+    const raw = p.selectedPlan || p.planId;
+    const pid = (raw === 'null' || raw === 'undefined' || !raw) ? null : raw;
+    return pid ? (planes.find(pl => pl.id === pid)?.nombre ?? null) : null;
+  })()) || 'Sin plan';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -582,9 +584,11 @@ export default function Tenants() {
                       {/* ── Plan (del espacio principal) ── */}
                       <td className="px-4 py-3">
                         {(() => {
-                          const raw = primary.selectedPlan || primary.planId;
-                          const pid = (raw === 'null' || raw === 'undefined' || !raw) ? null : raw;
-                          const nombre = pid ? (planes.find(p => p.id === pid)?.nombre ?? null) : null;
+                          const nombre = primary.plan?.nombre || (() => {
+                            const raw = primary.selectedPlan || primary.planId;
+                            const pid = (raw === 'null' || raw === 'undefined' || !raw) ? null : raw;
+                            return pid ? (planes.find(p => p.id === pid)?.nombre ?? null) : null;
+                          })();
                           return nombre
                             ? <span className="text-xs font-medium text-ink">{nombre}</span>
                             : <span className="text-xs text-ink-muted">Sin plan</span>;

@@ -22,7 +22,9 @@ This README will guide you through the process of using the generated JavaScript
   - [*GetPublicEspacios*](#getpublicespacios)
   - [*ListPublicWorkshopsByEspacio*](#listpublicworkshopsbyespacio)
   - [*ListMyReservas*](#listmyreservas)
-  - [*AdminCheckReservas*](#admincheckreservas)
+  - [*AdminListAllEspacios*](#adminlistallespacios)
+  - [*AdminListAllWorkshops*](#adminlistallworkshops)
+  - [*AdminListAllReservas*](#adminlistallreservas)
   - [*ListPublicWorkshops*](#listpublicworkshops)
 - [**Mutations**](#mutations)
   - [*UpsertProfesional*](#upsertprofesional)
@@ -40,6 +42,13 @@ This README will guide you through the process of using the generated JavaScript
   - [*SolicitarCancelacionEspacio*](#solicitarcancelacionespacio)
   - [*ReactivarSuscripcionEspacio*](#reactivarsuscripcionespacio)
   - [*CancelarReserva*](#cancelarreserva)
+  - [*AdminUpdateEspacio*](#adminupdateespacio)
+  - [*AdminDeleteEspacio*](#admindeleteespacio)
+  - [*AdminDeleteProfesional*](#admindeleteprofesional)
+  - [*AdminUpsertProfesional*](#adminupsertprofesional)
+  - [*AdminEnsureProfesional*](#adminensureprofesional)
+  - [*AdminCreateEspacioMigrate*](#admincreateespaciomigrate)
+  - [*AdminCreateWorkshopMigrate*](#admincreateworkshopmigrate)
   - [*DecrementarCupo*](#decrementarcupo)
   - [*CreateReservaConUsuario*](#createreservaconusuario)
 
@@ -1789,94 +1798,350 @@ executeQuery(ref).then((response) => {
 });
 ```
 
-## AdminCheckReservas
-You can execute the `AdminCheckReservas` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+## AdminListAllEspacios
+You can execute the `AdminListAllEspacios` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
 ```typescript
-adminCheckReservas(options?: ExecuteQueryOptions): QueryPromise<AdminCheckReservasData, undefined>;
+adminListAllEspacios(options?: ExecuteQueryOptions): QueryPromise<AdminListAllEspaciosData, undefined>;
 
-interface AdminCheckReservasRef {
+interface AdminListAllEspaciosRef {
   ...
   /* Allow users to create refs without passing in DataConnect */
-  (): QueryRef<AdminCheckReservasData, undefined>;
+  (): QueryRef<AdminListAllEspaciosData, undefined>;
 }
-export const adminCheckReservasRef: AdminCheckReservasRef;
+export const adminListAllEspaciosRef: AdminListAllEspaciosRef;
 ```
 You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
 ```typescript
-adminCheckReservas(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<AdminCheckReservasData, undefined>;
+adminListAllEspacios(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<AdminListAllEspaciosData, undefined>;
 
-interface AdminCheckReservasRef {
+interface AdminListAllEspaciosRef {
   ...
-  (dc: DataConnect): QueryRef<AdminCheckReservasData, undefined>;
+  (dc: DataConnect): QueryRef<AdminListAllEspaciosData, undefined>;
 }
-export const adminCheckReservasRef: AdminCheckReservasRef;
+export const adminListAllEspaciosRef: AdminListAllEspaciosRef;
 ```
 
-If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the adminCheckReservasRef:
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the adminListAllEspaciosRef:
 ```typescript
-const name = adminCheckReservasRef.operationName;
+const name = adminListAllEspaciosRef.operationName;
 console.log(name);
 ```
 
 ### Variables
-The `AdminCheckReservas` query has no variables.
+The `AdminListAllEspacios` query has no variables.
 ### Return Type
-Recall that executing the `AdminCheckReservas` query returns a `QueryPromise` that resolves to an object with a `data` property.
+Recall that executing the `AdminListAllEspacios` query returns a `QueryPromise` that resolves to an object with a `data` property.
 
-The `data` property is an object of type `AdminCheckReservasData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+The `data` property is an object of type `AdminListAllEspaciosData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
-export interface AdminCheckReservasData {
-  check?: unknown[] | null;
+export interface AdminListAllEspaciosData {
+  espacios: ({
+    id: UUIDString;
+    nombre: string;
+    estado: EstadoEspacio;
+    cancelacionPendiente: boolean;
+    createdAt: TimestampString;
+    updatedAt: TimestampString;
+    slug?: string | null;
+    bloqueado: boolean;
+    trialStartedAt?: TimestampString | null;
+    isSuperAdmin: boolean;
+    logoUrl?: string | null;
+    logoShape?: string | null;
+    logoScale?: number | null;
+    brandColors?: unknown | null;
+    brandFont?: string | null;
+    redesSociales?: unknown | null;
+    cobros?: unknown | null;
+    profesional: {
+      uid: string;
+      nombre: string;
+      email: string;
+    } & Profesional_Key;
+    rubro?: {
+      id: UUIDString;
+      nombre: string;
+    } & Rubro_Key;
+    rubroPersonalizado?: string | null;
+    plan?: {
+      id: UUIDString;
+      nombre: string;
+      precioMensual: number;
+      precioAnual: number;
+      features: unknown;
+    } & Plan_Key;
+  } & Espacio_Key)[];
 }
 ```
-### Using `AdminCheckReservas`'s action shortcut function
+### Using `AdminListAllEspacios`'s action shortcut function
 
 ```typescript
 import { getDataConnect } from 'firebase/data-connect';
-import { connectorConfig, adminCheckReservas } from '@antologico/dataconnect';
+import { connectorConfig, adminListAllEspacios } from '@antologico/dataconnect';
 
 
-// Call the `adminCheckReservas()` function to execute the query.
+// Call the `adminListAllEspacios()` function to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
-const { data } = await adminCheckReservas();
+const { data } = await adminListAllEspacios();
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
-const { data } = await adminCheckReservas(dataConnect);
+const { data } = await adminListAllEspacios(dataConnect);
 
-console.log(data.check);
+console.log(data.espacios);
 
 // Or, you can use the `Promise` API.
-adminCheckReservas().then((response) => {
+adminListAllEspacios().then((response) => {
   const data = response.data;
-  console.log(data.check);
+  console.log(data.espacios);
 });
 ```
 
-### Using `AdminCheckReservas`'s `QueryRef` function
+### Using `AdminListAllEspacios`'s `QueryRef` function
 
 ```typescript
 import { getDataConnect, executeQuery } from 'firebase/data-connect';
-import { connectorConfig, adminCheckReservasRef } from '@antologico/dataconnect';
+import { connectorConfig, adminListAllEspaciosRef } from '@antologico/dataconnect';
 
 
-// Call the `adminCheckReservasRef()` function to get a reference to the query.
-const ref = adminCheckReservasRef();
+// Call the `adminListAllEspaciosRef()` function to get a reference to the query.
+const ref = adminListAllEspaciosRef();
 
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
-const ref = adminCheckReservasRef(dataConnect);
+const ref = adminListAllEspaciosRef(dataConnect);
 
 // Call `executeQuery()` on the reference to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeQuery(ref);
 
-console.log(data.check);
+console.log(data.espacios);
 
 // Or, you can use the `Promise` API.
 executeQuery(ref).then((response) => {
   const data = response.data;
-  console.log(data.check);
+  console.log(data.espacios);
+});
+```
+
+## AdminListAllWorkshops
+You can execute the `AdminListAllWorkshops` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+adminListAllWorkshops(options?: ExecuteQueryOptions): QueryPromise<AdminListAllWorkshopsData, undefined>;
+
+interface AdminListAllWorkshopsRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<AdminListAllWorkshopsData, undefined>;
+}
+export const adminListAllWorkshopsRef: AdminListAllWorkshopsRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+adminListAllWorkshops(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<AdminListAllWorkshopsData, undefined>;
+
+interface AdminListAllWorkshopsRef {
+  ...
+  (dc: DataConnect): QueryRef<AdminListAllWorkshopsData, undefined>;
+}
+export const adminListAllWorkshopsRef: AdminListAllWorkshopsRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the adminListAllWorkshopsRef:
+```typescript
+const name = adminListAllWorkshopsRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `AdminListAllWorkshops` query has no variables.
+### Return Type
+Recall that executing the `AdminListAllWorkshops` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `AdminListAllWorkshopsData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface AdminListAllWorkshopsData {
+  workshops: ({
+    id: UUIDString;
+    nombre: string;
+    tipo?: TipoWorkshop | null;
+    estado: EstadoWorkshop;
+    cuposTotales: number;
+    cuposDisponibles: number;
+    precio: number;
+    fecha: TimestampString;
+    createdAt: TimestampString;
+    espacio: {
+      id: UUIDString;
+      nombre: string;
+      profesional: {
+        uid: string;
+        nombre: string;
+        email: string;
+      } & Profesional_Key;
+    } & Espacio_Key;
+  } & Workshop_Key)[];
+}
+```
+### Using `AdminListAllWorkshops`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, adminListAllWorkshops } from '@antologico/dataconnect';
+
+
+// Call the `adminListAllWorkshops()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await adminListAllWorkshops();
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await adminListAllWorkshops(dataConnect);
+
+console.log(data.workshops);
+
+// Or, you can use the `Promise` API.
+adminListAllWorkshops().then((response) => {
+  const data = response.data;
+  console.log(data.workshops);
+});
+```
+
+### Using `AdminListAllWorkshops`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, adminListAllWorkshopsRef } from '@antologico/dataconnect';
+
+
+// Call the `adminListAllWorkshopsRef()` function to get a reference to the query.
+const ref = adminListAllWorkshopsRef();
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = adminListAllWorkshopsRef(dataConnect);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.workshops);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.workshops);
+});
+```
+
+## AdminListAllReservas
+You can execute the `AdminListAllReservas` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+adminListAllReservas(options?: ExecuteQueryOptions): QueryPromise<AdminListAllReservasData, undefined>;
+
+interface AdminListAllReservasRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (): QueryRef<AdminListAllReservasData, undefined>;
+}
+export const adminListAllReservasRef: AdminListAllReservasRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+adminListAllReservas(dc: DataConnect, options?: ExecuteQueryOptions): QueryPromise<AdminListAllReservasData, undefined>;
+
+interface AdminListAllReservasRef {
+  ...
+  (dc: DataConnect): QueryRef<AdminListAllReservasData, undefined>;
+}
+export const adminListAllReservasRef: AdminListAllReservasRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the adminListAllReservasRef:
+```typescript
+const name = adminListAllReservasRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `AdminListAllReservas` query has no variables.
+### Return Type
+Recall that executing the `AdminListAllReservas` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `AdminListAllReservasData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface AdminListAllReservasData {
+  reservas: ({
+    id: UUIDString;
+    estado: EstadoReserva;
+    fechaReserva: TimestampString;
+    pagoExternoId?: string | null;
+    createdAt: TimestampString;
+    usuario: {
+      uid: string;
+      nombre: string;
+      email: string;
+    } & Usuario_Key;
+    workshop: {
+      id: UUIDString;
+      nombre: string;
+      fecha: TimestampString;
+      espacio: {
+        id: UUIDString;
+        nombre: string;
+      } & Espacio_Key;
+    } & Workshop_Key;
+  } & Reserva_Key)[];
+}
+```
+### Using `AdminListAllReservas`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, adminListAllReservas } from '@antologico/dataconnect';
+
+
+// Call the `adminListAllReservas()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await adminListAllReservas();
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await adminListAllReservas(dataConnect);
+
+console.log(data.reservas);
+
+// Or, you can use the `Promise` API.
+adminListAllReservas().then((response) => {
+  const data = response.data;
+  console.log(data.reservas);
+});
+```
+
+### Using `AdminListAllReservas`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, adminListAllReservasRef } from '@antologico/dataconnect';
+
+
+// Call the `adminListAllReservasRef()` function to get a reference to the query.
+const ref = adminListAllReservasRef();
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = adminListAllReservasRef(dataConnect);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.reservas);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.reservas);
 });
 ```
 
@@ -3796,6 +4061,871 @@ executeMutation(ref).then((response) => {
   const data = response.data;
   console.log(data.reserva_update);
   console.log(data.workshop_update);
+});
+```
+
+## AdminUpdateEspacio
+You can execute the `AdminUpdateEspacio` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+adminUpdateEspacio(vars: AdminUpdateEspacioVariables): MutationPromise<AdminUpdateEspacioData, AdminUpdateEspacioVariables>;
+
+interface AdminUpdateEspacioRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: AdminUpdateEspacioVariables): MutationRef<AdminUpdateEspacioData, AdminUpdateEspacioVariables>;
+}
+export const adminUpdateEspacioRef: AdminUpdateEspacioRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+adminUpdateEspacio(dc: DataConnect, vars: AdminUpdateEspacioVariables): MutationPromise<AdminUpdateEspacioData, AdminUpdateEspacioVariables>;
+
+interface AdminUpdateEspacioRef {
+  ...
+  (dc: DataConnect, vars: AdminUpdateEspacioVariables): MutationRef<AdminUpdateEspacioData, AdminUpdateEspacioVariables>;
+}
+export const adminUpdateEspacioRef: AdminUpdateEspacioRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the adminUpdateEspacioRef:
+```typescript
+const name = adminUpdateEspacioRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `AdminUpdateEspacio` mutation requires an argument of type `AdminUpdateEspacioVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface AdminUpdateEspacioVariables {
+  id: UUIDString;
+  bloqueado?: boolean | null;
+  trialStartedAt?: TimestampString | null;
+  slug?: string | null;
+  estado?: EstadoEspacio | null;
+}
+```
+### Return Type
+Recall that executing the `AdminUpdateEspacio` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `AdminUpdateEspacioData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface AdminUpdateEspacioData {
+  espacio_update?: Espacio_Key | null;
+}
+```
+### Using `AdminUpdateEspacio`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, adminUpdateEspacio, AdminUpdateEspacioVariables } from '@antologico/dataconnect';
+
+// The `AdminUpdateEspacio` mutation requires an argument of type `AdminUpdateEspacioVariables`:
+const adminUpdateEspacioVars: AdminUpdateEspacioVariables = {
+  id: ..., 
+  bloqueado: ..., // optional
+  trialStartedAt: ..., // optional
+  slug: ..., // optional
+  estado: ..., // optional
+};
+
+// Call the `adminUpdateEspacio()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await adminUpdateEspacio(adminUpdateEspacioVars);
+// Variables can be defined inline as well.
+const { data } = await adminUpdateEspacio({ id: ..., bloqueado: ..., trialStartedAt: ..., slug: ..., estado: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await adminUpdateEspacio(dataConnect, adminUpdateEspacioVars);
+
+console.log(data.espacio_update);
+
+// Or, you can use the `Promise` API.
+adminUpdateEspacio(adminUpdateEspacioVars).then((response) => {
+  const data = response.data;
+  console.log(data.espacio_update);
+});
+```
+
+### Using `AdminUpdateEspacio`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, adminUpdateEspacioRef, AdminUpdateEspacioVariables } from '@antologico/dataconnect';
+
+// The `AdminUpdateEspacio` mutation requires an argument of type `AdminUpdateEspacioVariables`:
+const adminUpdateEspacioVars: AdminUpdateEspacioVariables = {
+  id: ..., 
+  bloqueado: ..., // optional
+  trialStartedAt: ..., // optional
+  slug: ..., // optional
+  estado: ..., // optional
+};
+
+// Call the `adminUpdateEspacioRef()` function to get a reference to the mutation.
+const ref = adminUpdateEspacioRef(adminUpdateEspacioVars);
+// Variables can be defined inline as well.
+const ref = adminUpdateEspacioRef({ id: ..., bloqueado: ..., trialStartedAt: ..., slug: ..., estado: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = adminUpdateEspacioRef(dataConnect, adminUpdateEspacioVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.espacio_update);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.espacio_update);
+});
+```
+
+## AdminDeleteEspacio
+You can execute the `AdminDeleteEspacio` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+adminDeleteEspacio(vars: AdminDeleteEspacioVariables): MutationPromise<AdminDeleteEspacioData, AdminDeleteEspacioVariables>;
+
+interface AdminDeleteEspacioRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: AdminDeleteEspacioVariables): MutationRef<AdminDeleteEspacioData, AdminDeleteEspacioVariables>;
+}
+export const adminDeleteEspacioRef: AdminDeleteEspacioRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+adminDeleteEspacio(dc: DataConnect, vars: AdminDeleteEspacioVariables): MutationPromise<AdminDeleteEspacioData, AdminDeleteEspacioVariables>;
+
+interface AdminDeleteEspacioRef {
+  ...
+  (dc: DataConnect, vars: AdminDeleteEspacioVariables): MutationRef<AdminDeleteEspacioData, AdminDeleteEspacioVariables>;
+}
+export const adminDeleteEspacioRef: AdminDeleteEspacioRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the adminDeleteEspacioRef:
+```typescript
+const name = adminDeleteEspacioRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `AdminDeleteEspacio` mutation requires an argument of type `AdminDeleteEspacioVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface AdminDeleteEspacioVariables {
+  id: UUIDString;
+}
+```
+### Return Type
+Recall that executing the `AdminDeleteEspacio` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `AdminDeleteEspacioData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface AdminDeleteEspacioData {
+  deletedData?: number | null;
+}
+```
+### Using `AdminDeleteEspacio`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, adminDeleteEspacio, AdminDeleteEspacioVariables } from '@antologico/dataconnect';
+
+// The `AdminDeleteEspacio` mutation requires an argument of type `AdminDeleteEspacioVariables`:
+const adminDeleteEspacioVars: AdminDeleteEspacioVariables = {
+  id: ..., 
+};
+
+// Call the `adminDeleteEspacio()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await adminDeleteEspacio(adminDeleteEspacioVars);
+// Variables can be defined inline as well.
+const { data } = await adminDeleteEspacio({ id: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await adminDeleteEspacio(dataConnect, adminDeleteEspacioVars);
+
+console.log(data.deletedData);
+
+// Or, you can use the `Promise` API.
+adminDeleteEspacio(adminDeleteEspacioVars).then((response) => {
+  const data = response.data;
+  console.log(data.deletedData);
+});
+```
+
+### Using `AdminDeleteEspacio`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, adminDeleteEspacioRef, AdminDeleteEspacioVariables } from '@antologico/dataconnect';
+
+// The `AdminDeleteEspacio` mutation requires an argument of type `AdminDeleteEspacioVariables`:
+const adminDeleteEspacioVars: AdminDeleteEspacioVariables = {
+  id: ..., 
+};
+
+// Call the `adminDeleteEspacioRef()` function to get a reference to the mutation.
+const ref = adminDeleteEspacioRef(adminDeleteEspacioVars);
+// Variables can be defined inline as well.
+const ref = adminDeleteEspacioRef({ id: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = adminDeleteEspacioRef(dataConnect, adminDeleteEspacioVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.deletedData);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.deletedData);
+});
+```
+
+## AdminDeleteProfesional
+You can execute the `AdminDeleteProfesional` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+adminDeleteProfesional(vars: AdminDeleteProfesionalVariables): MutationPromise<AdminDeleteProfesionalData, AdminDeleteProfesionalVariables>;
+
+interface AdminDeleteProfesionalRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: AdminDeleteProfesionalVariables): MutationRef<AdminDeleteProfesionalData, AdminDeleteProfesionalVariables>;
+}
+export const adminDeleteProfesionalRef: AdminDeleteProfesionalRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+adminDeleteProfesional(dc: DataConnect, vars: AdminDeleteProfesionalVariables): MutationPromise<AdminDeleteProfesionalData, AdminDeleteProfesionalVariables>;
+
+interface AdminDeleteProfesionalRef {
+  ...
+  (dc: DataConnect, vars: AdminDeleteProfesionalVariables): MutationRef<AdminDeleteProfesionalData, AdminDeleteProfesionalVariables>;
+}
+export const adminDeleteProfesionalRef: AdminDeleteProfesionalRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the adminDeleteProfesionalRef:
+```typescript
+const name = adminDeleteProfesionalRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `AdminDeleteProfesional` mutation requires an argument of type `AdminDeleteProfesionalVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface AdminDeleteProfesionalVariables {
+  uid: string;
+}
+```
+### Return Type
+Recall that executing the `AdminDeleteProfesional` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `AdminDeleteProfesionalData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface AdminDeleteProfesionalData {
+  profesional_delete?: Profesional_Key | null;
+}
+```
+### Using `AdminDeleteProfesional`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, adminDeleteProfesional, AdminDeleteProfesionalVariables } from '@antologico/dataconnect';
+
+// The `AdminDeleteProfesional` mutation requires an argument of type `AdminDeleteProfesionalVariables`:
+const adminDeleteProfesionalVars: AdminDeleteProfesionalVariables = {
+  uid: ..., 
+};
+
+// Call the `adminDeleteProfesional()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await adminDeleteProfesional(adminDeleteProfesionalVars);
+// Variables can be defined inline as well.
+const { data } = await adminDeleteProfesional({ uid: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await adminDeleteProfesional(dataConnect, adminDeleteProfesionalVars);
+
+console.log(data.profesional_delete);
+
+// Or, you can use the `Promise` API.
+adminDeleteProfesional(adminDeleteProfesionalVars).then((response) => {
+  const data = response.data;
+  console.log(data.profesional_delete);
+});
+```
+
+### Using `AdminDeleteProfesional`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, adminDeleteProfesionalRef, AdminDeleteProfesionalVariables } from '@antologico/dataconnect';
+
+// The `AdminDeleteProfesional` mutation requires an argument of type `AdminDeleteProfesionalVariables`:
+const adminDeleteProfesionalVars: AdminDeleteProfesionalVariables = {
+  uid: ..., 
+};
+
+// Call the `adminDeleteProfesionalRef()` function to get a reference to the mutation.
+const ref = adminDeleteProfesionalRef(adminDeleteProfesionalVars);
+// Variables can be defined inline as well.
+const ref = adminDeleteProfesionalRef({ uid: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = adminDeleteProfesionalRef(dataConnect, adminDeleteProfesionalVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.profesional_delete);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.profesional_delete);
+});
+```
+
+## AdminUpsertProfesional
+You can execute the `AdminUpsertProfesional` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+adminUpsertProfesional(vars: AdminUpsertProfesionalVariables): MutationPromise<AdminUpsertProfesionalData, AdminUpsertProfesionalVariables>;
+
+interface AdminUpsertProfesionalRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: AdminUpsertProfesionalVariables): MutationRef<AdminUpsertProfesionalData, AdminUpsertProfesionalVariables>;
+}
+export const adminUpsertProfesionalRef: AdminUpsertProfesionalRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+adminUpsertProfesional(dc: DataConnect, vars: AdminUpsertProfesionalVariables): MutationPromise<AdminUpsertProfesionalData, AdminUpsertProfesionalVariables>;
+
+interface AdminUpsertProfesionalRef {
+  ...
+  (dc: DataConnect, vars: AdminUpsertProfesionalVariables): MutationRef<AdminUpsertProfesionalData, AdminUpsertProfesionalVariables>;
+}
+export const adminUpsertProfesionalRef: AdminUpsertProfesionalRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the adminUpsertProfesionalRef:
+```typescript
+const name = adminUpsertProfesionalRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `AdminUpsertProfesional` mutation requires an argument of type `AdminUpsertProfesionalVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface AdminUpsertProfesionalVariables {
+  uid: string;
+  nombre: string;
+  email: string;
+}
+```
+### Return Type
+Recall that executing the `AdminUpsertProfesional` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `AdminUpsertProfesionalData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface AdminUpsertProfesionalData {
+  profesional_upsert: Profesional_Key;
+}
+```
+### Using `AdminUpsertProfesional`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, adminUpsertProfesional, AdminUpsertProfesionalVariables } from '@antologico/dataconnect';
+
+// The `AdminUpsertProfesional` mutation requires an argument of type `AdminUpsertProfesionalVariables`:
+const adminUpsertProfesionalVars: AdminUpsertProfesionalVariables = {
+  uid: ..., 
+  nombre: ..., 
+  email: ..., 
+};
+
+// Call the `adminUpsertProfesional()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await adminUpsertProfesional(adminUpsertProfesionalVars);
+// Variables can be defined inline as well.
+const { data } = await adminUpsertProfesional({ uid: ..., nombre: ..., email: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await adminUpsertProfesional(dataConnect, adminUpsertProfesionalVars);
+
+console.log(data.profesional_upsert);
+
+// Or, you can use the `Promise` API.
+adminUpsertProfesional(adminUpsertProfesionalVars).then((response) => {
+  const data = response.data;
+  console.log(data.profesional_upsert);
+});
+```
+
+### Using `AdminUpsertProfesional`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, adminUpsertProfesionalRef, AdminUpsertProfesionalVariables } from '@antologico/dataconnect';
+
+// The `AdminUpsertProfesional` mutation requires an argument of type `AdminUpsertProfesionalVariables`:
+const adminUpsertProfesionalVars: AdminUpsertProfesionalVariables = {
+  uid: ..., 
+  nombre: ..., 
+  email: ..., 
+};
+
+// Call the `adminUpsertProfesionalRef()` function to get a reference to the mutation.
+const ref = adminUpsertProfesionalRef(adminUpsertProfesionalVars);
+// Variables can be defined inline as well.
+const ref = adminUpsertProfesionalRef({ uid: ..., nombre: ..., email: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = adminUpsertProfesionalRef(dataConnect, adminUpsertProfesionalVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.profesional_upsert);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.profesional_upsert);
+});
+```
+
+## AdminEnsureProfesional
+You can execute the `AdminEnsureProfesional` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+adminEnsureProfesional(vars: AdminEnsureProfesionalVariables): MutationPromise<AdminEnsureProfesionalData, AdminEnsureProfesionalVariables>;
+
+interface AdminEnsureProfesionalRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: AdminEnsureProfesionalVariables): MutationRef<AdminEnsureProfesionalData, AdminEnsureProfesionalVariables>;
+}
+export const adminEnsureProfesionalRef: AdminEnsureProfesionalRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+adminEnsureProfesional(dc: DataConnect, vars: AdminEnsureProfesionalVariables): MutationPromise<AdminEnsureProfesionalData, AdminEnsureProfesionalVariables>;
+
+interface AdminEnsureProfesionalRef {
+  ...
+  (dc: DataConnect, vars: AdminEnsureProfesionalVariables): MutationRef<AdminEnsureProfesionalData, AdminEnsureProfesionalVariables>;
+}
+export const adminEnsureProfesionalRef: AdminEnsureProfesionalRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the adminEnsureProfesionalRef:
+```typescript
+const name = adminEnsureProfesionalRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `AdminEnsureProfesional` mutation requires an argument of type `AdminEnsureProfesionalVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface AdminEnsureProfesionalVariables {
+  uid: string;
+  nombre: string;
+  email: string;
+}
+```
+### Return Type
+Recall that executing the `AdminEnsureProfesional` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `AdminEnsureProfesionalData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface AdminEnsureProfesionalData {
+  result?: number | null;
+}
+```
+### Using `AdminEnsureProfesional`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, adminEnsureProfesional, AdminEnsureProfesionalVariables } from '@antologico/dataconnect';
+
+// The `AdminEnsureProfesional` mutation requires an argument of type `AdminEnsureProfesionalVariables`:
+const adminEnsureProfesionalVars: AdminEnsureProfesionalVariables = {
+  uid: ..., 
+  nombre: ..., 
+  email: ..., 
+};
+
+// Call the `adminEnsureProfesional()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await adminEnsureProfesional(adminEnsureProfesionalVars);
+// Variables can be defined inline as well.
+const { data } = await adminEnsureProfesional({ uid: ..., nombre: ..., email: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await adminEnsureProfesional(dataConnect, adminEnsureProfesionalVars);
+
+console.log(data.result);
+
+// Or, you can use the `Promise` API.
+adminEnsureProfesional(adminEnsureProfesionalVars).then((response) => {
+  const data = response.data;
+  console.log(data.result);
+});
+```
+
+### Using `AdminEnsureProfesional`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, adminEnsureProfesionalRef, AdminEnsureProfesionalVariables } from '@antologico/dataconnect';
+
+// The `AdminEnsureProfesional` mutation requires an argument of type `AdminEnsureProfesionalVariables`:
+const adminEnsureProfesionalVars: AdminEnsureProfesionalVariables = {
+  uid: ..., 
+  nombre: ..., 
+  email: ..., 
+};
+
+// Call the `adminEnsureProfesionalRef()` function to get a reference to the mutation.
+const ref = adminEnsureProfesionalRef(adminEnsureProfesionalVars);
+// Variables can be defined inline as well.
+const ref = adminEnsureProfesionalRef({ uid: ..., nombre: ..., email: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = adminEnsureProfesionalRef(dataConnect, adminEnsureProfesionalVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.result);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.result);
+});
+```
+
+## AdminCreateEspacioMigrate
+You can execute the `AdminCreateEspacioMigrate` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+adminCreateEspacioMigrate(vars: AdminCreateEspacioMigrateVariables): MutationPromise<AdminCreateEspacioMigrateData, AdminCreateEspacioMigrateVariables>;
+
+interface AdminCreateEspacioMigrateRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: AdminCreateEspacioMigrateVariables): MutationRef<AdminCreateEspacioMigrateData, AdminCreateEspacioMigrateVariables>;
+}
+export const adminCreateEspacioMigrateRef: AdminCreateEspacioMigrateRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+adminCreateEspacioMigrate(dc: DataConnect, vars: AdminCreateEspacioMigrateVariables): MutationPromise<AdminCreateEspacioMigrateData, AdminCreateEspacioMigrateVariables>;
+
+interface AdminCreateEspacioMigrateRef {
+  ...
+  (dc: DataConnect, vars: AdminCreateEspacioMigrateVariables): MutationRef<AdminCreateEspacioMigrateData, AdminCreateEspacioMigrateVariables>;
+}
+export const adminCreateEspacioMigrateRef: AdminCreateEspacioMigrateRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the adminCreateEspacioMigrateRef:
+```typescript
+const name = adminCreateEspacioMigrateRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `AdminCreateEspacioMigrate` mutation requires an argument of type `AdminCreateEspacioMigrateVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface AdminCreateEspacioMigrateVariables {
+  profesionalUid: string;
+  nombre: string;
+  rubroPersonalizado?: string | null;
+  slug?: string | null;
+  logoUrl?: string | null;
+  logoShape?: string | null;
+  logoScale?: number | null;
+  brandColors?: unknown | null;
+  brandFont?: string | null;
+  redesSociales?: unknown | null;
+  cobros?: unknown | null;
+  estado?: EstadoEspacio | null;
+}
+```
+### Return Type
+Recall that executing the `AdminCreateEspacioMigrate` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `AdminCreateEspacioMigrateData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface AdminCreateEspacioMigrateData {
+  espacio_insert: Espacio_Key;
+}
+```
+### Using `AdminCreateEspacioMigrate`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, adminCreateEspacioMigrate, AdminCreateEspacioMigrateVariables } from '@antologico/dataconnect';
+
+// The `AdminCreateEspacioMigrate` mutation requires an argument of type `AdminCreateEspacioMigrateVariables`:
+const adminCreateEspacioMigrateVars: AdminCreateEspacioMigrateVariables = {
+  profesionalUid: ..., 
+  nombre: ..., 
+  rubroPersonalizado: ..., // optional
+  slug: ..., // optional
+  logoUrl: ..., // optional
+  logoShape: ..., // optional
+  logoScale: ..., // optional
+  brandColors: ..., // optional
+  brandFont: ..., // optional
+  redesSociales: ..., // optional
+  cobros: ..., // optional
+  estado: ..., // optional
+};
+
+// Call the `adminCreateEspacioMigrate()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await adminCreateEspacioMigrate(adminCreateEspacioMigrateVars);
+// Variables can be defined inline as well.
+const { data } = await adminCreateEspacioMigrate({ profesionalUid: ..., nombre: ..., rubroPersonalizado: ..., slug: ..., logoUrl: ..., logoShape: ..., logoScale: ..., brandColors: ..., brandFont: ..., redesSociales: ..., cobros: ..., estado: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await adminCreateEspacioMigrate(dataConnect, adminCreateEspacioMigrateVars);
+
+console.log(data.espacio_insert);
+
+// Or, you can use the `Promise` API.
+adminCreateEspacioMigrate(adminCreateEspacioMigrateVars).then((response) => {
+  const data = response.data;
+  console.log(data.espacio_insert);
+});
+```
+
+### Using `AdminCreateEspacioMigrate`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, adminCreateEspacioMigrateRef, AdminCreateEspacioMigrateVariables } from '@antologico/dataconnect';
+
+// The `AdminCreateEspacioMigrate` mutation requires an argument of type `AdminCreateEspacioMigrateVariables`:
+const adminCreateEspacioMigrateVars: AdminCreateEspacioMigrateVariables = {
+  profesionalUid: ..., 
+  nombre: ..., 
+  rubroPersonalizado: ..., // optional
+  slug: ..., // optional
+  logoUrl: ..., // optional
+  logoShape: ..., // optional
+  logoScale: ..., // optional
+  brandColors: ..., // optional
+  brandFont: ..., // optional
+  redesSociales: ..., // optional
+  cobros: ..., // optional
+  estado: ..., // optional
+};
+
+// Call the `adminCreateEspacioMigrateRef()` function to get a reference to the mutation.
+const ref = adminCreateEspacioMigrateRef(adminCreateEspacioMigrateVars);
+// Variables can be defined inline as well.
+const ref = adminCreateEspacioMigrateRef({ profesionalUid: ..., nombre: ..., rubroPersonalizado: ..., slug: ..., logoUrl: ..., logoShape: ..., logoScale: ..., brandColors: ..., brandFont: ..., redesSociales: ..., cobros: ..., estado: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = adminCreateEspacioMigrateRef(dataConnect, adminCreateEspacioMigrateVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.espacio_insert);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.espacio_insert);
+});
+```
+
+## AdminCreateWorkshopMigrate
+You can execute the `AdminCreateWorkshopMigrate` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+adminCreateWorkshopMigrate(vars: AdminCreateWorkshopMigrateVariables): MutationPromise<AdminCreateWorkshopMigrateData, AdminCreateWorkshopMigrateVariables>;
+
+interface AdminCreateWorkshopMigrateRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: AdminCreateWorkshopMigrateVariables): MutationRef<AdminCreateWorkshopMigrateData, AdminCreateWorkshopMigrateVariables>;
+}
+export const adminCreateWorkshopMigrateRef: AdminCreateWorkshopMigrateRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+adminCreateWorkshopMigrate(dc: DataConnect, vars: AdminCreateWorkshopMigrateVariables): MutationPromise<AdminCreateWorkshopMigrateData, AdminCreateWorkshopMigrateVariables>;
+
+interface AdminCreateWorkshopMigrateRef {
+  ...
+  (dc: DataConnect, vars: AdminCreateWorkshopMigrateVariables): MutationRef<AdminCreateWorkshopMigrateData, AdminCreateWorkshopMigrateVariables>;
+}
+export const adminCreateWorkshopMigrateRef: AdminCreateWorkshopMigrateRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the adminCreateWorkshopMigrateRef:
+```typescript
+const name = adminCreateWorkshopMigrateRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `AdminCreateWorkshopMigrate` mutation requires an argument of type `AdminCreateWorkshopMigrateVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface AdminCreateWorkshopMigrateVariables {
+  espacioId: UUIDString;
+  nombre: string;
+  tipo?: TipoWorkshop | null;
+  descripcion?: string | null;
+  cuposTotales: number;
+  cuposDisponibles: number;
+  precio: number;
+  fecha: TimestampString;
+  duracionHoras?: number | null;
+  duracionMinutos?: number | null;
+  experienciaPrevia?: boolean | null;
+  scheduleData?: unknown | null;
+  headerType?: HeaderType | null;
+  headerValue?: string | null;
+  metodosPago?: unknown | null;
+  estado?: EstadoWorkshop | null;
+}
+```
+### Return Type
+Recall that executing the `AdminCreateWorkshopMigrate` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `AdminCreateWorkshopMigrateData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface AdminCreateWorkshopMigrateData {
+  workshop_insert: Workshop_Key;
+}
+```
+### Using `AdminCreateWorkshopMigrate`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, adminCreateWorkshopMigrate, AdminCreateWorkshopMigrateVariables } from '@antologico/dataconnect';
+
+// The `AdminCreateWorkshopMigrate` mutation requires an argument of type `AdminCreateWorkshopMigrateVariables`:
+const adminCreateWorkshopMigrateVars: AdminCreateWorkshopMigrateVariables = {
+  espacioId: ..., 
+  nombre: ..., 
+  tipo: ..., // optional
+  descripcion: ..., // optional
+  cuposTotales: ..., 
+  cuposDisponibles: ..., 
+  precio: ..., 
+  fecha: ..., 
+  duracionHoras: ..., // optional
+  duracionMinutos: ..., // optional
+  experienciaPrevia: ..., // optional
+  scheduleData: ..., // optional
+  headerType: ..., // optional
+  headerValue: ..., // optional
+  metodosPago: ..., // optional
+  estado: ..., // optional
+};
+
+// Call the `adminCreateWorkshopMigrate()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await adminCreateWorkshopMigrate(adminCreateWorkshopMigrateVars);
+// Variables can be defined inline as well.
+const { data } = await adminCreateWorkshopMigrate({ espacioId: ..., nombre: ..., tipo: ..., descripcion: ..., cuposTotales: ..., cuposDisponibles: ..., precio: ..., fecha: ..., duracionHoras: ..., duracionMinutos: ..., experienciaPrevia: ..., scheduleData: ..., headerType: ..., headerValue: ..., metodosPago: ..., estado: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await adminCreateWorkshopMigrate(dataConnect, adminCreateWorkshopMigrateVars);
+
+console.log(data.workshop_insert);
+
+// Or, you can use the `Promise` API.
+adminCreateWorkshopMigrate(adminCreateWorkshopMigrateVars).then((response) => {
+  const data = response.data;
+  console.log(data.workshop_insert);
+});
+```
+
+### Using `AdminCreateWorkshopMigrate`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, adminCreateWorkshopMigrateRef, AdminCreateWorkshopMigrateVariables } from '@antologico/dataconnect';
+
+// The `AdminCreateWorkshopMigrate` mutation requires an argument of type `AdminCreateWorkshopMigrateVariables`:
+const adminCreateWorkshopMigrateVars: AdminCreateWorkshopMigrateVariables = {
+  espacioId: ..., 
+  nombre: ..., 
+  tipo: ..., // optional
+  descripcion: ..., // optional
+  cuposTotales: ..., 
+  cuposDisponibles: ..., 
+  precio: ..., 
+  fecha: ..., 
+  duracionHoras: ..., // optional
+  duracionMinutos: ..., // optional
+  experienciaPrevia: ..., // optional
+  scheduleData: ..., // optional
+  headerType: ..., // optional
+  headerValue: ..., // optional
+  metodosPago: ..., // optional
+  estado: ..., // optional
+};
+
+// Call the `adminCreateWorkshopMigrateRef()` function to get a reference to the mutation.
+const ref = adminCreateWorkshopMigrateRef(adminCreateWorkshopMigrateVars);
+// Variables can be defined inline as well.
+const ref = adminCreateWorkshopMigrateRef({ espacioId: ..., nombre: ..., tipo: ..., descripcion: ..., cuposTotales: ..., cuposDisponibles: ..., precio: ..., fecha: ..., duracionHoras: ..., duracionMinutos: ..., experienciaPrevia: ..., scheduleData: ..., headerType: ..., headerValue: ..., metodosPago: ..., estado: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = adminCreateWorkshopMigrateRef(dataConnect, adminCreateWorkshopMigrateVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.workshop_insert);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.workshop_insert);
 });
 ```
 

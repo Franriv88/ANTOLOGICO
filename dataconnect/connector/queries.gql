@@ -202,6 +202,35 @@ query ListMyReservas @auth(level: USER) {
   }
 }
 
+# ─── Admin (Super Admin) ─────────────────────────────────────────────────────
+
+query AdminListAllEspacios @auth(expr: "auth.token.admin == true") {
+  espacios(orderBy: [{ createdAt: DESC }]) {
+    id nombre estado cancelacionPendiente createdAt updatedAt
+    slug bloqueado trialStartedAt isSuperAdmin
+    logoUrl logoShape logoScale brandColors brandFont redesSociales cobros
+    profesional { uid nombre email }
+    rubro { id nombre }
+    rubroPersonalizado
+    plan { id nombre precioMensual precioAnual features }
+  }
+}
+
+query AdminListAllWorkshops @auth(expr: "auth.token.admin == true") {
+  workshops(orderBy: [{ createdAt: DESC }]) {
+    id nombre tipo estado cuposTotales cuposDisponibles precio fecha createdAt
+    espacio { id nombre profesional { uid nombre email } }
+  }
+}
+
+query AdminListAllReservas @auth(expr: "auth.token.admin == true") {
+  reservas(orderBy: [{ fechaReserva: DESC }]) {
+    id estado fechaReserva pagoExternoId createdAt
+    usuario { uid nombre email }
+    workshop { id nombre fecha espacio { id nombre } }
+  }
+}
+
 query ListPublicWorkshops @auth(level: PUBLIC, insecureReason: "Talleres publicados son el discovery público del marketplace — deben ser visibles sin login.") {
   workshops(
     where: { estado: { eq: PUBLICADO } }
