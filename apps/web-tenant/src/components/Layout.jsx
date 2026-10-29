@@ -582,13 +582,21 @@ export default function Layout({ children }) {
           )}
         </nav>
 
+        {/* Theme toggle */}
+        <div className="px-3 pt-3 pb-2 shrink-0 flex items-center gap-2">
+          <ThemeToggleButton isDark={isDark} onClick={toggleTheme} />
+          <span className="text-[11px] text-ink-muted">
+            {isDark ? 'Claro' : 'Oscuro'}
+          </span>
+        </div>
+
         {/* Instructivo */}
-        <div className="px-3 pt-2 pb-3 shrink-0">
+        <div className="px-3 pb-2 shrink-0">
           <button
             onClick={() => setShowInstructivo(true)}
-            className="flex items-center gap-2 w-full px-3 py-2 rounded-md text-xs text-ink-muted hover:text-ink hover:bg-surface-200 transition-colors"
+            className="flex items-center gap-2 w-full px-3 py-2.5 rounded-lg text-xs font-medium text-ink-muted border border-border bg-surface-100 hover:bg-surface-200 hover:text-ink hover:border-ink-muted/30 transition-colors"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
               <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
             </svg>
             Instructivo
@@ -629,7 +637,6 @@ export default function Layout({ children }) {
           <Link to="/perfil" className="text-xs text-ink-muted truncate max-w-[200px] hover:text-primary transition-colors">
             {user?.displayName || user?.email}
           </Link>
-          <ThemeToggleButton isDark={isDark} onClick={toggleTheme} />
           <button
             onClick={logout}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-ink-muted border border-border rounded-md hover:bg-danger/8 hover:text-danger hover:border-danger/30 transition-colors"
