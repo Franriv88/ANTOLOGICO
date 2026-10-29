@@ -384,34 +384,63 @@ const IconLogout = () => (
 );
 
 function ThemeToggleButton({ isDark, onClick }) {
+  const [pressed, setPressed] = useState(false);
+
+  const bg = isDark ? '#221d16' : '#d8cebb';
+
+  const shadowRest = isDark
+    ? '0 6px 12px -2px rgba(0,0,0,.5), inset 0 -1px 2px -1px rgba(0,0,0,.3), 0 -4px 8px -1px rgba(255,255,255,.06), inset 0 1px 2px -1px rgba(255,255,255,.15), inset 0 0 4px 1px rgba(255,255,255,.05), inset 0 8px 14px 0 rgba(255,255,255,.04)'
+    : '0 6px 12px -2px rgba(0,0,0,.12), inset 0 -1px 2px -1px rgba(0,0,0,.08), 0 -4px 8px -1px rgba(255,255,255,.7), inset 0 1px 2px -1px rgba(255,255,255,.9), inset 0 0 4px 1px rgba(255,255,255,.6), inset 0 8px 14px 0 rgba(255,255,255,.25)';
+
+  const shadowPressed = isDark
+    ? '0 2px 4px -1px rgba(0,0,0,.3), inset 0 -4px 12px 1px rgba(255,255,255,.06), 0 -2px 4px -1px rgba(255,255,255,.04), inset 0 4px 10px 0 rgba(0,0,0,.5), inset 0 0 6px 1px rgba(255,255,255,.03)'
+    : '0 2px 4px -1px rgba(0,0,0,.08), inset 0 -4px 12px 1px rgba(255,255,255,.8), 0 -2px 4px -1px rgba(255,255,255,.5), inset 0 4px 10px 0 rgba(0,0,0,.12), inset 0 0 6px 1px rgba(255,255,255,.4)';
+
+  function handleClick() {
+    setPressed(true);
+    onClick();
+    setTimeout(() => setPressed(false), 350);
+  }
+
   return (
     <button
-      onClick={onClick}
+      onClick={handleClick}
       title={isDark ? 'Modo claro' : 'Modo oscuro'}
-      className="group relative w-9 h-9 rounded-full transition-all duration-300 flex items-center justify-center shrink-0"
+      className="relative w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0 cursor-pointer select-none"
       style={{
-        background: isDark
-          ? 'linear-gradient(145deg, #1a1611, #2b241a)'
-          : 'linear-gradient(145deg, #e4dac5, #fbf8f2)',
-        boxShadow: isDark
-          ? 'inset 3px 3px 6px #111, inset -2px -2px 5px #3d342580, 0 1px 2px #0003'
-          : 'inset 3px 3px 6px #c4b89a, inset -2px -2px 5px #fff8, 0 1px 2px #0001',
+        background: bg,
+        boxShadow: pressed ? shadowPressed : shadowRest,
+        transition: 'box-shadow 300ms cubic-bezier(0.23, 1, 0.32, 1)',
       }}
     >
-      <div className="transition-transform duration-300" style={{ transform: isDark ? 'rotate(0deg)' : 'rotate(90deg)' }}>
+      <div
+        style={{
+          transition: 'transform 300ms cubic-bezier(0.23, 1, 0.32, 1)',
+          transform: `rotate(${isDark ? '0' : '90'}deg) scale(${pressed ? 0.82 : 1})`,
+          filter: 'blur(0.3px)',
+        }}
+      >
         {isDark ? (
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="4" stroke="#D49E3A" fill="#D49E3A" fillOpacity="0.15"/>
             {[[12,2,12,4],[12,20,12,22],[4.22,4.22,5.64,5.64],[18.36,18.36,19.78,19.78],[2,12,4,12],[20,12,22,12],[4.22,19.78,5.64,18.36],[18.36,5.64,19.78,4.22]].map(([x1,y1,x2,y2],i) => (
               <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#D49E3A" strokeWidth="1.5"/>
             ))}
           </svg>
         ) : (
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="#6B5F4C" fill="#6B5F4C" fillOpacity="0.08"/>
           </svg>
         )}
       </div>
+      <div
+        className="absolute inset-0 rounded-[10px] pointer-events-none"
+        style={{
+          background: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.12) 0%, transparent 70%)',
+          opacity: pressed ? 0 : 1,
+          transition: 'opacity 300ms ease',
+        }}
+      />
     </button>
   );
 }
