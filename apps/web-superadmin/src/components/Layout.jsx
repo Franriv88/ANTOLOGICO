@@ -28,45 +28,46 @@ function ThemeToggleButton({ isDark, onClick, variant = 'default' }) {
   const [pressed, setPressed] = useState(false);
   const dark = isDarkSidebar || isDark;
 
+  const convexLight = '0 8px 15px -4px rgba(0,0,0,.12), 0 -6px 10px -1px rgba(255,255,255,.8), inset 0 2px 3px 0 rgba(255,255,255,.9), inset 0 -2px 3px 0 rgba(0,0,0,.05)';
+  const convexDark  = '0 8px 15px -4px rgba(0,0,0,.6), 0 -6px 10px -1px rgba(255,255,255,.04), inset 0 2px 3px 0 rgba(255,255,255,.08), inset 0 -2px 3px 0 rgba(0,0,0,.3)';
+  const sunkLight   = 'inset 0 4px 8px -1px rgba(0,0,0,.12), inset 0 -2px 4px 0 rgba(255,255,255,.6), inset 0 0 6px 0 rgba(0,0,0,.05), 0 1px 1px rgba(255,255,255,.5)';
+  const sunkDark    = 'inset 0 4px 8px -1px rgba(0,0,0,.5), inset 0 -2px 4px 0 rgba(255,255,255,.04), inset 0 0 6px 0 rgba(0,0,0,.3), 0 1px 1px rgba(255,255,255,.02)';
+
   function handleClick() {
     setPressed(true);
     onClick();
-    setTimeout(() => setPressed(false), 350);
+    setTimeout(() => setPressed(false), 400);
   }
 
   return (
     <button
       onClick={handleClick}
       title={isDark ? 'Modo claro' : 'Modo oscuro'}
-      className="relative w-10 h-10 rounded-full flex items-center justify-center shrink-0 cursor-pointer select-none"
+      className="relative w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0 cursor-pointer select-none"
       style={{
-        background: dark
-          ? 'linear-gradient(145deg, #2e271d, #1a1611)'
-          : 'linear-gradient(145deg, #fefcf8, #ebe4d6)',
+        background: dark ? '#221d16' : '#f3ede2',
         boxShadow: pressed
-          ? (dark
-            ? '0 1px 2px rgba(0,0,0,.4), inset 0 2px 4px rgba(0,0,0,.4)'
-            : '0 1px 2px rgba(0,0,0,.06), inset 0 2px 4px rgba(0,0,0,.08)')
-          : (dark
-            ? '4px 4px 10px rgba(0,0,0,.6), -3px -3px 8px rgba(255,255,255,.05)'
-            : '4px 4px 10px rgba(0,0,0,.1), -3px -3px 8px rgba(255,255,255,.9)'),
+          ? (dark ? sunkDark : sunkLight)
+          : (dark ? convexDark : convexLight),
         transition: 'box-shadow 300ms cubic-bezier(0.23, 1, 0.32, 1), transform 300ms cubic-bezier(0.23, 1, 0.32, 1)',
         transform: pressed ? 'scale(0.92)' : 'scale(1)',
       }}
     >
       <div
-        className="absolute inset-[3px] rounded-full pointer-events-none"
+        className="absolute inset-[3px] rounded-[8px] pointer-events-none"
         style={{
           background: dark
-            ? 'linear-gradient(160deg, rgba(255,255,255,.06) 0%, transparent 50%)'
-            : 'linear-gradient(160deg, rgba(255,255,255,.8) 0%, transparent 50%)',
+            ? 'linear-gradient(160deg, rgba(255,255,255,.06) 0%, transparent 40%)'
+            : 'linear-gradient(160deg, rgba(255,255,255,.7) 0%, transparent 40%)',
+          opacity: pressed ? 0 : 1,
+          transition: 'opacity 300ms ease',
         }}
       />
       <div
         style={{
           position: 'relative',
           transition: 'transform 300ms cubic-bezier(0.23, 1, 0.32, 1)',
-          transform: `rotate(${isDark ? '0' : '90'}deg)`,
+          transform: `rotate(${isDark ? '0' : '90'}deg) scale(${pressed ? 0.88 : 1})`,
         }}
       >
         {isDark ? (
