@@ -27,11 +27,7 @@ function ThemeToggleButton({ isDark, onClick, variant = 'default' }) {
   const isDarkSidebar = variant === 'sidebar';
   const [pressed, setPressed] = useState(false);
   const dark = isDarkSidebar || isDark;
-
-  const convexLight = '0 8px 15px -4px rgba(0,0,0,.12), 0 -6px 10px -1px rgba(255,255,255,.8), inset 0 2px 3px 0 rgba(255,255,255,.9), inset 0 -2px 3px 0 rgba(0,0,0,.05)';
-  const convexDark  = '0 8px 15px -4px rgba(0,0,0,.6), 0 -6px 10px -1px rgba(255,255,255,.04), inset 0 2px 3px 0 rgba(255,255,255,.08), inset 0 -2px 3px 0 rgba(0,0,0,.3)';
-  const sunkLight   = 'inset 0 4px 8px -1px rgba(0,0,0,.12), inset 0 -2px 4px 0 rgba(255,255,255,.6), inset 0 0 6px 0 rgba(0,0,0,.05), 0 1px 1px rgba(255,255,255,.5)';
-  const sunkDark    = 'inset 0 4px 8px -1px rgba(0,0,0,.5), inset 0 -2px 4px 0 rgba(255,255,255,.04), inset 0 0 6px 0 rgba(0,0,0,.3), 0 1px 1px rgba(255,255,255,.02)';
+  const bg = dark ? '#221d16' : '#e4ddd0';
 
   function handleClick() {
     setPressed(true);
@@ -39,49 +35,57 @@ function ThemeToggleButton({ isDark, onClick, variant = 'default' }) {
     setTimeout(() => setPressed(false), 400);
   }
 
+  const socketShadow = dark
+    ? 'inset 0 0 10px 2px rgba(0,0,0,.5), inset 0 1px 1px 0 rgba(255,255,255,.06), inset 0 -1px 1px 0 rgba(0,0,0,.4)'
+    : 'inset 0 0 10px 2px rgba(0,0,0,.12), inset 0 1px 1px 0 rgba(255,255,255,.9), inset 0 -1px 1px 0 rgba(0,0,0,.12)';
+
+  const btnUp = dark
+    ? '0 5px 8px -2px rgba(0,0,0,.6), inset 0 -1px 2px 0 rgba(0,0,0,.3), 0 -3px 5px -1px rgba(255,255,255,.04), inset 0 1px 2px 0 rgba(255,255,255,.1), inset 0 0 2px 0 rgba(255,255,255,.06), inset 0 6px 10px 0 rgba(255,255,255,.03)'
+    : '0 5px 8px -2px rgba(0,0,0,.25), inset 0 -1px 2px 0 rgba(0,0,0,.1), 0 -3px 5px -1px rgba(255,255,255,.7), inset 0 1px 2px 0 rgba(255,255,255,.5), inset 0 0 2px 0 rgba(255,255,255,.8), inset 0 6px 10px 0 rgba(255,255,255,.2)';
+
+  const btnDown = dark
+    ? '0 2px 4px -1px rgba(0,0,0,.4), inset 0 -3px 8px 0 rgba(255,255,255,.04), 0 -2px 3px -1px rgba(255,255,255,.03), inset 0 3px 7px 0 rgba(0,0,0,.5), inset 0 0 3px 0 rgba(255,255,255,.03)'
+    : '0 2px 4px -1px rgba(0,0,0,.15), inset 0 -3px 8px 0 rgba(255,255,255,.7), 0 -2px 3px -1px rgba(255,255,255,.5), inset 0 3px 7px 0 rgba(0,0,0,.15), inset 0 0 3px 0 rgba(255,255,255,.4)';
+
   return (
     <button
       onClick={handleClick}
       title={isDark ? 'Modo claro' : 'Modo oscuro'}
-      className="relative w-10 h-10 rounded-[10px] flex items-center justify-center shrink-0 cursor-pointer select-none"
-      style={{
-        background: dark ? '#221d16' : '#f3ede2',
-        boxShadow: pressed
-          ? (dark ? sunkDark : sunkLight)
-          : (dark ? convexDark : convexLight),
-        transition: 'box-shadow 300ms cubic-bezier(0.23, 1, 0.32, 1), transform 300ms cubic-bezier(0.23, 1, 0.32, 1)',
-        transform: pressed ? 'scale(0.92)' : 'scale(1)',
-      }}
+      className="relative w-11 h-11 rounded-[10px] flex items-center justify-center shrink-0 cursor-pointer select-none"
+      style={{ background: bg, boxShadow: socketShadow }}
     >
+      <div className="absolute rounded-full pointer-events-none" style={{
+        width: 28, height: 28,
+        background: dark ? 'rgba(255,255,255,.03)' : 'rgba(255,255,255,.3)',
+        boxShadow: dark ? '0 0 6px 3px rgba(255,255,255,.02)' : '0 0 6px 3px rgba(255,255,255,.2)',
+      }} />
       <div
-        className="absolute inset-[3px] rounded-[8px] pointer-events-none"
+        className="relative w-8 h-8 rounded-full flex items-center justify-center"
         style={{
-          background: dark
-            ? 'linear-gradient(160deg, rgba(255,255,255,.06) 0%, transparent 40%)'
-            : 'linear-gradient(160deg, rgba(255,255,255,.7) 0%, transparent 40%)',
-          opacity: pressed ? 0 : 1,
-          transition: 'opacity 300ms ease',
-        }}
-      />
-      <div
-        style={{
-          position: 'relative',
-          transition: 'transform 300ms cubic-bezier(0.23, 1, 0.32, 1)',
-          transform: `rotate(${isDark ? '0' : '90'}deg) scale(${pressed ? 0.88 : 1})`,
+          background: bg,
+          boxShadow: pressed ? btnDown : btnUp,
+          filter: 'blur(0.4px)',
+          transition: 'all 300ms cubic-bezier(0.23, 1, 0.32, 1)',
         }}
       >
-        {isDark ? (
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="4" stroke="#D49E3A" fill="#D49E3A" fillOpacity="0.15"/>
-            {[[12,2,12,4],[12,20,12,22],[4.22,4.22,5.64,5.64],[18.36,18.36,19.78,19.78],[2,12,4,12],[20,12,22,12],[4.22,19.78,5.64,18.36],[18.36,5.64,19.78,4.22]].map(([x1,y1,x2,y2],i) => (
-              <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#D49E3A" strokeWidth="1.5"/>
-            ))}
-          </svg>
-        ) : (
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke={isDarkSidebar ? '#8a7e6a' : '#6B5F4C'} fill={isDarkSidebar ? '#8a7e6a' : '#6B5F4C'} fillOpacity="0.08"/>
-          </svg>
-        )}
+        <div style={{
+          transition: 'transform 300ms ease-out',
+          transform: `rotate(${isDark ? '0' : '90'}deg) scale(${pressed ? 0.9 : 1})`,
+          opacity: pressed ? 0.85 : 0.9,
+        }}>
+          {isDark ? (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="4" stroke="#D49E3A" fill="#D49E3A" fillOpacity="0.15"/>
+              {[[12,2,12,4],[12,20,12,22],[4.22,4.22,5.64,5.64],[18.36,18.36,19.78,19.78],[2,12,4,12],[20,12,22,12],[4.22,19.78,5.64,18.36],[18.36,5.64,19.78,4.22]].map(([x1,y1,x2,y2],i) => (
+                <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#D49E3A" strokeWidth="1.5"/>
+              ))}
+            </svg>
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke={isDarkSidebar ? '#8a7e6a' : '#6B5F4C'} fill={isDarkSidebar ? '#8a7e6a' : '#6B5F4C'} fillOpacity="0.08"/>
+            </svg>
+          )}
+        </div>
       </div>
     </button>
   );
