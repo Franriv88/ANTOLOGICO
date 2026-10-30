@@ -101,11 +101,11 @@ export const reservas = {
 
 export const espacios = {
   list: async () => {
-    const { data } = await listMyEspacios({ fetchPolicy: 'network-only' });
+    const { data } = await listMyEspacios();
     return data.espacios;
   },
   get: async (id) => {
-    const { data } = await getMyEspacio({ id }, { fetchPolicy: 'network-only' });
+    const { data } = await getMyEspacio({ id });
     return data.espacios[0] ?? null;
   },
   create: async (payload) => {
