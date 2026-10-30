@@ -12,6 +12,7 @@ import { functions, firestore } from '../lib/firebase';
 import { SOCIAL_NETWORKS, SocialIcon } from '../components/SocialIcons';
 import { IconAntologico } from '../components/LogoAntologico';
 import { usePlanes, precioConPeriodo, proximaRenovacion, formatFechaLarga } from '../hooks/usePlanes';
+import { listPlanes as listSqlPlanes } from '../dataconnect-generated';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -1078,8 +1079,12 @@ function TabEspacio({ espacio, refresh }) {
 // ── Tab: Identidad ────────────────────────────────────────────────────────────
 
 function TabIdentidad({ espacio, refresh }) {
-  const planNombre = espacio.plan?.nombre ?? '';
-  const isEstudio  = planNombre === 'Estudio';
+  const planes     = usePlanes();
+  const planNombre = (espacio.plan?.nombre ?? '').trim();
+  // Match case-insensitive; also works when plan is null (falls back to false)
+  const planFromFirestore = planes?.find(p => (p.nombre || '').toLowerCase().trim() === planNombre.toLowerCase());
+  const isEstudio  = planFromFirestore?.capabilities?.multiplesEspacios === true
+    || planNombre.toLowerCase() === 'estudio';
 
   const parseRedes = () => {
     const rs = espacio.redesSociales;
@@ -1449,10 +1454,10 @@ function TabIdentidad({ espacio, refresh }) {
                     onClick={() => !locked && setFontPair(pair)}
                     className={`relative text-left px-4 py-3 rounded-xl border-2 transition-all ${locked ? 'border-border bg-surface-100 cursor-not-allowed opacity-55' : selected ? 'bg-surface-100' : 'border-border bg-surface-100 hover:border-primary/40'}`}
                     style={selected && !locked ? { borderColor: selectedFontColor } : {}}>
-                    <p className="font-bold leading-tight" style={{ fontFamily: `'${pair.display}', serif`, fontSize: '1.1rem', color: selected ? selectedFontColor : '#2B241A' }}>
+                    <p className="font-bold leading-tight" style={{ fontFamily: `'${pair.display}', serif`, fontSize: '1.1rem', color: '#2B241A' }}>
                       {pair.display}
                     </p>
-                    <p className="text-xs mt-0.5 mb-1" style={{ fontFamily: `'${pair.body}', sans-serif`, color: selected ? selectedFontColor + 'bb' : '#6B5F4C' }}>
+                    <p className="text-xs mt-0.5 mb-1" style={{ fontFamily: `'${pair.body}', sans-serif`, color: '#6B5F4C' }}>
                       + {pair.body} · {pair.desc}
                     </p>
                     {locked && (
@@ -2197,11 +2202,23 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
   const [deleteTarget,    setDeleteTarget]    = useState(null);
   const [agregarOpen,     setAgregarOpen]     = useState(false);
   const [error,           setError]           = useState('');
-  const [periodo,      setPeriodo]      = useState('mensual'); // para el selector de activación
+  const [periodo,      setPeriodo]      = useState('mensual');
   const [cuponInput,   setCuponInput]   = useState('');
-  const [cuponValido,  setCuponValido]  = useState(null); // objeto cupón validado
+  const [cuponValido,  setCuponValido]  = useState(null);
   const [cuponError,   setCuponError]   = useState('');
   const [cuponLoading, setCuponLoading] = useState(false);
+  const [sqlPlanes,    setSqlPlanes]    = useState([]);
+
+  useEffect(() => {
+    listSqlPlanes().then(r => setSqlPlanes(r.data?.planes ?? [])).catch(() => {});
+  }, []);
+
+  // Resolves a Firestore plan (with string id) to the SQL UUID needed by activarPlan
+  function resolvePlanId(firestorePlan) {
+    const nombre = (firestorePlan.nombre || '').toLowerCase().trim();
+    const sql = sqlPlanes.find(p => (p.nombre || '').toLowerCase().trim() === nombre);
+    return sql?.id ?? firestorePlan.id; // UUID if found, else Firestore id (will fail gracefully)
+  }
 
   const isSuperAdmin   = !!espacio.isSuperAdmin;
   const pendiente      = espacio.cancelacionPendiente;
@@ -2249,7 +2266,7 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
     setLoading(true); setError('');
     try {
       await espacioApi.activarPlan(espacio.id, {
-        planId: plan.id,
+        planId: resolvePlanId(plan),
         periodoFacturacion: periodo,
         precioActual: precioConPeriodo(plan, periodo),
         proximaRenovacion: proximaRenovacion(periodo),
@@ -2294,7 +2311,7 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
     setLoading(true); setError('');
     try {
       await espacioApi.activarPlan(espacio.id, {
-        planId: plan.id,
+        planId: resolvePlanId(plan),
         periodoFacturacion: periodo,
         precioActual: precioConPeriodo(plan, periodo),
         proximaRenovacion: proximaRenovacion(periodo),
