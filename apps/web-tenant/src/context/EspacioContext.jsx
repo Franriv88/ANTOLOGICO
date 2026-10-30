@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { useAuth } from './AuthContext';
 import { espacios as espacioApi } from '../services/api';
+import { reassignProfesionalUid } from '../dataconnect-generated';
 
 const EspacioContext = createContext(null);
 
@@ -22,16 +23,30 @@ export function EspacioProvider({ children }) {
       return;
     }
     setLoading(true);
-    espacioApi.list(user.uid)
-      .then((list) => {
+    (async () => {
+      try {
+        let list = await espacioApi.list(user.uid);
+        // Si no hay espacios, puede que el tenant se registró con email y ahora
+        // usa Google (u otro provider) con el mismo email → UID cambió.
+        // ReassignProfesionalUid actualiza el UID en SQL para que el espacio
+        // vuelva a ser visible.
+        if (list.length === 0 && user.displayName) {
+          try {
+            await reassignProfesionalUid({ nombre: user.displayName });
+            list = await espacioApi.list(user.uid);
+          } catch { /* email no existe en profesionales — usuario genuinamente nuevo */ }
+        }
         setEspacios(list);
         setActive((prev) => {
           const match = prev ? list.find((e) => e.id === prev.id) : null;
           return match ?? list[0] ?? null;
         });
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    })();
   }, [user, authLoading]);
 
   async function refresh(fallback = null) {
@@ -39,6 +54,12 @@ export function EspacioProvider({ children }) {
     setLoading(true);
     try {
       let list = await espacioApi.list(user.uid);
+      if (list.length === 0 && user.displayName) {
+        try {
+          await reassignProfesionalUid({ nombre: user.displayName });
+          list = await espacioApi.list(user.uid);
+        } catch { /* usuario genuinamente nuevo */ }
+      }
       if (list.length === 0 && fallback) {
         list = [fallback];
       }
