@@ -2230,8 +2230,19 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
     ? Math.floor((Date.now() - new Date(trialRef)) / 86_400_000) < 14
     : false;
 
-  // Precio siempre desde demo_planes (fuente de verdad), con fallback al objeto guardado
-  const planActivo      = planesDB?.find(p => p.id === espacio.planId) ?? espacio.plan ?? null;
+  // planActivo: prefer Firestore plan (has descuentos + capabilities).
+  // espacio.plan comes from SQL JOIN (has UUID id, lacks descuentoAnual).
+  // Match by Firestore string id first, then by nombre against the SQL plan.
+  const planActivo = (() => {
+    const byId = planesDB?.find(p => p.id === espacio.planId);
+    if (byId) return byId;
+    const sqlPlan = espacio.plan ?? null;
+    if (!sqlPlan) return null;
+    const byNombre = planesDB?.find(p =>
+      (p.nombre || '').toLowerCase() === (sqlPlan.nombre || '').toLowerCase()
+    );
+    return byNombre ?? sqlPlan;
+  })();
   const periodoActivo   = espacio.periodoFacturacion ?? 'mensual';
   const otrosEspacios   = espacios.filter(e => e.id !== espacio.id);
 
