@@ -29,12 +29,18 @@ This README will guide you through the process of using the generated JavaScript
 - [**Mutations**](#mutations)
   - [*UpsertProfesional*](#upsertprofesional)
   - [*ReassignProfesionalUid*](#reassignprofesionaluid)
-  - [*UpdateEspacioPlanId*](#updateespacioplanid)
+  - [*ActivarPlan*](#activarplan)
+  - [*AgendarDowngrade*](#agendardowngrade)
+  - [*CancelarDowngrade*](#cancelardowngrade)
+  - [*UpdateCuponAplicado*](#updatecuponaplicado)
   - [*CreateEspacio*](#createespacio)
   - [*UpdateEspacioIdentidad*](#updateespacioidentidad)
   - [*UpdateEspacioCobros*](#updateespaciocobros)
   - [*UpdateEspacioRedes*](#updateespacioredes)
   - [*UpdateEspacio*](#updateespacio)
+  - [*UpdateEspacioDirecciones*](#updateespaciodirecciones)
+  - [*UpdateEspacioTyC*](#updateespaciotyc)
+  - [*UpdateEspacioSlug*](#updateespacioslug)
   - [*CreateWorkshop*](#createworkshop)
   - [*UpdateWorkshop*](#updateworkshop)
   - [*UpdateWorkshopEstado*](#updateworkshopestado)
@@ -557,6 +563,10 @@ export interface ListMyEspaciosData {
     estado: EstadoEspacio;
     cancelacionPendiente: boolean;
     createdAt: TimestampString;
+    trialStartedAt?: TimestampString | null;
+    isSuperAdmin: boolean;
+    slug?: string | null;
+    bloqueado: boolean;
     logoUrl?: string | null;
     logoShape?: string | null;
     logoScale?: number | null;
@@ -564,6 +574,14 @@ export interface ListMyEspaciosData {
     brandFont?: string | null;
     redesSociales?: unknown | null;
     cobros?: unknown | null;
+    direcciones?: unknown | null;
+    terminosCondiciones?: string | null;
+    tycEnabled: boolean;
+    periodoFacturacion?: string | null;
+    precioActual?: number | null;
+    proximaRenovacion?: TimestampString | null;
+    downgradePendiente?: unknown | null;
+    cuponAplicado?: unknown | null;
     rubro?: {
       id: UUIDString;
       nombre: string;
@@ -685,6 +703,10 @@ export interface GetMyEspacioData {
     cancelacionPendiente: boolean;
     createdAt: TimestampString;
     updatedAt: TimestampString;
+    trialStartedAt?: TimestampString | null;
+    isSuperAdmin: boolean;
+    slug?: string | null;
+    bloqueado: boolean;
     logoUrl?: string | null;
     logoShape?: string | null;
     logoScale?: number | null;
@@ -692,6 +714,14 @@ export interface GetMyEspacioData {
     brandFont?: string | null;
     redesSociales?: unknown | null;
     cobros?: unknown | null;
+    direcciones?: unknown | null;
+    terminosCondiciones?: string | null;
+    tycEnabled: boolean;
+    periodoFacturacion?: string | null;
+    precioActual?: number | null;
+    proximaRenovacion?: TimestampString | null;
+    downgradePendiente?: unknown | null;
+    cuponAplicado?: unknown | null;
     rubro?: {
       id: UUIDString;
       nombre: string;
@@ -1853,6 +1883,12 @@ export interface AdminListAllEspaciosData {
     brandFont?: string | null;
     redesSociales?: unknown | null;
     cobros?: unknown | null;
+    direcciones?: unknown | null;
+    periodoFacturacion?: string | null;
+    precioActual?: number | null;
+    proximaRenovacion?: TimestampString | null;
+    downgradePendiente?: unknown | null;
+    cuponAplicado?: unknown | null;
     profesional: {
       uid: string;
       nombre: string;
@@ -2495,104 +2531,446 @@ executeMutation(ref).then((response) => {
 });
 ```
 
-## UpdateEspacioPlanId
-You can execute the `UpdateEspacioPlanId` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+## ActivarPlan
+You can execute the `ActivarPlan` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
 ```typescript
-updateEspacioPlanId(vars: UpdateEspacioPlanIdVariables): MutationPromise<UpdateEspacioPlanIdData, UpdateEspacioPlanIdVariables>;
+activarPlan(vars: ActivarPlanVariables): MutationPromise<ActivarPlanData, ActivarPlanVariables>;
 
-interface UpdateEspacioPlanIdRef {
+interface ActivarPlanRef {
   ...
   /* Allow users to create refs without passing in DataConnect */
-  (vars: UpdateEspacioPlanIdVariables): MutationRef<UpdateEspacioPlanIdData, UpdateEspacioPlanIdVariables>;
+  (vars: ActivarPlanVariables): MutationRef<ActivarPlanData, ActivarPlanVariables>;
 }
-export const updateEspacioPlanIdRef: UpdateEspacioPlanIdRef;
+export const activarPlanRef: ActivarPlanRef;
 ```
 You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
 ```typescript
-updateEspacioPlanId(dc: DataConnect, vars: UpdateEspacioPlanIdVariables): MutationPromise<UpdateEspacioPlanIdData, UpdateEspacioPlanIdVariables>;
+activarPlan(dc: DataConnect, vars: ActivarPlanVariables): MutationPromise<ActivarPlanData, ActivarPlanVariables>;
 
-interface UpdateEspacioPlanIdRef {
+interface ActivarPlanRef {
   ...
-  (dc: DataConnect, vars: UpdateEspacioPlanIdVariables): MutationRef<UpdateEspacioPlanIdData, UpdateEspacioPlanIdVariables>;
+  (dc: DataConnect, vars: ActivarPlanVariables): MutationRef<ActivarPlanData, ActivarPlanVariables>;
 }
-export const updateEspacioPlanIdRef: UpdateEspacioPlanIdRef;
+export const activarPlanRef: ActivarPlanRef;
 ```
 
-If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the updateEspacioPlanIdRef:
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the activarPlanRef:
 ```typescript
-const name = updateEspacioPlanIdRef.operationName;
+const name = activarPlanRef.operationName;
 console.log(name);
 ```
 
 ### Variables
-The `UpdateEspacioPlanId` mutation requires an argument of type `UpdateEspacioPlanIdVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+The `ActivarPlan` mutation requires an argument of type `ActivarPlanVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 
 ```typescript
-export interface UpdateEspacioPlanIdVariables {
+export interface ActivarPlanVariables {
   id: UUIDString;
   planId: UUIDString;
+  periodoFacturacion: string;
+  precioActual: number;
+  proximaRenovacion: TimestampString;
 }
 ```
 ### Return Type
-Recall that executing the `UpdateEspacioPlanId` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+Recall that executing the `ActivarPlan` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
 
-The `data` property is an object of type `UpdateEspacioPlanIdData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+The `data` property is an object of type `ActivarPlanData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
-export interface UpdateEspacioPlanIdData {
+export interface ActivarPlanData {
   espacio_update?: Espacio_Key | null;
 }
 ```
-### Using `UpdateEspacioPlanId`'s action shortcut function
+### Using `ActivarPlan`'s action shortcut function
 
 ```typescript
 import { getDataConnect } from 'firebase/data-connect';
-import { connectorConfig, updateEspacioPlanId, UpdateEspacioPlanIdVariables } from '@antologico/dataconnect';
+import { connectorConfig, activarPlan, ActivarPlanVariables } from '@antologico/dataconnect';
 
-// The `UpdateEspacioPlanId` mutation requires an argument of type `UpdateEspacioPlanIdVariables`:
-const updateEspacioPlanIdVars: UpdateEspacioPlanIdVariables = {
+// The `ActivarPlan` mutation requires an argument of type `ActivarPlanVariables`:
+const activarPlanVars: ActivarPlanVariables = {
   id: ..., 
   planId: ..., 
+  periodoFacturacion: ..., 
+  precioActual: ..., 
+  proximaRenovacion: ..., 
 };
 
-// Call the `updateEspacioPlanId()` function to execute the mutation.
+// Call the `activarPlan()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
-const { data } = await updateEspacioPlanId(updateEspacioPlanIdVars);
+const { data } = await activarPlan(activarPlanVars);
 // Variables can be defined inline as well.
-const { data } = await updateEspacioPlanId({ id: ..., planId: ..., });
+const { data } = await activarPlan({ id: ..., planId: ..., periodoFacturacion: ..., precioActual: ..., proximaRenovacion: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
-const { data } = await updateEspacioPlanId(dataConnect, updateEspacioPlanIdVars);
+const { data } = await activarPlan(dataConnect, activarPlanVars);
 
 console.log(data.espacio_update);
 
 // Or, you can use the `Promise` API.
-updateEspacioPlanId(updateEspacioPlanIdVars).then((response) => {
+activarPlan(activarPlanVars).then((response) => {
   const data = response.data;
   console.log(data.espacio_update);
 });
 ```
 
-### Using `UpdateEspacioPlanId`'s `MutationRef` function
+### Using `ActivarPlan`'s `MutationRef` function
 
 ```typescript
 import { getDataConnect, executeMutation } from 'firebase/data-connect';
-import { connectorConfig, updateEspacioPlanIdRef, UpdateEspacioPlanIdVariables } from '@antologico/dataconnect';
+import { connectorConfig, activarPlanRef, ActivarPlanVariables } from '@antologico/dataconnect';
 
-// The `UpdateEspacioPlanId` mutation requires an argument of type `UpdateEspacioPlanIdVariables`:
-const updateEspacioPlanIdVars: UpdateEspacioPlanIdVariables = {
+// The `ActivarPlan` mutation requires an argument of type `ActivarPlanVariables`:
+const activarPlanVars: ActivarPlanVariables = {
   id: ..., 
   planId: ..., 
+  periodoFacturacion: ..., 
+  precioActual: ..., 
+  proximaRenovacion: ..., 
 };
 
-// Call the `updateEspacioPlanIdRef()` function to get a reference to the mutation.
-const ref = updateEspacioPlanIdRef(updateEspacioPlanIdVars);
+// Call the `activarPlanRef()` function to get a reference to the mutation.
+const ref = activarPlanRef(activarPlanVars);
 // Variables can be defined inline as well.
-const ref = updateEspacioPlanIdRef({ id: ..., planId: ..., });
+const ref = activarPlanRef({ id: ..., planId: ..., periodoFacturacion: ..., precioActual: ..., proximaRenovacion: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
-const ref = updateEspacioPlanIdRef(dataConnect, updateEspacioPlanIdVars);
+const ref = activarPlanRef(dataConnect, activarPlanVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.espacio_update);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.espacio_update);
+});
+```
+
+## AgendarDowngrade
+You can execute the `AgendarDowngrade` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+agendarDowngrade(vars: AgendarDowngradeVariables): MutationPromise<AgendarDowngradeData, AgendarDowngradeVariables>;
+
+interface AgendarDowngradeRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: AgendarDowngradeVariables): MutationRef<AgendarDowngradeData, AgendarDowngradeVariables>;
+}
+export const agendarDowngradeRef: AgendarDowngradeRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+agendarDowngrade(dc: DataConnect, vars: AgendarDowngradeVariables): MutationPromise<AgendarDowngradeData, AgendarDowngradeVariables>;
+
+interface AgendarDowngradeRef {
+  ...
+  (dc: DataConnect, vars: AgendarDowngradeVariables): MutationRef<AgendarDowngradeData, AgendarDowngradeVariables>;
+}
+export const agendarDowngradeRef: AgendarDowngradeRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the agendarDowngradeRef:
+```typescript
+const name = agendarDowngradeRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `AgendarDowngrade` mutation requires an argument of type `AgendarDowngradeVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface AgendarDowngradeVariables {
+  id: UUIDString;
+  downgradePendiente: unknown;
+}
+```
+### Return Type
+Recall that executing the `AgendarDowngrade` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `AgendarDowngradeData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface AgendarDowngradeData {
+  espacio_update?: Espacio_Key | null;
+}
+```
+### Using `AgendarDowngrade`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, agendarDowngrade, AgendarDowngradeVariables } from '@antologico/dataconnect';
+
+// The `AgendarDowngrade` mutation requires an argument of type `AgendarDowngradeVariables`:
+const agendarDowngradeVars: AgendarDowngradeVariables = {
+  id: ..., 
+  downgradePendiente: ..., 
+};
+
+// Call the `agendarDowngrade()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await agendarDowngrade(agendarDowngradeVars);
+// Variables can be defined inline as well.
+const { data } = await agendarDowngrade({ id: ..., downgradePendiente: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await agendarDowngrade(dataConnect, agendarDowngradeVars);
+
+console.log(data.espacio_update);
+
+// Or, you can use the `Promise` API.
+agendarDowngrade(agendarDowngradeVars).then((response) => {
+  const data = response.data;
+  console.log(data.espacio_update);
+});
+```
+
+### Using `AgendarDowngrade`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, agendarDowngradeRef, AgendarDowngradeVariables } from '@antologico/dataconnect';
+
+// The `AgendarDowngrade` mutation requires an argument of type `AgendarDowngradeVariables`:
+const agendarDowngradeVars: AgendarDowngradeVariables = {
+  id: ..., 
+  downgradePendiente: ..., 
+};
+
+// Call the `agendarDowngradeRef()` function to get a reference to the mutation.
+const ref = agendarDowngradeRef(agendarDowngradeVars);
+// Variables can be defined inline as well.
+const ref = agendarDowngradeRef({ id: ..., downgradePendiente: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = agendarDowngradeRef(dataConnect, agendarDowngradeVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.espacio_update);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.espacio_update);
+});
+```
+
+## CancelarDowngrade
+You can execute the `CancelarDowngrade` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+cancelarDowngrade(vars: CancelarDowngradeVariables): MutationPromise<CancelarDowngradeData, CancelarDowngradeVariables>;
+
+interface CancelarDowngradeRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CancelarDowngradeVariables): MutationRef<CancelarDowngradeData, CancelarDowngradeVariables>;
+}
+export const cancelarDowngradeRef: CancelarDowngradeRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+cancelarDowngrade(dc: DataConnect, vars: CancelarDowngradeVariables): MutationPromise<CancelarDowngradeData, CancelarDowngradeVariables>;
+
+interface CancelarDowngradeRef {
+  ...
+  (dc: DataConnect, vars: CancelarDowngradeVariables): MutationRef<CancelarDowngradeData, CancelarDowngradeVariables>;
+}
+export const cancelarDowngradeRef: CancelarDowngradeRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the cancelarDowngradeRef:
+```typescript
+const name = cancelarDowngradeRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `CancelarDowngrade` mutation requires an argument of type `CancelarDowngradeVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface CancelarDowngradeVariables {
+  id: UUIDString;
+}
+```
+### Return Type
+Recall that executing the `CancelarDowngrade` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `CancelarDowngradeData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface CancelarDowngradeData {
+  espacio_update?: Espacio_Key | null;
+}
+```
+### Using `CancelarDowngrade`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, cancelarDowngrade, CancelarDowngradeVariables } from '@antologico/dataconnect';
+
+// The `CancelarDowngrade` mutation requires an argument of type `CancelarDowngradeVariables`:
+const cancelarDowngradeVars: CancelarDowngradeVariables = {
+  id: ..., 
+};
+
+// Call the `cancelarDowngrade()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await cancelarDowngrade(cancelarDowngradeVars);
+// Variables can be defined inline as well.
+const { data } = await cancelarDowngrade({ id: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await cancelarDowngrade(dataConnect, cancelarDowngradeVars);
+
+console.log(data.espacio_update);
+
+// Or, you can use the `Promise` API.
+cancelarDowngrade(cancelarDowngradeVars).then((response) => {
+  const data = response.data;
+  console.log(data.espacio_update);
+});
+```
+
+### Using `CancelarDowngrade`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, cancelarDowngradeRef, CancelarDowngradeVariables } from '@antologico/dataconnect';
+
+// The `CancelarDowngrade` mutation requires an argument of type `CancelarDowngradeVariables`:
+const cancelarDowngradeVars: CancelarDowngradeVariables = {
+  id: ..., 
+};
+
+// Call the `cancelarDowngradeRef()` function to get a reference to the mutation.
+const ref = cancelarDowngradeRef(cancelarDowngradeVars);
+// Variables can be defined inline as well.
+const ref = cancelarDowngradeRef({ id: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = cancelarDowngradeRef(dataConnect, cancelarDowngradeVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.espacio_update);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.espacio_update);
+});
+```
+
+## UpdateCuponAplicado
+You can execute the `UpdateCuponAplicado` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+updateCuponAplicado(vars: UpdateCuponAplicadoVariables): MutationPromise<UpdateCuponAplicadoData, UpdateCuponAplicadoVariables>;
+
+interface UpdateCuponAplicadoRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: UpdateCuponAplicadoVariables): MutationRef<UpdateCuponAplicadoData, UpdateCuponAplicadoVariables>;
+}
+export const updateCuponAplicadoRef: UpdateCuponAplicadoRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+updateCuponAplicado(dc: DataConnect, vars: UpdateCuponAplicadoVariables): MutationPromise<UpdateCuponAplicadoData, UpdateCuponAplicadoVariables>;
+
+interface UpdateCuponAplicadoRef {
+  ...
+  (dc: DataConnect, vars: UpdateCuponAplicadoVariables): MutationRef<UpdateCuponAplicadoData, UpdateCuponAplicadoVariables>;
+}
+export const updateCuponAplicadoRef: UpdateCuponAplicadoRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the updateCuponAplicadoRef:
+```typescript
+const name = updateCuponAplicadoRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `UpdateCuponAplicado` mutation requires an argument of type `UpdateCuponAplicadoVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface UpdateCuponAplicadoVariables {
+  id: UUIDString;
+  cuponAplicado?: unknown | null;
+}
+```
+### Return Type
+Recall that executing the `UpdateCuponAplicado` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `UpdateCuponAplicadoData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface UpdateCuponAplicadoData {
+  espacio_update?: Espacio_Key | null;
+}
+```
+### Using `UpdateCuponAplicado`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, updateCuponAplicado, UpdateCuponAplicadoVariables } from '@antologico/dataconnect';
+
+// The `UpdateCuponAplicado` mutation requires an argument of type `UpdateCuponAplicadoVariables`:
+const updateCuponAplicadoVars: UpdateCuponAplicadoVariables = {
+  id: ..., 
+  cuponAplicado: ..., // optional
+};
+
+// Call the `updateCuponAplicado()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await updateCuponAplicado(updateCuponAplicadoVars);
+// Variables can be defined inline as well.
+const { data } = await updateCuponAplicado({ id: ..., cuponAplicado: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await updateCuponAplicado(dataConnect, updateCuponAplicadoVars);
+
+console.log(data.espacio_update);
+
+// Or, you can use the `Promise` API.
+updateCuponAplicado(updateCuponAplicadoVars).then((response) => {
+  const data = response.data;
+  console.log(data.espacio_update);
+});
+```
+
+### Using `UpdateCuponAplicado`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, updateCuponAplicadoRef, UpdateCuponAplicadoVariables } from '@antologico/dataconnect';
+
+// The `UpdateCuponAplicado` mutation requires an argument of type `UpdateCuponAplicadoVariables`:
+const updateCuponAplicadoVars: UpdateCuponAplicadoVariables = {
+  id: ..., 
+  cuponAplicado: ..., // optional
+};
+
+// Call the `updateCuponAplicadoRef()` function to get a reference to the mutation.
+const ref = updateCuponAplicadoRef(updateCuponAplicadoVars);
+// Variables can be defined inline as well.
+const ref = updateCuponAplicadoRef({ id: ..., cuponAplicado: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = updateCuponAplicadoRef(dataConnect, updateCuponAplicadoVars);
 
 // Call `executeMutation()` on the reference to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
@@ -3174,6 +3552,345 @@ const ref = updateEspacioRef({ id: ..., nombre: ..., rubroId: ..., rubroPersonal
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
 const ref = updateEspacioRef(dataConnect, updateEspacioVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.espacio_update);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.espacio_update);
+});
+```
+
+## UpdateEspacioDirecciones
+You can execute the `UpdateEspacioDirecciones` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+updateEspacioDirecciones(vars: UpdateEspacioDireccionesVariables): MutationPromise<UpdateEspacioDireccionesData, UpdateEspacioDireccionesVariables>;
+
+interface UpdateEspacioDireccionesRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: UpdateEspacioDireccionesVariables): MutationRef<UpdateEspacioDireccionesData, UpdateEspacioDireccionesVariables>;
+}
+export const updateEspacioDireccionesRef: UpdateEspacioDireccionesRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+updateEspacioDirecciones(dc: DataConnect, vars: UpdateEspacioDireccionesVariables): MutationPromise<UpdateEspacioDireccionesData, UpdateEspacioDireccionesVariables>;
+
+interface UpdateEspacioDireccionesRef {
+  ...
+  (dc: DataConnect, vars: UpdateEspacioDireccionesVariables): MutationRef<UpdateEspacioDireccionesData, UpdateEspacioDireccionesVariables>;
+}
+export const updateEspacioDireccionesRef: UpdateEspacioDireccionesRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the updateEspacioDireccionesRef:
+```typescript
+const name = updateEspacioDireccionesRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `UpdateEspacioDirecciones` mutation requires an argument of type `UpdateEspacioDireccionesVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface UpdateEspacioDireccionesVariables {
+  id: UUIDString;
+  direcciones?: unknown | null;
+}
+```
+### Return Type
+Recall that executing the `UpdateEspacioDirecciones` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `UpdateEspacioDireccionesData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface UpdateEspacioDireccionesData {
+  espacio_update?: Espacio_Key | null;
+}
+```
+### Using `UpdateEspacioDirecciones`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, updateEspacioDirecciones, UpdateEspacioDireccionesVariables } from '@antologico/dataconnect';
+
+// The `UpdateEspacioDirecciones` mutation requires an argument of type `UpdateEspacioDireccionesVariables`:
+const updateEspacioDireccionesVars: UpdateEspacioDireccionesVariables = {
+  id: ..., 
+  direcciones: ..., // optional
+};
+
+// Call the `updateEspacioDirecciones()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await updateEspacioDirecciones(updateEspacioDireccionesVars);
+// Variables can be defined inline as well.
+const { data } = await updateEspacioDirecciones({ id: ..., direcciones: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await updateEspacioDirecciones(dataConnect, updateEspacioDireccionesVars);
+
+console.log(data.espacio_update);
+
+// Or, you can use the `Promise` API.
+updateEspacioDirecciones(updateEspacioDireccionesVars).then((response) => {
+  const data = response.data;
+  console.log(data.espacio_update);
+});
+```
+
+### Using `UpdateEspacioDirecciones`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, updateEspacioDireccionesRef, UpdateEspacioDireccionesVariables } from '@antologico/dataconnect';
+
+// The `UpdateEspacioDirecciones` mutation requires an argument of type `UpdateEspacioDireccionesVariables`:
+const updateEspacioDireccionesVars: UpdateEspacioDireccionesVariables = {
+  id: ..., 
+  direcciones: ..., // optional
+};
+
+// Call the `updateEspacioDireccionesRef()` function to get a reference to the mutation.
+const ref = updateEspacioDireccionesRef(updateEspacioDireccionesVars);
+// Variables can be defined inline as well.
+const ref = updateEspacioDireccionesRef({ id: ..., direcciones: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = updateEspacioDireccionesRef(dataConnect, updateEspacioDireccionesVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.espacio_update);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.espacio_update);
+});
+```
+
+## UpdateEspacioTyC
+You can execute the `UpdateEspacioTyC` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+updateEspacioTyC(vars: UpdateEspacioTyCVariables): MutationPromise<UpdateEspacioTyCData, UpdateEspacioTyCVariables>;
+
+interface UpdateEspacioTyCRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: UpdateEspacioTyCVariables): MutationRef<UpdateEspacioTyCData, UpdateEspacioTyCVariables>;
+}
+export const updateEspacioTyCRef: UpdateEspacioTyCRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+updateEspacioTyC(dc: DataConnect, vars: UpdateEspacioTyCVariables): MutationPromise<UpdateEspacioTyCData, UpdateEspacioTyCVariables>;
+
+interface UpdateEspacioTyCRef {
+  ...
+  (dc: DataConnect, vars: UpdateEspacioTyCVariables): MutationRef<UpdateEspacioTyCData, UpdateEspacioTyCVariables>;
+}
+export const updateEspacioTyCRef: UpdateEspacioTyCRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the updateEspacioTyCRef:
+```typescript
+const name = updateEspacioTyCRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `UpdateEspacioTyC` mutation requires an argument of type `UpdateEspacioTyCVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface UpdateEspacioTyCVariables {
+  id: UUIDString;
+  terminosCondiciones?: string | null;
+  tycEnabled: boolean;
+}
+```
+### Return Type
+Recall that executing the `UpdateEspacioTyC` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `UpdateEspacioTyCData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface UpdateEspacioTyCData {
+  espacio_update?: Espacio_Key | null;
+}
+```
+### Using `UpdateEspacioTyC`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, updateEspacioTyC, UpdateEspacioTyCVariables } from '@antologico/dataconnect';
+
+// The `UpdateEspacioTyC` mutation requires an argument of type `UpdateEspacioTyCVariables`:
+const updateEspacioTyCVars: UpdateEspacioTyCVariables = {
+  id: ..., 
+  terminosCondiciones: ..., // optional
+  tycEnabled: ..., 
+};
+
+// Call the `updateEspacioTyC()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await updateEspacioTyC(updateEspacioTyCVars);
+// Variables can be defined inline as well.
+const { data } = await updateEspacioTyC({ id: ..., terminosCondiciones: ..., tycEnabled: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await updateEspacioTyC(dataConnect, updateEspacioTyCVars);
+
+console.log(data.espacio_update);
+
+// Or, you can use the `Promise` API.
+updateEspacioTyC(updateEspacioTyCVars).then((response) => {
+  const data = response.data;
+  console.log(data.espacio_update);
+});
+```
+
+### Using `UpdateEspacioTyC`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, updateEspacioTyCRef, UpdateEspacioTyCVariables } from '@antologico/dataconnect';
+
+// The `UpdateEspacioTyC` mutation requires an argument of type `UpdateEspacioTyCVariables`:
+const updateEspacioTyCVars: UpdateEspacioTyCVariables = {
+  id: ..., 
+  terminosCondiciones: ..., // optional
+  tycEnabled: ..., 
+};
+
+// Call the `updateEspacioTyCRef()` function to get a reference to the mutation.
+const ref = updateEspacioTyCRef(updateEspacioTyCVars);
+// Variables can be defined inline as well.
+const ref = updateEspacioTyCRef({ id: ..., terminosCondiciones: ..., tycEnabled: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = updateEspacioTyCRef(dataConnect, updateEspacioTyCVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.espacio_update);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.espacio_update);
+});
+```
+
+## UpdateEspacioSlug
+You can execute the `UpdateEspacioSlug` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+updateEspacioSlug(vars: UpdateEspacioSlugVariables): MutationPromise<UpdateEspacioSlugData, UpdateEspacioSlugVariables>;
+
+interface UpdateEspacioSlugRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: UpdateEspacioSlugVariables): MutationRef<UpdateEspacioSlugData, UpdateEspacioSlugVariables>;
+}
+export const updateEspacioSlugRef: UpdateEspacioSlugRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+updateEspacioSlug(dc: DataConnect, vars: UpdateEspacioSlugVariables): MutationPromise<UpdateEspacioSlugData, UpdateEspacioSlugVariables>;
+
+interface UpdateEspacioSlugRef {
+  ...
+  (dc: DataConnect, vars: UpdateEspacioSlugVariables): MutationRef<UpdateEspacioSlugData, UpdateEspacioSlugVariables>;
+}
+export const updateEspacioSlugRef: UpdateEspacioSlugRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the updateEspacioSlugRef:
+```typescript
+const name = updateEspacioSlugRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `UpdateEspacioSlug` mutation requires an argument of type `UpdateEspacioSlugVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface UpdateEspacioSlugVariables {
+  id: UUIDString;
+  slug: string;
+}
+```
+### Return Type
+Recall that executing the `UpdateEspacioSlug` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `UpdateEspacioSlugData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface UpdateEspacioSlugData {
+  espacio_update?: Espacio_Key | null;
+}
+```
+### Using `UpdateEspacioSlug`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, updateEspacioSlug, UpdateEspacioSlugVariables } from '@antologico/dataconnect';
+
+// The `UpdateEspacioSlug` mutation requires an argument of type `UpdateEspacioSlugVariables`:
+const updateEspacioSlugVars: UpdateEspacioSlugVariables = {
+  id: ..., 
+  slug: ..., 
+};
+
+// Call the `updateEspacioSlug()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await updateEspacioSlug(updateEspacioSlugVars);
+// Variables can be defined inline as well.
+const { data } = await updateEspacioSlug({ id: ..., slug: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await updateEspacioSlug(dataConnect, updateEspacioSlugVars);
+
+console.log(data.espacio_update);
+
+// Or, you can use the `Promise` API.
+updateEspacioSlug(updateEspacioSlugVars).then((response) => {
+  const data = response.data;
+  console.log(data.espacio_update);
+});
+```
+
+### Using `UpdateEspacioSlug`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, updateEspacioSlugRef, UpdateEspacioSlugVariables } from '@antologico/dataconnect';
+
+// The `UpdateEspacioSlug` mutation requires an argument of type `UpdateEspacioSlugVariables`:
+const updateEspacioSlugVars: UpdateEspacioSlugVariables = {
+  id: ..., 
+  slug: ..., 
+};
+
+// Call the `updateEspacioSlugRef()` function to get a reference to the mutation.
+const ref = updateEspacioSlugRef(updateEspacioSlugVars);
+// Variables can be defined inline as well.
+const ref = updateEspacioSlugRef({ id: ..., slug: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = updateEspacioSlugRef(dataConnect, updateEspacioSlugVars);
 
 // Call `executeMutation()` on the reference to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.

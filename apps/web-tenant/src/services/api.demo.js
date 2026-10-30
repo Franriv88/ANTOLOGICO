@@ -175,26 +175,26 @@ export const espacios = {
   updateIdentidad:      async (id, payload)       => espacios.update(id, payload),
   updateRedes:          async (id, redesSociales) => espacios.update(id, { redesSociales }),
   updateCobros:         async (id, cobros)        => espacios.update(id, { cobros }),
-  updatePlan: async (id, planId, plan, periodo = 'mensual', preapprovalId = null) => {
-    const base = plan?.precioMensual ?? 0;
-    const dto  = periodo === 'trimestral' ? (plan?.descuentoTrimestral ?? 0)
-               : periodo === 'anual'      ? (plan?.descuentoAnual      ?? 0) : 0;
-    const precioActual = Math.round(base * (1 - dto / 100));
-    const d = new Date();
-    const renovacion = periodo === 'trimestral'
-      ? new Date(d.getFullYear(), d.getMonth() + 3, d.getDate())
-      : periodo === 'anual'
-      ? new Date(d.getFullYear() + 1, d.getMonth(), d.getDate())
-      : new Date(d.getFullYear(), d.getMonth() + 1, d.getDate());
-    const update = {
+  updateDirecciones:    async (id, direcciones)   => espacios.update(id, { direcciones }),
+  updateTyC:            async (id, { terminosCondiciones, tycEnabled }) => espacios.update(id, { terminosCondiciones: terminosCondiciones || null, tycEnabled: !!tycEnabled }),
+  activarPlan: async (id, { planId, periodoFacturacion, precioActual, proximaRenovacion }) => {
+    return espacios.update(id, {
       planId,
-      plan: plan ?? null,
-      periodoFacturacion: periodo,
+      periodoFacturacion,
       precioActual,
-      proximaRenovacion: renovacion.toISOString(),
-    };
-    if (preapprovalId) update.mpPreapprovalId = preapprovalId;
-    return espacios.update(id, update);
+      proximaRenovacion: proximaRenovacion.toISOString(),
+      downgradePendiente: null,
+      cancelacionPendiente: false,
+    });
+  },
+  agendarDowngrade: async (id, downgradePendiente) => {
+    return espacios.update(id, { downgradePendiente });
+  },
+  cancelarDowngrade: async (id) => {
+    return espacios.update(id, { downgradePendiente: null });
+  },
+  updateCuponAplicado: async (id, cuponAplicado) => {
+    return espacios.update(id, { cuponAplicado });
   },
   solicitarCancelacion: async (id)                => espacios.update(id, { cancelacionPendiente: true }),
   reactivarSuscripcion: async (id)                => espacios.update(id, { cancelacionPendiente: false }),

@@ -78,17 +78,59 @@ exports.reassignProfesionalUid = function reassignProfesionalUid(dcOrVars, vars)
 }
 ;
 
-const updateEspacioPlanIdRef = (dcOrVars, vars) => {
+const activarPlanRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
-  return mutationRef(dcInstance, 'UpdateEspacioPlanId', inputVars);
+  return mutationRef(dcInstance, 'ActivarPlan', inputVars);
 }
-updateEspacioPlanIdRef.operationName = 'UpdateEspacioPlanId';
-exports.updateEspacioPlanIdRef = updateEspacioPlanIdRef;
+activarPlanRef.operationName = 'ActivarPlan';
+exports.activarPlanRef = activarPlanRef;
 
-exports.updateEspacioPlanId = function updateEspacioPlanId(dcOrVars, vars) {
+exports.activarPlan = function activarPlan(dcOrVars, vars) {
   const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
-  return executeMutation(updateEspacioPlanIdRef(dcInstance, inputVars));
+  return executeMutation(activarPlanRef(dcInstance, inputVars));
+}
+;
+
+const agendarDowngradeRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'AgendarDowngrade', inputVars);
+}
+agendarDowngradeRef.operationName = 'AgendarDowngrade';
+exports.agendarDowngradeRef = agendarDowngradeRef;
+
+exports.agendarDowngrade = function agendarDowngrade(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(agendarDowngradeRef(dcInstance, inputVars));
+}
+;
+
+const cancelarDowngradeRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'CancelarDowngrade', inputVars);
+}
+cancelarDowngradeRef.operationName = 'CancelarDowngrade';
+exports.cancelarDowngradeRef = cancelarDowngradeRef;
+
+exports.cancelarDowngrade = function cancelarDowngrade(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(cancelarDowngradeRef(dcInstance, inputVars));
+}
+;
+
+const updateCuponAplicadoRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'UpdateCuponAplicado', inputVars);
+}
+updateCuponAplicadoRef.operationName = 'UpdateCuponAplicado';
+exports.updateCuponAplicadoRef = updateCuponAplicadoRef;
+
+exports.updateCuponAplicado = function updateCuponAplicado(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(updateCuponAplicadoRef(dcInstance, inputVars));
 }
 ;
 
@@ -159,6 +201,48 @@ exports.updateEspacioRef = updateEspacioRef;
 exports.updateEspacio = function updateEspacio(dcOrVars, vars) {
   const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
   return executeMutation(updateEspacioRef(dcInstance, inputVars));
+}
+;
+
+const updateEspacioDireccionesRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'UpdateEspacioDirecciones', inputVars);
+}
+updateEspacioDireccionesRef.operationName = 'UpdateEspacioDirecciones';
+exports.updateEspacioDireccionesRef = updateEspacioDireccionesRef;
+
+exports.updateEspacioDirecciones = function updateEspacioDirecciones(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(updateEspacioDireccionesRef(dcInstance, inputVars));
+}
+;
+
+const updateEspacioTyCRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'UpdateEspacioTyC', inputVars);
+}
+updateEspacioTyCRef.operationName = 'UpdateEspacioTyC';
+exports.updateEspacioTyCRef = updateEspacioTyCRef;
+
+exports.updateEspacioTyC = function updateEspacioTyC(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(updateEspacioTyCRef(dcInstance, inputVars));
+}
+;
+
+const updateEspacioSlugRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'UpdateEspacioSlug', inputVars);
+}
+updateEspacioSlugRef.operationName = 'UpdateEspacioSlug';
+exports.updateEspacioSlugRef = updateEspacioSlugRef;
+
+exports.updateEspacioSlug = function updateEspacioSlug(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(updateEspacioSlugRef(dcInstance, inputVars));
 }
 ;
 

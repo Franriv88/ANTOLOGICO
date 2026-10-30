@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useEspacio } from '../../context/EspacioContext';
 import { espacios as espacioApi } from '../../services/api';
+import { precioConPeriodo, proximaRenovacion } from '../../hooks/usePlanes';
 import StepPerfil   from './StepPerfil';
 import StepEspacio  from './StepEspacio';
 import StepPlan     from './StepPlan';
@@ -28,11 +29,16 @@ export default function Onboarding() {
     setStep((s) => Math.max(0, s - 1));
   }
 
-  async function finish({ planId, periodo = 'mensual' } = {}) {
+  async function finish({ planId, plan, periodo = 'mensual' } = {}) {
     const isUuid = (s) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
-    if (planId && data.espacioId && isUuid(planId)) {
+    if (planId && data.espacioId && isUuid(planId) && plan) {
       try {
-        await espacioApi.updatePlan(data.espacioId, planId);
+        await espacioApi.activarPlan(data.espacioId, {
+          planId,
+          periodoFacturacion: periodo,
+          precioActual: precioConPeriodo(plan, periodo),
+          proximaRenovacion: proximaRenovacion(periodo),
+        });
       } catch (e) {
         console.error('Error al guardar el plan:', e);
       }

@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePlanes, PLANES_FALLBACK, precioConPeriodo } from '../../hooks/usePlanes';
 import { usePromo, isPromoActiva, precioConPromoYPeriodo } from '../../hooks/usePromo';
+import { listPlanes } from '../../dataconnect-generated';
 
 function formatPrecio(n) {
   return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
@@ -15,9 +16,14 @@ const PERIODOS = [
 export default function StepPlan({ onFinish, onBack }) {
   const planesDB = usePlanes();
   const promo    = usePromo();
-  const [selected, setSelected] = useState(null);   // planId
+  const [selected, setSelected] = useState(null);   // Firestore plan id
   const [periodo,  setPeriodo]  = useState('mensual');
   const [loading,  setLoading]  = useState(false);
+  const [sqlPlanes, setSqlPlanes] = useState([]);   // plans from Data Connect (UUIDs)
+
+  useEffect(() => {
+    listPlanes().then(r => setSqlPlanes(r.data?.planes ?? [])).catch(() => {});
+  }, []);
 
   const list        = planesDB ?? [];
   const promoActiva = isPromoActiva(promo);
@@ -25,7 +31,12 @@ export default function StepPlan({ onFinish, onBack }) {
   async function handleFinish() {
     setLoading(true);
     try {
-      await onFinish({ planId: selected, periodo });
+      const firestorePlan = list.find(p => p.id === selected);
+      // Resolve the SQL UUID by matching plan name (case-insensitive)
+      const firestoreNombre = (firestorePlan?.nombre || '').toLowerCase().trim();
+      const sqlPlan = sqlPlanes.find(p => (p.nombre || '').toLowerCase().trim() === firestoreNombre);
+      const planId = sqlPlan?.id ?? selected; // UUID from Data Connect, or Firestore fallback
+      await onFinish({ planId, plan: firestorePlan, periodo });
     } finally {
       setLoading(false);
     }

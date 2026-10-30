@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useState, useEffect } from 'react';
 
 const SEL_CLS =
   'px-2 py-2 bg-surface-100 border border-border rounded-md text-sm text-ink ' +
@@ -14,18 +14,28 @@ function daysInMonth(month, year) {
   return new Date(year, month, 0).getDate();
 }
 
+function parseValue(value) {
+  if (!value) return { day: '', month: '', year: '' };
+  const [y, m, d] = value.split('-');
+  return { day: parseInt(d, 10) || '', month: parseInt(m, 10) || '', year: parseInt(y, 10) || '' };
+}
+
 export default function BirthDatePicker({ value, onChange }) {
-  const today = new Date();
+  const today  = new Date();
   const minYear = today.getFullYear() - 100;
   const maxYear = today.getFullYear() - 13;
 
-  const parts = useMemo(() => {
-    if (!value) return { day: '', month: '', year: '' };
-    const [y, m, d] = value.split('-');
-    return { day: parseInt(d, 10) || '', month: parseInt(m, 10) || '', year: parseInt(y, 10) || '' };
+  // Estado interno para selecciones parciales
+  const [parts, setParts] = useState(() => parseValue(value));
+
+  // Sincronizar cuando el prop value cambia desde afuera (ej: reset del formulario)
+  useEffect(() => {
+    setParts(parseValue(value));
   }, [value]);
 
-  function emit(day, month, year) {
+  function update(newParts) {
+    setParts(newParts);
+    const { day, month, year } = newParts;
     if (day && month && year) {
       const d = String(day).padStart(2, '0');
       const m = String(month).padStart(2, '0');
@@ -43,8 +53,8 @@ export default function BirthDatePicker({ value, onChange }) {
       <select
         value={parts.day}
         onChange={(e) => {
-          const d = e.target.value ? parseInt(e.target.value, 10) : '';
-          emit(d, parts.month, parts.year);
+          const day = e.target.value ? parseInt(e.target.value, 10) : '';
+          update({ ...parts, day });
         }}
         className={SEL_CLS}
       >
@@ -58,10 +68,10 @@ export default function BirthDatePicker({ value, onChange }) {
       <select
         value={parts.month}
         onChange={(e) => {
-          const m = e.target.value ? parseInt(e.target.value, 10) : '';
-          const newMax = daysInMonth(m, parts.year);
-          const d = parts.day > newMax ? newMax : parts.day;
-          emit(d, m, parts.year);
+          const month  = e.target.value ? parseInt(e.target.value, 10) : '';
+          const newMax = daysInMonth(month, parts.year);
+          const day    = parts.day > newMax ? newMax : parts.day;
+          update({ ...parts, month, day });
         }}
         className={SEL_CLS}
       >
@@ -75,10 +85,10 @@ export default function BirthDatePicker({ value, onChange }) {
       <select
         value={parts.year}
         onChange={(e) => {
-          const y = e.target.value ? parseInt(e.target.value, 10) : '';
-          const newMax = daysInMonth(parts.month, y);
-          const d = parts.day > newMax ? newMax : parts.day;
-          emit(d, parts.month, y);
+          const year   = e.target.value ? parseInt(e.target.value, 10) : '';
+          const newMax = daysInMonth(parts.month, year);
+          const day    = parts.day > newMax ? newMax : parts.day;
+          update({ ...parts, year, day });
         }}
         className={SEL_CLS}
       >

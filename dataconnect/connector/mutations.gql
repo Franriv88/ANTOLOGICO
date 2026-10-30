@@ -28,11 +28,78 @@ mutation ReassignProfesionalUid($nombre: String!) @auth(level: USER) {
 
 # ─── Espacios ─────────────────────────────────────────────────────────────────
 
-mutation UpdateEspacioPlanId($id: UUID!, $planId: UUID!) @auth(level: USER) {
+mutation ActivarPlan(
+  $id:                 UUID!
+  $planId:             UUID!
+  $periodoFacturacion: String!
+  $precioActual:       Float!
+  $proximaRenovacion:  Timestamp!
+) @auth(level: USER) {
   espacio_update(
-    id: $id
+    first: {
+      where: {
+        id: { eq: $id }
+        profesionalUid: { eq_expr: "auth.uid" }
+      }
+    }
     data: {
-      planId: $planId
+      planId:              $planId
+      periodoFacturacion:  $periodoFacturacion
+      precioActual:        $precioActual
+      proximaRenovacion:   $proximaRenovacion
+      downgradePendiente:  null
+      cancelacionPendiente: false
+      updatedAt_expr:      "request.time"
+    }
+  )
+}
+
+mutation AgendarDowngrade(
+  $id:                 UUID!
+  $downgradePendiente: Any!
+) @auth(level: USER) {
+  espacio_update(
+    first: {
+      where: {
+        id: { eq: $id }
+        profesionalUid: { eq_expr: "auth.uid" }
+      }
+    }
+    data: {
+      downgradePendiente: $downgradePendiente
+      updatedAt_expr:     "request.time"
+    }
+  )
+}
+
+mutation CancelarDowngrade($id: UUID!) @auth(level: USER) {
+  espacio_update(
+    first: {
+      where: {
+        id: { eq: $id }
+        profesionalUid: { eq_expr: "auth.uid" }
+      }
+    }
+    data: {
+      downgradePendiente: null
+      updatedAt_expr:     "request.time"
+    }
+  )
+}
+
+mutation UpdateCuponAplicado(
+  $id:            UUID!
+  $cuponAplicado: Any
+) @auth(level: USER) {
+  espacio_update(
+    first: {
+      where: {
+        id: { eq: $id }
+        profesionalUid: { eq_expr: "auth.uid" }
+      }
+    }
+    data: {
+      cuponAplicado:  $cuponAplicado
       updatedAt_expr: "request.time"
     }
   )
@@ -133,6 +200,62 @@ mutation UpdateEspacio(
       rubroId:            $rubroId
       rubroPersonalizado: $rubroPersonalizado
       updatedAt_expr:     "request.time"
+    }
+  )
+}
+
+mutation UpdateEspacioDirecciones(
+  $id:          UUID!
+  $direcciones: Any
+) @auth(level: USER) {
+  espacio_update(
+    first: {
+      where: {
+        id: { eq: $id }
+        profesionalUid: { eq_expr: "auth.uid" }
+      }
+    }
+    data: {
+      direcciones:    $direcciones
+      updatedAt_expr: "request.time"
+    }
+  )
+}
+
+mutation UpdateEspacioTyC(
+  $id:                  UUID!
+  $terminosCondiciones: String
+  $tycEnabled:          Boolean!
+) @auth(level: USER) {
+  espacio_update(
+    first: {
+      where: {
+        id: { eq: $id }
+        profesionalUid: { eq_expr: "auth.uid" }
+      }
+    }
+    data: {
+      terminosCondiciones: $terminosCondiciones
+      tycEnabled:          $tycEnabled
+      updatedAt_expr:      "request.time"
+    }
+  )
+}
+
+mutation UpdateEspacioSlug(
+  $id:   UUID!
+  $slug: String!
+) @auth(level: USER) {
+  espacio_update(
+    first: {
+      where: {
+        id: { eq: $id }
+        profesionalUid: { eq_expr: "auth.uid" }
+      }
+    }
+    data: {
+      slug:           $slug
+      updatedAt_expr: "request.time"
     }
   )
 }

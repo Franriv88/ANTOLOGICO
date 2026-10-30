@@ -40,10 +40,11 @@ export default function StepPerfil({ onNext }) {
     }
     if (user?.uid) {
       try {
-        await updateUserProfile(user.uid, {
+        const telefonoCompleto = telefono.trim() ? `+54 9 ${telefono.trim()}` : '';
+      await updateUserProfile(user.uid, {
           nombre:    nombre.trim(),
           email:     email.trim(),
-          telefono:  telefono.trim(),
+          telefono:  telefonoCompleto,
           genero:    genero || 'prefiero-no-decirlo',
           fechaNac:  fechaNac || null,
         });
@@ -51,7 +52,8 @@ export default function StepPerfil({ onNext }) {
         // non-blocking
       }
     }
-    onNext({ nombre: nombre.trim(), telefono: telefono.trim() });
+    const telefonoCompleto = telefono.trim() ? `+54 9 ${telefono.trim()}` : '';
+    onNext({ nombre: nombre.trim(), telefono: telefonoCompleto });
     setLoading(false);
   }
 
@@ -111,13 +113,22 @@ export default function StepPerfil({ onNext }) {
 
       <div>
         <label className={LABEL_CLS}>Teléfono de contacto <span className="font-normal">(opcional)</span></label>
-        <input
-          type="tel"
-          value={telefono}
-          onChange={(e) => setTelefono(e.target.value)}
-          placeholder="Ej: +54 9 11 1234-5678"
-          className={INPUT_CLS}
-        />
+        <div className="flex items-stretch border border-border rounded-md overflow-hidden focus-within:border-primary focus-within:ring-1 focus-within:ring-primary bg-surface-100">
+          <span className="flex items-center px-3 text-sm text-ink-muted bg-surface-200 border-r border-border select-none whitespace-nowrap">
+            +54 9
+          </span>
+          <input
+            type="tel"
+            value={telefono}
+            onChange={(e) => {
+              const digits = e.target.value.replace(/\D/g, '');
+              setTelefono(digits);
+            }}
+            placeholder="11 1234 5678"
+            maxLength={12}
+            className="flex-1 px-3 py-2 bg-transparent text-sm text-ink focus:outline-none"
+          />
+        </div>
       </div>
 
       <div>

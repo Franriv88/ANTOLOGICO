@@ -14,7 +14,7 @@ If a user is not using a supported framework, they can use the generated SDK dir
 Here's an example of how to use it with the first 5 operations:
 
 ```js
-import { upsertProfesional, reassignProfesionalUid, updateEspacioPlanId, createEspacio, updateEspacioIdentidad, updateEspacioCobros, updateEspacioRedes, updateEspacio, createWorkshop, updateWorkshop } from '@antologico/dataconnect';
+import { upsertProfesional, reassignProfesionalUid, activarPlan, agendarDowngrade, cancelarDowngrade, updateCuponAplicado, createEspacio, updateEspacioIdentidad, updateEspacioCobros, updateEspacioRedes } from '@antologico/dataconnect';
 
 
 // Operation UpsertProfesional:  For variables, look at type UpsertProfesionalVars in ../index.d.ts
@@ -23,8 +23,17 @@ const { data } = await UpsertProfesional(dataConnect, upsertProfesionalVars);
 // Operation ReassignProfesionalUid:  For variables, look at type ReassignProfesionalUidVars in ../index.d.ts
 const { data } = await ReassignProfesionalUid(dataConnect, reassignProfesionalUidVars);
 
-// Operation UpdateEspacioPlanId:  For variables, look at type UpdateEspacioPlanIdVars in ../index.d.ts
-const { data } = await UpdateEspacioPlanId(dataConnect, updateEspacioPlanIdVars);
+// Operation ActivarPlan:  For variables, look at type ActivarPlanVars in ../index.d.ts
+const { data } = await ActivarPlan(dataConnect, activarPlanVars);
+
+// Operation AgendarDowngrade:  For variables, look at type AgendarDowngradeVars in ../index.d.ts
+const { data } = await AgendarDowngrade(dataConnect, agendarDowngradeVars);
+
+// Operation CancelarDowngrade:  For variables, look at type CancelarDowngradeVars in ../index.d.ts
+const { data } = await CancelarDowngrade(dataConnect, cancelarDowngradeVars);
+
+// Operation UpdateCuponAplicado:  For variables, look at type UpdateCuponAplicadoVars in ../index.d.ts
+const { data } = await UpdateCuponAplicado(dataConnect, updateCuponAplicadoVars);
 
 // Operation CreateEspacio:  For variables, look at type CreateEspacioVars in ../index.d.ts
 const { data } = await CreateEspacio(dataConnect, createEspacioVars);
@@ -37,15 +46,6 @@ const { data } = await UpdateEspacioCobros(dataConnect, updateEspacioCobrosVars)
 
 // Operation UpdateEspacioRedes:  For variables, look at type UpdateEspacioRedesVars in ../index.d.ts
 const { data } = await UpdateEspacioRedes(dataConnect, updateEspacioRedesVars);
-
-// Operation UpdateEspacio:  For variables, look at type UpdateEspacioVars in ../index.d.ts
-const { data } = await UpdateEspacio(dataConnect, updateEspacioVars);
-
-// Operation CreateWorkshop:  For variables, look at type CreateWorkshopVars in ../index.d.ts
-const { data } = await CreateWorkshop(dataConnect, createWorkshopVars);
-
-// Operation UpdateWorkshop:  For variables, look at type UpdateWorkshopVars in ../index.d.ts
-const { data } = await UpdateWorkshop(dataConnect, updateWorkshopVars);
 
 
 ```

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { planes as planesApi, promoApi, configApi, PLAN_CAPABILITIES, EMPTY_CAPABILITIES } from '../services/adminApi';
 import ConfirmModal from '../components/ConfirmModal';
 import { AntologicoLoaderCream } from '../components/AntologicoLoaderCream';
+import FloatingSaveBar from '../components/FloatingSaveBar';
 
 const EMPTY = {
   nombre: '',
@@ -39,13 +40,15 @@ function promoStatus(promo) {
 
 function PlanForm({ initial, onSave, onCancel, saving }) {
   const [form, setForm] = useState(() => ({ ...EMPTY, ...(initial ?? {}) }));
-  function set(k, v) { setForm(f => ({ ...f, [k]: v })); }
+  const [dirty, setDirty] = useState(false);
+  function set(k, v) { setForm(f => ({ ...f, [k]: v })); setDirty(true); }
   function toggleCap(key) {
     setForm(f => ({ ...f, capabilities: { ...f.capabilities, [key]: !f.capabilities?.[key] } }));
+    setDirty(true);
   }
 
   function handleSubmit(e) {
-    e.preventDefault();
+    e?.preventDefault();
     if (!form.nombre.trim()) return;
     const capabilities = { ...EMPTY_CAPABILITIES, ...form.capabilities };
     // Las features visibles en la landing se derivan de las capabilities activas,
@@ -188,17 +191,20 @@ function PlanForm({ initial, onSave, onCancel, saving }) {
 
       </div>
 
-      {/* Acciones */}
-      <div className="flex gap-3 px-6 py-4 border-t border-border bg-surface-100/50">
+      {/* Cancelar — siempre visible en el form */}
+      <div className="px-6 py-4 border-t border-border bg-surface-100/50">
         <button type="button" onClick={onCancel}
-          className="flex-1 py-2 border border-border rounded-md text-sm font-medium text-ink hover:bg-surface-0 transition-colors">
+          className="w-full py-2 border border-border rounded-md text-sm font-medium text-ink hover:bg-surface-0 transition-colors">
           Cancelar
         </button>
-        <button type="submit" disabled={saving}
-          className="flex-1 py-2 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary-strong transition-colors disabled:opacity-50">
-          {saving ? 'Guardando…' : 'Guardar plan'}
-        </button>
       </div>
+
+      <FloatingSaveBar
+        dirty={dirty || !!initial}
+        saving={saving}
+        onSave={handleSubmit}
+        label={saving ? 'Guardando…' : 'Guardar plan'}
+      />
     </form>
   );
 }

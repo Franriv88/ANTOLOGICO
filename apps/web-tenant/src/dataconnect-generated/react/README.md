@@ -38,12 +38,18 @@ You can also follow the instructions from the [Data Connect documentation](https
 - [**Mutations**](#mutations)
   - [*UpsertProfesional*](#upsertprofesional)
   - [*ReassignProfesionalUid*](#reassignprofesionaluid)
-  - [*UpdateEspacioPlanId*](#updateespacioplanid)
+  - [*ActivarPlan*](#activarplan)
+  - [*AgendarDowngrade*](#agendardowngrade)
+  - [*CancelarDowngrade*](#cancelardowngrade)
+  - [*UpdateCuponAplicado*](#updatecuponaplicado)
   - [*CreateEspacio*](#createespacio)
   - [*UpdateEspacioIdentidad*](#updateespacioidentidad)
   - [*UpdateEspacioCobros*](#updateespaciocobros)
   - [*UpdateEspacioRedes*](#updateespacioredes)
   - [*UpdateEspacio*](#updateespacio)
+  - [*UpdateEspacioDirecciones*](#updateespaciodirecciones)
+  - [*UpdateEspacioTyC*](#updateespaciotyc)
+  - [*UpdateEspacioSlug*](#updateespacioslug)
   - [*CreateWorkshop*](#createworkshop)
   - [*UpdateWorkshop*](#updateworkshop)
   - [*UpdateWorkshopEstado*](#updateworkshopestado)
@@ -502,6 +508,10 @@ export interface ListMyEspaciosData {
     estado: EstadoEspacio;
     cancelacionPendiente: boolean;
     createdAt: TimestampString;
+    trialStartedAt?: TimestampString | null;
+    isSuperAdmin: boolean;
+    slug?: string | null;
+    bloqueado: boolean;
     logoUrl?: string | null;
     logoShape?: string | null;
     logoScale?: number | null;
@@ -509,6 +519,14 @@ export interface ListMyEspaciosData {
     brandFont?: string | null;
     redesSociales?: unknown | null;
     cobros?: unknown | null;
+    direcciones?: unknown | null;
+    terminosCondiciones?: string | null;
+    tycEnabled: boolean;
+    periodoFacturacion?: string | null;
+    precioActual?: number | null;
+    proximaRenovacion?: TimestampString | null;
+    downgradePendiente?: unknown | null;
+    cuponAplicado?: unknown | null;
     rubro?: {
       id: UUIDString;
       nombre: string;
@@ -608,6 +626,10 @@ export interface GetMyEspacioData {
     cancelacionPendiente: boolean;
     createdAt: TimestampString;
     updatedAt: TimestampString;
+    trialStartedAt?: TimestampString | null;
+    isSuperAdmin: boolean;
+    slug?: string | null;
+    bloqueado: boolean;
     logoUrl?: string | null;
     logoShape?: string | null;
     logoScale?: number | null;
@@ -615,6 +637,14 @@ export interface GetMyEspacioData {
     brandFont?: string | null;
     redesSociales?: unknown | null;
     cobros?: unknown | null;
+    direcciones?: unknown | null;
+    terminosCondiciones?: string | null;
+    tycEnabled: boolean;
+    periodoFacturacion?: string | null;
+    precioActual?: number | null;
+    proximaRenovacion?: TimestampString | null;
+    downgradePendiente?: unknown | null;
+    cuponAplicado?: unknown | null;
     rubro?: {
       id: UUIDString;
       nombre: string;
@@ -1536,6 +1566,12 @@ export interface AdminListAllEspaciosData {
     brandFont?: string | null;
     redesSociales?: unknown | null;
     cobros?: unknown | null;
+    direcciones?: unknown | null;
+    periodoFacturacion?: string | null;
+    precioActual?: number | null;
+    proximaRenovacion?: TimestampString | null;
+    downgradePendiente?: unknown | null;
+    cuponAplicado?: unknown | null;
     profesional: {
       uid: string;
       nombre: string;
@@ -2085,84 +2121,376 @@ export default function ReassignProfesionalUidComponent() {
 }
 ```
 
-## UpdateEspacioPlanId
-You can execute the `UpdateEspacioPlanId` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+## ActivarPlan
+You can execute the `ActivarPlan` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
 ```javascript
-useUpdateEspacioPlanId(options?: useDataConnectMutationOptions<UpdateEspacioPlanIdData, FirebaseError, UpdateEspacioPlanIdVariables>): UseDataConnectMutationResult<UpdateEspacioPlanIdData, UpdateEspacioPlanIdVariables>;
+useActivarPlan(options?: useDataConnectMutationOptions<ActivarPlanData, FirebaseError, ActivarPlanVariables>): UseDataConnectMutationResult<ActivarPlanData, ActivarPlanVariables>;
 ```
 You can also pass in a `DataConnect` instance to the Mutation hook function.
 ```javascript
-useUpdateEspacioPlanId(dc: DataConnect, options?: useDataConnectMutationOptions<UpdateEspacioPlanIdData, FirebaseError, UpdateEspacioPlanIdVariables>): UseDataConnectMutationResult<UpdateEspacioPlanIdData, UpdateEspacioPlanIdVariables>;
+useActivarPlan(dc: DataConnect, options?: useDataConnectMutationOptions<ActivarPlanData, FirebaseError, ActivarPlanVariables>): UseDataConnectMutationResult<ActivarPlanData, ActivarPlanVariables>;
 ```
 
 ### Variables
-The `UpdateEspacioPlanId` Mutation requires an argument of type `UpdateEspacioPlanIdVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+The `ActivarPlan` Mutation requires an argument of type `ActivarPlanVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 
 ```javascript
-export interface UpdateEspacioPlanIdVariables {
+export interface ActivarPlanVariables {
   id: UUIDString;
   planId: UUIDString;
+  periodoFacturacion: string;
+  precioActual: number;
+  proximaRenovacion: TimestampString;
 }
 ```
 ### Return Type
-Recall that calling the `UpdateEspacioPlanId` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+Recall that calling the `ActivarPlan` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
 
 To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
 
 To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
 
-To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `UpdateEspacioPlanId` Mutation is of type `UpdateEspacioPlanIdData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `ActivarPlan` Mutation is of type `ActivarPlanData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
-export interface UpdateEspacioPlanIdData {
+export interface ActivarPlanData {
   espacio_update?: Espacio_Key | null;
 }
 ```
 
 To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
 
-### Using `UpdateEspacioPlanId`'s Mutation hook function
+### Using `ActivarPlan`'s Mutation hook function
 
 ```javascript
 import { getDataConnect } from 'firebase/data-connect';
-import { connectorConfig, UpdateEspacioPlanIdVariables } from '@antologico/dataconnect';
-import { useUpdateEspacioPlanId } from '@antologico/dataconnect/react'
+import { connectorConfig, ActivarPlanVariables } from '@antologico/dataconnect';
+import { useActivarPlan } from '@antologico/dataconnect/react'
 
-export default function UpdateEspacioPlanIdComponent() {
+export default function ActivarPlanComponent() {
   // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
-  const mutation = useUpdateEspacioPlanId();
+  const mutation = useActivarPlan();
 
   // You can also pass in a `DataConnect` instance to the Mutation hook function.
   const dataConnect = getDataConnect(connectorConfig);
-  const mutation = useUpdateEspacioPlanId(dataConnect);
+  const mutation = useActivarPlan(dataConnect);
 
   // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
   const options = {
     onSuccess: () => { console.log('Mutation succeeded!'); }
   };
-  const mutation = useUpdateEspacioPlanId(options);
+  const mutation = useActivarPlan(options);
 
   // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
   const dataConnect = getDataConnect(connectorConfig);
   const options = {
     onSuccess: () => { console.log('Mutation succeeded!'); }
   };
-  const mutation = useUpdateEspacioPlanId(dataConnect, options);
+  const mutation = useActivarPlan(dataConnect, options);
 
   // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
-  // The `useUpdateEspacioPlanId` Mutation requires an argument of type `UpdateEspacioPlanIdVariables`:
-  const updateEspacioPlanIdVars: UpdateEspacioPlanIdVariables = {
+  // The `useActivarPlan` Mutation requires an argument of type `ActivarPlanVariables`:
+  const activarPlanVars: ActivarPlanVariables = {
     id: ..., 
     planId: ..., 
+    periodoFacturacion: ..., 
+    precioActual: ..., 
+    proximaRenovacion: ..., 
   };
-  mutation.mutate(updateEspacioPlanIdVars);
+  mutation.mutate(activarPlanVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ id: ..., planId: ..., });
+  mutation.mutate({ id: ..., planId: ..., periodoFacturacion: ..., precioActual: ..., proximaRenovacion: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
     onSuccess: () => { console.log('Mutation succeeded!'); }
   };
-  mutation.mutate(updateEspacioPlanIdVars, options);
+  mutation.mutate(activarPlanVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.espacio_update);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## AgendarDowngrade
+You can execute the `AgendarDowngrade` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useAgendarDowngrade(options?: useDataConnectMutationOptions<AgendarDowngradeData, FirebaseError, AgendarDowngradeVariables>): UseDataConnectMutationResult<AgendarDowngradeData, AgendarDowngradeVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useAgendarDowngrade(dc: DataConnect, options?: useDataConnectMutationOptions<AgendarDowngradeData, FirebaseError, AgendarDowngradeVariables>): UseDataConnectMutationResult<AgendarDowngradeData, AgendarDowngradeVariables>;
+```
+
+### Variables
+The `AgendarDowngrade` Mutation requires an argument of type `AgendarDowngradeVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface AgendarDowngradeVariables {
+  id: UUIDString;
+  downgradePendiente: unknown;
+}
+```
+### Return Type
+Recall that calling the `AgendarDowngrade` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `AgendarDowngrade` Mutation is of type `AgendarDowngradeData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface AgendarDowngradeData {
+  espacio_update?: Espacio_Key | null;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `AgendarDowngrade`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, AgendarDowngradeVariables } from '@antologico/dataconnect';
+import { useAgendarDowngrade } from '@antologico/dataconnect/react'
+
+export default function AgendarDowngradeComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useAgendarDowngrade();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useAgendarDowngrade(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useAgendarDowngrade(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useAgendarDowngrade(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useAgendarDowngrade` Mutation requires an argument of type `AgendarDowngradeVariables`:
+  const agendarDowngradeVars: AgendarDowngradeVariables = {
+    id: ..., 
+    downgradePendiente: ..., 
+  };
+  mutation.mutate(agendarDowngradeVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ id: ..., downgradePendiente: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(agendarDowngradeVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.espacio_update);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## CancelarDowngrade
+You can execute the `CancelarDowngrade` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useCancelarDowngrade(options?: useDataConnectMutationOptions<CancelarDowngradeData, FirebaseError, CancelarDowngradeVariables>): UseDataConnectMutationResult<CancelarDowngradeData, CancelarDowngradeVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useCancelarDowngrade(dc: DataConnect, options?: useDataConnectMutationOptions<CancelarDowngradeData, FirebaseError, CancelarDowngradeVariables>): UseDataConnectMutationResult<CancelarDowngradeData, CancelarDowngradeVariables>;
+```
+
+### Variables
+The `CancelarDowngrade` Mutation requires an argument of type `CancelarDowngradeVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface CancelarDowngradeVariables {
+  id: UUIDString;
+}
+```
+### Return Type
+Recall that calling the `CancelarDowngrade` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `CancelarDowngrade` Mutation is of type `CancelarDowngradeData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface CancelarDowngradeData {
+  espacio_update?: Espacio_Key | null;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `CancelarDowngrade`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, CancelarDowngradeVariables } from '@antologico/dataconnect';
+import { useCancelarDowngrade } from '@antologico/dataconnect/react'
+
+export default function CancelarDowngradeComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useCancelarDowngrade();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useCancelarDowngrade(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useCancelarDowngrade(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useCancelarDowngrade(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useCancelarDowngrade` Mutation requires an argument of type `CancelarDowngradeVariables`:
+  const cancelarDowngradeVars: CancelarDowngradeVariables = {
+    id: ..., 
+  };
+  mutation.mutate(cancelarDowngradeVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ id: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(cancelarDowngradeVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.espacio_update);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## UpdateCuponAplicado
+You can execute the `UpdateCuponAplicado` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useUpdateCuponAplicado(options?: useDataConnectMutationOptions<UpdateCuponAplicadoData, FirebaseError, UpdateCuponAplicadoVariables>): UseDataConnectMutationResult<UpdateCuponAplicadoData, UpdateCuponAplicadoVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useUpdateCuponAplicado(dc: DataConnect, options?: useDataConnectMutationOptions<UpdateCuponAplicadoData, FirebaseError, UpdateCuponAplicadoVariables>): UseDataConnectMutationResult<UpdateCuponAplicadoData, UpdateCuponAplicadoVariables>;
+```
+
+### Variables
+The `UpdateCuponAplicado` Mutation requires an argument of type `UpdateCuponAplicadoVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface UpdateCuponAplicadoVariables {
+  id: UUIDString;
+  cuponAplicado?: unknown | null;
+}
+```
+### Return Type
+Recall that calling the `UpdateCuponAplicado` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `UpdateCuponAplicado` Mutation is of type `UpdateCuponAplicadoData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface UpdateCuponAplicadoData {
+  espacio_update?: Espacio_Key | null;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `UpdateCuponAplicado`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, UpdateCuponAplicadoVariables } from '@antologico/dataconnect';
+import { useUpdateCuponAplicado } from '@antologico/dataconnect/react'
+
+export default function UpdateCuponAplicadoComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useUpdateCuponAplicado();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useUpdateCuponAplicado(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useUpdateCuponAplicado(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useUpdateCuponAplicado(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useUpdateCuponAplicado` Mutation requires an argument of type `UpdateCuponAplicadoVariables`:
+  const updateCuponAplicadoVars: UpdateCuponAplicadoVariables = {
+    id: ..., 
+    cuponAplicado: ..., // optional
+  };
+  mutation.mutate(updateCuponAplicadoVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ id: ..., cuponAplicado: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(updateCuponAplicadoVars, options);
 
   // Then, you can render your component dynamically based on the status of the Mutation.
   if (mutation.isPending) {
@@ -2657,6 +2985,296 @@ export default function UpdateEspacioComponent() {
     onSuccess: () => { console.log('Mutation succeeded!'); }
   };
   mutation.mutate(updateEspacioVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.espacio_update);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## UpdateEspacioDirecciones
+You can execute the `UpdateEspacioDirecciones` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useUpdateEspacioDirecciones(options?: useDataConnectMutationOptions<UpdateEspacioDireccionesData, FirebaseError, UpdateEspacioDireccionesVariables>): UseDataConnectMutationResult<UpdateEspacioDireccionesData, UpdateEspacioDireccionesVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useUpdateEspacioDirecciones(dc: DataConnect, options?: useDataConnectMutationOptions<UpdateEspacioDireccionesData, FirebaseError, UpdateEspacioDireccionesVariables>): UseDataConnectMutationResult<UpdateEspacioDireccionesData, UpdateEspacioDireccionesVariables>;
+```
+
+### Variables
+The `UpdateEspacioDirecciones` Mutation requires an argument of type `UpdateEspacioDireccionesVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface UpdateEspacioDireccionesVariables {
+  id: UUIDString;
+  direcciones?: unknown | null;
+}
+```
+### Return Type
+Recall that calling the `UpdateEspacioDirecciones` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `UpdateEspacioDirecciones` Mutation is of type `UpdateEspacioDireccionesData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface UpdateEspacioDireccionesData {
+  espacio_update?: Espacio_Key | null;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `UpdateEspacioDirecciones`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, UpdateEspacioDireccionesVariables } from '@antologico/dataconnect';
+import { useUpdateEspacioDirecciones } from '@antologico/dataconnect/react'
+
+export default function UpdateEspacioDireccionesComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useUpdateEspacioDirecciones();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useUpdateEspacioDirecciones(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useUpdateEspacioDirecciones(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useUpdateEspacioDirecciones(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useUpdateEspacioDirecciones` Mutation requires an argument of type `UpdateEspacioDireccionesVariables`:
+  const updateEspacioDireccionesVars: UpdateEspacioDireccionesVariables = {
+    id: ..., 
+    direcciones: ..., // optional
+  };
+  mutation.mutate(updateEspacioDireccionesVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ id: ..., direcciones: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(updateEspacioDireccionesVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.espacio_update);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## UpdateEspacioTyC
+You can execute the `UpdateEspacioTyC` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useUpdateEspacioTyC(options?: useDataConnectMutationOptions<UpdateEspacioTyCData, FirebaseError, UpdateEspacioTyCVariables>): UseDataConnectMutationResult<UpdateEspacioTyCData, UpdateEspacioTyCVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useUpdateEspacioTyC(dc: DataConnect, options?: useDataConnectMutationOptions<UpdateEspacioTyCData, FirebaseError, UpdateEspacioTyCVariables>): UseDataConnectMutationResult<UpdateEspacioTyCData, UpdateEspacioTyCVariables>;
+```
+
+### Variables
+The `UpdateEspacioTyC` Mutation requires an argument of type `UpdateEspacioTyCVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface UpdateEspacioTyCVariables {
+  id: UUIDString;
+  terminosCondiciones?: string | null;
+  tycEnabled: boolean;
+}
+```
+### Return Type
+Recall that calling the `UpdateEspacioTyC` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `UpdateEspacioTyC` Mutation is of type `UpdateEspacioTyCData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface UpdateEspacioTyCData {
+  espacio_update?: Espacio_Key | null;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `UpdateEspacioTyC`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, UpdateEspacioTyCVariables } from '@antologico/dataconnect';
+import { useUpdateEspacioTyC } from '@antologico/dataconnect/react'
+
+export default function UpdateEspacioTyCComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useUpdateEspacioTyC();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useUpdateEspacioTyC(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useUpdateEspacioTyC(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useUpdateEspacioTyC(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useUpdateEspacioTyC` Mutation requires an argument of type `UpdateEspacioTyCVariables`:
+  const updateEspacioTyCVars: UpdateEspacioTyCVariables = {
+    id: ..., 
+    terminosCondiciones: ..., // optional
+    tycEnabled: ..., 
+  };
+  mutation.mutate(updateEspacioTyCVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ id: ..., terminosCondiciones: ..., tycEnabled: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(updateEspacioTyCVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.espacio_update);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## UpdateEspacioSlug
+You can execute the `UpdateEspacioSlug` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useUpdateEspacioSlug(options?: useDataConnectMutationOptions<UpdateEspacioSlugData, FirebaseError, UpdateEspacioSlugVariables>): UseDataConnectMutationResult<UpdateEspacioSlugData, UpdateEspacioSlugVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useUpdateEspacioSlug(dc: DataConnect, options?: useDataConnectMutationOptions<UpdateEspacioSlugData, FirebaseError, UpdateEspacioSlugVariables>): UseDataConnectMutationResult<UpdateEspacioSlugData, UpdateEspacioSlugVariables>;
+```
+
+### Variables
+The `UpdateEspacioSlug` Mutation requires an argument of type `UpdateEspacioSlugVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface UpdateEspacioSlugVariables {
+  id: UUIDString;
+  slug: string;
+}
+```
+### Return Type
+Recall that calling the `UpdateEspacioSlug` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `UpdateEspacioSlug` Mutation is of type `UpdateEspacioSlugData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface UpdateEspacioSlugData {
+  espacio_update?: Espacio_Key | null;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `UpdateEspacioSlug`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, UpdateEspacioSlugVariables } from '@antologico/dataconnect';
+import { useUpdateEspacioSlug } from '@antologico/dataconnect/react'
+
+export default function UpdateEspacioSlugComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useUpdateEspacioSlug();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useUpdateEspacioSlug(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useUpdateEspacioSlug(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useUpdateEspacioSlug(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useUpdateEspacioSlug` Mutation requires an argument of type `UpdateEspacioSlugVariables`:
+  const updateEspacioSlugVars: UpdateEspacioSlugVariables = {
+    id: ..., 
+    slug: ..., 
+  };
+  mutation.mutate(updateEspacioSlugVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ id: ..., slug: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(updateEspacioSlugVars, options);
 
   // Then, you can render your component dynamically based on the status of the Mutation.
   if (mutation.isPending) {

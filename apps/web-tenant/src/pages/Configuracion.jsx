@@ -456,7 +456,9 @@ function CompartirEspacio({ espacio, refresh }) {
   const [slugSaved, setSlugSaved]   = useState(false);
   const [slugEditing, setSlugEditing] = useState(false);
 
-  const publicUrl = `https://www.antologico.app/p/${espacio.id}`;
+  const publicUrl = slug
+    ? `https://${slug}.antologico.app`
+    : `https://www.antologico.app/p/${espacio.id}`;
   const logoUrl   = espacio.logoUrl ?? null;
   const QR_SIZE   = 200;
   const LOGO_SIZE = Math.round(QR_SIZE * 0.22);
@@ -764,6 +766,12 @@ function TabEspacio({ espacio, refresh }) {
 
   useEffect(() => { fetchRubros().then(setRubros); }, []);
 
+  // Sincronizar campos locales si el espacio del contexto se actualiza después del mount
+  useEffect(() => {
+    setNombre(espacio.nombre ?? '');
+    setSelectedRubro(espacio.rubroPersonalizado ?? '');
+  }, [espacio.id, espacio.nombre, espacio.rubroPersonalizado]);
+
   // ── Eliminar espacio ─────────────────────────────────────────────────────────
   const [delPhase,    setDelPhase]    = useState(null); // null | 'warn' | 'confirm'
   const [delReservas, setDelReservas] = useState(0);
@@ -855,7 +863,7 @@ function TabEspacio({ espacio, refresh }) {
     const updated = [...direcciones, entry];
     setDirSaving(true);
     try {
-      await espacioApi.update(espacio.id, { direcciones: updated });
+      await espacioApi.updateDirecciones(espacio.id, updated);
       setDirecciones(updated);
       setNewDir(EMPTY_DIR);
       setPendingDir(null);
@@ -875,7 +883,7 @@ function TabEspacio({ espacio, refresh }) {
   async function handleRemoveDir(id) {
     const updated = direcciones.filter(d => d.id !== id);
     setDirecciones(updated);
-    await espacioApi.update(espacio.id, { direcciones: updated });
+    await espacioApi.updateDirecciones(espacio.id, updated);
     await refresh();
   }
 
@@ -1533,7 +1541,7 @@ function TabTerminos({ espacio, refresh }) {
   async function handleSave() {
     setSaving(true); setSaved(false);
     try {
-      await espacioApi.update(espacio.id, {
+      await espacioApi.updateTyC(espacio.id, {
         terminosCondiciones: tycHtml || null,
         tycEnabled,
       });
@@ -1631,9 +1639,9 @@ function Toggle({ checked, onChange, disabled }) {
 function TabCobros({ espacio, refresh }) {
   const parseCobros = () => {
     const c = espacio.cobros;
-    if (!c) return { efectivo: true, mercadoPago: false, linksDePago: false, links: [], horasCancelacion: 24 };
+    if (!c) return { efectivo: false, mercadoPago: false, linksDePago: false, links: [], horasCancelacion: 24 };
     return {
-      efectivo:         c.efectivo         ?? true,
+      efectivo:         c.efectivo         ?? false,
       mercadoPago:      c.mercadoPago      ?? false,
       linksDePago:      c.linksDePago      ?? false,
       links:            c.links            ?? [],
@@ -2007,14 +2015,188 @@ function EspacioLogoThumb({ esp }) {
   );
 }
 
+// ── Modal: Cambiar plan (upgrade/downgrade con prorrateo) ──────────────────
+
+function CambiarPlanModal({ espacio, planes, currentPlan, currentPeriodo, onClose, onUpgrade, onDowngrade, loading, error }) {
+  const [selectedPlanId, setSelectedPlanId] = useState(null);
+  const [selectedPeriodo, setSelectedPeriodo] = useState(currentPeriodo);
+
+  const selectedPlan = planes?.find(p => p.id === selectedPlanId) ?? null;
+  const otrosPlanes  = (planes ?? []).filter(p => p.id !== currentPlan?.id);
+
+  const precioActual = precioConPeriodo(currentPlan, currentPeriodo);
+  const precioNuevo  = selectedPlan ? precioConPeriodo(selectedPlan, selectedPeriodo) : 0;
+
+  const planOrder = { esencial: 1, profesional: 2, estudio: 3 };
+  const currentRank  = planOrder[(currentPlan?.nombre ?? '').toLowerCase()] ?? 0;
+  const selectedRank = planOrder[(selectedPlan?.nombre ?? '').toLowerCase()] ?? 0;
+
+  const isUpgrade   = selectedPlan && (selectedRank > currentRank || (selectedRank === currentRank && precioNuevo > precioActual));
+  const isDowngrade = selectedPlan && !isUpgrade && (selectedRank < currentRank || precioNuevo < precioActual);
+  const isSamePlan  = selectedPlan && selectedPlan.id === currentPlan?.id;
+
+  // Prorrateo para upgrade
+  const renovacion      = espacio.proximaRenovacion ? new Date(espacio.proximaRenovacion) : proximaRenovacion(currentPeriodo);
+  const diasTotales     = (() => {
+    if (currentPeriodo === 'trimestral') return 90;
+    if (currentPeriodo === 'anual') return 365;
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  })();
+  const diasRestantes   = Math.max(0, Math.ceil((renovacion - new Date()) / 86_400_000));
+  const diferenciaMes   = precioNuevo - precioActual;
+  const prorrateo       = isUpgrade ? Math.max(0, Math.round(diferenciaMes * diasRestantes / diasTotales)) : 0;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => !loading && onClose()}>
+      <div className="absolute inset-0 bg-ink/20 backdrop-blur-[2px]" />
+      <div className="relative bg-surface-0 border border-border rounded-xl shadow-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <h3 className="font-display text-lg text-ink mb-1">Cambiar plan</h3>
+        <p className="text-sm text-ink-muted mb-4">
+          Plan actual: <strong className="text-ink">{currentPlan?.nombre}</strong> · {currentPeriodo === 'mensual' ? 'Mensual' : currentPeriodo === 'trimestral' ? 'Trimestral' : 'Anual'} · <span className="font-mono">${precioActual.toLocaleString('es-AR')}/mes</span>
+        </p>
+
+        {/* Toggle de período */}
+        <div className="flex gap-1 p-1 bg-surface-200 rounded-lg w-fit mb-4">
+          {[
+            { id: 'mensual', label: 'Mensual' },
+            { id: 'trimestral', label: 'Trimestral' },
+            { id: 'anual', label: 'Anual' },
+          ].map(op => (
+            <button key={op.id} onClick={() => setSelectedPeriodo(op.id)}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${selectedPeriodo === op.id ? 'bg-surface-100 shadow-sm text-ink' : 'text-ink-muted hover:text-ink'}`}>
+              {op.label}
+              {op.id !== 'mensual' && (planes ?? [])[0] && (
+                <span className="ml-1 text-success font-semibold">
+                  −{op.id === 'trimestral' ? ((planes ?? [])[0].descuentoTrimestral ?? 0) : ((planes ?? [])[0].descuentoAnual ?? 0)}%
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Plan cards */}
+        <div className="flex flex-col gap-3 mb-4">
+          {(planes ?? []).map(plan => {
+            if (plan.id === currentPlan?.id && selectedPeriodo === currentPeriodo) return null;
+            const precio = precioConPeriodo(plan, selectedPeriodo);
+            const rank   = planOrder[(plan.nombre ?? '').toLowerCase()] ?? 0;
+            const up     = rank > currentRank || (rank === currentRank && precio > precioActual);
+            const isSelected = selectedPlanId === plan.id;
+            return (
+              <button key={plan.id} onClick={() => setSelectedPlanId(plan.id)}
+                className={`text-left w-full flex items-center gap-4 p-4 rounded-lg border-2 transition-colors ${
+                  isSelected ? 'border-primary bg-primary/5' : 'border-border bg-surface-100 hover:border-primary/40'
+                }`}>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                    <p className="text-sm font-semibold text-ink">{plan.nombre}</p>
+                    {up
+                      ? <span className="text-[10px] px-1.5 py-0.5 bg-success/10 text-success rounded font-medium">Upgrade</span>
+                      : <span className="text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded font-medium">Downgrade</span>
+                    }
+                  </div>
+                  <ul className="flex flex-col gap-0.5 mt-1">
+                    {(plan.features ?? []).slice(0, 3).map((f, i) => (
+                      <li key={i} className="text-xs text-ink-muted flex items-center gap-1">
+                        <span className="text-primary">✓</span> {f}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="font-mono text-sm font-semibold text-ink">${precio.toLocaleString('es-AR')}/mes</p>
+                  {precio !== plan.precioMensual && (
+                    <p className="text-xs text-ink-muted line-through">${plan.precioMensual.toLocaleString('es-AR')}</p>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Resumen de la acción */}
+        {selectedPlan && isUpgrade && (
+          <div className="bg-success/5 border border-success/25 rounded-lg p-4 mb-4">
+            <p className="text-sm font-semibold text-ink mb-2">Resumen del upgrade</p>
+            <div className="flex flex-col gap-1 text-xs text-ink-muted">
+              <div className="flex justify-between">
+                <span>Precio nuevo ({selectedPlan.nombre} {selectedPeriodo})</span>
+                <span className="font-mono text-ink">${precioNuevo.toLocaleString('es-AR')}/mes</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Precio actual ({currentPlan.nombre} {currentPeriodo})</span>
+                <span className="font-mono text-ink">−${precioActual.toLocaleString('es-AR')}/mes</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Días restantes del período</span>
+                <span className="font-mono text-ink">{diasRestantes} de {diasTotales}</span>
+              </div>
+              <hr className="border-border my-1" />
+              <div className="flex justify-between font-semibold text-ink">
+                <span>Cobro inmediato (prorrateo)</span>
+                <span className="font-mono">${prorrateo.toLocaleString('es-AR')}</span>
+              </div>
+            </div>
+            <p className="text-[11px] text-ink-muted mt-2">
+              El cambio se aplica de inmediato. A partir de la próxima renovación ({formatFechaLarga(renovacion)}) se cobrará ${precioNuevo.toLocaleString('es-AR')}/mes.
+            </p>
+          </div>
+        )}
+
+        {selectedPlan && isDowngrade && (
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+            <p className="text-sm font-semibold text-ink mb-2">Downgrade programado</p>
+            <p className="text-xs text-ink-muted leading-relaxed">
+              Tu plan <strong className="text-ink">{currentPlan.nombre}</strong> seguirá activo hasta el <strong className="text-ink">{formatFechaLarga(renovacion)}</strong>.
+              A partir de esa fecha se activará <strong className="text-ink">{selectedPlan.nombre}</strong> ({selectedPeriodo}) a <span className="font-mono font-semibold text-ink">${precioNuevo.toLocaleString('es-AR')}/mes</span>. No se genera ningún cobro ni devolución ahora.
+            </p>
+          </div>
+        )}
+
+        {selectedPlan && isSamePlan && selectedPeriodo !== currentPeriodo && !isUpgrade && !isDowngrade && (
+          <div className="bg-surface-200 border border-border rounded-lg p-4 mb-4">
+            <p className="text-sm font-semibold text-ink mb-1">Cambio de período</p>
+            <p className="text-xs text-ink-muted">
+              Se actualizará tu período de facturación de <strong>{currentPeriodo}</strong> a <strong>{selectedPeriodo}</strong> en la próxima renovación.
+            </p>
+          </div>
+        )}
+
+        {error && <p className="mb-4 text-xs text-danger bg-danger/5 border border-danger/20 rounded-lg px-3 py-2">{error}</p>}
+
+        <div className="flex justify-end gap-3">
+          <button onClick={onClose} disabled={loading}
+            className="px-4 py-2 text-sm font-medium text-ink hover:bg-surface-200 rounded-md border border-border disabled:opacity-50">
+            Cancelar
+          </button>
+          {selectedPlan && isUpgrade && (
+            <button onClick={() => onUpgrade(selectedPlan, selectedPeriodo, prorrateo)} disabled={loading}
+              className="px-4 py-2 text-sm font-semibold text-white bg-primary hover:bg-primary/90 rounded-md disabled:opacity-50">
+              {loading ? 'Procesando…' : `Cambiar ahora · $${prorrateo.toLocaleString('es-AR')}`}
+            </button>
+          )}
+          {selectedPlan && isDowngrade && (
+            <button onClick={() => onDowngrade(selectedPlan, selectedPeriodo)} disabled={loading}
+              className="px-4 py-2 text-sm font-semibold text-white bg-amber-600 hover:bg-amber-700 rounded-md disabled:opacity-50">
+              {loading ? 'Procesando…' : 'Agendar cambio'}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function TabSuscripcion({ espacio, espacios, refresh }) {
   const { user } = useAuth();
   const planesDB = usePlanes();
-  const [loading,      setLoading]      = useState(false);
-  const [cancelOpen,   setCancelOpen]   = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState(null);
-  const [agregarOpen,  setAgregarOpen]  = useState(false);
-  const [error,        setError]        = useState('');
+  const [loading,         setLoading]         = useState(false);
+  const [cancelOpen,      setCancelOpen]      = useState(false);
+  const [cambiarPlanOpen, setCambiarPlanOpen] = useState(false);
+  const [deleteTarget,    setDeleteTarget]    = useState(null);
+  const [agregarOpen,     setAgregarOpen]     = useState(false);
+  const [error,           setError]           = useState('');
   const [periodo,      setPeriodo]      = useState('mensual'); // para el selector de activación
   const [cuponInput,   setCuponInput]   = useState('');
   const [cuponValido,  setCuponValido]  = useState(null); // objeto cupón validado
@@ -2066,17 +2248,20 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
   async function handleActivarPlan(plan) {
     setLoading(true); setError('');
     try {
-      await espacioApi.updatePlan(espacio.id, plan.id, plan, periodo);
+      await espacioApi.activarPlan(espacio.id, {
+        planId: plan.id,
+        periodoFacturacion: periodo,
+        precioActual: precioConPeriodo(plan, periodo),
+        proximaRenovacion: proximaRenovacion(periodo),
+      });
       if (cuponValido) {
         const vence = new Date();
         vence.setMonth(vence.getMonth() + cuponValido.duracionMeses);
-        await espacioApi.update(espacio.id, {
-          cuponAplicado: {
-            codigo: cuponValido.codigo,
-            descuento: cuponValido.descuento,
-            duracionMeses: cuponValido.duracionMeses,
-            venceCupon: vence.toISOString(),
-          },
+        await espacioApi.updateCuponAplicado(espacio.id, {
+          codigo: cuponValido.codigo,
+          descuento: cuponValido.descuento,
+          duracionMeses: cuponValido.duracionMeses,
+          venceCupon: vence.toISOString(),
         });
         await updateDoc(doc(firestore, 'demo_cupones', cuponValido.id), { usosActuales: increment(1) });
         setCuponValido(null); setCuponInput('');
@@ -2100,6 +2285,49 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
     setLoading(true); setError('');
     try {
       await espacioApi.reactivarSuscripcion(espacio.id);
+      await refresh();
+    } catch (e) { setError(e.message || 'Ocurrió un error.'); }
+    finally { setLoading(false); }
+  }
+
+  async function handleUpgrade(plan, periodo, prorrateo) {
+    setLoading(true); setError('');
+    try {
+      await espacioApi.activarPlan(espacio.id, {
+        planId: plan.id,
+        periodoFacturacion: periodo,
+        precioActual: precioConPeriodo(plan, periodo),
+        proximaRenovacion: proximaRenovacion(periodo),
+      });
+      await refresh();
+      setCambiarPlanOpen(false);
+    } catch (e) { setError(e.message || 'Ocurrió un error.'); }
+    finally { setLoading(false); }
+  }
+
+  async function handleDowngrade(plan, periodo) {
+    setLoading(true); setError('');
+    try {
+      const renovacion = espacio.proximaRenovacion
+        ? new Date(espacio.proximaRenovacion)
+        : proximaRenovacion(espacio.periodoFacturacion ?? 'mensual');
+      await espacioApi.agendarDowngrade(espacio.id, {
+        planId: plan.id,
+        planNombre: plan.nombre,
+        periodoFacturacion: periodo,
+        precioNuevo: precioConPeriodo(plan, periodo),
+        activaEn: renovacion.toISOString(),
+      });
+      await refresh();
+      setCambiarPlanOpen(false);
+    } catch (e) { setError(e.message || 'Ocurrió un error.'); }
+    finally { setLoading(false); }
+  }
+
+  async function handleCancelarDowngrade() {
+    setLoading(true); setError('');
+    try {
+      await espacioApi.cancelarDowngrade(espacio.id);
       await refresh();
     } catch (e) { setError(e.message || 'Ocurrió un error.'); }
     finally { setLoading(false); }
@@ -2310,7 +2538,38 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
             </>
           );
         })()}
+
+        {/* Botón cambiar plan */}
+        <button
+          onClick={() => { setCambiarPlanOpen(true); setError(''); }}
+          className="mt-4 self-start px-4 py-2 text-sm font-medium text-ink border border-border rounded-md hover:bg-surface-200 transition-colors"
+        >
+          Cambiar plan
+        </button>
       </div>
+      )}
+
+      {/* ── Downgrade pendiente banner ── */}
+      {!isSuperAdmin && planActivo && espacio.downgradePendiente && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-5">
+          <div className="flex items-start gap-3">
+            <span className="text-amber-600 mt-0.5 shrink-0 text-lg">⏳</span>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-ink mb-1">Cambio de plan programado</p>
+              <p className="text-xs text-ink-muted leading-relaxed">
+                Tu plan actual (<strong className="text-ink">{planActivo.nombre}</strong>) estará activo hasta el <strong className="text-ink">{formatFechaLarga(new Date(espacio.downgradePendiente.activaEn))}</strong>.
+                A partir de esa fecha se activará <strong className="text-ink">{espacio.downgradePendiente.planNombre}</strong> ({espacio.downgradePendiente.periodoFacturacion}) a <span className="font-mono font-semibold text-ink">${(espacio.downgradePendiente.precioNuevo ?? 0).toLocaleString('es-AR')}/mes</span>.
+              </p>
+              <button
+                onClick={handleCancelarDowngrade}
+                disabled={loading}
+                className="mt-3 px-3 py-1.5 text-xs font-medium text-amber-700 border border-amber-300 rounded-md hover:bg-amber-100 transition-colors disabled:opacity-50"
+              >
+                {loading ? 'Cancelando…' : 'Cancelar cambio programado'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ── Espacios adicionales (solo plan Estudio, fuera del trial) ── */}
@@ -2420,6 +2679,19 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
           userId={user?.uid}
           onSuccess={async () => { await refresh(); setAgregarOpen(false); }}
           onClose={() => setAgregarOpen(false)}
+        />
+      )}
+      {cambiarPlanOpen && planActivo && (
+        <CambiarPlanModal
+          espacio={espacio}
+          planes={planesDB}
+          currentPlan={planActivo}
+          currentPeriodo={periodoActivo}
+          loading={loading}
+          error={error}
+          onClose={() => { setCambiarPlanOpen(false); setError(''); }}
+          onUpgrade={handleUpgrade}
+          onDowngrade={handleDowngrade}
         />
       )}
     </div>

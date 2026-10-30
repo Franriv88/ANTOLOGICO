@@ -4,6 +4,7 @@ import {
   signInWithPopup,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  getAdditionalUserInfo,
   updateProfile,
   sendPasswordResetEmail,
   deleteUser,
@@ -147,15 +148,23 @@ function TenantLoginPage({ initialTab = 'login' }) {
 
   const [error,   setError]   = useState('');
   const [loading, setLoading] = useState(false);
+  const [noAccount, setNoAccount] = useState(null); // { email, method: 'email'|'google', googleUser }
 
-  function clearErr() { setError(''); }
+  function clearErr() { setError(''); setNoAccount(null); }
 
   // ── Google ──────────────────────────────────────────────────────────────────
   async function handleGoogle() {
     setError('');
+    setNoAccount(null);
     setLoading(true);
     try {
-      await signInWithPopup(auth, provider);
+      const credential = await signInWithPopup(auth, provider);
+      const isNew = getAdditionalUserInfo(credential)?.isNewUser ?? false;
+      if (isNew) {
+        setNoAccount({ email: credential.user.email, method: 'google', googleUser: credential.user });
+        setLoading(false);
+        return;
+      }
       navigate('/workshops', { replace: true });
     } catch (err) {
       if (err.code !== 'auth/popup-closed-by-user') setError(authErrorMsg(err.code));
@@ -163,11 +172,24 @@ function TenantLoginPage({ initialTab = 'login' }) {
     }
   }
 
+  async function handleGoogleNoAccountAccept() {
+    navigate('/onboarding', { replace: true });
+  }
+
+  async function handleGoogleNoAccountReject() {
+    try {
+      if (noAccount?.googleUser) await deleteUser(noAccount.googleUser);
+      else if (auth.currentUser) await deleteUser(auth.currentUser);
+    } catch { try { await signOut(auth); } catch {} }
+    setNoAccount(null);
+  }
+
   // ── Login con email ──────────────────────────────────────────────────────────
   async function handleLogin(e) {
     e.preventDefault();
     if (!loginEmail || !loginPass) { setError('Completá todos los campos'); return; }
     setError('');
+    setNoAccount(null);
     setLoading(true);
     try {
       const cred = await signInWithEmailAndPassword(auth, loginEmail, loginPass);
@@ -180,7 +202,11 @@ function TenantLoginPage({ initialTab = 'login' }) {
       }
       navigate('/workshops', { replace: true });
     } catch (err) {
-      setError(authErrorMsg(err.code));
+      if (err.code === 'auth/user-not-found') {
+        setNoAccount({ email: loginEmail, method: 'email' });
+      } else {
+        setError(authErrorMsg(err.code));
+      }
       setLoading(false);
     }
   }
@@ -240,6 +266,64 @@ function TenantLoginPage({ initialTab = 'login' }) {
     } finally {
       setLoading(false);
     }
+  }
+
+  // ── Sin cuenta — prompt para crear ───────────────────────────────────────────
+  if (noAccount) {
+    return (
+      <PageShell>
+        <div className="flex flex-col items-center text-center gap-4">
+          <div className="w-14 h-14 rounded-full bg-amber-100 flex items-center justify-center">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#b45309" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+              <line x1="12" y1="11" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <div>
+            <h2 className="font-display text-xl text-ink mb-1">No encontramos tu cuenta</h2>
+            <p className="text-sm text-ink-muted">
+              No existe una cuenta asociada a <span className="font-medium text-ink">{noAccount.email}</span>.
+              {noAccount.method === 'google' ? ' Se creó un acceso con Google, pero necesitás completar tu registro.' : ''}
+            </p>
+          </div>
+          <p className="text-sm text-ink-muted">¿Querés crear una cuenta nueva?</p>
+          <div className="w-full flex flex-col gap-2">
+            {noAccount.method === 'google' ? (
+              <>
+                <button
+                  onClick={handleGoogleNoAccountAccept}
+                  className="w-full py-2.5 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary-strong transition-colors"
+                >
+                  Sí, crear mi cuenta →
+                </button>
+                <button
+                  onClick={handleGoogleNoAccountReject}
+                  className="w-full py-2.5 border border-border rounded-md text-sm text-ink-muted hover:bg-surface-100 transition-colors"
+                >
+                  No, volver
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => { setTab('register'); setRegEmail(noAccount.email); setNoAccount(null); setError(''); }}
+                  className="w-full py-2.5 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary-strong transition-colors"
+                >
+                  Crear cuenta →
+                </button>
+                <button
+                  onClick={() => setNoAccount(null)}
+                  className="w-full py-2.5 border border-border rounded-md text-sm text-ink-muted hover:bg-surface-100 transition-colors"
+                >
+                  Volver al inicio de sesión
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </PageShell>
+    );
   }
 
   // ── Verificación de email (post-registro) ────────────────────────────────────

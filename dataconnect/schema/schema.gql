@@ -65,12 +65,20 @@ type Espacio @table(name: "espacios", singular: "espacio", plural: "espacios")
   brandFont:              String     @col(dataType: "varchar(100)")  # Google Font name
   redesSociales:          Any        # JSON: { style, minimalColor, links: { instagram, … } }
   cobros:                 Any        # JSON: { efectivo, mercadoPago, linksDePago, links: [{id,nombre,url}] }
+  direcciones:            Any        # JSON: [{id, nombre, barrio, calle, altura, piso, apto}]
   slug:                   String     @col(dataType: "varchar(100)")
+  terminosCondiciones:    String     # HTML generado por el rich-editor del tenant
+  tycEnabled:             Boolean!   @default(value: false)
   bloqueado:              Boolean!   @default(value: false)
   trialStartedAt:         Timestamp
   isSuperAdmin:           Boolean!   @default(value: false)
   estado:                 EstadoEspacio! @default(value: ACTIVO)
   cancelacionPendiente:   Boolean!   @default(value: false)
+  periodoFacturacion:     String     @col(dataType: "varchar(20)")
+  precioActual:           Float
+  proximaRenovacion:      Timestamp
+  downgradePendiente:     Any
+  cuponAplicado:          Any
   createdAt:          Timestamp! @default(expr: "request.time")
   updatedAt:          Timestamp! @default(expr: "request.time")
 }

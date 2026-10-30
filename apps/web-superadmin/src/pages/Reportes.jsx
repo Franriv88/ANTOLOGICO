@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useLayoutEffect, useCallback, useRef } from 'react';
 import {
   AreaChart, Area,
   BarChart, Bar,
@@ -7,6 +7,58 @@ import {
 } from 'recharts';
 import { planes as planesApi, tenants as tenantsApi, usuarios as usuariosApi } from '../services/adminApi';
 import { AntologicoLoaderCream } from '../components/AntologicoLoaderCream';
+
+function FilterGroup({ label, value, onChange, options }) {
+  const containerRef = useRef(null);
+  const [pill, setPill] = useState({ left: 0, width: 0 });
+  const [ready, setReady] = useState(false);
+
+  const measure = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const active = container.querySelector('[data-active="true"]');
+    if (!active) return;
+    const cRect = container.getBoundingClientRect();
+    const aRect = active.getBoundingClientRect();
+    setPill({ left: aRect.left - cRect.left, width: aRect.width });
+    if (!ready) setReady(true);
+  }, [value, ready]);
+
+  useLayoutEffect(measure, [measure]);
+
+  return (
+    <div ref={containerRef} className="relative flex items-center gap-1 bg-surface-100 border border-border rounded-xl p-1">
+      {label && <span className="text-[10px] font-bold text-ink-muted uppercase tracking-wider px-2 select-none">{label}</span>}
+      <div
+        className="absolute rounded-lg bg-primary shadow-sm pointer-events-none"
+        style={{
+          left: pill.left,
+          width: pill.width,
+          top: 4,
+          bottom: 4,
+          transition: ready ? 'left .3s cubic-bezier(.4,.0,.2,1), width .3s cubic-bezier(.4,.0,.2,1)' : 'none',
+        }}
+      />
+      {options.map(f => {
+        const active = value === f.key;
+        return (
+          <button
+            key={f.key}
+            data-active={active || undefined}
+            onClick={() => { if (f.key !== value) onChange(f.key); }}
+            className={`relative z-[1] px-3 py-1.5 rounded-lg text-xs font-medium transition-colors duration-200 ${
+              active
+                ? 'text-white'
+                : 'text-ink-muted hover:text-ink hover:bg-surface-200'
+            }`}
+          >
+            {f.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 const CORAL  = '#E85D4A';
 const OCRE   = '#B98527';
@@ -92,9 +144,33 @@ const CustomTooltip = ({ active, payload, label, formatter }) => {
   );
 };
 
+const PERIODO_OPTIONS = [
+  { key: 3,  label: '3 meses' },
+  { key: 6,  label: '6 meses' },
+  { key: 12, label: '12 meses' },
+];
+
+function buildPorMes(tenantsList, meses) {
+  const monthsMap = {};
+  for (let i = meses - 1; i >= 0; i--) {
+    const d = new Date();
+    d.setMonth(d.getMonth() - i);
+    d.setDate(1);
+    const key = monthLabel(d.toISOString());
+    monthsMap[key] = { mes: key, nuevos: 0 };
+  }
+  tenantsList.forEach(t => {
+    if (!t.createdAt) return;
+    const key = monthLabel(t.createdAt);
+    if (monthsMap[key]) monthsMap[key].nuevos++;
+  });
+  return Object.values(monthsMap);
+}
+
 export default function Reportes() {
-  const [data,    setData]    = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [rawData,  setRawData]  = useState(null);
+  const [loading,  setLoading]  = useState(true);
+  const [meses,    setMeses]    = useState(6);
 
   useEffect(() => {
     Promise.all([tenantsApi.list(), planesApi.list(), usuariosApi.count()])
@@ -105,17 +181,13 @@ export default function Reportes() {
           planesByKey[p.nombre] = p;
         });
 
-        // MRR por tenant (activos con plan)
         const mrr = tenantsList.reduce((sum, t) => {
           const plan = planesByKey[t.planId] ?? planesByKey[t.selectedPlan];
           return sum + (t.estado === 'ACTIVO' && plan ? (plan.precioMensual ?? 0) : 0);
         }, 0);
 
-        // Tenants en trial (sin planId real pero con trialStartedAt)
         const trialing = tenantsList.filter(t => t.trialStartedAt && !t.planId).length;
-        const activos  = tenantsList.filter(t => t.estado === 'ACTIVO').length;
 
-        // Distribución por plan
         const distMap = {};
         planesList.forEach(p => { distMap[p.nombre] = { nombre: p.nombre, count: 0, mrr: 0 }; });
         distMap['Sin plan'] = { nombre: 'Sin plan', count: 0, mrr: 0 };
@@ -128,23 +200,6 @@ export default function Reportes() {
         });
         const distPlanes = Object.values(distMap).filter(d => d.count > 0);
 
-        // Registro por mes (últimos 6 meses)
-        const monthsMap = {};
-        for (let i = 5; i >= 0; i--) {
-          const d = new Date();
-          d.setMonth(d.getMonth() - i);
-          d.setDate(1);
-          const key = monthLabel(d.toISOString());
-          monthsMap[key] = { mes: key, nuevos: 0 };
-        }
-        tenantsList.forEach(t => {
-          if (!t.createdAt) return;
-          const key = monthLabel(t.createdAt);
-          if (monthsMap[key]) monthsMap[key].nuevos++;
-        });
-        const porMes = Object.values(monthsMap);
-
-        // Tenants únicos: contamos por userId cuando existe, o por espacio como fallback
         const seenIds = new Set();
         let totalTenants = 0;
         tenantsList.forEach(t => {
@@ -152,11 +207,10 @@ export default function Reportes() {
           if (!seenIds.has(key)) { seenIds.add(key); totalTenants++; }
         });
 
-        // Espacios activos (métrica de espacios, no de tenants)
-        const totalEspacios  = tenantsList.length;
+        const totalEspacios   = tenantsList.length;
         const espaciosActivos = tenantsList.filter(t => t.estado === 'ACTIVO').length;
 
-        setData({ mrr, trialing, total: totalTenants, totalEspacios, espaciosActivos, totalUsuarios, distPlanes, porMes });
+        setRawData({ mrr, trialing, total: totalTenants, totalEspacios, espaciosActivos, totalUsuarios, distPlanes, tenantsList });
       })
       .finally(() => setLoading(false));
   }, []);
@@ -167,7 +221,8 @@ export default function Reportes() {
     </div>
   );
 
-  const { mrr, trialing, total, totalEspacios, espaciosActivos, totalUsuarios, distPlanes, porMes } = data;
+  const { mrr, trialing, total, totalEspacios, espaciosActivos, totalUsuarios, distPlanes, tenantsList } = rawData;
+  const porMes = buildPorMes(tenantsList, meses);
 
   return (
     <div className="flex flex-col gap-8">
@@ -214,8 +269,17 @@ export default function Reportes() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Nuevos tenants por mes */}
         <div className="bg-surface-100 border border-border rounded-xl p-5">
-          <h2 className="font-semibold text-sm text-ink mb-1">Nuevos tenants por mes</h2>
-          <p className="text-xs text-ink-muted mb-5">Registros en los últimos 6 meses</p>
+          <div className="flex items-start justify-between gap-3 mb-5">
+            <div>
+              <h2 className="font-semibold text-sm text-ink mb-0.5">Nuevos tenants por mes</h2>
+              <p className="text-xs text-ink-muted">Registros en los últimos {meses} meses</p>
+            </div>
+            <FilterGroup
+              value={meses}
+              onChange={setMeses}
+              options={PERIODO_OPTIONS}
+            />
+          </div>
           <ResponsiveContainer width="100%" height={180}>
             <AreaChart data={porMes} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
               <defs>

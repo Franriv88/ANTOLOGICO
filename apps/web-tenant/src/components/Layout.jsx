@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useEspacio } from '../context/EspacioContext';
 import { IconAntologico, LogoAntologico } from './LogoAntologico';
 import { InstructivoModal } from './Instructivo';
-import { usePlanes, precioConPeriodo } from '../hooks/usePlanes';
+import { usePlanes, precioConPeriodo, proximaRenovacion } from '../hooks/usePlanes';
 import { useTrialDays } from '../hooks/useTrialDays';
 import { useTheme } from '../hooks/useTheme';
 import { espacios as espacioApi } from '../services/api';
@@ -372,7 +372,7 @@ const NAV = [
   { to: '/reservas',  label: 'Reservas' },
   { to: '/reportes',  label: 'Reportes' },
   { to: '/config',    label: 'Configuración' },
-  { to: '/perfil',    label: 'Mi perfil' },
+  { to: '/perfil',    label: 'Mis datos' },
 ];
 
 const IconLogout = () => (
@@ -451,17 +451,23 @@ export default function Layout({ children }) {
         .then(data => {
           if (data.status === 'authorized' || data.status === 'pending') {
             sessionStorage.removeItem('mp_pending_sub');
-            espacioApi.updatePlan(pending.espacioId, pending.planId, pending.plan, pending.periodo, preapprovalId)
-              .then(() => refresh())
-              .catch(console.error);
+            espacioApi.activarPlan(pending.espacioId, {
+              planId: pending.planId,
+              periodoFacturacion: pending.periodo,
+              precioActual: precioConPeriodo(pending.plan, pending.periodo),
+              proximaRenovacion: proximaRenovacion(pending.periodo),
+            }).then(() => refresh()).catch(console.error);
           }
         })
         .catch(console.error);
     } else if (mpSub === 'back') {
       sessionStorage.removeItem('mp_pending_sub');
-      espacioApi.updatePlan(pending.espacioId, pending.planId, pending.plan, pending.periodo)
-        .then(() => refresh())
-        .catch(console.error);
+      espacioApi.activarPlan(pending.espacioId, {
+        planId: pending.planId,
+        periodoFacturacion: pending.periodo,
+        precioActual: precioConPeriodo(pending.plan, pending.periodo),
+        proximaRenovacion: proximaRenovacion(pending.periodo),
+      }).then(() => refresh()).catch(console.error);
     }
   }, [searchParams]);
 

@@ -91,7 +91,7 @@ export default function Perfil() {
     fetchProfile(user.uid).then(p => {
       setProfile(p);
       setNombre(p.nombre ?? user.displayName ?? '');
-      setTelefono(p.telefono ?? '');
+      setTelefono((p.telefono ?? '').replace(/^\+54 9\s*/, '').replace(/\D/g, ''));
       setGenero(p.genero ?? '');
       setFechaNac(p.fechaNac ?? '');
     });
@@ -114,7 +114,7 @@ export default function Perfil() {
     try {
       await updateUserProfile(user.uid, {
         nombre:   nombre.trim(),
-        telefono: telefono.trim(),
+        telefono: telefono.trim() ? `+54 9 ${telefono.trim()}` : '',
         genero:   genero || 'prefiero-no-decirlo',
         fechaNac: fechaNac || null,
       });
@@ -226,7 +226,19 @@ export default function Perfil() {
 
             <div>
               <label className={LABEL_CLS}>Teléfono <span className="font-normal">(opcional)</span></label>
-              <input type="tel" value={telefono} onChange={e => setTelefono(e.target.value)} className={INPUT_CLS} placeholder="+54 9 11 1234-5678" />
+              <div className="flex items-stretch border border-border rounded-md overflow-hidden focus-within:border-primary focus-within:ring-1 focus-within:ring-primary bg-surface-100">
+                <span className="flex items-center px-3 text-sm text-ink-muted bg-surface-200 border-r border-border select-none whitespace-nowrap">
+                  +54 9
+                </span>
+                <input
+                  type="tel"
+                  value={telefono}
+                  onChange={e => setTelefono(e.target.value.replace(/\D/g, ''))}
+                  placeholder="11 1234 5678"
+                  maxLength={12}
+                  className="flex-1 px-3 py-2 bg-transparent text-sm text-ink focus:outline-none"
+                />
+              </div>
             </div>
 
             <div>

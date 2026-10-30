@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { promoApi, promoCodes as promoCodesApi, tenants as tenantsApi, planes as planesApi } from '../services/adminApi';
 import { AntologicoLoaderCream } from '../components/AntologicoLoaderCream';
+import FloatingSaveBar from '../components/FloatingSaveBar';
 
 const FMT = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
 const fmt = n => FMT.format(n);
@@ -44,6 +45,7 @@ export default function Promocion() {
   // ── Promo global ──────────────────────────────────────────────────────────
   const [promo,   setPromo]   = useState(null);
   const [saving,  setSaving]  = useState(false);
+  const [dirty,   setDirty]   = useState(false);
   const [form, setForm] = useState({
     label: '', descuento: '10', tipo: 'manual',
     inicio: '', fin: '', activo: false,
@@ -79,7 +81,7 @@ export default function Promocion() {
       .finally(() => setLoading(false));
   }, []);
 
-  function setF(k, v)  { setForm(f      => ({ ...f,      [k]: v })); }
+  function setF(k, v)  { setForm(f => ({ ...f, [k]: v })); setDirty(true); }
   function setTF(k, v) { setTenantForm(f => ({ ...f, [k]: v })); }
   function togglePlanId(id) {
     setForm(f => ({
@@ -106,6 +108,7 @@ export default function Promocion() {
     setPromo(updated);
     setForm(f => ({ ...f, activo: updated?.activo ?? f.activo }));
     setSaving(false);
+    setDirty(false);
   }
 
   // ── Handlers códigos ──────────────────────────────────────────────────────
@@ -278,20 +281,6 @@ export default function Promocion() {
           </div>
         )}
 
-        <div className="flex gap-3">
-          <button onClick={() => handleSavePromo(undefined)} disabled={saving}
-            className="flex-1 py-2.5 border border-border text-sm font-medium text-ink rounded-md hover:bg-surface-200 transition-colors disabled:opacity-50">
-            {saving ? '…' : 'Guardar'}
-          </button>
-          <button onClick={() => handleSavePromo(!form.activo)} disabled={saving}
-            className={`flex-1 py-2.5 rounded-md text-sm font-semibold transition-colors disabled:opacity-50 ${
-              form.activo
-                ? 'bg-danger/10 text-danger hover:bg-danger/20 border border-danger/20'
-                : 'bg-primary text-white hover:bg-primary-strong'
-            }`}>
-            {saving ? '…' : form.activo ? 'Guardar y desactivar' : 'Guardar y activar'}
-          </button>
-        </div>
       </section>
 
       {/* ── 2. Códigos de descuento ── */}
@@ -453,6 +442,18 @@ export default function Promocion() {
           </table>
         )}
       </section>
+
+      <FloatingSaveBar
+        dirty={dirty}
+        saving={saving}
+        onSave={() => handleSavePromo(undefined)}
+        extra={[{
+          label: form.activo ? 'Guardar y desactivar' : 'Guardar y activar',
+          onClick: () => handleSavePromo(!form.activo),
+          variant: form.activo ? 'danger' : undefined,
+        }]}
+        label="Guardar promoción"
+      />
     </div>
   );
 }

@@ -47,6 +47,18 @@ export enum TipoWorkshop {
 
 
 
+export interface ActivarPlanData {
+  espacio_update?: Espacio_Key | null;
+}
+
+export interface ActivarPlanVariables {
+  id: UUIDString;
+  planId: UUIDString;
+  periodoFacturacion: string;
+  precioActual: number;
+  proximaRenovacion: TimestampString;
+}
+
 export interface AdminCreateEspacioMigrateData {
   espacio_insert: Espacio_Key;
 }
@@ -134,6 +146,12 @@ export interface AdminListAllEspaciosData {
     brandFont?: string | null;
     redesSociales?: unknown | null;
     cobros?: unknown | null;
+    direcciones?: unknown | null;
+    periodoFacturacion?: string | null;
+    precioActual?: number | null;
+    proximaRenovacion?: TimestampString | null;
+    downgradePendiente?: unknown | null;
+    cuponAplicado?: unknown | null;
     profesional: {
       uid: string;
       nombre: string;
@@ -221,6 +239,23 @@ export interface AdminUpsertProfesionalVariables {
   uid: string;
   nombre: string;
   email: string;
+}
+
+export interface AgendarDowngradeData {
+  espacio_update?: Espacio_Key | null;
+}
+
+export interface AgendarDowngradeVariables {
+  id: UUIDString;
+  downgradePendiente: unknown;
+}
+
+export interface CancelarDowngradeData {
+  espacio_update?: Espacio_Key | null;
+}
+
+export interface CancelarDowngradeVariables {
+  id: UUIDString;
 }
 
 export interface CancelarReservaData {
@@ -315,6 +350,10 @@ export interface GetMyEspacioData {
     cancelacionPendiente: boolean;
     createdAt: TimestampString;
     updatedAt: TimestampString;
+    trialStartedAt?: TimestampString | null;
+    isSuperAdmin: boolean;
+    slug?: string | null;
+    bloqueado: boolean;
     logoUrl?: string | null;
     logoShape?: string | null;
     logoScale?: number | null;
@@ -322,6 +361,14 @@ export interface GetMyEspacioData {
     brandFont?: string | null;
     redesSociales?: unknown | null;
     cobros?: unknown | null;
+    direcciones?: unknown | null;
+    terminosCondiciones?: string | null;
+    tycEnabled: boolean;
+    periodoFacturacion?: string | null;
+    precioActual?: number | null;
+    proximaRenovacion?: TimestampString | null;
+    downgradePendiente?: unknown | null;
+    cuponAplicado?: unknown | null;
     rubro?: {
       id: UUIDString;
       nombre: string;
@@ -448,6 +495,10 @@ export interface ListMyEspaciosData {
     estado: EstadoEspacio;
     cancelacionPendiente: boolean;
     createdAt: TimestampString;
+    trialStartedAt?: TimestampString | null;
+    isSuperAdmin: boolean;
+    slug?: string | null;
+    bloqueado: boolean;
     logoUrl?: string | null;
     logoShape?: string | null;
     logoScale?: number | null;
@@ -455,6 +506,14 @@ export interface ListMyEspaciosData {
     brandFont?: string | null;
     redesSociales?: unknown | null;
     cobros?: unknown | null;
+    direcciones?: unknown | null;
+    terminosCondiciones?: string | null;
+    tycEnabled: boolean;
+    periodoFacturacion?: string | null;
+    precioActual?: number | null;
+    proximaRenovacion?: TimestampString | null;
+    downgradePendiente?: unknown | null;
+    cuponAplicado?: unknown | null;
     rubro?: {
       id: UUIDString;
       nombre: string;
@@ -736,6 +795,15 @@ export interface SuperAdmin_Key {
   __typename?: 'SuperAdmin_Key';
 }
 
+export interface UpdateCuponAplicadoData {
+  espacio_update?: Espacio_Key | null;
+}
+
+export interface UpdateCuponAplicadoVariables {
+  id: UUIDString;
+  cuponAplicado?: unknown | null;
+}
+
 export interface UpdateEspacioCobrosData {
   espacio_update?: Espacio_Key | null;
 }
@@ -747,6 +815,15 @@ export interface UpdateEspacioCobrosVariables {
 
 export interface UpdateEspacioData {
   espacio_update?: Espacio_Key | null;
+}
+
+export interface UpdateEspacioDireccionesData {
+  espacio_update?: Espacio_Key | null;
+}
+
+export interface UpdateEspacioDireccionesVariables {
+  id: UUIDString;
+  direcciones?: unknown | null;
 }
 
 export interface UpdateEspacioIdentidadData {
@@ -762,15 +839,6 @@ export interface UpdateEspacioIdentidadVariables {
   brandFont?: string | null;
 }
 
-export interface UpdateEspacioPlanIdData {
-  espacio_update?: Espacio_Key | null;
-}
-
-export interface UpdateEspacioPlanIdVariables {
-  id: UUIDString;
-  planId: UUIDString;
-}
-
 export interface UpdateEspacioRedesData {
   espacio_update?: Espacio_Key | null;
 }
@@ -778,6 +846,25 @@ export interface UpdateEspacioRedesData {
 export interface UpdateEspacioRedesVariables {
   id: UUIDString;
   redesSociales?: unknown | null;
+}
+
+export interface UpdateEspacioSlugData {
+  espacio_update?: Espacio_Key | null;
+}
+
+export interface UpdateEspacioSlugVariables {
+  id: UUIDString;
+  slug: string;
+}
+
+export interface UpdateEspacioTyCData {
+  espacio_update?: Espacio_Key | null;
+}
+
+export interface UpdateEspacioTyCVariables {
+  id: UUIDString;
+  terminosCondiciones?: string | null;
+  tycEnabled: boolean;
 }
 
 export interface UpdateEspacioVariables {
@@ -865,17 +952,53 @@ export const reassignProfesionalUidRef: ReassignProfesionalUidRef;
 export function reassignProfesionalUid(vars: ReassignProfesionalUidVariables): MutationPromise<ReassignProfesionalUidData, ReassignProfesionalUidVariables>;
 export function reassignProfesionalUid(dc: DataConnect, vars: ReassignProfesionalUidVariables): MutationPromise<ReassignProfesionalUidData, ReassignProfesionalUidVariables>;
 
-interface UpdateEspacioPlanIdRef {
+interface ActivarPlanRef {
   /* Allow users to create refs without passing in DataConnect */
-  (vars: UpdateEspacioPlanIdVariables): MutationRef<UpdateEspacioPlanIdData, UpdateEspacioPlanIdVariables>;
+  (vars: ActivarPlanVariables): MutationRef<ActivarPlanData, ActivarPlanVariables>;
   /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: UpdateEspacioPlanIdVariables): MutationRef<UpdateEspacioPlanIdData, UpdateEspacioPlanIdVariables>;
+  (dc: DataConnect, vars: ActivarPlanVariables): MutationRef<ActivarPlanData, ActivarPlanVariables>;
   operationName: string;
 }
-export const updateEspacioPlanIdRef: UpdateEspacioPlanIdRef;
+export const activarPlanRef: ActivarPlanRef;
 
-export function updateEspacioPlanId(vars: UpdateEspacioPlanIdVariables): MutationPromise<UpdateEspacioPlanIdData, UpdateEspacioPlanIdVariables>;
-export function updateEspacioPlanId(dc: DataConnect, vars: UpdateEspacioPlanIdVariables): MutationPromise<UpdateEspacioPlanIdData, UpdateEspacioPlanIdVariables>;
+export function activarPlan(vars: ActivarPlanVariables): MutationPromise<ActivarPlanData, ActivarPlanVariables>;
+export function activarPlan(dc: DataConnect, vars: ActivarPlanVariables): MutationPromise<ActivarPlanData, ActivarPlanVariables>;
+
+interface AgendarDowngradeRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: AgendarDowngradeVariables): MutationRef<AgendarDowngradeData, AgendarDowngradeVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: AgendarDowngradeVariables): MutationRef<AgendarDowngradeData, AgendarDowngradeVariables>;
+  operationName: string;
+}
+export const agendarDowngradeRef: AgendarDowngradeRef;
+
+export function agendarDowngrade(vars: AgendarDowngradeVariables): MutationPromise<AgendarDowngradeData, AgendarDowngradeVariables>;
+export function agendarDowngrade(dc: DataConnect, vars: AgendarDowngradeVariables): MutationPromise<AgendarDowngradeData, AgendarDowngradeVariables>;
+
+interface CancelarDowngradeRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CancelarDowngradeVariables): MutationRef<CancelarDowngradeData, CancelarDowngradeVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: CancelarDowngradeVariables): MutationRef<CancelarDowngradeData, CancelarDowngradeVariables>;
+  operationName: string;
+}
+export const cancelarDowngradeRef: CancelarDowngradeRef;
+
+export function cancelarDowngrade(vars: CancelarDowngradeVariables): MutationPromise<CancelarDowngradeData, CancelarDowngradeVariables>;
+export function cancelarDowngrade(dc: DataConnect, vars: CancelarDowngradeVariables): MutationPromise<CancelarDowngradeData, CancelarDowngradeVariables>;
+
+interface UpdateCuponAplicadoRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: UpdateCuponAplicadoVariables): MutationRef<UpdateCuponAplicadoData, UpdateCuponAplicadoVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: UpdateCuponAplicadoVariables): MutationRef<UpdateCuponAplicadoData, UpdateCuponAplicadoVariables>;
+  operationName: string;
+}
+export const updateCuponAplicadoRef: UpdateCuponAplicadoRef;
+
+export function updateCuponAplicado(vars: UpdateCuponAplicadoVariables): MutationPromise<UpdateCuponAplicadoData, UpdateCuponAplicadoVariables>;
+export function updateCuponAplicado(dc: DataConnect, vars: UpdateCuponAplicadoVariables): MutationPromise<UpdateCuponAplicadoData, UpdateCuponAplicadoVariables>;
 
 interface CreateEspacioRef {
   /* Allow users to create refs without passing in DataConnect */
@@ -936,6 +1059,42 @@ export const updateEspacioRef: UpdateEspacioRef;
 
 export function updateEspacio(vars: UpdateEspacioVariables): MutationPromise<UpdateEspacioData, UpdateEspacioVariables>;
 export function updateEspacio(dc: DataConnect, vars: UpdateEspacioVariables): MutationPromise<UpdateEspacioData, UpdateEspacioVariables>;
+
+interface UpdateEspacioDireccionesRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: UpdateEspacioDireccionesVariables): MutationRef<UpdateEspacioDireccionesData, UpdateEspacioDireccionesVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: UpdateEspacioDireccionesVariables): MutationRef<UpdateEspacioDireccionesData, UpdateEspacioDireccionesVariables>;
+  operationName: string;
+}
+export const updateEspacioDireccionesRef: UpdateEspacioDireccionesRef;
+
+export function updateEspacioDirecciones(vars: UpdateEspacioDireccionesVariables): MutationPromise<UpdateEspacioDireccionesData, UpdateEspacioDireccionesVariables>;
+export function updateEspacioDirecciones(dc: DataConnect, vars: UpdateEspacioDireccionesVariables): MutationPromise<UpdateEspacioDireccionesData, UpdateEspacioDireccionesVariables>;
+
+interface UpdateEspacioTyCRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: UpdateEspacioTyCVariables): MutationRef<UpdateEspacioTyCData, UpdateEspacioTyCVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: UpdateEspacioTyCVariables): MutationRef<UpdateEspacioTyCData, UpdateEspacioTyCVariables>;
+  operationName: string;
+}
+export const updateEspacioTyCRef: UpdateEspacioTyCRef;
+
+export function updateEspacioTyC(vars: UpdateEspacioTyCVariables): MutationPromise<UpdateEspacioTyCData, UpdateEspacioTyCVariables>;
+export function updateEspacioTyC(dc: DataConnect, vars: UpdateEspacioTyCVariables): MutationPromise<UpdateEspacioTyCData, UpdateEspacioTyCVariables>;
+
+interface UpdateEspacioSlugRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: UpdateEspacioSlugVariables): MutationRef<UpdateEspacioSlugData, UpdateEspacioSlugVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: UpdateEspacioSlugVariables): MutationRef<UpdateEspacioSlugData, UpdateEspacioSlugVariables>;
+  operationName: string;
+}
+export const updateEspacioSlugRef: UpdateEspacioSlugRef;
+
+export function updateEspacioSlug(vars: UpdateEspacioSlugVariables): MutationPromise<UpdateEspacioSlugData, UpdateEspacioSlugVariables>;
+export function updateEspacioSlug(dc: DataConnect, vars: UpdateEspacioSlugVariables): MutationPromise<UpdateEspacioSlugData, UpdateEspacioSlugVariables>;
 
 interface CreateWorkshopRef {
   /* Allow users to create refs without passing in DataConnect */

@@ -54,7 +54,10 @@ query ListMyEspacios @auth(level: USER) {
     orderBy: [{ createdAt: ASC }]
   ) {
     id nombre estado cancelacionPendiente createdAt
-    logoUrl logoShape logoScale brandColors brandFont redesSociales cobros
+    trialStartedAt isSuperAdmin slug bloqueado
+    logoUrl logoShape logoScale brandColors brandFont redesSociales cobros direcciones
+    terminosCondiciones tycEnabled
+    periodoFacturacion precioActual proximaRenovacion downgradePendiente cuponAplicado
     rubro { id nombre }
     rubroPersonalizado
     plan { id nombre precioMensual precioAnual features }
@@ -71,7 +74,10 @@ query GetMyEspacio($id: UUID!) @auth(level: USER) {
     limit: 1
   ) {
     id nombre estado cancelacionPendiente createdAt updatedAt
-    logoUrl logoShape logoScale brandColors brandFont redesSociales cobros
+    trialStartedAt isSuperAdmin slug bloqueado
+    logoUrl logoShape logoScale brandColors brandFont redesSociales cobros direcciones
+    terminosCondiciones tycEnabled
+    periodoFacturacion precioActual proximaRenovacion downgradePendiente cuponAplicado
     rubro { id nombre }
     rubroPersonalizado
     plan { id nombre precioMensual precioAnual features }
@@ -208,7 +214,8 @@ query AdminListAllEspacios @auth(expr: "auth.token.admin == true") {
   espacios(orderBy: [{ createdAt: DESC }]) {
     id nombre estado cancelacionPendiente createdAt updatedAt
     slug bloqueado trialStartedAt isSuperAdmin
-    logoUrl logoShape logoScale brandColors brandFont redesSociales cobros
+    logoUrl logoShape logoScale brandColors brandFont redesSociales cobros direcciones
+    periodoFacturacion precioActual proximaRenovacion downgradePendiente cuponAplicado
     profesional { uid nombre email }
     rubro { id nombre }
     rubroPersonalizado

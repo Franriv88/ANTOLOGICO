@@ -3,7 +3,10 @@ import {
   getMyEspacio,
   createEspacio,
   updateEspacio,
-  updateEspacioPlanId,
+  activarPlan,
+  agendarDowngrade,
+  cancelarDowngrade,
+  updateCuponAplicado,
   updateEspacioIdentidad,
   updateEspacioRedes,
   updateEspacioCobros,
@@ -26,6 +29,9 @@ import {
   listPublicWorkshopsByEspacio,
   createReservaConUsuario,
   listMyReservas,
+  updateEspacioSlug,
+  updateEspacioDirecciones,
+  updateEspacioTyC,
 } from '../dataconnect-generated';
 
 export const profesionales = {
@@ -111,6 +117,18 @@ export const espacios = {
     const { data } = await updateEspacio({ id, ...payload });
     return data.espacio_update;
   },
+  updateSlug: async (id, slug) => {
+    const { data } = await updateEspacioSlug({ id, slug });
+    return data.espacio_update;
+  },
+  updateDirecciones: async (id, direcciones) => {
+    const { data } = await updateEspacioDirecciones({ id, direcciones });
+    return data.espacio_update;
+  },
+  updateTyC: async (id, { terminosCondiciones, tycEnabled }) => {
+    const { data } = await updateEspacioTyC({ id, terminosCondiciones: terminosCondiciones || null, tycEnabled: !!tycEnabled });
+    return data.espacio_update;
+  },
   updateIdentidad: async (id, { logoUrl, logoShape, logoScale, brandColors, brandFont }) => {
     const { data } = await updateEspacioIdentidad({ id, logoUrl, logoShape, logoScale, brandColors, brandFont });
     return data.espacio_update;
@@ -123,8 +141,26 @@ export const espacios = {
     const { data } = await updateEspacioCobros({ id, cobros });
     return data.espacio_update;
   },
-  updatePlan: async (id, planId) => {
-    const { data } = await updateEspacioPlanId({ id, planId });
+  activarPlan: async (id, { planId, periodoFacturacion, precioActual, proximaRenovacion }) => {
+    const { data } = await activarPlan({
+      id,
+      planId,
+      periodoFacturacion,
+      precioActual,
+      proximaRenovacion: proximaRenovacion.toISOString(),
+    });
+    return data.espacio_update;
+  },
+  agendarDowngrade: async (id, downgradePendiente) => {
+    const { data } = await agendarDowngrade({ id, downgradePendiente });
+    return data.espacio_update;
+  },
+  cancelarDowngrade: async (id) => {
+    const { data } = await cancelarDowngrade({ id });
+    return data.espacio_update;
+  },
+  updateCuponAplicado: async (id, cuponAplicado) => {
+    const { data } = await updateCuponAplicado({ id, cuponAplicado });
     return data.espacio_update;
   },
   solicitarCancelacion: async (id) => {
