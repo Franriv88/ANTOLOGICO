@@ -673,6 +673,7 @@ mutation CreateReservaConUsuario(
 
 mutation MarkReservaPaid($id: UUID!) @auth(level: USER, insecureReason: "Solo accesible desde el panel tenant donde el tenant ya está autenticado.") {
   reserva_update(id: $id, data: {
+    estado:         CONFIRMADA
     estadoPago:     PAGADO
     updatedAt_expr: "request.time"
   })

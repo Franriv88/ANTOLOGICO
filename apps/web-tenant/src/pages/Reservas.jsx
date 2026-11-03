@@ -7,6 +7,7 @@ function formatDate(iso) {
   if (!iso) return '—';
   return new Date(iso).toLocaleDateString('es-AR', {
     day: '2-digit', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
   });
 }
 
@@ -290,7 +291,7 @@ export default function Reservas() {
     confirmadas: reservas.filter(r => r.estado === 'CONFIRMADA').length,
     canceladas:  reservas.filter(r => r.estado === 'CANCELADA').length,
     efectivoPendiente: reservas.filter(
-      r => r.estado === 'CONFIRMADA' && r.metodoPago !== 'MERCADO_PAGO' && r.estadoPago !== 'PAGADO'
+      r => r.estado !== 'CANCELADA' && r.metodoPago !== 'MERCADO_PAGO' && r.estadoPago !== 'PAGADO'
     ).length,
   }), [reservas]);
 
@@ -299,7 +300,7 @@ export default function Reservas() {
     try {
       await api.reservas.markPaid(id);
       setReservas(prev =>
-        prev.map(r => r.id === id ? { ...r, estadoPago: 'PAGADO' } : r),
+        prev.map(r => r.id === id ? { ...r, estadoPago: 'PAGADO', estado: 'CONFIRMADA' } : r),
       );
     } finally {
       setMarkingPaid(null);
@@ -502,7 +503,7 @@ export default function Reservas() {
                     </td>
                     <td className="pl-1 pr-4 py-3.5">
                       <div className="flex items-center justify-end gap-1.5 opacity-70 group-hover:opacity-100 transition-opacity">
-                        {r.estado === 'CONFIRMADA' && r.estadoPago !== 'PAGADO' && r.metodoPago !== 'MERCADO_PAGO' && (
+                        {r.estado !== 'CANCELADA' && r.estadoPago !== 'PAGADO' && r.metodoPago !== 'MERCADO_PAGO' && (
                           <button
                             onClick={() => handleMarkPaid(r.id)}
                             disabled={markingPaid === r.id}
