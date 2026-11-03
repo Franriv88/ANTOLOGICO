@@ -27,6 +27,7 @@ You can also follow the instructions from the [Data Connect documentation](https
   - [*ListMyWorkshopsByEstado*](#listmyworkshopsbyestado)
   - [*SearchMyWorkshops*](#searchmyworkshops)
   - [*GetMyWorkshop*](#getmyworkshop)
+  - [*GetEspacioBySlug*](#getespaciobyslug)
   - [*GetPublicEspacio*](#getpublicespacio)
   - [*GetPublicEspacios*](#getpublicespacios)
   - [*ListPublicWorkshopsByEspacio*](#listpublicworkshopsbyespacio)
@@ -66,6 +67,8 @@ You can also follow the instructions from the [Data Connect documentation](https
   - [*AdminCreateWorkshopMigrate*](#admincreateworkshopmigrate)
   - [*DecrementarCupo*](#decrementarcupo)
   - [*CreateReservaConUsuario*](#createreservaconusuario)
+  - [*MarkReservaPaid*](#markreservapaid)
+  - [*DevExpireTrial*](#devexpiretrial)
 
 # TanStack Query Firebase & TanStack React Query
 This SDK provides [React](https://react.dev/) hooks generated specific to your application, for the operations found in the connector `antologico`. These hooks are generated using [TanStack Query Firebase](https://react-query-firebase.invertase.dev/) by our partners at Invertase, a library built on top of [TanStack React Query v5](https://tanstack.com/query/v5/docs/framework/react/overview).
@@ -187,6 +190,8 @@ export interface ListReservasByEspacioData {
   reservas: ({
     id: UUIDString;
     estado: EstadoReserva;
+    metodoPago?: MetodoPago | null;
+    estadoPago?: EstadoPago | null;
     fechaReserva: TimestampString;
     comprobanteUrl?: string | null;
     pagoExternoId?: string | null;
@@ -1121,6 +1126,92 @@ export default function GetMyWorkshopComponent() {
   // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
   if (query.isSuccess) {
     console.log(query.data.workshops);
+  }
+  return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## GetEspacioBySlug
+You can execute the `GetEspacioBySlug` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
+
+```javascript
+useGetEspacioBySlug(dc: DataConnect, vars: GetEspacioBySlugVariables, options?: useDataConnectQueryOptions<GetEspacioBySlugData>): UseDataConnectQueryResult<GetEspacioBySlugData, GetEspacioBySlugVariables>;
+```
+You can also pass in a `DataConnect` instance to the Query hook function.
+```javascript
+useGetEspacioBySlug(vars: GetEspacioBySlugVariables, options?: useDataConnectQueryOptions<GetEspacioBySlugData>): UseDataConnectQueryResult<GetEspacioBySlugData, GetEspacioBySlugVariables>;
+```
+
+### Variables
+The `GetEspacioBySlug` Query requires an argument of type `GetEspacioBySlugVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface GetEspacioBySlugVariables {
+  slug: string;
+}
+```
+### Return Type
+Recall that calling the `GetEspacioBySlug` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
+
+To check the status of a Query, use the `UseQueryResult.status` field. You can also check for pending / success / error status using the `UseQueryResult.isPending`, `UseQueryResult.isSuccess`, and `UseQueryResult.isError` fields.
+
+To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `GetEspacioBySlug` Query is of type `GetEspacioBySlugData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface GetEspacioBySlugData {
+  espacios: ({
+    id: UUIDString;
+    nombre: string;
+    slug?: string | null;
+  } & Espacio_Key)[];
+}
+```
+
+To learn more about the `UseQueryResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery).
+
+### Using `GetEspacioBySlug`'s Query hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, GetEspacioBySlugVariables } from '@antologico/dataconnect';
+import { useGetEspacioBySlug } from '@antologico/dataconnect/react'
+
+export default function GetEspacioBySlugComponent() {
+  // The `useGetEspacioBySlug` Query hook requires an argument of type `GetEspacioBySlugVariables`:
+  const getEspacioBySlugVars: GetEspacioBySlugVariables = {
+    slug: ..., 
+  };
+
+  // You don't have to do anything to "execute" the Query.
+  // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
+  const query = useGetEspacioBySlug(getEspacioBySlugVars);
+  // Variables can be defined inline as well.
+  const query = useGetEspacioBySlug({ slug: ..., });
+
+  // You can also pass in a `DataConnect` instance to the Query hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const query = useGetEspacioBySlug(dataConnect, getEspacioBySlugVars);
+
+  // You can also pass in a `useDataConnectQueryOptions` object to the Query hook function.
+  const options = { staleTime: 5 * 1000 };
+  const query = useGetEspacioBySlug(getEspacioBySlugVars, options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectQueryOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = { staleTime: 5 * 1000 };
+  const query = useGetEspacioBySlug(dataConnect, getEspacioBySlugVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Query.
+  if (query.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (query.isError) {
+    return <div>Error: {query.error.message}</div>;
+  }
+
+  // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
+  if (query.isSuccess) {
+    console.log(query.data.espacios);
   }
   return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
 }
@@ -4864,6 +4955,8 @@ export interface CreateReservaConUsuarioVariables {
   email: string;
   workshopId: UUIDString;
   estado: EstadoReserva;
+  metodoPago?: MetodoPago | null;
+  estadoPago?: EstadoPago | null;
   pagoExternoId?: string | null;
 }
 ```
@@ -4920,11 +5013,13 @@ export default function CreateReservaConUsuarioComponent() {
     email: ..., 
     workshopId: ..., 
     estado: ..., 
+    metodoPago: ..., // optional
+    estadoPago: ..., // optional
     pagoExternoId: ..., // optional
   };
   mutation.mutate(createReservaConUsuarioVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ nombre: ..., email: ..., workshopId: ..., estado: ..., pagoExternoId: ..., });
+  mutation.mutate({ nombre: ..., email: ..., workshopId: ..., estado: ..., metodoPago: ..., estadoPago: ..., pagoExternoId: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -4946,6 +5041,194 @@ export default function CreateReservaConUsuarioComponent() {
     console.log(mutation.data.usuario_upsert);
     console.log(mutation.data.reserva_insert);
     console.log(mutation.data.workshop_update);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## MarkReservaPaid
+You can execute the `MarkReservaPaid` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useMarkReservaPaid(options?: useDataConnectMutationOptions<MarkReservaPaidData, FirebaseError, MarkReservaPaidVariables>): UseDataConnectMutationResult<MarkReservaPaidData, MarkReservaPaidVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useMarkReservaPaid(dc: DataConnect, options?: useDataConnectMutationOptions<MarkReservaPaidData, FirebaseError, MarkReservaPaidVariables>): UseDataConnectMutationResult<MarkReservaPaidData, MarkReservaPaidVariables>;
+```
+
+### Variables
+The `MarkReservaPaid` Mutation requires an argument of type `MarkReservaPaidVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface MarkReservaPaidVariables {
+  id: UUIDString;
+}
+```
+### Return Type
+Recall that calling the `MarkReservaPaid` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `MarkReservaPaid` Mutation is of type `MarkReservaPaidData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface MarkReservaPaidData {
+  reserva_update?: Reserva_Key | null;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `MarkReservaPaid`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, MarkReservaPaidVariables } from '@antologico/dataconnect';
+import { useMarkReservaPaid } from '@antologico/dataconnect/react'
+
+export default function MarkReservaPaidComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useMarkReservaPaid();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useMarkReservaPaid(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useMarkReservaPaid(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useMarkReservaPaid(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useMarkReservaPaid` Mutation requires an argument of type `MarkReservaPaidVariables`:
+  const markReservaPaidVars: MarkReservaPaidVariables = {
+    id: ..., 
+  };
+  mutation.mutate(markReservaPaidVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ id: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(markReservaPaidVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.reserva_update);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## DevExpireTrial
+You can execute the `DevExpireTrial` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useDevExpireTrial(options?: useDataConnectMutationOptions<DevExpireTrialData, FirebaseError, DevExpireTrialVariables>): UseDataConnectMutationResult<DevExpireTrialData, DevExpireTrialVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useDevExpireTrial(dc: DataConnect, options?: useDataConnectMutationOptions<DevExpireTrialData, FirebaseError, DevExpireTrialVariables>): UseDataConnectMutationResult<DevExpireTrialData, DevExpireTrialVariables>;
+```
+
+### Variables
+The `DevExpireTrial` Mutation requires an argument of type `DevExpireTrialVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface DevExpireTrialVariables {
+  espacioId: UUIDString;
+}
+```
+### Return Type
+Recall that calling the `DevExpireTrial` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `DevExpireTrial` Mutation is of type `DevExpireTrialData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface DevExpireTrialData {
+  expired?: number | null;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `DevExpireTrial`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, DevExpireTrialVariables } from '@antologico/dataconnect';
+import { useDevExpireTrial } from '@antologico/dataconnect/react'
+
+export default function DevExpireTrialComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useDevExpireTrial();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useDevExpireTrial(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useDevExpireTrial(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useDevExpireTrial(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useDevExpireTrial` Mutation requires an argument of type `DevExpireTrialVariables`:
+  const devExpireTrialVars: DevExpireTrialVariables = {
+    espacioId: ..., 
+  };
+  mutation.mutate(devExpireTrialVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ espacioId: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(devExpireTrialVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.expired);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
 }

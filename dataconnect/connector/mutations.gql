@@ -640,6 +640,8 @@ mutation CreateReservaConUsuario(
   $email:         String!
   $workshopId:    UUID!
   $estado:        EstadoReserva!
+  $metodoPago:    MetodoPago
+  $estadoPago:    EstadoPago
   $pagoExternoId: String
 ) @auth(level: USER) @transaction {
   query @redact {
@@ -657,6 +659,8 @@ mutation CreateReservaConUsuario(
     usuarioUid_expr: "auth.uid"
     workshopId:      $workshopId
     estado:          $estado
+    metodoPago:      $metodoPago
+    estadoPago:      $estadoPago
     pagoExternoId:   $pagoExternoId
     createdAt_expr:  "request.time"
     updatedAt_expr:  "request.time"
@@ -664,5 +668,26 @@ mutation CreateReservaConUsuario(
   workshop_update(
     id: $workshopId
     data: { cuposDisponibles_update: { dec: 1 } }
+  )
+}
+
+mutation MarkReservaPaid($id: UUID!) @auth(level: USER, insecureReason: "Solo accesible desde el panel tenant donde el tenant ya está autenticado.") {
+  reserva_update(id: $id, data: {
+    estadoPago:     PAGADO
+    updatedAt_expr: "request.time"
+  })
+}
+
+# ─── TEMPORAL: Expirar trial para pruebas de pago ────────────────────────────
+# ELIMINAR después de probar. Mueve trialStartedAt 15 días al pasado.
+mutation DevExpireTrial($espacioId: UUID!) @auth(level: USER) {
+  expired: _execute(
+    sql: """
+      UPDATE espacios
+      SET trial_started_at = NOW() - INTERVAL '15 days',
+          updated_at = NOW()
+      WHERE id = $1 AND profesional_uid = $2
+    """
+    params: [$espacioId, {_expr: "auth.uid"}]
   )
 }

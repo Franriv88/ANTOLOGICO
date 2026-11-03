@@ -6,6 +6,11 @@ export const EstadoEspacio = {
   INACTIVO: "INACTIVO",
 }
 
+export const EstadoPago = {
+  PENDIENTE: "PENDIENTE",
+  PAGADO: "PAGADO",
+}
+
 export const EstadoProfesional = {
   ACTIVO: "ACTIVO",
   SUSPENDIDO: "SUSPENDIDO",
@@ -28,6 +33,11 @@ export const EstadoWorkshop = {
 export const HeaderType = {
   COLOR: "COLOR",
   IMAGE: "IMAGE",
+}
+
+export const MetodoPago = {
+  EFECTIVO: "EFECTIVO",
+  MERCADO_PAGO: "MERCADO_PAGO",
 }
 
 export const TipoWorkshop = {
@@ -402,6 +412,30 @@ export function createReservaConUsuario(dcOrVars, vars) {
   return executeMutation(createReservaConUsuarioRef(dcInstance, inputVars));
 }
 
+export const markReservaPaidRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'MarkReservaPaid', inputVars);
+}
+markReservaPaidRef.operationName = 'MarkReservaPaid';
+
+export function markReservaPaid(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(markReservaPaidRef(dcInstance, inputVars));
+}
+
+export const devExpireTrialRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'DevExpireTrial', inputVars);
+}
+devExpireTrialRef.operationName = 'DevExpireTrial';
+
+export function devExpireTrial(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(devExpireTrialRef(dcInstance, inputVars));
+}
+
 export const listReservasByEspacioRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
@@ -530,6 +564,19 @@ export function getMyWorkshop(dcOrVars, varsOrOptions, options) {
   
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(getMyWorkshopRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const getEspacioBySlugRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetEspacioBySlug', inputVars);
+}
+getEspacioBySlugRef.operationName = 'GetEspacioBySlug';
+
+export function getEspacioBySlug(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getEspacioBySlugRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 
 export const getPublicEspacioRef = (dcOrVars, vars) => {

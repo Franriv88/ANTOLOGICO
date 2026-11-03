@@ -28,10 +28,12 @@ import {
   getPublicEspacios,
   listPublicWorkshopsByEspacio,
   createReservaConUsuario,
+  markReservaPaid,
   listMyReservas,
   updateEspacioSlug,
   updateEspacioDirecciones,
   updateEspacioTyC,
+  getEspacioBySlug,
 } from '../dataconnect-generated';
 
 export const profesionales = {
@@ -52,20 +54,23 @@ export const reservas = {
       email:       r.usuario.email,
       usuarioUid:  r.usuario.uid,
       estado:      r.estado,
+      metodoPago:  r.metodoPago ?? null,
+      estadoPago:  r.estadoPago ?? null,
       fechaReserva: r.fechaReserva,
-      metodoPago:  null,
-      estadoPago:  null,
       grupoId:     null,
       workshop:    r.workshop,
     }));
   },
   create: async (workshopId, { nombre, email, metodoPago, mpPaymentId }) => {
     const estado = (metodoPago === 'MERCADO_PAGO') ? 'CONFIRMADA' : 'PENDIENTE';
+    const estadoPago = (metodoPago === 'MERCADO_PAGO') ? 'PAGADO' : 'PENDIENTE';
     const result = await createReservaConUsuario({
       nombre,
       email,
       workshopId,
       estado,
+      metodoPago:   metodoPago || null,
+      estadoPago,
       pagoExternoId: mpPaymentId || null,
     });
     if (result.errors?.length) throw new Error(result.errors.map(e => e.message).join(' | '));
@@ -76,7 +81,7 @@ export const reservas = {
       email,
       estado,
       metodoPago:  metodoPago || null,
-      estadoPago:  metodoPago === 'MERCADO_PAGO' ? 'PAGADO' : 'PENDIENTE',
+      estadoPago,
     };
   },
   listByEmail: async () => {
@@ -91,7 +96,10 @@ export const reservas = {
       espacio:     r.workshop.espacio ?? null,
     }));
   },
-  markPaid: async () => {},
+  markPaid: async (id) => {
+    const result = await markReservaPaid({ id });
+    if (result.errors?.length) throw new Error(result.errors.map(e => e.message).join(' | '));
+  },
   cancel: async (id, workshopId) => {
     const result = await cancelarReserva({ id, workshopId });
     if (result.errors?.length) throw new Error(result.errors.map(e => e.message).join(' | '));
@@ -178,13 +186,8 @@ export const espacios = {
   blockUser: async () => {},
   unblockUser: async () => {},
   getBySlug: async (slug) => {
-    const { collection, query, where, getDocs } = await import('firebase/firestore');
-    const { firestore } = await import('../lib/firebase.js');
-    const q = query(collection(firestore, 'demo_espacios'), where('slug', '==', slug.toLowerCase()));
-    const snap = await getDocs(q);
-    if (snap.empty) return null;
-    const d = snap.docs[0];
-    return { id: d.id, ...d.data() };
+    const { data } = await getEspacioBySlug({ slug: slug.toLowerCase() });
+    return data.espacios[0] ?? null;
   },
   getPublic: async (id) => {
     const { data } = await getPublicEspacio({ id });

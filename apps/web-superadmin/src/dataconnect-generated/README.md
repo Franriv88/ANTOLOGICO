@@ -18,6 +18,7 @@ This README will guide you through the process of using the generated JavaScript
   - [*ListMyWorkshopsByEstado*](#listmyworkshopsbyestado)
   - [*SearchMyWorkshops*](#searchmyworkshops)
   - [*GetMyWorkshop*](#getmyworkshop)
+  - [*GetEspacioBySlug*](#getespaciobyslug)
   - [*GetPublicEspacio*](#getpublicespacio)
   - [*GetPublicEspacios*](#getpublicespacios)
   - [*ListPublicWorkshopsByEspacio*](#listpublicworkshopsbyespacio)
@@ -57,6 +58,8 @@ This README will guide you through the process of using the generated JavaScript
   - [*AdminCreateWorkshopMigrate*](#admincreateworkshopmigrate)
   - [*DecrementarCupo*](#decrementarcupo)
   - [*CreateReservaConUsuario*](#createreservaconusuario)
+  - [*MarkReservaPaid*](#markreservapaid)
+  - [*DevExpireTrial*](#devexpiretrial)
 
 # Accessing the connector
 A connector is a collection of Queries and Mutations. One SDK is generated for each connector - this SDK is generated for the connector `antologico`. You can find more information about connectors in the [Data Connect documentation](https://firebase.google.com/docs/data-connect#how-does).
@@ -149,6 +152,8 @@ export interface ListReservasByEspacioData {
   reservas: ({
     id: UUIDString;
     estado: EstadoReserva;
+    metodoPago?: MetodoPago | null;
+    estadoPago?: EstadoPago | null;
     fechaReserva: TimestampString;
     comprobanteUrl?: string | null;
     pagoExternoId?: string | null;
@@ -1321,6 +1326,119 @@ console.log(data.workshops);
 executeQuery(ref).then((response) => {
   const data = response.data;
   console.log(data.workshops);
+});
+```
+
+## GetEspacioBySlug
+You can execute the `GetEspacioBySlug` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+getEspacioBySlug(vars: GetEspacioBySlugVariables, options?: ExecuteQueryOptions): QueryPromise<GetEspacioBySlugData, GetEspacioBySlugVariables>;
+
+interface GetEspacioBySlugRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetEspacioBySlugVariables): QueryRef<GetEspacioBySlugData, GetEspacioBySlugVariables>;
+}
+export const getEspacioBySlugRef: GetEspacioBySlugRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+getEspacioBySlug(dc: DataConnect, vars: GetEspacioBySlugVariables, options?: ExecuteQueryOptions): QueryPromise<GetEspacioBySlugData, GetEspacioBySlugVariables>;
+
+interface GetEspacioBySlugRef {
+  ...
+  (dc: DataConnect, vars: GetEspacioBySlugVariables): QueryRef<GetEspacioBySlugData, GetEspacioBySlugVariables>;
+}
+export const getEspacioBySlugRef: GetEspacioBySlugRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the getEspacioBySlugRef:
+```typescript
+const name = getEspacioBySlugRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `GetEspacioBySlug` query requires an argument of type `GetEspacioBySlugVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface GetEspacioBySlugVariables {
+  slug: string;
+}
+```
+### Return Type
+Recall that executing the `GetEspacioBySlug` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `GetEspacioBySlugData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface GetEspacioBySlugData {
+  espacios: ({
+    id: UUIDString;
+    nombre: string;
+    slug?: string | null;
+  } & Espacio_Key)[];
+}
+```
+### Using `GetEspacioBySlug`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, getEspacioBySlug, GetEspacioBySlugVariables } from '@antologico/dataconnect';
+
+// The `GetEspacioBySlug` query requires an argument of type `GetEspacioBySlugVariables`:
+const getEspacioBySlugVars: GetEspacioBySlugVariables = {
+  slug: ..., 
+};
+
+// Call the `getEspacioBySlug()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await getEspacioBySlug(getEspacioBySlugVars);
+// Variables can be defined inline as well.
+const { data } = await getEspacioBySlug({ slug: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await getEspacioBySlug(dataConnect, getEspacioBySlugVars);
+
+console.log(data.espacios);
+
+// Or, you can use the `Promise` API.
+getEspacioBySlug(getEspacioBySlugVars).then((response) => {
+  const data = response.data;
+  console.log(data.espacios);
+});
+```
+
+### Using `GetEspacioBySlug`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, getEspacioBySlugRef, GetEspacioBySlugVariables } from '@antologico/dataconnect';
+
+// The `GetEspacioBySlug` query requires an argument of type `GetEspacioBySlugVariables`:
+const getEspacioBySlugVars: GetEspacioBySlugVariables = {
+  slug: ..., 
+};
+
+// Call the `getEspacioBySlugRef()` function to get a reference to the query.
+const ref = getEspacioBySlugRef(getEspacioBySlugVars);
+// Variables can be defined inline as well.
+const ref = getEspacioBySlugRef({ slug: ..., });
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = getEspacioBySlugRef(dataConnect, getEspacioBySlugVars);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.espacios);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.espacios);
 });
 ```
 
@@ -5793,6 +5911,8 @@ export interface CreateReservaConUsuarioVariables {
   email: string;
   workshopId: UUIDString;
   estado: EstadoReserva;
+  metodoPago?: MetodoPago | null;
+  estadoPago?: EstadoPago | null;
   pagoExternoId?: string | null;
 }
 ```
@@ -5819,6 +5939,8 @@ const createReservaConUsuarioVars: CreateReservaConUsuarioVariables = {
   email: ..., 
   workshopId: ..., 
   estado: ..., 
+  metodoPago: ..., // optional
+  estadoPago: ..., // optional
   pagoExternoId: ..., // optional
 };
 
@@ -5826,7 +5948,7 @@ const createReservaConUsuarioVars: CreateReservaConUsuarioVariables = {
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await createReservaConUsuario(createReservaConUsuarioVars);
 // Variables can be defined inline as well.
-const { data } = await createReservaConUsuario({ nombre: ..., email: ..., workshopId: ..., estado: ..., pagoExternoId: ..., });
+const { data } = await createReservaConUsuario({ nombre: ..., email: ..., workshopId: ..., estado: ..., metodoPago: ..., estadoPago: ..., pagoExternoId: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -5857,13 +5979,15 @@ const createReservaConUsuarioVars: CreateReservaConUsuarioVariables = {
   email: ..., 
   workshopId: ..., 
   estado: ..., 
+  metodoPago: ..., // optional
+  estadoPago: ..., // optional
   pagoExternoId: ..., // optional
 };
 
 // Call the `createReservaConUsuarioRef()` function to get a reference to the mutation.
 const ref = createReservaConUsuarioRef(createReservaConUsuarioVars);
 // Variables can be defined inline as well.
-const ref = createReservaConUsuarioRef({ nombre: ..., email: ..., workshopId: ..., estado: ..., pagoExternoId: ..., });
+const ref = createReservaConUsuarioRef({ nombre: ..., email: ..., workshopId: ..., estado: ..., metodoPago: ..., estadoPago: ..., pagoExternoId: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -5883,6 +6007,224 @@ executeMutation(ref).then((response) => {
   console.log(data.usuario_upsert);
   console.log(data.reserva_insert);
   console.log(data.workshop_update);
+});
+```
+
+## MarkReservaPaid
+You can execute the `MarkReservaPaid` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+markReservaPaid(vars: MarkReservaPaidVariables): MutationPromise<MarkReservaPaidData, MarkReservaPaidVariables>;
+
+interface MarkReservaPaidRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: MarkReservaPaidVariables): MutationRef<MarkReservaPaidData, MarkReservaPaidVariables>;
+}
+export const markReservaPaidRef: MarkReservaPaidRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+markReservaPaid(dc: DataConnect, vars: MarkReservaPaidVariables): MutationPromise<MarkReservaPaidData, MarkReservaPaidVariables>;
+
+interface MarkReservaPaidRef {
+  ...
+  (dc: DataConnect, vars: MarkReservaPaidVariables): MutationRef<MarkReservaPaidData, MarkReservaPaidVariables>;
+}
+export const markReservaPaidRef: MarkReservaPaidRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the markReservaPaidRef:
+```typescript
+const name = markReservaPaidRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `MarkReservaPaid` mutation requires an argument of type `MarkReservaPaidVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface MarkReservaPaidVariables {
+  id: UUIDString;
+}
+```
+### Return Type
+Recall that executing the `MarkReservaPaid` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `MarkReservaPaidData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface MarkReservaPaidData {
+  reserva_update?: Reserva_Key | null;
+}
+```
+### Using `MarkReservaPaid`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, markReservaPaid, MarkReservaPaidVariables } from '@antologico/dataconnect';
+
+// The `MarkReservaPaid` mutation requires an argument of type `MarkReservaPaidVariables`:
+const markReservaPaidVars: MarkReservaPaidVariables = {
+  id: ..., 
+};
+
+// Call the `markReservaPaid()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await markReservaPaid(markReservaPaidVars);
+// Variables can be defined inline as well.
+const { data } = await markReservaPaid({ id: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await markReservaPaid(dataConnect, markReservaPaidVars);
+
+console.log(data.reserva_update);
+
+// Or, you can use the `Promise` API.
+markReservaPaid(markReservaPaidVars).then((response) => {
+  const data = response.data;
+  console.log(data.reserva_update);
+});
+```
+
+### Using `MarkReservaPaid`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, markReservaPaidRef, MarkReservaPaidVariables } from '@antologico/dataconnect';
+
+// The `MarkReservaPaid` mutation requires an argument of type `MarkReservaPaidVariables`:
+const markReservaPaidVars: MarkReservaPaidVariables = {
+  id: ..., 
+};
+
+// Call the `markReservaPaidRef()` function to get a reference to the mutation.
+const ref = markReservaPaidRef(markReservaPaidVars);
+// Variables can be defined inline as well.
+const ref = markReservaPaidRef({ id: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = markReservaPaidRef(dataConnect, markReservaPaidVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.reserva_update);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.reserva_update);
+});
+```
+
+## DevExpireTrial
+You can execute the `DevExpireTrial` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+devExpireTrial(vars: DevExpireTrialVariables): MutationPromise<DevExpireTrialData, DevExpireTrialVariables>;
+
+interface DevExpireTrialRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: DevExpireTrialVariables): MutationRef<DevExpireTrialData, DevExpireTrialVariables>;
+}
+export const devExpireTrialRef: DevExpireTrialRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+devExpireTrial(dc: DataConnect, vars: DevExpireTrialVariables): MutationPromise<DevExpireTrialData, DevExpireTrialVariables>;
+
+interface DevExpireTrialRef {
+  ...
+  (dc: DataConnect, vars: DevExpireTrialVariables): MutationRef<DevExpireTrialData, DevExpireTrialVariables>;
+}
+export const devExpireTrialRef: DevExpireTrialRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the devExpireTrialRef:
+```typescript
+const name = devExpireTrialRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `DevExpireTrial` mutation requires an argument of type `DevExpireTrialVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface DevExpireTrialVariables {
+  espacioId: UUIDString;
+}
+```
+### Return Type
+Recall that executing the `DevExpireTrial` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `DevExpireTrialData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface DevExpireTrialData {
+  expired?: number | null;
+}
+```
+### Using `DevExpireTrial`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, devExpireTrial, DevExpireTrialVariables } from '@antologico/dataconnect';
+
+// The `DevExpireTrial` mutation requires an argument of type `DevExpireTrialVariables`:
+const devExpireTrialVars: DevExpireTrialVariables = {
+  espacioId: ..., 
+};
+
+// Call the `devExpireTrial()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await devExpireTrial(devExpireTrialVars);
+// Variables can be defined inline as well.
+const { data } = await devExpireTrial({ espacioId: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await devExpireTrial(dataConnect, devExpireTrialVars);
+
+console.log(data.expired);
+
+// Or, you can use the `Promise` API.
+devExpireTrial(devExpireTrialVars).then((response) => {
+  const data = response.data;
+  console.log(data.expired);
+});
+```
+
+### Using `DevExpireTrial`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, devExpireTrialRef, DevExpireTrialVariables } from '@antologico/dataconnect';
+
+// The `DevExpireTrial` mutation requires an argument of type `DevExpireTrialVariables`:
+const devExpireTrialVars: DevExpireTrialVariables = {
+  espacioId: ..., 
+};
+
+// Call the `devExpireTrialRef()` function to get a reference to the mutation.
+const ref = devExpireTrialRef(devExpireTrialVars);
+// Variables can be defined inline as well.
+const ref = devExpireTrialRef({ espacioId: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = devExpireTrialRef(dataConnect, devExpireTrialVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.expired);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.expired);
 });
 ```
 

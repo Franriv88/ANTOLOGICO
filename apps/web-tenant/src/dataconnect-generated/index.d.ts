@@ -14,6 +14,11 @@ export enum EstadoEspacio {
   INACTIVO = "INACTIVO",
 };
 
+export enum EstadoPago {
+  PENDIENTE = "PENDIENTE",
+  PAGADO = "PAGADO",
+};
+
 export enum EstadoProfesional {
   ACTIVO = "ACTIVO",
   SUSPENDIDO = "SUSPENDIDO",
@@ -36,6 +41,11 @@ export enum EstadoWorkshop {
 export enum HeaderType {
   COLOR = "COLOR",
   IMAGE = "IMAGE",
+};
+
+export enum MetodoPago {
+  EFECTIVO = "EFECTIVO",
+  MERCADO_PAGO = "MERCADO_PAGO",
 };
 
 export enum TipoWorkshop {
@@ -289,6 +299,8 @@ export interface CreateReservaConUsuarioVariables {
   email: string;
   workshopId: UUIDString;
   estado: EstadoReserva;
+  metodoPago?: MetodoPago | null;
+  estadoPago?: EstadoPago | null;
   pagoExternoId?: string | null;
 }
 
@@ -332,6 +344,14 @@ export interface DeleteWorkshopVariables {
   espacioId: UUIDString;
 }
 
+export interface DevExpireTrialData {
+  expired?: number | null;
+}
+
+export interface DevExpireTrialVariables {
+  espacioId: UUIDString;
+}
+
 export interface Dominio_Key {
   id: UUIDString;
   __typename?: 'Dominio_Key';
@@ -340,6 +360,18 @@ export interface Dominio_Key {
 export interface Espacio_Key {
   id: UUIDString;
   __typename?: 'Espacio_Key';
+}
+
+export interface GetEspacioBySlugData {
+  espacios: ({
+    id: UUIDString;
+    nombre: string;
+    slug?: string | null;
+  } & Espacio_Key)[];
+}
+
+export interface GetEspacioBySlugVariables {
+  slug: string;
 }
 
 export interface GetMyEspacioData {
@@ -688,6 +720,8 @@ export interface ListReservasByEspacioData {
   reservas: ({
     id: UUIDString;
     estado: EstadoReserva;
+    metodoPago?: MetodoPago | null;
+    estadoPago?: EstadoPago | null;
     fechaReserva: TimestampString;
     comprobanteUrl?: string | null;
     pagoExternoId?: string | null;
@@ -717,6 +751,14 @@ export interface ListRubrosData {
     id: UUIDString;
     nombre: string;
   } & Rubro_Key)[];
+}
+
+export interface MarkReservaPaidData {
+  reserva_update?: Reserva_Key | null;
+}
+
+export interface MarkReservaPaidVariables {
+  id: UUIDString;
 }
 
 export interface Plan_Key {
@@ -1288,6 +1330,30 @@ export const createReservaConUsuarioRef: CreateReservaConUsuarioRef;
 export function createReservaConUsuario(vars: CreateReservaConUsuarioVariables): MutationPromise<CreateReservaConUsuarioData, CreateReservaConUsuarioVariables>;
 export function createReservaConUsuario(dc: DataConnect, vars: CreateReservaConUsuarioVariables): MutationPromise<CreateReservaConUsuarioData, CreateReservaConUsuarioVariables>;
 
+interface MarkReservaPaidRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: MarkReservaPaidVariables): MutationRef<MarkReservaPaidData, MarkReservaPaidVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: MarkReservaPaidVariables): MutationRef<MarkReservaPaidData, MarkReservaPaidVariables>;
+  operationName: string;
+}
+export const markReservaPaidRef: MarkReservaPaidRef;
+
+export function markReservaPaid(vars: MarkReservaPaidVariables): MutationPromise<MarkReservaPaidData, MarkReservaPaidVariables>;
+export function markReservaPaid(dc: DataConnect, vars: MarkReservaPaidVariables): MutationPromise<MarkReservaPaidData, MarkReservaPaidVariables>;
+
+interface DevExpireTrialRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: DevExpireTrialVariables): MutationRef<DevExpireTrialData, DevExpireTrialVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: DevExpireTrialVariables): MutationRef<DevExpireTrialData, DevExpireTrialVariables>;
+  operationName: string;
+}
+export const devExpireTrialRef: DevExpireTrialRef;
+
+export function devExpireTrial(vars: DevExpireTrialVariables): MutationPromise<DevExpireTrialData, DevExpireTrialVariables>;
+export function devExpireTrial(dc: DataConnect, vars: DevExpireTrialVariables): MutationPromise<DevExpireTrialData, DevExpireTrialVariables>;
+
 interface ListReservasByEspacioRef {
   /* Allow users to create refs without passing in DataConnect */
   (vars: ListReservasByEspacioVariables): QueryRef<ListReservasByEspacioData, ListReservasByEspacioVariables>;
@@ -1407,6 +1473,18 @@ export const getMyWorkshopRef: GetMyWorkshopRef;
 
 export function getMyWorkshop(vars: GetMyWorkshopVariables, options?: ExecuteQueryOptions): QueryPromise<GetMyWorkshopData, GetMyWorkshopVariables>;
 export function getMyWorkshop(dc: DataConnect, vars: GetMyWorkshopVariables, options?: ExecuteQueryOptions): QueryPromise<GetMyWorkshopData, GetMyWorkshopVariables>;
+
+interface GetEspacioBySlugRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: GetEspacioBySlugVariables): QueryRef<GetEspacioBySlugData, GetEspacioBySlugVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: GetEspacioBySlugVariables): QueryRef<GetEspacioBySlugData, GetEspacioBySlugVariables>;
+  operationName: string;
+}
+export const getEspacioBySlugRef: GetEspacioBySlugRef;
+
+export function getEspacioBySlug(vars: GetEspacioBySlugVariables, options?: ExecuteQueryOptions): QueryPromise<GetEspacioBySlugData, GetEspacioBySlugVariables>;
+export function getEspacioBySlug(dc: DataConnect, vars: GetEspacioBySlugVariables, options?: ExecuteQueryOptions): QueryPromise<GetEspacioBySlugData, GetEspacioBySlugVariables>;
 
 interface GetPublicEspacioRef {
   /* Allow users to create refs without passing in DataConnect */

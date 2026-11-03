@@ -10,6 +10,8 @@ enum TipoWorkshop      { WORKSHOP TALLER CLASE CURSO }
 enum HeaderType        { COLOR IMAGE }
 enum EstadoUsuario     { ACTIVO SUSPENDIDO }
 enum EstadoReserva     { PENDIENTE CONFIRMADA CANCELADA }
+enum MetodoPago        { EFECTIVO MERCADO_PAGO }
+enum EstadoPago        { PENDIENTE PAGADO }
 
 # ─── Rubros (catálogo de categorías de negocio) ───────────────────────────────
 # Gestionado por Super Admin. Los tenants eligen uno al crear su Espacio.
@@ -114,7 +116,7 @@ type Workshop @table(name: "workshops")
   experienciaPrevia: Boolean
   scheduleData:      Any
   headerType:        HeaderType!    @default(value: COLOR)
-  headerValue:       String         @col(dataType: "varchar(500)")
+  headerValue:       String         @col(dataType: "text")
   metodosPago:       Any            # JSON: array de IDs, ej. ["efectivo","mercadopago","link-uuid"]
   estado:            EstadoWorkshop! @default(value: BORRADOR)
   createdAt:        Timestamp! @default(expr: "request.time")
@@ -141,6 +143,8 @@ type Reserva @table(name: "reservas", singular: "reserva", plural: "reservas") {
   workshop:       Workshop!
   fechaReserva:   Timestamp! @default(expr: "request.time")
   estado:         EstadoReserva! @default(value: PENDIENTE)
+  metodoPago:     MetodoPago
+  estadoPago:     EstadoPago     @default(value: PENDIENTE)
   comprobanteUrl: String     @col(dataType: "varchar(500)")
   pagoExternoId:  String     @col(dataType: "varchar(255)")
   createdAt:      Timestamp! @default(expr: "request.time")

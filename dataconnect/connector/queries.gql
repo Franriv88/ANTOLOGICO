@@ -7,7 +7,7 @@ query ListReservasByEspacio($espacioId: UUID!) @auth(level: USER, insecureReason
     }
     orderBy: [{ fechaReserva: DESC }]
   ) {
-    id estado fechaReserva comprobanteUrl pagoExternoId createdAt
+    id estado metodoPago estadoPago fechaReserva comprobanteUrl pagoExternoId createdAt
     usuario { uid nombre email }
     workshop { id nombre fecha cuposTotales cuposDisponibles espacioId }
   }
@@ -150,6 +150,15 @@ query GetMyWorkshop($id: UUID!) @auth(level: USER) {
 }
 
 # ─── Público ──────────────────────────────────────────────────────────────────
+
+query GetEspacioBySlug($slug: String!) @auth(level: PUBLIC, insecureReason: "Resolución de subdominio público — mapea slug a espacioId para cargar la tienda.") {
+  espacios(
+    where: { slug: { eq: $slug }, estado: { eq: ACTIVO } }
+    limit: 1
+  ) {
+    id nombre slug
+  }
+}
 
 query GetPublicEspacio($id: UUID!) @auth(level: PUBLIC, insecureReason: "Cualquier usuario (autenticado o no) debe poder ver la info básica de un espacio para seguirlo o reservar.") {
   espacios(

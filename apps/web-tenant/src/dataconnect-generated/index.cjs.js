@@ -7,6 +7,12 @@ const EstadoEspacio = {
 }
 exports.EstadoEspacio = EstadoEspacio;
 
+const EstadoPago = {
+  PENDIENTE: "PENDIENTE",
+  PAGADO: "PAGADO",
+}
+exports.EstadoPago = EstadoPago;
+
 const EstadoProfesional = {
   ACTIVO: "ACTIVO",
   SUSPENDIDO: "SUSPENDIDO",
@@ -34,6 +40,12 @@ const HeaderType = {
   IMAGE: "IMAGE",
 }
 exports.HeaderType = HeaderType;
+
+const MetodoPago = {
+  EFECTIVO: "EFECTIVO",
+  MERCADO_PAGO: "MERCADO_PAGO",
+}
+exports.MetodoPago = MetodoPago;
 
 const TipoWorkshop = {
   WORKSHOP: "WORKSHOP",
@@ -470,6 +482,34 @@ exports.createReservaConUsuario = function createReservaConUsuario(dcOrVars, var
 }
 ;
 
+const markReservaPaidRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'MarkReservaPaid', inputVars);
+}
+markReservaPaidRef.operationName = 'MarkReservaPaid';
+exports.markReservaPaidRef = markReservaPaidRef;
+
+exports.markReservaPaid = function markReservaPaid(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(markReservaPaidRef(dcInstance, inputVars));
+}
+;
+
+const devExpireTrialRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'DevExpireTrial', inputVars);
+}
+devExpireTrialRef.operationName = 'DevExpireTrial';
+exports.devExpireTrialRef = devExpireTrialRef;
+
+exports.devExpireTrial = function devExpireTrial(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(devExpireTrialRef(dcInstance, inputVars));
+}
+;
+
 const listReservasByEspacioRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
@@ -617,6 +657,21 @@ exports.getMyWorkshop = function getMyWorkshop(dcOrVars, varsOrOptions, options)
   
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
   return executeQuery(getMyWorkshopRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const getEspacioBySlugRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'GetEspacioBySlug', inputVars);
+}
+getEspacioBySlugRef.operationName = 'GetEspacioBySlug';
+exports.getEspacioBySlugRef = getEspacioBySlugRef;
+
+exports.getEspacioBySlug = function getEspacioBySlug(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(getEspacioBySlugRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 ;
 
