@@ -115,7 +115,7 @@ export default function Login({ mode = 'login' }) {
 // ─── Componente de login/registro de producción ──────────────────────────────
 function TenantLoginPage({ initialTab = 'login' }) {
   const navigate = useNavigate();
-  const { user }  = useAuth();
+  const { user, adminBlocked }  = useAuth();
   const { activeEspacio, loading: espacioLoading } = useEspacio();
 
   const [tab, setTab] = useState(initialTab);
@@ -485,6 +485,11 @@ function TenantLoginPage({ initialTab = 'login' }) {
                 className={INPUT_CLS}
               />
             </div>
+            {adminBlocked && (
+              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2">
+                Esta cuenta es exclusiva de administración. Usá el panel de Super Admin.
+              </p>
+            )}
             {error && (
               <p className="text-xs text-danger bg-danger/5 border border-danger/20 rounded px-3 py-2">
                 {error}

@@ -213,7 +213,12 @@ export default function Reportes() {
     const ingresos    = pagadas.reduce((s, r) => s + (wsMap[r.workshopId]?.precio ?? 0), 0);
     const nonBorrador = workshops.filter(w => w.estado !== 'BORRADOR');
     const ocupacion   = nonBorrador.length > 0
-      ? nonBorrador.reduce((s, w) => s + ((w.cuposTotales - w.cuposDisponibles) / (w.cuposTotales || 1)) * 100, 0) / nonBorrador.length
+      ? nonBorrador.reduce((s, w) => {
+          const resReales = reservas.filter(r => r.workshopId === w.id && r.estado === 'CONFIRMADA').length;
+          const esAgotadoManual = w.cuposDisponibles === 0 && resReales < (w.cuposTotales ?? 0);
+          const inscritos = esAgotadoManual ? resReales : (w.cuposTotales - w.cuposDisponibles);
+          return s + (inscritos / (w.cuposTotales || 1)) * 100;
+        }, 0) / nonBorrador.length
       : 0;
     return {
       ingresos,
@@ -221,19 +226,20 @@ export default function Reportes() {
       ocupacion:   Math.round(ocupacion),
       publicados:  workshops.filter(w => w.estado === 'PUBLICADO').length,
     };
-  }, [periodReservas, workshops, wsMap]);
+  }, [periodReservas, workshops, wsMap, reservas]);
 
   // Per-workshop table (all-time)
   const wsStats = useMemo(() => {
     return workshops
       .filter(w => w.estado !== 'BORRADOR')
       .map(w => {
-        const inscritos = (w.cuposTotales ?? 0) - (w.cuposDisponibles ?? 0);
-        const ocupacion = w.cuposTotales > 0 ? (inscritos / w.cuposTotales) * 100 : 0;
+        const totalRes  = reservas.filter(r => r.workshopId === w.id && r.estado === 'CONFIRMADA').length;
         const pagadas   = reservas.filter(r => r.workshopId === w.id && r.estadoPago === 'PAGADO' && r.estado === 'CONFIRMADA');
         const ingresos  = pagadas.reduce((s, r) => s + (w.precio ?? 0), 0);
-        const totalRes  = reservas.filter(r => r.workshopId === w.id && r.estado === 'CONFIRMADA').length;
-        return { ...w, inscritos, ocupacion, ingresos, totalRes };
+        const agotadoManual = w.cuposDisponibles === 0 && totalRes < (w.cuposTotales ?? 0);
+        const inscritos = agotadoManual ? totalRes : (w.cuposTotales ?? 0) - (w.cuposDisponibles ?? 0);
+        const ocupacion = w.cuposTotales > 0 ? (inscritos / w.cuposTotales) * 100 : 0;
+        return { ...w, inscritos, ocupacion, ingresos, totalRes, agotadoManual };
       })
       .sort((a, b) => b.ingresos - a.ingresos || b.inscritos - a.inscritos);
   }, [workshops, reservas]);
@@ -351,6 +357,11 @@ export default function Reportes() {
                           <span className={`text-[10px] ${w.estado === 'PUBLICADO' ? 'text-[#10B981]' : 'text-ink-muted'}`}>
                             {w.estado === 'PUBLICADO' ? 'Publicado' : w.estado === 'CANCELADO' ? 'Cancelado' : 'Finalizado'}
                           </span>
+                          {w.agotadoManual && (
+                            <span className="ml-1.5 inline-flex items-center gap-1 text-[10px] text-amber-600 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">
+                              Agotado manualmente
+                            </span>
+                          )}
                         </td>
                         <td className="px-4 py-3 text-center">
                           <span className="font-mono text-ink">

@@ -1,27 +1,41 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from '../lib/firebase';
-import { upsertProfesional, reassignProfesionalUid } from '../dataconnect-generated';
+import { upsertProfesional, reassignProfesionalUid, listMyEspacios } from '../dataconnect-generated';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(undefined);
+  const [adminBlocked, setAdminBlocked] = useState(false);
 
   useEffect(() => {
     return onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        // Solo creamos el documento del profesional cuando el email está
-        // verificado. Si el usuario no completa la verificación, no queda
-        // ningún registro en nuestra base más allá de la cuenta Firebase Auth
-        // (que luego se purga).
         if (firebaseUser.emailVerified) {
-          try {
-            await upsertProfesional({
-              nombre: firebaseUser.displayName || firebaseUser.email,
-              email:  firebaseUser.email,
-            });
-          } catch (e) {
+          const tokenResult = await firebaseUser.getIdTokenResult();
+          if (tokenResult.claims.admin) {
+            try {
+              const { data } = await listMyEspacios();
+              const tieneEspacio = (data.espacios ?? []).length > 0;
+              if (!tieneEspacio) {
+                setAdminBlocked(true);
+                setUser(null);
+                await signOut(auth);
+                return;
+              }
+            } catch {
+              setAdminBlocked(true);
+              setUser(null);
+              await signOut(auth);
+              return;
+            }
+          }
+          setAdminBlocked(false);
+          upsertProfesional({
+            nombre: firebaseUser.displayName || firebaseUser.email,
+            email:  firebaseUser.email,
+          }).catch((e) => {
             const errStr = (() => { try { return JSON.stringify(e); } catch { return String(e); } })();
             const isAlreadyExists =
               errStr.includes('ALREADY_EXISTS') ||
@@ -31,16 +45,13 @@ export function AuthProvider({ children }) {
                 err?.message?.includes('profesionales_email_uidx')
               );
             if (isAlreadyExists) {
-              try {
-                await reassignProfesionalUid({ nombre: firebaseUser.displayName || firebaseUser.email });
-                console.log('[Auth] reassignProfesionalUid OK — UID actualizado');
-              } catch (reassignErr) {
-                console.error('[Auth] reassignProfesionalUid failed:', reassignErr);
-              }
+              reassignProfesionalUid({ nombre: firebaseUser.displayName || firebaseUser.email })
+                .then(() => console.log('[Auth] reassignProfesionalUid OK — UID actualizado'))
+                .catch((reassignErr) => console.error('[Auth] reassignProfesionalUid failed:', reassignErr));
             } else {
               console.error('upsertProfesional:', e);
             }
-          }
+          });
         }
         setUser(firebaseUser);
       } else {
@@ -54,7 +65,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading: user === undefined, logout }}>
+    <AuthContext.Provider value={{ user, loading: user === undefined, logout, adminBlocked }}>
       {children}
     </AuthContext.Provider>
   );
