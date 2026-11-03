@@ -42,7 +42,7 @@ function StateBadge({ estado }) {
   return <span className="text-xs text-ink-muted">{estado}</span>;
 }
 
-function PagoBadge({ metodoPago, estadoPago }) {
+function PagoBadge({ metodoPago, estadoPago, canMarkPaid, onMarkPaid, loading }) {
   if (metodoPago === 'MERCADO_PAGO') {
     return (
       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-600 whitespace-nowrap">
@@ -57,9 +57,37 @@ function PagoBadge({ metodoPago, estadoPago }) {
       </span>
     );
   }
+  if (canMarkPaid) {
+    return (
+      <div className="relative group/pago inline-flex">
+        <button
+          onClick={onMarkPaid}
+          disabled={loading}
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-[#B98527]/10 text-[#B98527] border border-[#B98527]/20 hover:bg-[#B98527]/20 hover:border-[#B98527]/40 transition-all cursor-pointer disabled:opacity-40 whitespace-nowrap"
+        >
+          {loading ? '…' : (
+            <>
+              Pendiente
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </>
+          )}
+        </button>
+        <div className="absolute left-0 top-full mt-1 bg-surface-100 border border-border rounded-lg shadow-lg py-1 z-20 opacity-0 pointer-events-none group-hover/pago:opacity-100 group-hover/pago:pointer-events-auto transition-opacity min-w-[160px]">
+          <button
+            onClick={onMarkPaid}
+            disabled={loading}
+            className="w-full text-left px-3 py-2 text-xs text-ink hover:bg-surface-200 transition-colors flex items-center gap-2 disabled:opacity-40"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Marcar como pagado
+          </button>
+        </div>
+      </div>
+    );
+  }
   return (
     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[#B98527]/10 text-[#B98527] whitespace-nowrap">
-      {metodoPago === 'EFECTIVO' ? 'Efectivo · Pendiente' : 'Pendiente'}
+      Pendiente
     </span>
   );
 }
@@ -505,25 +533,17 @@ export default function Reservas() {
                       <StateBadge estado={r.estado} />
                     </td>
                     <td className="px-3 py-3.5">
-                      <PagoBadge metodoPago={r.metodoPago} estadoPago={r.estadoPago} />
+                      <PagoBadge
+                        metodoPago={r.metodoPago}
+                        estadoPago={r.estadoPago}
+                        canMarkPaid={r.estado !== 'CANCELADA' && r.estadoPago !== 'PAGADO' && r.metodoPago !== 'MERCADO_PAGO'}
+                        onMarkPaid={() => handleMarkPaid(r.id)}
+                        loading={markingPaid === r.id}
+                      />
                     </td>
                     <td className="pl-1 pr-4 py-3.5">
                       <div className="flex items-center justify-end gap-1.5 opacity-70 group-hover:opacity-100 transition-opacity">
-                        {r.estado !== 'CANCELADA' && r.estadoPago !== 'PAGADO' && r.metodoPago !== 'MERCADO_PAGO' && (
-                          <button
-                            onClick={() => handleMarkPaid(r.id)}
-                            disabled={markingPaid === r.id}
-                            className="flex items-center gap-1 text-xs text-[#10B981] hover:bg-[#10B981]/10 transition-colors disabled:opacity-40 px-2.5 py-1.5 rounded-lg whitespace-nowrap"
-                          >
-                            {markingPaid === r.id ? '…' : (
-                              <>
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                                Pagado
-                              </>
-                            )}
-                          </button>
-                        )}
-                        {r.estado === 'CONFIRMADA' && (
+                        {r.estado !== 'CANCELADA' && (
                           <button
                             onClick={() => setCancelTarget({ id: r.id, nombre: r.nombre, workshopId: r.workshopId })}
                             className="flex items-center gap-1 text-xs text-ink-muted hover:text-danger hover:bg-danger/5 transition-colors px-2.5 py-1.5 rounded-lg whitespace-nowrap"
