@@ -4,11 +4,12 @@ import * as api from '../services/api';
 import Layout from '../components/Layout';
 
 function formatDate(iso) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('es-AR', {
-    day: '2-digit', month: 'short', year: 'numeric',
-    hour: '2-digit', minute: '2-digit',
-  });
+  if (!iso) return { date: '—', time: null };
+  const d = new Date(iso);
+  return {
+    date: d.toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' }),
+    time: d.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }),
+  };
 }
 
 function StatCard({ label, value, accent }) {
@@ -493,7 +494,12 @@ export default function Reservas() {
                       )}
                     </td>
                     <td className="px-3 py-3.5 whitespace-nowrap">
-                      <p className="text-[13px] text-ink">{formatDate(r.fechaReserva)}</p>
+                      {(() => { const { date, time } = formatDate(r.fechaReserva); return (
+                        <>
+                          <p className="text-[13px] text-ink">{date}</p>
+                          {time && <p className="text-[11px] text-ink-muted">{time}</p>}
+                        </>
+                      ); })()}
                     </td>
                     <td className="px-3 py-3.5">
                       <StateBadge estado={r.estado} />
