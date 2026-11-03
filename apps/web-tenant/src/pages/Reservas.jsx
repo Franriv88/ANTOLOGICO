@@ -41,7 +41,6 @@ function StateBadge({ estado }) {
 }
 
 function PagoBadge({ metodoPago, estadoPago }) {
-  if (!metodoPago) return null;
   if (metodoPago === 'MERCADO_PAGO') {
     return (
       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-600 whitespace-nowrap">
@@ -52,13 +51,13 @@ function PagoBadge({ metodoPago, estadoPago }) {
   if (estadoPago === 'PAGADO') {
     return (
       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[#10B981]/10 text-[#10B981] whitespace-nowrap">
-        Efectivo · Pagado
+        {metodoPago === 'EFECTIVO' ? 'Efectivo · Pagado' : 'Pagado'}
       </span>
     );
   }
   return (
     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[#B98527]/10 text-[#B98527] whitespace-nowrap">
-      Efectivo · Pendiente
+      {metodoPago === 'EFECTIVO' ? 'Efectivo · Pendiente' : 'Pendiente'}
     </span>
   );
 }
@@ -259,8 +258,8 @@ export default function Reservas() {
     if (filterPago) {
       list = list.filter(r => {
         if (filterPago === 'MERCADO_PAGO') return r.metodoPago === 'MERCADO_PAGO';
-        if (filterPago === 'EFECTIVO_PAGADO') return r.metodoPago === 'EFECTIVO' && r.estadoPago === 'PAGADO';
-        if (filterPago === 'EFECTIVO_PENDIENTE') return r.metodoPago === 'EFECTIVO' && r.estadoPago === 'PENDIENTE';
+        if (filterPago === 'EFECTIVO_PAGADO') return r.metodoPago !== 'MERCADO_PAGO' && r.estadoPago === 'PAGADO';
+        if (filterPago === 'EFECTIVO_PENDIENTE') return r.metodoPago !== 'MERCADO_PAGO' && r.estadoPago !== 'PAGADO';
         return true;
       });
     }
@@ -268,7 +267,7 @@ export default function Reservas() {
       const now = new Date();
       const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       list = list.filter(r => {
-        const d = new Date(r.fecha_reserva);
+        const d = new Date(r.fechaReserva);
         if (filterFecha === 'hoy') return d >= startOfDay;
         if (filterFecha === '7dias') return d >= new Date(startOfDay - 7 * 86400000);
         if (filterFecha === '30dias') return d >= new Date(startOfDay - 30 * 86400000);
@@ -281,7 +280,7 @@ export default function Reservas() {
         r.nombre?.toLowerCase().includes(q) || r.email?.toLowerCase().includes(q),
       );
     }
-    return [...list].sort((a, b) => new Date(b.fecha_reserva) - new Date(a.fecha_reserva));
+    return [...list].sort((a, b) => new Date(b.fechaReserva) - new Date(a.fechaReserva));
   }, [reservas, filterWs, filterEstado, filterPago, filterFecha, search]);
 
   const activeFilterCount = [filterWs, filterEstado, filterPago, filterFecha].filter(Boolean).length;
@@ -291,7 +290,7 @@ export default function Reservas() {
     confirmadas: reservas.filter(r => r.estado === 'CONFIRMADA').length,
     canceladas:  reservas.filter(r => r.estado === 'CANCELADA').length,
     efectivoPendiente: reservas.filter(
-      r => r.estado === 'CONFIRMADA' && r.metodoPago === 'EFECTIVO' && r.estadoPago === 'PENDIENTE'
+      r => r.estado === 'CONFIRMADA' && r.metodoPago !== 'MERCADO_PAGO' && r.estadoPago !== 'PAGADO'
     ).length,
   }), [reservas]);
 
@@ -493,7 +492,7 @@ export default function Reservas() {
                       )}
                     </td>
                     <td className="px-3 py-3.5 whitespace-nowrap">
-                      <p className="text-[13px] text-ink">{formatDate(r.fecha_reserva)}</p>
+                      <p className="text-[13px] text-ink">{formatDate(r.fechaReserva)}</p>
                     </td>
                     <td className="px-3 py-3.5">
                       <StateBadge estado={r.estado} />
@@ -503,7 +502,7 @@ export default function Reservas() {
                     </td>
                     <td className="pl-1 pr-4 py-3.5">
                       <div className="flex items-center justify-end gap-1.5 opacity-70 group-hover:opacity-100 transition-opacity">
-                        {r.estado === 'CONFIRMADA' && r.metodoPago === 'EFECTIVO' && r.estadoPago === 'PENDIENTE' && (
+                        {r.estado === 'CONFIRMADA' && r.estadoPago !== 'PAGADO' && r.metodoPago !== 'MERCADO_PAGO' && (
                           <button
                             onClick={() => handleMarkPaid(r.id)}
                             disabled={markingPaid === r.id}
