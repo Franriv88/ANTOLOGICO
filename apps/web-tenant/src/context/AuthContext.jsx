@@ -13,7 +13,12 @@ export function AuthProvider({ children }) {
   const [adminBlocked, setAdminBlocked] = useState(false);
 
   useEffect(() => {
+    let gen = 0;
+
     return onAuthStateChanged(auth, async (firebaseUser) => {
+      const myGen = ++gen;
+      const stale = () => myGen !== gen;
+
       if (firebaseUser) {
         if (firebaseUser.emailVerified) {
           const skip = _skipAdminCheck;
@@ -26,10 +31,12 @@ export function AuthProvider({ children }) {
           } catch (e) {
             console.warn('[Auth] getIdTokenResult failed:', e);
           }
+          if (stale()) return;
 
           if (isAdmin && !skip) {
             try {
               const { data } = await listMyEspacios();
+              if (stale()) return;
               if ((data.espacios ?? []).length === 0) {
                 setAdminBlocked(true);
                 setUser(null);
@@ -37,10 +44,12 @@ export function AuthProvider({ children }) {
                 return;
               }
             } catch (e) {
+              if (stale()) return;
               console.warn('[Auth] Admin espacio check failed, letting through:', e);
             }
           }
 
+          if (stale()) return;
           setAdminBlocked(false);
           upsertProfesional({
             nombre: firebaseUser.displayName || firebaseUser.email,
@@ -63,8 +72,10 @@ export function AuthProvider({ children }) {
             }
           });
         }
+        if (stale()) return;
         setUser(firebaseUser);
       } else {
+        if (stale()) return;
         setUser(null);
       }
     });
