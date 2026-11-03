@@ -4,9 +4,6 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
 
-const DEMO_EMAIL    = 'superadmin@antologico.app';
-const DEMO_PASSWORD = 'Admin2024!';
-
 // Red neuronal — coordenadas del logo Antológico
 const EDGES = [
   [256,108,392,128],[256,108,184,190],[256,108,315,198],[184,190,315,198],
@@ -226,20 +223,6 @@ export default function Login() {
             boxShadow: '0 0 0 1px rgba(185,133,39,0.06), 0 32px 80px rgba(0,0,0,0.55)',
           }}
         >
-          {/* Credenciales demo */}
-          <div
-            className="rounded-lg px-3 py-2.5 mb-6 text-xs space-y-0.5"
-            style={{ background: 'rgba(185,133,39,0.09)', border: '1px solid rgba(185,133,39,0.18)' }}
-          >
-            <p className="font-medium" style={{ color: '#D4A83A' }}>Credenciales de acceso:</p>
-            <p style={{ color: 'rgba(239,231,216,0.55)' }}>
-              Email: <span className="font-mono" style={{ color: '#EFE7D8' }}>{DEMO_EMAIL}</span>
-            </p>
-            <p style={{ color: 'rgba(239,231,216,0.55)' }}>
-              Contraseña: <span className="font-mono" style={{ color: '#EFE7D8' }}>{DEMO_PASSWORD}</span>
-            </p>
-          </div>
-
           {denied && (
             <div className="mb-4 text-xs rounded px-3 py-2" style={{ color: '#F87171', background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.2)' }}>
               Tu cuenta no tiene permisos de administrador.
@@ -253,7 +236,7 @@ export default function Login() {
                 type="email"
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); setError(''); }}
-                placeholder={DEMO_EMAIL}
+                placeholder="admin@ejemplo.com"
                 autoFocus
                 style={{
                   width: '100%', padding: '0.5rem 0.75rem', fontSize: '0.875rem',
