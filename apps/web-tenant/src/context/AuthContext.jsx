@@ -13,7 +13,7 @@ export function AuthProvider({ children }) {
     return onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         if (firebaseUser.emailVerified) {
-          const tokenResult = await firebaseUser.getIdTokenResult();
+          const tokenResult = await firebaseUser.getIdTokenResult(true);
           if (tokenResult.claims.admin) {
             try {
               const { data } = await listMyEspacios();
@@ -24,11 +24,8 @@ export function AuthProvider({ children }) {
                 await signOut(auth);
                 return;
               }
-            } catch {
-              setAdminBlocked(true);
-              setUser(null);
-              await signOut(auth);
-              return;
+            } catch (e) {
+              console.warn('[Auth] Admin espacio check failed, letting through:', e);
             }
           }
           setAdminBlocked(false);
