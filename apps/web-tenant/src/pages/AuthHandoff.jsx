@@ -21,6 +21,7 @@ export default function AuthHandoff() {
     let cancelled = false;
     (async () => {
       try {
+        try { sessionStorage.setItem('__handoff', '1'); } catch {}
         try { await signOut(auth); } catch { /* ignore */ }
         await signInWithCustomToken(auth, token);
         if (!cancelled) setSignedIn(true);

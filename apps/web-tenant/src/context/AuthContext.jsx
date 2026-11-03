@@ -13,12 +13,21 @@ export function AuthProvider({ children }) {
     return onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         if (firebaseUser.emailVerified) {
-          const tokenResult = await firebaseUser.getIdTokenResult(true);
-          if (tokenResult.claims.admin) {
+          const skipAdminCheck = (() => { try { return sessionStorage.getItem('__handoff') === '1'; } catch { return false; } })();
+          if (skipAdminCheck) { try { sessionStorage.removeItem('__handoff'); } catch {} }
+
+          let isAdmin = false;
+          try {
+            const tokenResult = await firebaseUser.getIdTokenResult();
+            isAdmin = !!tokenResult.claims.admin;
+          } catch (e) {
+            console.warn('[Auth] getIdTokenResult failed:', e);
+          }
+
+          if (isAdmin && !skipAdminCheck) {
             try {
               const { data } = await listMyEspacios();
-              const tieneEspacio = (data.espacios ?? []).length > 0;
-              if (!tieneEspacio) {
+              if ((data.espacios ?? []).length === 0) {
                 setAdminBlocked(true);
                 setUser(null);
                 await signOut(auth);
@@ -28,6 +37,7 @@ export function AuthProvider({ children }) {
               console.warn('[Auth] Admin espacio check failed, letting through:', e);
             }
           }
+
           setAdminBlocked(false);
           upsertProfesional({
             nombre: firebaseUser.displayName || firebaseUser.email,

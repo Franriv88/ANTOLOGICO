@@ -130,12 +130,15 @@ function TenantLoginPage({ initialTab = 'login' }) {
   // Login
   const [loginEmail, setLoginEmail]       = useState('');
   const [loginPass,  setLoginPass]        = useState('');
+  const [showLoginPass, setShowLoginPass] = useState(false);
 
   // Register
   const [regNombre,   setRegNombre]   = useState('');
   const [regEmail,    setRegEmail]    = useState('');
   const [regPass,     setRegPass]     = useState('');
   const [regConfirm,  setRegConfirm]  = useState('');
+  const [showRegPass, setShowRegPass]       = useState(false);
+  const [showRegConfirm, setShowRegConfirm] = useState(false);
 
   // Reset password
   const [resetMode,  setResetMode]   = useState(false);
@@ -477,13 +480,25 @@ function TenantLoginPage({ initialTab = 'login' }) {
                   ¿Olvidaste tu contraseña?
                 </button>
               </div>
-              <input
-                type="password"
-                value={loginPass}
-                onChange={(e) => { setLoginPass(e.target.value); clearErr(); }}
-                placeholder="••••••••"
-                className={INPUT_CLS}
-              />
+              <div className="relative">
+                <input
+                  type={showLoginPass ? 'text' : 'password'}
+                  value={loginPass}
+                  onChange={(e) => { setLoginPass(e.target.value); clearErr(); }}
+                  placeholder="••••••••"
+                  className={`${INPUT_CLS} pr-10`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowLoginPass(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink transition-colors"
+                  tabIndex={-1}
+                >
+                  {showLoginPass
+                    ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/></svg>
+                    : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
+                </button>
+              </div>
             </div>
             {adminBlocked && (
               <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2">
@@ -537,13 +552,25 @@ function TenantLoginPage({ initialTab = 'login' }) {
             </div>
             <div>
               <label className="block text-xs font-medium text-ink-muted mb-1">Contraseña</label>
-              <input
-                type="password"
-                value={regPass}
-                onChange={(e) => { setRegPass(e.target.value); clearErr(); }}
-                placeholder="Mínimo 8 caracteres"
-                className={INPUT_CLS}
-              />
+              <div className="relative">
+                <input
+                  type={showRegPass ? 'text' : 'password'}
+                  value={regPass}
+                  onChange={(e) => { setRegPass(e.target.value); clearErr(); }}
+                  placeholder="Mínimo 8 caracteres"
+                  className={`${INPUT_CLS} pr-10`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowRegPass(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink transition-colors"
+                  tabIndex={-1}
+                >
+                  {showRegPass
+                    ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/></svg>
+                    : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
+                </button>
+              </div>
               {regPass && (
                 <div className="mt-1.5 flex flex-col gap-1">
                   {[
@@ -564,13 +591,25 @@ function TenantLoginPage({ initialTab = 'login' }) {
             </div>
             <div>
               <label className="block text-xs font-medium text-ink-muted mb-1">Confirmar contraseña</label>
-              <input
-                type="password"
-                value={regConfirm}
-                onChange={(e) => { setRegConfirm(e.target.value); clearErr(); }}
-                placeholder="Repetí tu contraseña"
-                className={`${INPUT_CLS} ${passMatch ? 'border-danger focus:border-danger focus:ring-danger' : ''}`}
-              />
+              <div className="relative">
+                <input
+                  type={showRegConfirm ? 'text' : 'password'}
+                  value={regConfirm}
+                  onChange={(e) => { setRegConfirm(e.target.value); clearErr(); }}
+                  placeholder="Repetí tu contraseña"
+                  className={`${INPUT_CLS} pr-10 ${passMatch ? 'border-danger focus:border-danger focus:ring-danger' : ''}`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowRegConfirm(v => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink transition-colors"
+                  tabIndex={-1}
+                >
+                  {showRegConfirm
+                    ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/></svg>
+                    : <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
+                </button>
+              </div>
               {passMatch && (
                 <p className="mt-1 text-[11px] text-danger">Las contraseñas no coinciden</p>
               )}
