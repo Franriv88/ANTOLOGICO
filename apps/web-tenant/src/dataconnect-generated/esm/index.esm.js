@@ -424,6 +424,18 @@ export function markReservaPaid(dcOrVars, vars) {
   return executeMutation(markReservaPaidRef(dcInstance, inputVars));
 }
 
+export const markReservaUnpaidRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'MarkReservaUnpaid', inputVars);
+}
+markReservaUnpaidRef.operationName = 'MarkReservaUnpaid';
+
+export function markReservaUnpaid(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(markReservaUnpaidRef(dcInstance, inputVars));
+}
+
 export const devExpireTrialRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();

@@ -59,6 +59,7 @@ This README will guide you through the process of using the generated JavaScript
   - [*DecrementarCupo*](#decrementarcupo)
   - [*CreateReservaConUsuario*](#createreservaconusuario)
   - [*MarkReservaPaid*](#markreservapaid)
+  - [*MarkReservaUnpaid*](#markreservaunpaid)
   - [*DevExpireTrial*](#devexpiretrial)
 
 # Accessing the connector
@@ -6105,6 +6106,115 @@ const ref = markReservaPaidRef({ id: ..., });
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
 const ref = markReservaPaidRef(dataConnect, markReservaPaidVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.reserva_update);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.reserva_update);
+});
+```
+
+## MarkReservaUnpaid
+You can execute the `MarkReservaUnpaid` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+markReservaUnpaid(vars: MarkReservaUnpaidVariables): MutationPromise<MarkReservaUnpaidData, MarkReservaUnpaidVariables>;
+
+interface MarkReservaUnpaidRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: MarkReservaUnpaidVariables): MutationRef<MarkReservaUnpaidData, MarkReservaUnpaidVariables>;
+}
+export const markReservaUnpaidRef: MarkReservaUnpaidRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+markReservaUnpaid(dc: DataConnect, vars: MarkReservaUnpaidVariables): MutationPromise<MarkReservaUnpaidData, MarkReservaUnpaidVariables>;
+
+interface MarkReservaUnpaidRef {
+  ...
+  (dc: DataConnect, vars: MarkReservaUnpaidVariables): MutationRef<MarkReservaUnpaidData, MarkReservaUnpaidVariables>;
+}
+export const markReservaUnpaidRef: MarkReservaUnpaidRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the markReservaUnpaidRef:
+```typescript
+const name = markReservaUnpaidRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `MarkReservaUnpaid` mutation requires an argument of type `MarkReservaUnpaidVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface MarkReservaUnpaidVariables {
+  id: UUIDString;
+}
+```
+### Return Type
+Recall that executing the `MarkReservaUnpaid` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `MarkReservaUnpaidData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface MarkReservaUnpaidData {
+  reserva_update?: Reserva_Key | null;
+}
+```
+### Using `MarkReservaUnpaid`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, markReservaUnpaid, MarkReservaUnpaidVariables } from '@antologico/dataconnect';
+
+// The `MarkReservaUnpaid` mutation requires an argument of type `MarkReservaUnpaidVariables`:
+const markReservaUnpaidVars: MarkReservaUnpaidVariables = {
+  id: ..., 
+};
+
+// Call the `markReservaUnpaid()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await markReservaUnpaid(markReservaUnpaidVars);
+// Variables can be defined inline as well.
+const { data } = await markReservaUnpaid({ id: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await markReservaUnpaid(dataConnect, markReservaUnpaidVars);
+
+console.log(data.reserva_update);
+
+// Or, you can use the `Promise` API.
+markReservaUnpaid(markReservaUnpaidVars).then((response) => {
+  const data = response.data;
+  console.log(data.reserva_update);
+});
+```
+
+### Using `MarkReservaUnpaid`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, markReservaUnpaidRef, MarkReservaUnpaidVariables } from '@antologico/dataconnect';
+
+// The `MarkReservaUnpaid` mutation requires an argument of type `MarkReservaUnpaidVariables`:
+const markReservaUnpaidVars: MarkReservaUnpaidVariables = {
+  id: ..., 
+};
+
+// Call the `markReservaUnpaidRef()` function to get a reference to the mutation.
+const ref = markReservaUnpaidRef(markReservaUnpaidVars);
+// Variables can be defined inline as well.
+const ref = markReservaUnpaidRef({ id: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = markReservaUnpaidRef(dataConnect, markReservaUnpaidVars);
 
 // Call `executeMutation()` on the reference to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.

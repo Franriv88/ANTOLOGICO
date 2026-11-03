@@ -761,6 +761,14 @@ export interface MarkReservaPaidVariables {
   id: UUIDString;
 }
 
+export interface MarkReservaUnpaidData {
+  reserva_update?: Reserva_Key | null;
+}
+
+export interface MarkReservaUnpaidVariables {
+  id: UUIDString;
+}
+
 export interface Plan_Key {
   id: UUIDString;
   __typename?: 'Plan_Key';
@@ -1341,6 +1349,18 @@ export const markReservaPaidRef: MarkReservaPaidRef;
 
 export function markReservaPaid(vars: MarkReservaPaidVariables): MutationPromise<MarkReservaPaidData, MarkReservaPaidVariables>;
 export function markReservaPaid(dc: DataConnect, vars: MarkReservaPaidVariables): MutationPromise<MarkReservaPaidData, MarkReservaPaidVariables>;
+
+interface MarkReservaUnpaidRef {
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: MarkReservaUnpaidVariables): MutationRef<MarkReservaUnpaidData, MarkReservaUnpaidVariables>;
+  /* Allow users to pass in custom DataConnect instances */
+  (dc: DataConnect, vars: MarkReservaUnpaidVariables): MutationRef<MarkReservaUnpaidData, MarkReservaUnpaidVariables>;
+  operationName: string;
+}
+export const markReservaUnpaidRef: MarkReservaUnpaidRef;
+
+export function markReservaUnpaid(vars: MarkReservaUnpaidVariables): MutationPromise<MarkReservaUnpaidData, MarkReservaUnpaidVariables>;
+export function markReservaUnpaid(dc: DataConnect, vars: MarkReservaUnpaidVariables): MutationPromise<MarkReservaUnpaidData, MarkReservaUnpaidVariables>;
 
 interface DevExpireTrialRef {
   /* Allow users to create refs without passing in DataConnect */

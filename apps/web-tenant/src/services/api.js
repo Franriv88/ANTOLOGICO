@@ -29,6 +29,7 @@ import {
   listPublicWorkshopsByEspacio,
   createReservaConUsuario,
   markReservaPaid,
+  markReservaUnpaid,
   listMyReservas,
   updateEspacioSlug,
   updateEspacioDirecciones,
@@ -98,6 +99,10 @@ export const reservas = {
   },
   markPaid: async (id) => {
     const result = await markReservaPaid({ id });
+    if (result.errors?.length) throw new Error(result.errors.map(e => e.message).join(' | '));
+  },
+  markUnpaid: async (id) => {
+    const result = await markReservaUnpaid({ id });
     if (result.errors?.length) throw new Error(result.errors.map(e => e.message).join(' | '));
   },
   cancel: async (id, workshopId) => {

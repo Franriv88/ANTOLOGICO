@@ -679,6 +679,14 @@ mutation MarkReservaPaid($id: UUID!) @auth(level: USER, insecureReason: "Solo ac
   })
 }
 
+mutation MarkReservaUnpaid($id: UUID!) @auth(level: USER, insecureReason: "Solo accesible desde el panel tenant donde el tenant ya está autenticado.") {
+  reserva_update(id: $id, data: {
+    estado:         PENDIENTE
+    estadoPago:     PENDIENTE
+    updatedAt_expr: "request.time"
+  })
+}
+
 # ─── TEMPORAL: Expirar trial para pruebas de pago ────────────────────────────
 # ELIMINAR después de probar. Mueve trialStartedAt 15 días al pasado.
 mutation DevExpireTrial($espacioId: UUID!) @auth(level: USER) {
