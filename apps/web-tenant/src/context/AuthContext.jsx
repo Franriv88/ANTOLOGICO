@@ -5,6 +5,9 @@ import { upsertProfesional, reassignProfesionalUid, listMyEspacios } from '../da
 
 const AuthContext = createContext(null);
 
+let _skipAdminCheck = false;
+export function markHandoff() { _skipAdminCheck = true; }
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(undefined);
   const [adminBlocked, setAdminBlocked] = useState(false);
@@ -13,8 +16,8 @@ export function AuthProvider({ children }) {
     return onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         if (firebaseUser.emailVerified) {
-          const skipAdminCheck = (() => { try { return sessionStorage.getItem('__handoff') === '1'; } catch { return false; } })();
-          if (skipAdminCheck) { try { sessionStorage.removeItem('__handoff'); } catch {} }
+          const skip = _skipAdminCheck;
+          _skipAdminCheck = false;
 
           let isAdmin = false;
           try {
@@ -24,7 +27,7 @@ export function AuthProvider({ children }) {
             console.warn('[Auth] getIdTokenResult failed:', e);
           }
 
-          if (isAdmin && !skipAdminCheck) {
+          if (isAdmin && !skip) {
             try {
               const { data } = await listMyEspacios();
               if ((data.espacios ?? []).length === 0) {

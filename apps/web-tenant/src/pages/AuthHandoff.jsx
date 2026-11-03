@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { signInWithCustomToken, signOut } from 'firebase/auth';
 import { auth } from '../lib/firebase';
-import { useAuth } from '../context/AuthContext';
+import { useAuth, markHandoff } from '../context/AuthContext';
 import { useEspacio } from '../context/EspacioContext';
 import { FullScreenLoader } from '../components/AntologicoLoader';
 
@@ -21,7 +21,7 @@ export default function AuthHandoff() {
     let cancelled = false;
     (async () => {
       try {
-        try { sessionStorage.setItem('__handoff', '1'); } catch {}
+        markHandoff();
         try { await signOut(auth); } catch { /* ignore */ }
         await signInWithCustomToken(auth, token);
         if (!cancelled) setSignedIn(true);
@@ -60,7 +60,7 @@ export default function AuthHandoff() {
           </div>
           <h1 className="font-display text-lg text-ink mb-2">No pudimos abrir tu sesión</h1>
           <p className="text-sm text-ink-muted mb-5">
-            {errorMsg} El link puede haber expirado. Volvé al Panel de Super Admin y probá otra vez.
+            {errorMsg}
           </p>
           <button
             onClick={() => navigate('/login', { replace: true })}
