@@ -525,7 +525,7 @@ function buildCancellationEmailHtml({ userName, workshopName, espacioName, works
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF7F2;padding:40px 20px;">
     <tr><td align="center">
       <table width="480" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;border:1px solid #E5DDD0;overflow:hidden;">
-        <tr><td style="background:#8C2E1F;padding:16px 32px;text-align:center;">
+        <tr><td style="background:#E85D4A;padding:16px 32px;text-align:center;">
           <img src="${LOGO_URL}" alt="Antológico" width="260" style="display:block;margin:0 auto;max-width:100%;height:auto;" />
         </td></tr>
         <tr><td style="padding:32px;">
