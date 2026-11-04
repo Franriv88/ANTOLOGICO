@@ -20,6 +20,9 @@ export default function AuthHandoff() {
     let cancelled = false;
     (async () => {
       try {
+        // Flag ANTES de signIn para que onAuthStateChanged lo vea
+        try { sessionStorage.setItem('__handoff', '1'); } catch {}
+
         await signInWithCustomToken(auth, token);
         if (cancelled) return;
 
@@ -43,6 +46,7 @@ export default function AuthHandoff() {
         }
 
         if (cancelled) return;
+        // Re-set flag para el reload (AuthContext pudo haberlo limpiado)
         try { sessionStorage.setItem('__handoff', '1'); } catch {}
         window.location.replace('/workshops');
       } catch (err) {
