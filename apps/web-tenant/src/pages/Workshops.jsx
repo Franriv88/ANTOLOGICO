@@ -566,7 +566,7 @@ export default function Workshops() {
         )}
 
         {/* Grilla de cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        {!loading && <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {displayItems.map(w => {
             const headerBg = w.headerType === 'COLOR' && w.headerValue
               ? w.headerValue
@@ -766,7 +766,7 @@ export default function Workshops() {
               </div>
             );
           })}
-        </div>
+        </div>}
       </div>
     </Layout>
   );
