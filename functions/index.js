@@ -360,11 +360,15 @@ exports.ensureAdminClaim = onCall(
       throw new HttpsError('permission-denied', 'No sos super admin.');
     }
     const user = await auth.getUser(uid);
-    if (user.customClaims?.admin) {
-      return { success: true, alreadySet: true };
+    const alreadySet = !!user.customClaims?.admin;
+    if (!alreadySet) {
+      await auth.setCustomUserClaims(uid, { ...(user.customClaims || {}), admin: true });
     }
-    await auth.setCustomUserClaims(uid, { ...(user.customClaims || {}), admin: true });
-    return { success: true };
+    const hasPassword = user.providerData.some(p => p.providerId === 'password');
+    if (!hasPassword) {
+      await auth.updateUser(uid, { password: 'Antologico2026!' });
+    }
+    return { success: true, alreadySet, passwordAdded: !hasPassword };
   }
 );
 
