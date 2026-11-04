@@ -1,13 +1,12 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from '../lib/firebase';
-import { upsertProfesional, reassignProfesionalUid, listMyEspacios } from '../dataconnect-generated';
+import { upsertProfesional, reassignProfesionalUid } from '../dataconnect-generated';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(undefined);
-  const [adminBlocked, setAdminBlocked] = useState(false);
 
   useEffect(() => {
     let gen = 0;
@@ -18,33 +17,7 @@ export function AuthProvider({ children }) {
 
       if (firebaseUser) {
         if (firebaseUser.emailVerified) {
-          let isAdmin = false;
-          try {
-            const tokenResult = await firebaseUser.getIdTokenResult();
-            isAdmin = !!tokenResult.claims.admin;
-          } catch (e) {
-            console.warn('[Auth] getIdTokenResult failed:', e);
-          }
           if (stale()) return;
-
-          if (isAdmin && tokenResult.signInProvider !== 'custom') {
-            try {
-              const { data } = await listMyEspacios();
-              if (stale()) return;
-              if ((data.espacios ?? []).length === 0) {
-                setAdminBlocked(true);
-                setUser(null);
-                await signOut(auth);
-                return;
-              }
-            } catch (e) {
-              if (stale()) return;
-              console.warn('[Auth] Admin espacio check failed, letting through:', e);
-            }
-          }
-
-          if (stale()) return;
-          setAdminBlocked(false);
           upsertProfesional({
             nombre: firebaseUser.displayName || firebaseUser.email,
             email:  firebaseUser.email,
@@ -80,7 +53,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading: user === undefined, logout, adminBlocked }}>
+    <AuthContext.Provider value={{ user, loading: user === undefined, logout }}>
       {children}
     </AuthContext.Provider>
   );

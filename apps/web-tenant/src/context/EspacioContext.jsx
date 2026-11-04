@@ -36,16 +36,23 @@ export function EspacioProvider({ children }) {
             list = await espacioApi.list(user.uid);
           } catch { /* email no existe en profesionales — usuario genuinamente nuevo */ }
         }
-        // Admin que llega vía handoff no tiene espacio en PostgreSQL — crearlo
-        let isHandoff = false;
-        try { isHandoff = !!sessionStorage.getItem('__handoff'); } catch {}
-        if (list.length === 0 && isHandoff) {
+        // Admin sin espacio en PostgreSQL — crearlo automáticamente
+        if (list.length === 0) {
+          let isAdmin = false;
           try {
-            await createEspacio({ nombre: user.displayName || 'Mi Espacio' });
-            list = await espacioApi.list(user.uid);
-          } catch (he) { console.warn('[Espacio] auto-create from handoff failed:', he); }
+            const tokenResult = await user.getIdTokenResult();
+            isAdmin = !!tokenResult.claims.admin;
+          } catch {}
+          let isHandoff = false;
+          try { isHandoff = !!sessionStorage.getItem('__handoff'); } catch {}
+          if (isAdmin || isHandoff) {
+            try {
+              await createEspacio({ nombre: user.displayName || 'Mi Espacio' });
+              list = await espacioApi.list(user.uid);
+            } catch (he) { console.warn('[Espacio] auto-create failed:', he); }
+          }
+          try { sessionStorage.removeItem('__handoff'); } catch {}
         }
-        try { sessionStorage.removeItem('__handoff'); } catch {}
         setEspacios(list);
         setActive((prev) => {
           const match = prev ? list.find((e) => e.id === prev.id) : null;
