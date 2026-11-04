@@ -32,7 +32,6 @@ import {
 // Emails que pueden ser super admin (se auto-registran en sa_admins al loguearse).
 const SEED_ADMIN_EMAILS = [
   'frivasv2388@gmail.com',
-  'superadmin@antologico.app',
 ];
 
 function uid() {

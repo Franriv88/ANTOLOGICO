@@ -25,7 +25,7 @@ const functionsDir = path.join(__dirname, '..', 'functions');
 const requireFromFunctions = createRequire(path.join(functionsDir, 'package.json'));
 
 const PROJECT_ID       = 'antologico';
-const SUPERADMIN_EMAIL = 'superadmin@antologico.app';
+const SUPERADMIN_EMAIL = 'frivasv2388@gmail.com';
 
 // ─── Colores ──────────────────────────────────────────────────────────────────
 const green  = (s) => `\x1b[32m${s}\x1b[0m`;
