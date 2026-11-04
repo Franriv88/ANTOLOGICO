@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { signInWithEmailLink } from 'firebase/auth';
+import { signInWithCustomToken } from 'firebase/auth';
 import { httpsCallable } from 'firebase/functions';
 import { auth, functions } from '../lib/firebase';
 import { FullScreenLoader } from '../components/AntologicoLoader';
@@ -24,11 +24,11 @@ export default function AuthHandoff() {
         const { data } = await redeem({ code });
         if (cancelled) return;
 
-        if (!data?.email || !data?.signInLink) {
+        if (!data?.customToken) {
           throw new Error('El servidor no devolvió credenciales válidas.');
         }
 
-        await signInWithEmailLink(auth, data.email, data.signInLink);
+        await signInWithCustomToken(auth, data.customToken);
         if (cancelled) return;
 
         try { sessionStorage.setItem('__handoff', '1'); } catch {}

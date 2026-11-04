@@ -367,12 +367,39 @@ export function injectBrandTheme({ primary, button, bg, dFont, bFont }) {
   document.head.appendChild(style);
 }
 
+const NavIconTalleres = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+    <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+  </svg>
+);
+const NavIconReservas = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+  </svg>
+);
+const NavIconReportes = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+  </svg>
+);
+const NavIconConfig = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+  </svg>
+);
+const NavIconPerfil = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+  </svg>
+);
+
 const NAV = [
-  { to: '/workshops', label: 'Talleres' },
-  { to: '/reservas',  label: 'Reservas' },
-  { to: '/reportes',  label: 'Reportes' },
-  { to: '/config',    label: 'Configuración' },
-  { to: '/perfil',    label: 'Mis datos' },
+  { to: '/workshops', label: 'Talleres',       icon: NavIconTalleres },
+  { to: '/reservas',  label: 'Reservas',       icon: NavIconReservas },
+  { to: '/reportes',  label: 'Reportes',       icon: NavIconReportes },
+  { to: '/config',    label: 'Configuración',  icon: NavIconConfig },
+  { to: '/perfil',    label: 'Mis datos',      icon: NavIconPerfil },
 ];
 
 const IconLogout = () => (
@@ -537,12 +564,13 @@ export default function Layout({ children }) {
         {/* Navegación + Instructivo centrado */}
         <div className="flex-1 min-h-0 overflow-y-auto scrollbar-brand flex flex-col px-3">
           <nav className="py-4 flex flex-col gap-0.5">
-            {NAV.map(({ to, label, disabled }) =>
+            {NAV.map(({ to, label, icon: Icon, disabled }) =>
               disabled ? (
                 <span
                   key={to}
-                  className="px-3 py-2 rounded-md text-sm text-ink-muted cursor-default select-none"
+                  className="flex items-center gap-2.5 px-3 py-2 rounded-md text-sm text-ink-muted cursor-default select-none"
                 >
+                  <span className="shrink-0 opacity-50"><Icon /></span>
                   {label}
                 </span>
               ) : (
@@ -550,13 +578,14 @@ export default function Layout({ children }) {
                   key={to}
                   to={to}
                   className={({ isActive }) =>
-                    `px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    `flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                       isActive
                         ? 'bg-primary/10 text-primary'
                         : 'text-ink hover:bg-surface-200'
                     }`
                   }
                 >
+                  <span className="shrink-0 opacity-70"><Icon /></span>
                   {label}
                 </NavLink>
               )

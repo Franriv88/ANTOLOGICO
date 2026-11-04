@@ -301,16 +301,13 @@ exports.createTenantSessionToken = onCall(
       await auth.updateUser(uid, { emailVerified: true });
     }
 
-    const signInLink = await auth.generateSignInWithEmailLink(u.email, {
-      url: 'https://www.antologico.app/auth/handoff',
-      handleCodeInApp: true,
-    });
+    const customToken = await auth.createCustomToken(uid);
 
     const code = require('crypto').randomBytes(20).toString('hex');
     await db.collection('handoff_sessions').doc(code).set({
       uid,
       email: u.email,
-      signInLink,
+      customToken,
       createdAt: FieldValue.serverTimestamp(),
       expiresAt: new Date(Date.now() + 5 * 60 * 1000),
     });
@@ -341,7 +338,7 @@ exports.redeemHandoffCode = onCall(
     }
 
     await ref.delete();
-    return { email: data.email, signInLink: data.signInLink };
+    return { customToken: data.customToken };
   }
 );
 

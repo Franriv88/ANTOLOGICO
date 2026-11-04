@@ -330,15 +330,15 @@ export default function Landing() {
 
           {/* Toggle de período */}
           <div className="flex flex-col items-center gap-2 mb-8">
-            <div className="flex gap-1 p-1 bg-surface-200 rounded-lg">
+            <div className="flex gap-1 bg-surface-200 p-1 rounded-lg">
               {PERIODOS.map(op => {
                 const plan0 = (planes ?? [])[0];
                 const dto = op.id === 'trimestral' ? (plan0?.descuentoTrimestral ?? 0)
                           : op.id === 'anual'      ? (plan0?.descuentoAnual      ?? 0) : 0;
                 return (
                   <button key={op.id} type="button" onClick={() => setPeriodo(op.id)}
-                    className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                      periodo === op.id ? 'bg-surface-100 shadow-sm text-ink' : 'text-ink-muted hover:text-ink'
+                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                      periodo === op.id ? 'bg-surface-100 text-ink shadow-sm' : 'text-ink-muted hover:text-ink'
                     }`}>
                     {op.label}
                     {op.id !== 'mensual' && dto > 0 && (
@@ -383,6 +383,7 @@ export default function Landing() {
                       ? 'border-primary bg-primary/5 shadow-md'
                       : 'border-border bg-surface-0 hover:border-primary/40 hover:shadow-sm'
                   }`}
+                  style={{ minHeight: 320 }}
                 >
                   {highlight && (
                     <span className="text-xs font-semibold text-primary mb-2 uppercase tracking-wide">

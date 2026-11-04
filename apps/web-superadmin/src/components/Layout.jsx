@@ -3,15 +3,56 @@ import { useAuth } from '../context/AuthContext';
 import { IconAntologico } from './LogoAntologico';
 import { useTheme } from '../hooks/useTheme';
 
+const NavIconTenants = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+  </svg>
+);
+const NavIconPlanes = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
+  </svg>
+);
+const NavIconReportes = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+  </svg>
+);
+const NavIconMetricas = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+  </svg>
+);
+const NavIconRubros = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+  </svg>
+);
+const NavIconCupones = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>
+  </svg>
+);
+const NavIconUsuarios = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+  </svg>
+);
+const NavIconMiEspacio = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+  </svg>
+);
+
 const NAV = [
-  { to: '/tenants',    label: 'Tenants' },
-  { to: '/planes',     label: 'Planes y Promociones' },
-  { to: '/reportes',   label: 'Reportes' },
-  { to: '/metricas',   label: 'Métricas' },
-  { to: '/rubros',     label: 'Rubros' },
-  { to: '/cupones',    label: 'Cupones' },
-  { to: '/usuarios',   label: 'Usuarios' },
-  { to: '/mi-espacio', label: 'Mi Espacio' },
+  { to: '/tenants',    label: 'Tenants',              icon: NavIconTenants },
+  { to: '/planes',     label: 'Planes y Promociones', icon: NavIconPlanes },
+  { to: '/reportes',   label: 'Reportes',             icon: NavIconReportes },
+  { to: '/metricas',   label: 'Métricas',             icon: NavIconMetricas },
+  { to: '/rubros',     label: 'Rubros',               icon: NavIconRubros },
+  { to: '/cupones',    label: 'Cupones',              icon: NavIconCupones },
+  { to: '/usuarios',   label: 'Usuarios',             icon: NavIconUsuarios },
+  { to: '/mi-espacio', label: 'Mi Espacio',           icon: NavIconMiEspacio },
 ];
 
 const IconLogout = () => (
@@ -87,12 +128,12 @@ export default function Layout({ children }) {
 
         {/* Navegación */}
         <nav className="flex-1 py-4 px-2 flex flex-col gap-0.5">
-          {NAV.map(({ to, label }) => (
+          {NAV.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
               className={({ isActive }) =>
-                `flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors border-l-2 ${
+                `flex items-center gap-2.5 px-3 py-2 rounded-md text-sm font-medium transition-colors border-l-2 ${
                   isActive
                     ? 'border-[#B98527] text-white bg-white/8'
                     : 'border-transparent hover:bg-white/6'
@@ -102,6 +143,7 @@ export default function Layout({ children }) {
                 color: isActive ? '#EFE7D8' : 'rgba(239,231,216,0.55)',
               })}
             >
+              <span className="shrink-0 opacity-75"><Icon /></span>
               {label}
             </NavLink>
           ))}
