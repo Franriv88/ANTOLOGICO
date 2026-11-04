@@ -251,6 +251,7 @@ function TenantDetailModal({ group, planes, onClose }) {
           <DetailRow label="Rubro">{rubro}</DetailRow>
           <DetailRow label="Plan">{planNombre}</DetailRow>
           <DetailRow label="Espacio principal">{p.nombre || '—'}</DetailRow>
+          <DetailRow label="Espacio ID"><span className="font-mono text-[11px] select-all">{p.id}</span></DetailRow>
           {group.extras.length > 0 && (
             <DetailRow label="Otros espacios">
               <div className="flex flex-col gap-1">

@@ -186,7 +186,7 @@ export default function Workshops() {
     document.head.appendChild(link);
   }, [brand.displayFont, brand.bodyFont]);
 
-  async function load() {
+  async function load(retryForId) {
     if (!activeEspacio) return;
     try {
       setLoading(true);
@@ -195,7 +195,16 @@ export default function Workshops() {
         ...(estado && { estado }),
         ...(q && { q }),
       });
-      setItems(data);
+      if (retryForId && !data.some(w => w.id === retryForId)) {
+        await new Promise(r => setTimeout(r, 800));
+        const retry = await api.list(activeEspacio.id, {
+          ...(estado && { estado }),
+          ...(q && { q }),
+        });
+        setItems(retry);
+      } else {
+        setItems(data);
+      }
     } catch (e) {
       setError(e.message);
     } finally {
@@ -203,7 +212,13 @@ export default function Workshops() {
     }
   }
 
-  useEffect(() => { load(); }, [estado, activeEspacio?.id, location.state?.refresh]);
+  useEffect(() => {
+    const nw = location.state?.newWorkshop;
+    if (nw) {
+      setItems(prev => prev.some(w => w.id === nw.id) ? prev : [nw, ...prev]);
+    }
+    load(nw?.id);
+  }, [estado, activeEspacio?.id, location.key]);
 
   function handleDeleteRequest(id, nombre) {
     setConfirm({ action: 'delete', id, nombre });

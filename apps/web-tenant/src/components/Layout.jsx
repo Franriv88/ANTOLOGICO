@@ -88,7 +88,7 @@ const PERIODOS_OVERLAY = [
   { id: 'anual',      label: 'Anual' },
 ];
 
-function TrialExpiredOverlay({ espacio, trialDays, onSelectPlan }) {
+function TrialExpiredOverlay({ espacio, trialDays, onSelectPlan, user }) {
   const planes = usePlanes();
   const [periodo, setPeriodo] = useState('mensual');
   const [loadingPlan, setLoadingPlan] = useState(null);
@@ -118,7 +118,7 @@ function TrialExpiredOverlay({ espacio, trialDays, onSelectPlan }) {
           amount: total,
           frequency: meses,
           frequencyType: 'months',
-          payerEmail: espacio.email || 'tenant@antologico.app',
+          payerEmail: user.email,
           externalReference: `sub|${espacio.id}|${plan.id}|${periodo}`,
           backUrl,
         }),
@@ -475,7 +475,7 @@ export default function Layout({ children }) {
     <div className="flex h-screen overflow-hidden">
 
       {/* Overlay bloqueante cuando la prueba venció */}
-      {trialExpired && <TrialExpiredOverlay espacio={activeEspacio} trialDays={trialDays} />}
+      {trialExpired && <TrialExpiredOverlay espacio={activeEspacio} trialDays={trialDays} user={user} />}
 
       {/* ── Sidebar ── */}
       <aside className="w-56 shrink-0 bg-surface-100 border-r border-border flex flex-col h-screen">

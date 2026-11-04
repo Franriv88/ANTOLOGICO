@@ -663,12 +663,13 @@ export default function WorkshopForm() {
       if (isEdit) {
         const updated = await api.update(id, activeEspacio.id, payload);
         if (!updated) throw new Error('El taller no pudo actualizarse. Verificá que el emulador de Firebase esté activo.');
+        navigate('/workshops', { state: { refresh: Date.now() } });
       } else {
         const created = await api.create(activeEspacio.id, payload);
         if (!created) throw new Error('El taller no pudo guardarse. Verificá que el emulador de Firebase esté activo.');
         trackWorkshopCreado({ workshopId: created.id, espacioId: activeEspacio.id });
+        navigate('/workshops', { state: { refresh: Date.now(), newWorkshop: { id: created.id, ...payload } } });
       }
-      navigate('/workshops', { state: { refresh: Date.now() } });
     } catch (err) {
       setErrors({ _server: err?.message || 'Error desconocido al guardar' });
     } finally {

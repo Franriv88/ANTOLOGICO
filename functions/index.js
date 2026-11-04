@@ -417,23 +417,18 @@ exports.notifyTenantNewBooking = onCall(
   { secrets: [smtpPass], region: 'us-central1' },
   async (request) => {
     const { espacioId, tenantUid: tenantUidParam, workshopName, clientName, clientEmail, clientPhone, metodoPago, cantidad } = request.data || {};
-    console.log('notifyTenantNewBooking called', { espacioId, tenantUidParam, workshopName, clientName, clientEmail, metodoPago, cantidad });
-
     if (!espacioId || !workshopName || !clientName || !clientEmail) {
-      console.error('Missing required fields');
       throw new HttpsError('invalid-argument', 'Faltan datos de la reserva.');
     }
 
     let tenantUid = tenantUidParam;
     if (!tenantUid) {
       const espSnap = await db.collection('demo_espacios').doc(espacioId).get();
-      console.log('espacio exists (Firestore fallback):', espSnap.exists, 'id:', espacioId);
       if (!espSnap.exists) {
         throw new HttpsError('not-found', 'Espacio no encontrado. Pasá tenantUid directamente.');
       }
       tenantUid = espSnap.data()?.userId;
     }
-    console.log('tenantUid:', tenantUid);
     if (!tenantUid) {
       throw new HttpsError('not-found', 'El espacio no tiene dueño asignado.');
     }
@@ -444,7 +439,6 @@ exports.notifyTenantNewBooking = onCall(
       const tenantUser = await auth.getUser(tenantUid);
       tenantEmail = tenantUser.email;
       tenantName = tenantUser.displayName;
-      console.log('tenant email:', tenantEmail);
     } catch (err) {
       console.error('Failed to get tenant user:', err.message);
       throw new HttpsError('not-found', 'No se pudo obtener el email del tenant.');
@@ -472,7 +466,6 @@ exports.notifyTenantNewBooking = onCall(
           fecha,
         }),
       });
-      console.log('Email sent successfully to', tenantEmail);
     } catch (err) {
       console.error('Failed to send email:', err.message);
       throw new HttpsError('internal', 'Error al enviar el email.');

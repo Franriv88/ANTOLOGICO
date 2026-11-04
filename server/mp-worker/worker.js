@@ -166,7 +166,6 @@ async function crearSuscripcion(request, env) {
   const body = {
     reason,
     external_reference: externalReference,
-    payer_email: payerEmail,
     auto_recurring: {
       frequency:          Number(frequency),
       frequency_type:     frequencyType || 'months',
@@ -174,8 +173,8 @@ async function crearSuscripcion(request, env) {
       currency_id:        'ARS',
     },
     back_url: backUrl,
-    status:   'pending',
   };
+  if (payerEmail) body.payer_email = payerEmail;
 
   const mpRes = await fetch('https://api.mercadopago.com/preapproval', {
     method: 'POST',
@@ -256,69 +255,6 @@ async function webhookHandler(request, env) {
   return new Response('OK', { status: 200 });
 }
 
-// ── Debug ────────────────────────────────────────────────────────────────────
-
-async function debugCredentials(request, env) {
-  const { searchParams } = new URL(request.url);
-  const tenantId = searchParams.get('tenantId');
-
-  const tenantData = tenantId
-    ? await env.MP_TENANTS.get(`tenant:${tenantId}`, 'json')
-    : null;
-
-  const accessToken = tenantData?.accessToken ?? env.MP_ACCESS_TOKEN;
-  const source = tenantData?.accessToken ? 'OAUTH_KV' : 'ENV';
-
-  let mpUserInfo = null;
-  try {
-    const meRes = await fetch('https://api.mercadopago.com/users/me', {
-      headers: { 'Authorization': `Bearer ${accessToken}` },
-    });
-    const me = await meRes.json();
-    mpUserInfo = meRes.ok
-      ? { id: me.id, nickname: me.nickname, site_id: me.site_id, tags: me.tags, status: me.status }
-      : { error: me.message };
-  } catch (e) {
-    mpUserInfo = { error: e.message };
-  }
-
-  let testPaymentResult = null;
-  try {
-    const testRes = await fetch('https://api.mercadopago.com/checkout/preferences', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        items: [{ title: 'Debug test', quantity: 1, unit_price: 100, currency_id: 'ARS' }],
-        payer: { email: 'test_debug@testuser.com' },
-      }),
-    });
-    const testData = await testRes.json();
-    testPaymentResult = testRes.ok
-      ? { ok: true, sandbox_init_point: testData.sandbox_init_point ? 'present' : 'absent', init_point: testData.init_point ? 'present' : 'absent' }
-      : { ok: false, error: testData.message, status: testRes.status };
-  } catch (e) {
-    testPaymentResult = { error: e.message };
-  }
-
-  const tokenPrefix = accessToken?.substring(0, 20) + '...';
-  const isTestToken = accessToken?.startsWith('TEST-');
-  const isAppToken  = accessToken?.startsWith('APP_USR-');
-
-  return json({
-    tenantId,
-    tokenSource: source,
-    hasOAuthInKV: !!tenantData,
-    oauthConnectedAt: tenantData?.connectedAt ?? null,
-    mpUser: mpUserInfo,
-    tokenAnalysis: { prefix: tokenPrefix, isTestPrefix: isTestToken, isAppUsrPrefix: isAppToken },
-    testPreference: testPaymentResult,
-    envTokenPrefix: env.MP_ACCESS_TOKEN?.substring(0, 15) + '...',
-  });
-}
-
 // ── Router ────────────────────────────────────────────────────────────────────
 
 export default {
@@ -333,7 +269,6 @@ export default {
       if (pathname === '/oauth/callback')       return oauthCallback(request, env);
       if (pathname === '/tenant-mp-config')     return getTenantMpConfig(request, env);
       if (pathname === '/suscripcion-status')   return verificarSuscripcion(request, env);
-      if (pathname === '/debug')                return debugCredentials(request, env);
     }
 
     // POST routes
