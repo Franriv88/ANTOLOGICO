@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useRef, useState, useCallback, useEffect } from 'react';
+import { useRef, useState, useCallback, useEffect, useLayoutEffect } from 'react';
 import { IconAntologico, LogoAntologico } from '../components/LogoAntologico';
 import { usePlanes, precioConPeriodo } from '../hooks/usePlanes';
 import { usePromo, isPromoActiva, precioConPromoYPeriodo } from '../hooks/usePromo';
@@ -154,6 +154,56 @@ function MobileNoticeScreen({ onDismiss }) {
         ¿Sos alumno/a?{' '}
         <a href="/inicio" className="underline font-medium text-white">Ir a mi inicio</a>
       </p>
+    </div>
+  );
+}
+
+function PeriodToggle({ periodo, setPeriodo, planes }) {
+  const containerRef = useRef(null);
+  const [pill, setPill] = useState({ left: 0, width: 0 });
+  const [ready, setReady] = useState(false);
+
+  const measure = useCallback(() => {
+    const c = containerRef.current;
+    if (!c) return;
+    const a = c.querySelector('[data-active="true"]');
+    if (!a) return;
+    const cR = c.getBoundingClientRect();
+    const aR = a.getBoundingClientRect();
+    setPill({ left: aR.left - cR.left, width: aR.width });
+    if (!ready) setReady(true);
+  }, [periodo, ready]);
+
+  useLayoutEffect(measure, [measure]);
+
+  return (
+    <div ref={containerRef} className="relative flex items-center gap-1 bg-surface-200 border border-border rounded-xl p-1">
+      <div
+        className="absolute rounded-lg bg-primary shadow-sm pointer-events-none"
+        style={{
+          left: pill.left, width: pill.width, top: 4, bottom: 4,
+          transition: ready ? 'left .3s cubic-bezier(.4,.0,.2,1), width .3s cubic-bezier(.4,.0,.2,1)' : 'none',
+        }}
+      />
+      {PERIODOS.map(op => {
+        const plan0 = (planes ?? [])[0];
+        const dto = op.id === 'trimestral' ? (plan0?.descuentoTrimestral ?? 0)
+                  : op.id === 'anual'      ? (plan0?.descuentoAnual      ?? 0) : 0;
+        const active = periodo === op.id;
+        return (
+          <button key={op.id} type="button"
+            data-active={active || undefined}
+            onClick={() => setPeriodo(op.id)}
+            className={`relative z-[1] px-3 py-1.5 rounded-lg text-xs font-medium transition-colors duration-200 ${
+              active ? 'text-white' : 'text-ink-muted hover:text-ink hover:bg-surface-300'
+            }`}>
+            {op.label}
+            {op.id !== 'mensual' && dto > 0 && (
+              <span className={`ml-1.5 text-xs font-semibold ${active ? 'text-white/80' : 'text-success'}`}>−{dto}%</span>
+            )}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -330,24 +380,7 @@ export default function Landing() {
 
           {/* Toggle de período */}
           <div className="flex flex-col items-center gap-2 mb-8">
-            <div className="flex gap-1 bg-surface-200 p-1 rounded-lg">
-              {PERIODOS.map(op => {
-                const plan0 = (planes ?? [])[0];
-                const dto = op.id === 'trimestral' ? (plan0?.descuentoTrimestral ?? 0)
-                          : op.id === 'anual'      ? (plan0?.descuentoAnual      ?? 0) : 0;
-                return (
-                  <button key={op.id} type="button" onClick={() => setPeriodo(op.id)}
-                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                      periodo === op.id ? 'bg-surface-0 text-ink shadow-sm' : 'text-ink-muted hover:text-ink'
-                    }`}>
-                    {op.label}
-                    {op.id !== 'mensual' && dto > 0 && (
-                      <span className="ml-1.5 text-xs text-success font-semibold">−{dto}%</span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+            <PeriodToggle periodo={periodo} setPeriodo={setPeriodo} planes={planes} />
             {periodo !== 'mensual' && (planes ?? []).length > 0 && (() => {
               const maxAhorro = Math.max(...(planes ?? []).map(p => {
                 const meses = periodo === 'trimestral' ? 3 : 12;

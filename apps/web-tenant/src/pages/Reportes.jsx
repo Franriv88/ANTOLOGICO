@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, useLayoutEffect, useCallback } from 'react';
 import { useEspacio } from '../context/EspacioContext';
 import * as api from '../services/api';
 import Layout from '../components/Layout';
@@ -163,6 +163,55 @@ const PERIODS = [
   { id: 'year',  label: 'Histórico',    chartLabel: 'por año' },
 ];
 
+function PillToggle({ value, onChange, options }) {
+  const containerRef = useRef(null);
+  const [pill, setPill] = useState({ left: 0, width: 0 });
+  const [ready, setReady] = useState(false);
+
+  const measure = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const active = container.querySelector('[data-active="true"]');
+    if (!active) return;
+    const cRect = container.getBoundingClientRect();
+    const aRect = active.getBoundingClientRect();
+    setPill({ left: aRect.left - cRect.left, width: aRect.width });
+    if (!ready) setReady(true);
+  }, [value, ready]);
+
+  useLayoutEffect(measure, [measure]);
+
+  return (
+    <div ref={containerRef} className="relative flex items-center gap-1 bg-surface-100 border border-border rounded-xl p-1">
+      <div
+        className="absolute rounded-lg bg-primary shadow-sm pointer-events-none"
+        style={{
+          left: pill.left,
+          width: pill.width,
+          top: 4,
+          bottom: 4,
+          transition: ready ? 'left .3s cubic-bezier(.4,.0,.2,1), width .3s cubic-bezier(.4,.0,.2,1)' : 'none',
+        }}
+      />
+      {options.map(o => {
+        const active = value === o.id;
+        return (
+          <button
+            key={o.id}
+            data-active={active || undefined}
+            onClick={() => { if (o.id !== value) onChange(o.id); }}
+            className={`relative z-[1] px-3 py-1.5 rounded-lg text-xs font-medium transition-colors duration-200 ${
+              active ? 'text-white' : 'text-ink-muted hover:text-ink hover:bg-surface-200'
+            }`}
+          >
+            {o.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function Reportes() {
   const { activeEspacio } = useEspacio();
   const [workshops, setWorkshops] = useState([]);
@@ -274,19 +323,7 @@ export default function Reportes() {
       {/* Header + period tabs */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display text-2xl text-ink">Reportes</h1>
-        <div className="flex gap-1 bg-surface-200 p-1 rounded-lg">
-          {PERIODS.map(p => (
-            <button
-              key={p.id}
-              onClick={() => setPeriod(p.id)}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                period === p.id ? 'bg-surface-100 text-ink shadow-sm' : 'text-ink-muted hover:text-ink'
-              }`}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
+        <PillToggle value={period} onChange={setPeriod} options={PERIODS} />
       </div>
 
       {!hasData ? (
