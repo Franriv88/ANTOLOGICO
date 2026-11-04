@@ -436,18 +436,6 @@ export function markReservaUnpaid(dcOrVars, vars) {
   return executeMutation(markReservaUnpaidRef(dcInstance, inputVars));
 }
 
-export const devExpireTrialRef = (dcOrVars, vars) => {
-  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
-  dcInstance._useGeneratedSdk();
-  return mutationRef(dcInstance, 'DevExpireTrial', inputVars);
-}
-devExpireTrialRef.operationName = 'DevExpireTrial';
-
-export function devExpireTrial(dcOrVars, vars) {
-  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
-  return executeMutation(devExpireTrialRef(dcInstance, inputVars));
-}
-
 export const listReservasByEspacioRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();

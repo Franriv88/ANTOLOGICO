@@ -344,14 +344,6 @@ export interface DeleteWorkshopVariables {
   espacioId: UUIDString;
 }
 
-export interface DevExpireTrialData {
-  expired?: number | null;
-}
-
-export interface DevExpireTrialVariables {
-  espacioId: UUIDString;
-}
-
 export interface Dominio_Key {
   id: UUIDString;
   __typename?: 'Dominio_Key';
@@ -1361,18 +1353,6 @@ export const markReservaUnpaidRef: MarkReservaUnpaidRef;
 
 export function markReservaUnpaid(vars: MarkReservaUnpaidVariables): MutationPromise<MarkReservaUnpaidData, MarkReservaUnpaidVariables>;
 export function markReservaUnpaid(dc: DataConnect, vars: MarkReservaUnpaidVariables): MutationPromise<MarkReservaUnpaidData, MarkReservaUnpaidVariables>;
-
-interface DevExpireTrialRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: DevExpireTrialVariables): MutationRef<DevExpireTrialData, DevExpireTrialVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: DevExpireTrialVariables): MutationRef<DevExpireTrialData, DevExpireTrialVariables>;
-  operationName: string;
-}
-export const devExpireTrialRef: DevExpireTrialRef;
-
-export function devExpireTrial(vars: DevExpireTrialVariables): MutationPromise<DevExpireTrialData, DevExpireTrialVariables>;
-export function devExpireTrial(dc: DataConnect, vars: DevExpireTrialVariables): MutationPromise<DevExpireTrialData, DevExpireTrialVariables>;
 
 interface ListReservasByEspacioRef {
   /* Allow users to create refs without passing in DataConnect */
