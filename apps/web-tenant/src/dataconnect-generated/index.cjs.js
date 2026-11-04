@@ -356,6 +356,20 @@ exports.cancelarReserva = function cancelarReserva(dcOrVars, vars) {
 }
 ;
 
+const cancelarWorkshopConReservasRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'CancelarWorkshopConReservas', inputVars);
+}
+cancelarWorkshopConReservasRef.operationName = 'CancelarWorkshopConReservas';
+exports.cancelarWorkshopConReservasRef = cancelarWorkshopConReservasRef;
+
+exports.cancelarWorkshopConReservas = function cancelarWorkshopConReservas(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(cancelarWorkshopConReservasRef(dcInstance, inputVars));
+}
+;
+
 const adminUpdateEspacioRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
@@ -732,6 +746,21 @@ exports.listMyReservas = function listMyReservas(dcOrOptions, options) {
   
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
   return executeQuery(listMyReservasRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+;
+
+const listReservasByWorkshopRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'ListReservasByWorkshop', inputVars);
+}
+listReservasByWorkshopRef.operationName = 'ListReservasByWorkshop';
+exports.listReservasByWorkshopRef = listReservasByWorkshopRef;
+
+exports.listReservasByWorkshop = function listReservasByWorkshop(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(listReservasByWorkshopRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 ;
 

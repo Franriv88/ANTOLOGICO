@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { httpsCallable } from 'firebase/functions';
 import Layout from '../components/Layout';
 import SlotBadge from '../components/SlotBadge';
 import { workshops as api } from '../services/api';
 import { getSlotStatus } from '../lib/slotStatus';
 import { useEspacio } from '../context/EspacioContext';
 import { TIPO_CONFIG, formatDuracion } from '../lib/tipoWorkshop';
+import { functions } from '../lib/firebase';
 
 const ESTADOS = ['', 'BORRADOR', 'PUBLICADO', 'CANCELADO', 'FINALIZADO'];
 const ESTADO_LABEL = {
@@ -167,7 +169,9 @@ export default function Workshops() {
   const [error, setError] = useState('');
   const [estado, setEstado] = useState('');
   const [q, setQ] = useState('');
-  const [confirm, setConfirm] = useState(null); // { id, nombre }
+  const [confirm, setConfirm] = useState(null); // { action, id, nombre, reservas? }
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const [cancelSummary, setCancelSummary] = useState(null); // { workshopName, sent, reservas }
   const navigate = useNavigate();
   const location = useLocation();
   const brand = parseBrand(activeEspacio);
@@ -224,12 +228,21 @@ export default function Workshops() {
     setConfirm({ action: 'delete', id, nombre });
   }
 
-  function handleCancelRequest(id, nombre) {
-    setConfirm({ action: 'cancel', id, nombre });
+  async function handleCancelRequest(id, nombre) {
+    setCancelLoading(true);
+    try {
+      const reservas = await api.listReservas(id);
+      const activas = reservas.filter(r => r.estado !== 'CANCELADA');
+      setConfirm({ action: 'cancel', id, nombre, reservas: activas });
+    } catch (e) {
+      setConfirm({ action: 'cancel', id, nombre, reservas: [] });
+    } finally {
+      setCancelLoading(false);
+    }
   }
 
   async function handleConfirm() {
-    const { action, id } = confirm;
+    const { action, id, nombre, reservas: affectedReservas } = confirm;
     setConfirm(null);
     if (action === 'delete') {
       try {
@@ -239,8 +252,47 @@ export default function Workshops() {
         alert(e.message);
       }
     } else if (action === 'cancel') {
-      const w = items.find(x => x.id === id);
-      if (w) await handleQuickStatus(w, 'cancelar');
+      setCancelLoading(true);
+      try {
+        await api.cancelWithReservas(id, activeEspacio.id);
+        setItems(prev => prev.map(item =>
+          item.id === id ? { ...item, estado: 'CANCELADO' } : item
+        ));
+
+        let sent = 0;
+        if (affectedReservas?.length) {
+          const w = items.find(x => x.id === id);
+          const workshopDate = w?.fecha
+            ? new Date(w.fecha).toLocaleDateString('es-AR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+            : '';
+          try {
+            const { data } = await httpsCallable(functions, 'notifyWorkshopCancelled')({
+              workshopName: nombre,
+              espacioName: activeEspacio.nombre,
+              workshopDate,
+              reservas: affectedReservas.map(r => ({
+                email: r.usuario?.email,
+                nombre: r.usuario?.nombre,
+                metodoPago: r.metodoPago,
+                estadoPago: r.estadoPago,
+              })),
+            });
+            sent = data.sent || 0;
+          } catch (e) {
+            console.error('Notification error:', e);
+          }
+        }
+
+        setCancelSummary({
+          workshopName: nombre,
+          sent,
+          reservas: affectedReservas || [],
+        });
+      } catch (e) {
+        alert(e.message);
+      } finally {
+        setCancelLoading(false);
+      }
     }
   }
 
@@ -283,21 +335,144 @@ export default function Workshops() {
 
   return (
     <Layout>
-      {confirm && (
+      {confirm && confirm.action === 'delete' && (
         <ConfirmModal
-          title={confirm.action === 'delete' ? 'Eliminar taller' : 'Cancelar taller'}
-          message={
-            confirm.action === 'delete'
-              ? `¿Eliminar "${confirm.nombre}"? Esta acción no se puede deshacer.`
-              : `¿Cancelar "${confirm.nombre}"? El taller quedará marcado como cancelado y ya no será visible para los usuarios.`
-          }
-          confirmLabel={confirm.action === 'delete' ? 'Eliminar' : 'Cancelar taller'}
-          confirmClass={confirm.action === 'delete'
-            ? 'bg-danger text-white hover:bg-danger/90'
-            : 'bg-ink text-white hover:bg-ink/80'}
+          title="Eliminar taller"
+          message={`¿Eliminar "${confirm.nombre}"? Esta acción no se puede deshacer.`}
+          confirmLabel="Eliminar"
+          confirmClass="bg-danger text-white hover:bg-danger/90"
           onConfirm={handleConfirm}
           onCancel={() => setConfirm(null)}
         />
+      )}
+
+      {confirm && confirm.action === 'cancel' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setConfirm(null)} />
+          <div className="relative bg-surface-100 border border-border rounded-xl shadow-2xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
+            <h2 className="font-display text-lg text-ink mb-2">Cancelar taller</h2>
+            <p className="text-sm text-ink-muted mb-4">
+              ¿Cancelar &quot;{confirm.nombre}&quot;? El taller quedará marcado como cancelado.
+            </p>
+
+            {confirm.reservas?.length > 0 && (
+              <div className="border border-border rounded-lg p-3 mb-4 bg-surface-50">
+                <p className="text-xs font-semibold text-ink mb-2">
+                  {confirm.reservas.length} reserva{confirm.reservas.length > 1 ? 's' : ''} activa{confirm.reservas.length > 1 ? 's' : ''} serán canceladas:
+                </p>
+                <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                  {confirm.reservas.map(r => (
+                    <div key={r.id} className="flex items-center justify-between text-xs">
+                      <span className="text-ink truncate mr-2">{r.usuario?.nombre || r.usuario?.email}</span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                          r.estadoPago === 'PAGADO' ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800'
+                        }`}>
+                          {r.estadoPago === 'PAGADO' ? 'Pagado' : 'Pendiente'}
+                        </span>
+                        <span className="text-ink-muted text-[10px]">
+                          {r.metodoPago === 'MERCADO_PAGO' ? 'MP' : 'Efvo'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {confirm.reservas.some(r => r.estadoPago === 'PAGADO') && (
+                  <p className="text-[11px] text-amber-700 mt-2 leading-snug">
+                    Hay reservas pagas. Se notificará a los usuarios y podrás gestionar las devoluciones.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {confirm.reservas?.length === 0 && (
+              <p className="text-xs text-ink-muted mb-4">No hay reservas activas para este taller.</p>
+            )}
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setConfirm(null)}
+                className="px-4 py-2 text-sm font-medium text-ink hover:bg-surface-200 rounded-md transition-colors border border-border"
+              >
+                Volver
+              </button>
+              <button
+                onClick={handleConfirm}
+                disabled={cancelLoading}
+                className="px-4 py-2 text-sm font-semibold rounded-md transition-colors bg-ink text-white hover:bg-ink/80 disabled:opacity-50"
+              >
+                {cancelLoading ? 'Cancelando...' : 'Cancelar taller'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {cancelSummary && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setCancelSummary(null)} />
+          <div className="relative bg-surface-100 border border-border rounded-xl shadow-2xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
+            <h2 className="font-display text-lg text-ink mb-2">Taller cancelado</h2>
+            <p className="text-sm text-ink-muted mb-4">
+              &quot;{cancelSummary.workshopName}&quot; fue cancelado exitosamente.
+            </p>
+
+            {cancelSummary.reservas.length > 0 && (
+              <div className="border border-border rounded-lg p-3 mb-4 bg-surface-50">
+                <p className="text-xs font-semibold text-ink mb-1">
+                  {cancelSummary.reservas.length} reserva{cancelSummary.reservas.length > 1 ? 's' : ''} cancelada{cancelSummary.reservas.length > 1 ? 's' : ''}
+                </p>
+                <p className="text-xs text-ink-muted mb-3">
+                  {cancelSummary.sent > 0
+                    ? `Se envió notificación por email a ${cancelSummary.sent} usuario${cancelSummary.sent > 1 ? 's' : ''}.`
+                    : 'No se pudieron enviar notificaciones por email.'}
+                </p>
+
+                {cancelSummary.reservas.some(r => r.estadoPago === 'PAGADO') && (
+                  <>
+                    <p className="text-xs font-semibold text-ink mb-1.5">Devoluciones pendientes:</p>
+                    <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                      {cancelSummary.reservas.filter(r => r.estadoPago === 'PAGADO').map(r => (
+                        <div key={r.id} className="flex items-center justify-between text-xs bg-white rounded p-2 border border-border">
+                          <div className="truncate mr-2">
+                            <span className="font-medium text-ink">{r.usuario?.nombre}</span>
+                            <span className="text-ink-muted ml-1">({r.usuario?.email})</span>
+                          </div>
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium shrink-0 ${
+                            r.metodoPago === 'MERCADO_PAGO' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-800'
+                          }`}>
+                            {r.metodoPago === 'MERCADO_PAGO' ? 'Mercado Pago' : 'Efectivo'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-[11px] text-amber-700 mt-2 leading-snug">
+                      Recordá gestionar las devoluciones desde la sección de Reservas o contactando a cada usuario.
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
+
+            <div className="flex justify-end">
+              <button
+                onClick={() => setCancelSummary(null)}
+                className="px-4 py-2 text-sm font-semibold rounded-md transition-colors bg-ink text-white hover:bg-ink/80"
+              >
+                Entendido
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {cancelLoading && !confirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/30" />
+          <div className="relative bg-surface-100 border border-border rounded-xl shadow-2xl px-8 py-6">
+            <p className="text-sm text-ink font-medium">Cancelando taller y notificando usuarios...</p>
+          </div>
+        </div>
       )}
 
       <div className="max-w-5xl">

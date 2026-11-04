@@ -1,4 +1,4 @@
-import { upsertProfesionalRef, reassignProfesionalUidRef, activarPlanRef, agendarDowngradeRef, cancelarDowngradeRef, updateCuponAplicadoRef, createEspacioRef, updateEspacioIdentidadRef, updateEspacioCobrosRef, updateEspacioRedesRef, updateEspacioRef, updateEspacioDireccionesRef, updateEspacioTyCRef, updateEspacioSlugRef, createWorkshopRef, updateWorkshopRef, updateWorkshopEstadoRef, deleteWorkshopRef, solicitarCancelacionEspacioRef, reactivarSuscripcionEspacioRef, cancelarReservaRef, adminUpdateEspacioRef, adminDeleteEspacioRef, adminDeleteProfesionalRef, adminUpsertProfesionalRef, adminEnsureProfesionalRef, adminCreateEspacioMigrateRef, adminCreateWorkshopMigrateRef, decrementarCupoRef, createReservaConUsuarioRef, markReservaPaidRef, markReservaUnpaidRef, listReservasByEspacioRef, getMyProfileRef, listPlanesRef, listRubrosRef, listMyEspaciosRef, getMyEspacioRef, listMyWorkshopsRef, listMyWorkshopsByEstadoRef, searchMyWorkshopsRef, getMyWorkshopRef, getEspacioBySlugRef, getPublicEspacioRef, getPublicEspaciosRef, listPublicWorkshopsByEspacioRef, listMyReservasRef, adminListAllEspaciosRef, adminListAllWorkshopsRef, adminListAllReservasRef, listPublicWorkshopsRef, connectorConfig } from '../../esm/index.esm.js';
+import { upsertProfesionalRef, reassignProfesionalUidRef, activarPlanRef, agendarDowngradeRef, cancelarDowngradeRef, updateCuponAplicadoRef, createEspacioRef, updateEspacioIdentidadRef, updateEspacioCobrosRef, updateEspacioRedesRef, updateEspacioRef, updateEspacioDireccionesRef, updateEspacioTyCRef, updateEspacioSlugRef, createWorkshopRef, updateWorkshopRef, updateWorkshopEstadoRef, deleteWorkshopRef, solicitarCancelacionEspacioRef, reactivarSuscripcionEspacioRef, cancelarReservaRef, cancelarWorkshopConReservasRef, adminUpdateEspacioRef, adminDeleteEspacioRef, adminDeleteProfesionalRef, adminUpsertProfesionalRef, adminEnsureProfesionalRef, adminCreateEspacioMigrateRef, adminCreateWorkshopMigrateRef, decrementarCupoRef, createReservaConUsuarioRef, markReservaPaidRef, markReservaUnpaidRef, listReservasByEspacioRef, getMyProfileRef, listPlanesRef, listRubrosRef, listMyEspaciosRef, getMyEspacioRef, listMyWorkshopsRef, listMyWorkshopsByEstadoRef, searchMyWorkshopsRef, getMyWorkshopRef, getEspacioBySlugRef, getPublicEspacioRef, getPublicEspaciosRef, listPublicWorkshopsByEspacioRef, listMyReservasRef, listReservasByWorkshopRef, adminListAllEspaciosRef, adminListAllWorkshopsRef, adminListAllReservasRef, listPublicWorkshopsRef, connectorConfig } from '../../esm/index.esm.js';
 import { validateArgs, CallerSdkTypeEnum } from 'firebase/data-connect';
 import { useDataConnectQuery, useDataConnectMutation, validateReactArgs } from '@tanstack-query-firebase/react/data-connect';
 
@@ -166,6 +166,14 @@ export function useCancelarReserva(dcOrOptions, options) {
   const { dc: dcInstance, vars: inputOpts } = validateArgs(connectorConfig, dcOrOptions, options);
   function refFactory(vars) {
     return cancelarReservaRef(dcInstance, vars);
+  }
+  return useDataConnectMutation(refFactory, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
+export function useCancelarWorkshopConReservas(dcOrOptions, options) {
+  const { dc: dcInstance, vars: inputOpts } = validateArgs(connectorConfig, dcOrOptions, options);
+  function refFactory(vars) {
+    return cancelarWorkshopConReservasRef(dcInstance, vars);
   }
   return useDataConnectMutation(refFactory, inputOpts, CallerSdkTypeEnum.GeneratedReact);
 }
@@ -346,6 +354,12 @@ export function useListPublicWorkshopsByEspacio(dcOrVars, varsOrOptions, options
 export function useListMyReservas(dcOrOptions, options) {
   const { dc: dcInstance, options: inputOpts } = validateReactArgs(connectorConfig, dcOrOptions, options);
   const ref = listMyReservasRef(dcInstance);
+  return useDataConnectQuery(ref, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
+export function useListReservasByWorkshop(dcOrVars, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateReactArgs(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  const ref = listReservasByWorkshopRef(dcInstance, inputVars);
   return useDataConnectQuery(ref, inputOpts, CallerSdkTypeEnum.GeneratedReact);
 }
 

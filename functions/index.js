@@ -508,6 +508,121 @@ exports.notifyTenantNewBooking = onCall(
   }
 );
 
+// ── Notificar a usuarios cuando un taller se cancela ──────────────────────
+function buildCancellationEmailHtml({ userName, workshopName, espacioName, workshopDate, metodoPago, estadoPago }) {
+  const metodoLabel = metodoPago === 'MERCADO_PAGO' ? 'Mercado Pago' : 'Efectivo';
+  const pagoLabel = estadoPago === 'PAGADO' ? 'Pagado' : 'Pendiente';
+  const refundNote = estadoPago === 'PAGADO'
+    ? metodoPago === 'MERCADO_PAGO'
+      ? 'Tu pago por Mercado Pago será reembolsado. Podés contactar al organizador si no lo recibís en los próximos días.'
+      : 'Contactá al organizador para coordinar la devolución de tu pago en efectivo.'
+    : '';
+  return `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
+<body style="margin:0;padding:0;background:#FAF7F2;font-family:'Helvetica Neue',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF7F2;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="480" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;border:1px solid #E5DDD0;overflow:hidden;">
+        <tr><td style="background:#8C2E1F;padding:16px 32px;text-align:center;">
+          <img src="${LOGO_URL}" alt="Antológico" width="260" style="display:block;margin:0 auto;max-width:100%;height:auto;" />
+        </td></tr>
+        <tr><td style="padding:32px;">
+          <p style="margin:0 0 8px;font-size:16px;color:#2C2416;">Hola${userName ? ` ${userName}` : ''},</p>
+          <p style="margin:0 0 20px;font-size:14px;color:#6B5D4D;line-height:1.5;">
+            Lamentamos informarte que el siguiente taller fue <strong>cancelado</strong> por el organizador:
+          </p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#FAF7F2;border-radius:8px;border:1px solid #E5DDD0;overflow:hidden;">
+            <tr>
+              <td style="padding:12px 16px;border-bottom:1px solid #E5DDD0;">
+                <span style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#9C8E7A;">Taller</span><br/>
+                <span style="font-size:14px;font-weight:600;color:#2C2416;">${workshopName}</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:12px 16px;border-bottom:1px solid #E5DDD0;">
+                <span style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#9C8E7A;">Espacio</span><br/>
+                <span style="font-size:14px;color:#2C2416;">${espacioName}</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:12px 16px;border-bottom:1px solid #E5DDD0;">
+                <span style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#9C8E7A;">Fecha programada</span><br/>
+                <span style="font-size:14px;color:#2C2416;">${workshopDate}</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:12px 16px;border-bottom:1px solid #E5DDD0;">
+                <span style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#9C8E7A;">Método de pago</span><br/>
+                <span style="font-size:14px;color:#2C2416;">${metodoLabel}</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:12px 16px;">
+                <span style="font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#9C8E7A;">Estado del pago</span><br/>
+                <span style="font-size:14px;color:#2C2416;">${pagoLabel}</span>
+              </td>
+            </tr>
+          </table>
+          ${refundNote ? `<p style="margin:20px 0 0;font-size:14px;color:#8C2E1F;line-height:1.5;font-weight:500;">${refundNote}</p>` : ''}
+          <p style="margin:20px 0 0;font-size:12px;color:#9C8E7A;line-height:1.5;">
+            Tu reserva fue cancelada automáticamente. Disculpá las molestias.
+          </p>
+        </td></tr>
+        <tr><td style="padding:16px 32px;border-top:1px solid #E5DDD0;text-align:center;">
+          <p style="margin:0;font-size:11px;color:#9C8E7A;">© ${new Date().getFullYear()} Antológico · Hecho en Argentina</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+exports.notifyWorkshopCancelled = onCall(
+  { secrets: [smtpPass], region: 'us-central1' },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'Debés estar autenticado.');
+    }
+
+    const { workshopName, espacioName, workshopDate, reservas } = request.data || {};
+    if (!workshopName || !reservas?.length) {
+      return { success: true, sent: 0 };
+    }
+
+    const transporter = createTransporter();
+    let sent = 0;
+    const errors = [];
+
+    for (const r of reservas) {
+      if (!r.email) continue;
+      try {
+        await transporter.sendMail({
+          from: `"Antológico" <${SMTP_USER}>`,
+          to: r.email,
+          subject: `Taller cancelado: ${workshopName}`,
+          html: buildCancellationEmailHtml({
+            userName: r.nombre || '',
+            workshopName,
+            espacioName: espacioName || '',
+            workshopDate: workshopDate || '',
+            metodoPago: r.metodoPago || 'EFECTIVO',
+            estadoPago: r.estadoPago || 'PENDIENTE',
+          }),
+        });
+        sent++;
+      } catch (err) {
+        console.error(`Failed to notify ${r.email}:`, err.message);
+        errors.push(r.email);
+      }
+    }
+
+    return { success: true, sent, errors };
+  }
+);
+
 // ── Registrar/eliminar subdominio en Vercel ────────────────────────────────
 exports.registerSubdomain = onCall(
   { secrets: [vercelToken], region: 'us-central1' },

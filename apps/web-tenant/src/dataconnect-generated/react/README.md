@@ -32,6 +32,7 @@ You can also follow the instructions from the [Data Connect documentation](https
   - [*GetPublicEspacios*](#getpublicespacios)
   - [*ListPublicWorkshopsByEspacio*](#listpublicworkshopsbyespacio)
   - [*ListMyReservas*](#listmyreservas)
+  - [*ListReservasByWorkshop*](#listreservasbyworkshop)
   - [*AdminListAllEspacios*](#adminlistallespacios)
   - [*AdminListAllWorkshops*](#adminlistallworkshops)
   - [*AdminListAllReservas*](#adminlistallreservas)
@@ -58,6 +59,7 @@ You can also follow the instructions from the [Data Connect documentation](https
   - [*SolicitarCancelacionEspacio*](#solicitarcancelacionespacio)
   - [*ReactivarSuscripcionEspacio*](#reactivarsuscripcionespacio)
   - [*CancelarReserva*](#cancelarreserva)
+  - [*CancelarWorkshopConReservas*](#cancelarworkshopconreservas)
   - [*AdminUpdateEspacio*](#adminupdateespacio)
   - [*AdminDeleteEspacio*](#admindeleteespacio)
   - [*AdminDeleteProfesional*](#admindeleteprofesional)
@@ -1600,6 +1602,105 @@ export default function ListMyReservasComponent() {
   const dataConnect = getDataConnect(connectorConfig);
   const options = { staleTime: 5 * 1000 };
   const query = useListMyReservas(dataConnect, options);
+
+  // Then, you can render your component dynamically based on the status of the Query.
+  if (query.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (query.isError) {
+    return <div>Error: {query.error.message}</div>;
+  }
+
+  // If the Query is successful, you can access the data returned using the `UseQueryResult.data` field.
+  if (query.isSuccess) {
+    console.log(query.data.reservas);
+  }
+  return <div>Query execution {query.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## ListReservasByWorkshop
+You can execute the `ListReservasByWorkshop` Query using the following Query hook function, which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts):
+
+```javascript
+useListReservasByWorkshop(dc: DataConnect, vars: ListReservasByWorkshopVariables, options?: useDataConnectQueryOptions<ListReservasByWorkshopData>): UseDataConnectQueryResult<ListReservasByWorkshopData, ListReservasByWorkshopVariables>;
+```
+You can also pass in a `DataConnect` instance to the Query hook function.
+```javascript
+useListReservasByWorkshop(vars: ListReservasByWorkshopVariables, options?: useDataConnectQueryOptions<ListReservasByWorkshopData>): UseDataConnectQueryResult<ListReservasByWorkshopData, ListReservasByWorkshopVariables>;
+```
+
+### Variables
+The `ListReservasByWorkshop` Query requires an argument of type `ListReservasByWorkshopVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface ListReservasByWorkshopVariables {
+  workshopId: UUIDString;
+}
+```
+### Return Type
+Recall that calling the `ListReservasByWorkshop` Query hook function returns a `UseQueryResult` object. This object holds the state of your Query, including whether the Query is loading, has completed, or has succeeded/failed, and any data returned by the Query, among other things.
+
+To check the status of a Query, use the `UseQueryResult.status` field. You can also check for pending / success / error status using the `UseQueryResult.isPending`, `UseQueryResult.isSuccess`, and `UseQueryResult.isError` fields.
+
+To access the data returned by a Query, use the `UseQueryResult.data` field. The data for the `ListReservasByWorkshop` Query is of type `ListReservasByWorkshopData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface ListReservasByWorkshopData {
+  reservas: ({
+    id: UUIDString;
+    estado: EstadoReserva;
+    metodoPago?: MetodoPago | null;
+    estadoPago?: EstadoPago | null;
+    pagoExternoId?: string | null;
+    fechaReserva: TimestampString;
+    usuario: {
+      uid: string;
+      nombre: string;
+      email: string;
+    } & Usuario_Key;
+    workshop: {
+      id: UUIDString;
+      nombre: string;
+      fecha: TimestampString;
+    } & Workshop_Key;
+  } & Reserva_Key)[];
+}
+```
+
+To learn more about the `UseQueryResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useQuery).
+
+### Using `ListReservasByWorkshop`'s Query hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, ListReservasByWorkshopVariables } from '@antologico/dataconnect';
+import { useListReservasByWorkshop } from '@antologico/dataconnect/react'
+
+export default function ListReservasByWorkshopComponent() {
+  // The `useListReservasByWorkshop` Query hook requires an argument of type `ListReservasByWorkshopVariables`:
+  const listReservasByWorkshopVars: ListReservasByWorkshopVariables = {
+    workshopId: ..., 
+  };
+
+  // You don't have to do anything to "execute" the Query.
+  // Call the Query hook function to get a `UseQueryResult` object which holds the state of your Query.
+  const query = useListReservasByWorkshop(listReservasByWorkshopVars);
+  // Variables can be defined inline as well.
+  const query = useListReservasByWorkshop({ workshopId: ..., });
+
+  // You can also pass in a `DataConnect` instance to the Query hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const query = useListReservasByWorkshop(dataConnect, listReservasByWorkshopVars);
+
+  // You can also pass in a `useDataConnectQueryOptions` object to the Query hook function.
+  const options = { staleTime: 5 * 1000 };
+  const query = useListReservasByWorkshop(listReservasByWorkshopVars, options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectQueryOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = { staleTime: 5 * 1000 };
+  const query = useListReservasByWorkshop(dataConnect, listReservasByWorkshopVars, options);
 
   // Then, you can render your component dynamically based on the status of the Query.
   if (query.isPending) {
@@ -4111,6 +4212,104 @@ export default function CancelarReservaComponent() {
   if (mutation.isSuccess) {
     console.log(mutation.data.reserva_update);
     console.log(mutation.data.workshop_update);
+  }
+  return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
+}
+```
+
+## CancelarWorkshopConReservas
+You can execute the `CancelarWorkshopConReservas` Mutation using the `UseMutationResult` object returned by the following Mutation hook function (which is defined in [dataconnect-generated/react/index.d.ts](./index.d.ts)):
+```javascript
+useCancelarWorkshopConReservas(options?: useDataConnectMutationOptions<CancelarWorkshopConReservasData, FirebaseError, CancelarWorkshopConReservasVariables>): UseDataConnectMutationResult<CancelarWorkshopConReservasData, CancelarWorkshopConReservasVariables>;
+```
+You can also pass in a `DataConnect` instance to the Mutation hook function.
+```javascript
+useCancelarWorkshopConReservas(dc: DataConnect, options?: useDataConnectMutationOptions<CancelarWorkshopConReservasData, FirebaseError, CancelarWorkshopConReservasVariables>): UseDataConnectMutationResult<CancelarWorkshopConReservasData, CancelarWorkshopConReservasVariables>;
+```
+
+### Variables
+The `CancelarWorkshopConReservas` Mutation requires an argument of type `CancelarWorkshopConReservasVariables`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+
+```javascript
+export interface CancelarWorkshopConReservasVariables {
+  id: UUIDString;
+  espacioId: UUIDString;
+}
+```
+### Return Type
+Recall that calling the `CancelarWorkshopConReservas` Mutation hook function returns a `UseMutationResult` object. This object holds the state of your Mutation, including whether the Mutation is loading, has completed, or has succeeded/failed, among other things.
+
+To check the status of a Mutation, use the `UseMutationResult.status` field. You can also check for pending / success / error status using the `UseMutationResult.isPending`, `UseMutationResult.isSuccess`, and `UseMutationResult.isError` fields.
+
+To execute the Mutation, call `UseMutationResult.mutate()`. This function executes the Mutation, but does not return the data from the Mutation.
+
+To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `CancelarWorkshopConReservas` Mutation is of type `CancelarWorkshopConReservasData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
+```javascript
+export interface CancelarWorkshopConReservasData {
+  workshop_update?: Workshop_Key | null;
+  canceladas?: number | null;
+}
+```
+
+To learn more about the `UseMutationResult` object, see the [TanStack React Query documentation](https://tanstack.com/query/v5/docs/framework/react/reference/useMutation).
+
+### Using `CancelarWorkshopConReservas`'s Mutation hook function
+
+```javascript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, CancelarWorkshopConReservasVariables } from '@antologico/dataconnect';
+import { useCancelarWorkshopConReservas } from '@antologico/dataconnect/react'
+
+export default function CancelarWorkshopConReservasComponent() {
+  // Call the Mutation hook function to get a `UseMutationResult` object which holds the state of your Mutation.
+  const mutation = useCancelarWorkshopConReservas();
+
+  // You can also pass in a `DataConnect` instance to the Mutation hook function.
+  const dataConnect = getDataConnect(connectorConfig);
+  const mutation = useCancelarWorkshopConReservas(dataConnect);
+
+  // You can also pass in a `useDataConnectMutationOptions` object to the Mutation hook function.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useCancelarWorkshopConReservas(options);
+
+  // You can also pass both a `DataConnect` instance and a `useDataConnectMutationOptions` object.
+  const dataConnect = getDataConnect(connectorConfig);
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  const mutation = useCancelarWorkshopConReservas(dataConnect, options);
+
+  // After calling the Mutation hook function, you must call `UseMutationResult.mutate()` to execute the Mutation.
+  // The `useCancelarWorkshopConReservas` Mutation requires an argument of type `CancelarWorkshopConReservasVariables`:
+  const cancelarWorkshopConReservasVars: CancelarWorkshopConReservasVariables = {
+    id: ..., 
+    espacioId: ..., 
+  };
+  mutation.mutate(cancelarWorkshopConReservasVars);
+  // Variables can be defined inline as well.
+  mutation.mutate({ id: ..., espacioId: ..., });
+
+  // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
+  const options = {
+    onSuccess: () => { console.log('Mutation succeeded!'); }
+  };
+  mutation.mutate(cancelarWorkshopConReservasVars, options);
+
+  // Then, you can render your component dynamically based on the status of the Mutation.
+  if (mutation.isPending) {
+    return <div>Loading...</div>;
+  }
+
+  if (mutation.isError) {
+    return <div>Error: {mutation.error.message}</div>;
+  }
+
+  // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
+  if (mutation.isSuccess) {
+    console.log(mutation.data.workshop_update);
+    console.log(mutation.data.canceladas);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;
 }

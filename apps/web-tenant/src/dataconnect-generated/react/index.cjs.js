@@ -1,4 +1,4 @@
-const { upsertProfesionalRef, reassignProfesionalUidRef, activarPlanRef, agendarDowngradeRef, cancelarDowngradeRef, updateCuponAplicadoRef, createEspacioRef, updateEspacioIdentidadRef, updateEspacioCobrosRef, updateEspacioRedesRef, updateEspacioRef, updateEspacioDireccionesRef, updateEspacioTyCRef, updateEspacioSlugRef, createWorkshopRef, updateWorkshopRef, updateWorkshopEstadoRef, deleteWorkshopRef, solicitarCancelacionEspacioRef, reactivarSuscripcionEspacioRef, cancelarReservaRef, adminUpdateEspacioRef, adminDeleteEspacioRef, adminDeleteProfesionalRef, adminUpsertProfesionalRef, adminEnsureProfesionalRef, adminCreateEspacioMigrateRef, adminCreateWorkshopMigrateRef, decrementarCupoRef, createReservaConUsuarioRef, markReservaPaidRef, markReservaUnpaidRef, listReservasByEspacioRef, getMyProfileRef, listPlanesRef, listRubrosRef, listMyEspaciosRef, getMyEspacioRef, listMyWorkshopsRef, listMyWorkshopsByEstadoRef, searchMyWorkshopsRef, getMyWorkshopRef, getEspacioBySlugRef, getPublicEspacioRef, getPublicEspaciosRef, listPublicWorkshopsByEspacioRef, listMyReservasRef, adminListAllEspaciosRef, adminListAllWorkshopsRef, adminListAllReservasRef, listPublicWorkshopsRef, connectorConfig } = require('../index.cjs.js');
+const { upsertProfesionalRef, reassignProfesionalUidRef, activarPlanRef, agendarDowngradeRef, cancelarDowngradeRef, updateCuponAplicadoRef, createEspacioRef, updateEspacioIdentidadRef, updateEspacioCobrosRef, updateEspacioRedesRef, updateEspacioRef, updateEspacioDireccionesRef, updateEspacioTyCRef, updateEspacioSlugRef, createWorkshopRef, updateWorkshopRef, updateWorkshopEstadoRef, deleteWorkshopRef, solicitarCancelacionEspacioRef, reactivarSuscripcionEspacioRef, cancelarReservaRef, cancelarWorkshopConReservasRef, adminUpdateEspacioRef, adminDeleteEspacioRef, adminDeleteProfesionalRef, adminUpsertProfesionalRef, adminEnsureProfesionalRef, adminCreateEspacioMigrateRef, adminCreateWorkshopMigrateRef, decrementarCupoRef, createReservaConUsuarioRef, markReservaPaidRef, markReservaUnpaidRef, listReservasByEspacioRef, getMyProfileRef, listPlanesRef, listRubrosRef, listMyEspaciosRef, getMyEspacioRef, listMyWorkshopsRef, listMyWorkshopsByEstadoRef, searchMyWorkshopsRef, getMyWorkshopRef, getEspacioBySlugRef, getPublicEspacioRef, getPublicEspaciosRef, listPublicWorkshopsByEspacioRef, listMyReservasRef, listReservasByWorkshopRef, adminListAllEspaciosRef, adminListAllWorkshopsRef, adminListAllReservasRef, listPublicWorkshopsRef, connectorConfig } = require('../index.cjs.js');
 const { validateArgs, CallerSdkTypeEnum } = require('firebase/data-connect');
 const { useDataConnectQuery, useDataConnectMutation, validateReactArgs } = require('@tanstack-query-firebase/react/data-connect');
 
@@ -166,6 +166,14 @@ exports.useCancelarReserva = function useCancelarReserva(dcOrOptions, options) {
   const { dc: dcInstance, vars: inputOpts } = validateArgs(connectorConfig, dcOrOptions, options);
   function refFactory(vars) {
     return cancelarReservaRef(dcInstance, vars);
+  }
+  return useDataConnectMutation(refFactory, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
+exports.useCancelarWorkshopConReservas = function useCancelarWorkshopConReservas(dcOrOptions, options) {
+  const { dc: dcInstance, vars: inputOpts } = validateArgs(connectorConfig, dcOrOptions, options);
+  function refFactory(vars) {
+    return cancelarWorkshopConReservasRef(dcInstance, vars);
   }
   return useDataConnectMutation(refFactory, inputOpts, CallerSdkTypeEnum.GeneratedReact);
 }
@@ -346,6 +354,12 @@ exports.useListPublicWorkshopsByEspacio = function useListPublicWorkshopsByEspac
 exports.useListMyReservas = function useListMyReservas(dcOrOptions, options) {
   const { dc: dcInstance, options: inputOpts } = validateReactArgs(connectorConfig, dcOrOptions, options);
   const ref = listMyReservasRef(dcInstance);
+  return useDataConnectQuery(ref, inputOpts, CallerSdkTypeEnum.GeneratedReact);
+}
+
+exports.useListReservasByWorkshop = function useListReservasByWorkshop(dcOrVars, varsOrOptions, options) {
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateReactArgs(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  const ref = listReservasByWorkshopRef(dcInstance, inputVars);
   return useDataConnectQuery(ref, inputOpts, CallerSdkTypeEnum.GeneratedReact);
 }
 

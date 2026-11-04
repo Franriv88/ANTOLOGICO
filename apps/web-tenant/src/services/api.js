@@ -31,6 +31,8 @@ import {
   markReservaPaid,
   markReservaUnpaid,
   listMyReservas,
+  cancelarWorkshopConReservas,
+  listReservasByWorkshop,
   updateEspacioSlug,
   updateEspacioDirecciones,
   updateEspacioTyC,
@@ -250,5 +252,14 @@ export const workshops = {
   listPublic: async (espacioId) => {
     const { data } = await listPublicWorkshopsByEspacio({ espacioId });
     return data.workshops ?? [];
+  },
+  cancelWithReservas: async (id, espacioId) => {
+    const result = await cancelarWorkshopConReservas({ id, espacioId });
+    if (result.errors?.length) throw new Error(result.errors.map(e => e.message).join(' | '));
+    return result.data;
+  },
+  listReservas: async (workshopId) => {
+    const { data } = await listReservasByWorkshop({ workshopId });
+    return data.reservas ?? [];
   },
 };

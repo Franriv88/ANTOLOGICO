@@ -25,6 +25,7 @@ This README will guide you through the process of using the generated JavaScript
   - [*GetPublicEspacios*](#getpublicespacios)
   - [*ListPublicWorkshopsByEspacio*](#listpublicworkshopsbyespacio)
   - [*ListMyReservas*](#listmyreservas)
+  - [*ListReservasByWorkshop*](#listreservasbyworkshop)
   - [*AdminListAllEspacios*](#adminlistallespacios)
   - [*AdminListAllWorkshops*](#adminlistallworkshops)
   - [*AdminListAllReservas*](#adminlistallreservas)
@@ -51,6 +52,7 @@ This README will guide you through the process of using the generated JavaScript
   - [*SolicitarCancelacionEspacio*](#solicitarcancelacionespacio)
   - [*ReactivarSuscripcionEspacio*](#reactivarsuscripcionespacio)
   - [*CancelarReserva*](#cancelarreserva)
+  - [*CancelarWorkshopConReservas*](#cancelarworkshopconreservas)
   - [*AdminUpdateEspacio*](#adminupdateespacio)
   - [*AdminDeleteEspacio*](#admindeleteespacio)
   - [*AdminDeleteProfesional*](#admindeleteprofesional)
@@ -1934,6 +1936,132 @@ const ref = listMyReservasRef();
 // You can also pass in a `DataConnect` instance to the `QueryRef` function.
 const dataConnect = getDataConnect(connectorConfig);
 const ref = listMyReservasRef(dataConnect);
+
+// Call `executeQuery()` on the reference to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeQuery(ref);
+
+console.log(data.reservas);
+
+// Or, you can use the `Promise` API.
+executeQuery(ref).then((response) => {
+  const data = response.data;
+  console.log(data.reservas);
+});
+```
+
+## ListReservasByWorkshop
+You can execute the `ListReservasByWorkshop` query using the following action shortcut function, or by calling `executeQuery()` after calling the following `QueryRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+listReservasByWorkshop(vars: ListReservasByWorkshopVariables, options?: ExecuteQueryOptions): QueryPromise<ListReservasByWorkshopData, ListReservasByWorkshopVariables>;
+
+interface ListReservasByWorkshopRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: ListReservasByWorkshopVariables): QueryRef<ListReservasByWorkshopData, ListReservasByWorkshopVariables>;
+}
+export const listReservasByWorkshopRef: ListReservasByWorkshopRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `QueryRef` function.
+```typescript
+listReservasByWorkshop(dc: DataConnect, vars: ListReservasByWorkshopVariables, options?: ExecuteQueryOptions): QueryPromise<ListReservasByWorkshopData, ListReservasByWorkshopVariables>;
+
+interface ListReservasByWorkshopRef {
+  ...
+  (dc: DataConnect, vars: ListReservasByWorkshopVariables): QueryRef<ListReservasByWorkshopData, ListReservasByWorkshopVariables>;
+}
+export const listReservasByWorkshopRef: ListReservasByWorkshopRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the listReservasByWorkshopRef:
+```typescript
+const name = listReservasByWorkshopRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `ListReservasByWorkshop` query requires an argument of type `ListReservasByWorkshopVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface ListReservasByWorkshopVariables {
+  workshopId: UUIDString;
+}
+```
+### Return Type
+Recall that executing the `ListReservasByWorkshop` query returns a `QueryPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `ListReservasByWorkshopData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface ListReservasByWorkshopData {
+  reservas: ({
+    id: UUIDString;
+    estado: EstadoReserva;
+    metodoPago?: MetodoPago | null;
+    estadoPago?: EstadoPago | null;
+    pagoExternoId?: string | null;
+    fechaReserva: TimestampString;
+    usuario: {
+      uid: string;
+      nombre: string;
+      email: string;
+    } & Usuario_Key;
+    workshop: {
+      id: UUIDString;
+      nombre: string;
+      fecha: TimestampString;
+    } & Workshop_Key;
+  } & Reserva_Key)[];
+}
+```
+### Using `ListReservasByWorkshop`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, listReservasByWorkshop, ListReservasByWorkshopVariables } from '@antologico/dataconnect';
+
+// The `ListReservasByWorkshop` query requires an argument of type `ListReservasByWorkshopVariables`:
+const listReservasByWorkshopVars: ListReservasByWorkshopVariables = {
+  workshopId: ..., 
+};
+
+// Call the `listReservasByWorkshop()` function to execute the query.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await listReservasByWorkshop(listReservasByWorkshopVars);
+// Variables can be defined inline as well.
+const { data } = await listReservasByWorkshop({ workshopId: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await listReservasByWorkshop(dataConnect, listReservasByWorkshopVars);
+
+console.log(data.reservas);
+
+// Or, you can use the `Promise` API.
+listReservasByWorkshop(listReservasByWorkshopVars).then((response) => {
+  const data = response.data;
+  console.log(data.reservas);
+});
+```
+
+### Using `ListReservasByWorkshop`'s `QueryRef` function
+
+```typescript
+import { getDataConnect, executeQuery } from 'firebase/data-connect';
+import { connectorConfig, listReservasByWorkshopRef, ListReservasByWorkshopVariables } from '@antologico/dataconnect';
+
+// The `ListReservasByWorkshop` query requires an argument of type `ListReservasByWorkshopVariables`:
+const listReservasByWorkshopVars: ListReservasByWorkshopVariables = {
+  workshopId: ..., 
+};
+
+// Call the `listReservasByWorkshopRef()` function to get a reference to the query.
+const ref = listReservasByWorkshopRef(listReservasByWorkshopVars);
+// Variables can be defined inline as well.
+const ref = listReservasByWorkshopRef({ workshopId: ..., });
+
+// You can also pass in a `DataConnect` instance to the `QueryRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = listReservasByWorkshopRef(dataConnect, listReservasByWorkshopVars);
 
 // Call `executeQuery()` on the reference to execute the query.
 // You can use the `await` keyword to wait for the promise to resolve.
@@ -4898,6 +5026,123 @@ executeMutation(ref).then((response) => {
   const data = response.data;
   console.log(data.reserva_update);
   console.log(data.workshop_update);
+});
+```
+
+## CancelarWorkshopConReservas
+You can execute the `CancelarWorkshopConReservas` mutation using the following action shortcut function, or by calling `executeMutation()` after calling the following `MutationRef` function, both of which are defined in [dataconnect-generated/index.d.ts](./index.d.ts):
+```typescript
+cancelarWorkshopConReservas(vars: CancelarWorkshopConReservasVariables): MutationPromise<CancelarWorkshopConReservasData, CancelarWorkshopConReservasVariables>;
+
+interface CancelarWorkshopConReservasRef {
+  ...
+  /* Allow users to create refs without passing in DataConnect */
+  (vars: CancelarWorkshopConReservasVariables): MutationRef<CancelarWorkshopConReservasData, CancelarWorkshopConReservasVariables>;
+}
+export const cancelarWorkshopConReservasRef: CancelarWorkshopConReservasRef;
+```
+You can also pass in a `DataConnect` instance to the action shortcut function or `MutationRef` function.
+```typescript
+cancelarWorkshopConReservas(dc: DataConnect, vars: CancelarWorkshopConReservasVariables): MutationPromise<CancelarWorkshopConReservasData, CancelarWorkshopConReservasVariables>;
+
+interface CancelarWorkshopConReservasRef {
+  ...
+  (dc: DataConnect, vars: CancelarWorkshopConReservasVariables): MutationRef<CancelarWorkshopConReservasData, CancelarWorkshopConReservasVariables>;
+}
+export const cancelarWorkshopConReservasRef: CancelarWorkshopConReservasRef;
+```
+
+If you need the name of the operation without creating a ref, you can retrieve the operation name by calling the `operationName` property on the cancelarWorkshopConReservasRef:
+```typescript
+const name = cancelarWorkshopConReservasRef.operationName;
+console.log(name);
+```
+
+### Variables
+The `CancelarWorkshopConReservas` mutation requires an argument of type `CancelarWorkshopConReservasVariables`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+
+```typescript
+export interface CancelarWorkshopConReservasVariables {
+  id: UUIDString;
+  espacioId: UUIDString;
+}
+```
+### Return Type
+Recall that executing the `CancelarWorkshopConReservas` mutation returns a `MutationPromise` that resolves to an object with a `data` property.
+
+The `data` property is an object of type `CancelarWorkshopConReservasData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
+```typescript
+export interface CancelarWorkshopConReservasData {
+  workshop_update?: Workshop_Key | null;
+  canceladas?: number | null;
+}
+```
+### Using `CancelarWorkshopConReservas`'s action shortcut function
+
+```typescript
+import { getDataConnect } from 'firebase/data-connect';
+import { connectorConfig, cancelarWorkshopConReservas, CancelarWorkshopConReservasVariables } from '@antologico/dataconnect';
+
+// The `CancelarWorkshopConReservas` mutation requires an argument of type `CancelarWorkshopConReservasVariables`:
+const cancelarWorkshopConReservasVars: CancelarWorkshopConReservasVariables = {
+  id: ..., 
+  espacioId: ..., 
+};
+
+// Call the `cancelarWorkshopConReservas()` function to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await cancelarWorkshopConReservas(cancelarWorkshopConReservasVars);
+// Variables can be defined inline as well.
+const { data } = await cancelarWorkshopConReservas({ id: ..., espacioId: ..., });
+
+// You can also pass in a `DataConnect` instance to the action shortcut function.
+const dataConnect = getDataConnect(connectorConfig);
+const { data } = await cancelarWorkshopConReservas(dataConnect, cancelarWorkshopConReservasVars);
+
+console.log(data.workshop_update);
+console.log(data.canceladas);
+
+// Or, you can use the `Promise` API.
+cancelarWorkshopConReservas(cancelarWorkshopConReservasVars).then((response) => {
+  const data = response.data;
+  console.log(data.workshop_update);
+  console.log(data.canceladas);
+});
+```
+
+### Using `CancelarWorkshopConReservas`'s `MutationRef` function
+
+```typescript
+import { getDataConnect, executeMutation } from 'firebase/data-connect';
+import { connectorConfig, cancelarWorkshopConReservasRef, CancelarWorkshopConReservasVariables } from '@antologico/dataconnect';
+
+// The `CancelarWorkshopConReservas` mutation requires an argument of type `CancelarWorkshopConReservasVariables`:
+const cancelarWorkshopConReservasVars: CancelarWorkshopConReservasVariables = {
+  id: ..., 
+  espacioId: ..., 
+};
+
+// Call the `cancelarWorkshopConReservasRef()` function to get a reference to the mutation.
+const ref = cancelarWorkshopConReservasRef(cancelarWorkshopConReservasVars);
+// Variables can be defined inline as well.
+const ref = cancelarWorkshopConReservasRef({ id: ..., espacioId: ..., });
+
+// You can also pass in a `DataConnect` instance to the `MutationRef` function.
+const dataConnect = getDataConnect(connectorConfig);
+const ref = cancelarWorkshopConReservasRef(dataConnect, cancelarWorkshopConReservasVars);
+
+// Call `executeMutation()` on the reference to execute the mutation.
+// You can use the `await` keyword to wait for the promise to resolve.
+const { data } = await executeMutation(ref);
+
+console.log(data.workshop_update);
+console.log(data.canceladas);
+
+// Or, you can use the `Promise` API.
+executeMutation(ref).then((response) => {
+  const data = response.data;
+  console.log(data.workshop_update);
+  console.log(data.canceladas);
 });
 ```
 

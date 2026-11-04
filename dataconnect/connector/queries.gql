@@ -217,6 +217,20 @@ query ListMyReservas @auth(level: USER) {
   }
 }
 
+query ListReservasByWorkshop($workshopId: UUID!) @auth(level: USER, insecureReason: "El tenant accede desde su panel; la query filtra por auth.uid a través del espacio.") {
+  reservas(
+    where: {
+      workshopId: { eq: $workshopId }
+      workshop: { espacio: { profesionalUid: { eq_expr: "auth.uid" } } }
+    }
+    orderBy: [{ createdAt: DESC }]
+  ) {
+    id estado metodoPago estadoPago pagoExternoId fechaReserva
+    usuario { uid nombre email }
+    workshop { id nombre fecha }
+  }
+}
+
 # ─── Admin (Super Admin) ─────────────────────────────────────────────────────
 
 query AdminListAllEspacios @auth(expr: "auth.token.admin == true") {

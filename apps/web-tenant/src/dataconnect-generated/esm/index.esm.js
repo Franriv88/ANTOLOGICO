@@ -304,6 +304,18 @@ export function cancelarReserva(dcOrVars, vars) {
   return executeMutation(cancelarReservaRef(dcInstance, inputVars));
 }
 
+export const cancelarWorkshopConReservasRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return mutationRef(dcInstance, 'CancelarWorkshopConReservas', inputVars);
+}
+cancelarWorkshopConReservasRef.operationName = 'CancelarWorkshopConReservas';
+
+export function cancelarWorkshopConReservas(dcOrVars, vars) {
+  const { dc: dcInstance, vars: inputVars } = validateArgs(connectorConfig, dcOrVars, vars, true);
+  return executeMutation(cancelarWorkshopConReservasRef(dcInstance, inputVars));
+}
+
 export const adminUpdateEspacioRef = (dcOrVars, vars) => {
   const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
   dcInstance._useGeneratedSdk();
@@ -629,6 +641,19 @@ export function listMyReservas(dcOrOptions, options) {
   
   const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrOptions, options, undefined,false, false);
   return executeQuery(listMyReservasRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
+}
+
+export const listReservasByWorkshopRef = (dcOrVars, vars) => {
+  const { dc: dcInstance, vars: inputVars} = validateArgs(connectorConfig, dcOrVars, vars, true);
+  dcInstance._useGeneratedSdk();
+  return queryRef(dcInstance, 'ListReservasByWorkshop', inputVars);
+}
+listReservasByWorkshopRef.operationName = 'ListReservasByWorkshop';
+
+export function listReservasByWorkshop(dcOrVars, varsOrOptions, options) {
+  
+  const { dc: dcInstance, vars: inputVars, options: inputOpts } = validateArgsWithOptions(connectorConfig, dcOrVars, varsOrOptions, options, true, true);
+  return executeQuery(listReservasByWorkshopRef(dcInstance, inputVars), inputOpts && { fetchPolicy: inputOpts.fetchPolicy });
 }
 
 export const adminListAllEspaciosRef = (dc) => {
