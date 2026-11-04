@@ -20,6 +20,7 @@ import { trackRegistro, trackLogin } from '../lib/analytics.js';
 
 const C_USUARIOS = 'demo_usuarios';
 const googleProvider = new GoogleAuthProvider();
+googleProvider.setCustomParameters({ prompt: 'select_account' });
 
 async function saveProfile(uid, data) {
   await setDoc(doc(firestore, C_USUARIOS, uid), data, { merge: true });

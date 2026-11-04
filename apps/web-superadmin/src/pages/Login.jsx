@@ -127,7 +127,9 @@ export default function Login() {
     setError('');
     setGLoading(true);
     try {
-      await signInWithPopup(auth, new GoogleAuthProvider());
+      const gp = new GoogleAuthProvider();
+      gp.setCustomParameters({ prompt: 'select_account' });
+      await signInWithPopup(auth, gp);
     } catch (err) {
       if (err.code !== 'auth/popup-closed-by-user') {
         setError('No se pudo iniciar sesión con Google.');

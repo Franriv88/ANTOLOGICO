@@ -18,6 +18,7 @@ import { useEspacio } from '../context/EspacioContext';
 import { authErrorMsg } from '../services/userAuth';
 
 const provider = new GoogleAuthProvider();
+provider.setCustomParameters({ prompt: 'select_account' });
 const isDev    = import.meta.env.DEV;
 
 const DEV_EMAIL    = 'dev@antologico.app';
