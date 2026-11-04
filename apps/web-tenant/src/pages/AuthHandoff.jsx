@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailLink } from 'firebase/auth';
 import { httpsCallable } from 'firebase/functions';
 import { auth, functions } from '../lib/firebase';
 import { FullScreenLoader } from '../components/AntologicoLoader';
@@ -24,13 +24,14 @@ export default function AuthHandoff() {
         const { data } = await redeem({ code });
         if (cancelled) return;
 
-        if (!data?.email || !data?.password) {
+        if (!data?.email || !data?.signInLink) {
           throw new Error('El servidor no devolvió credenciales válidas.');
         }
 
-        await signInWithEmailAndPassword(auth, data.email, data.password);
+        await signInWithEmailLink(auth, data.email, data.signInLink);
         if (cancelled) return;
 
+        try { sessionStorage.setItem('__handoff', '1'); } catch {}
         window.location.replace('/workshops');
       } catch (err) {
         if (cancelled) return;
