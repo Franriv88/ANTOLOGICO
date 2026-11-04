@@ -280,11 +280,10 @@ exports.resendVerificationCode = onCall(
   }
 );
 
-// ── Super Admin: generar custom token para entrar al Panel Tenant ───────────
-// El super admin apreta "Abrir Panel Tenant" en Mi Espacio y necesita loguearse
-// en antologico.app con su mismo uid, sin tener que escribir contraseña.
-// Esta funcion verifica que sea super admin y le devuelve un custom token de
-// Firebase Auth que el frontend consume via signInWithCustomToken.
+// ── Super Admin: generar código de handoff para entrar al Panel Tenant ──────
+// Genera una contraseña temporal, la setea en Firebase Auth, y guarda un código
+// de un solo uso en Firestore. El tenant panel canjea el código vía
+// redeemHandoffCode y hace signInWithEmailAndPassword (sesión real, no custom token).
 exports.createTenantSessionToken = onCall(
   { region: 'us-central1' },
   async (request) => {
@@ -296,23 +295,51 @@ exports.createTenantSessionToken = onCall(
     if (!adminSnap.exists) {
       throw new HttpsError('permission-denied', 'Solo super admins pueden hacer esto.');
     }
-    // Marcamos la cuenta como verificada (es un super admin confirmado) para
-    // que al entrar al Panel Tenant AuthContext cree su documento profesional.
-    try {
-      const u = await auth.getUser(uid);
-      if (!u.emailVerified) {
-        await auth.updateUser(uid, { emailVerified: true });
-      }
-    } catch (e) {
-      console.warn('createTenantSessionToken: no se pudo marcar emailVerified', e);
+
+    const u = await auth.getUser(uid);
+    if (!u.emailVerified) {
+      await auth.updateUser(uid, { emailVerified: true });
     }
-    try {
-      const token = await auth.createCustomToken(uid);
-      return { token };
-    } catch (err) {
-      console.error('createTenantSessionToken createCustomToken error', err);
-      throw new HttpsError('internal', err.message || 'No se pudo generar el token.');
+
+    const tempPass = require('crypto').randomBytes(32).toString('base64url');
+    await auth.updateUser(uid, { password: tempPass });
+
+    const code = require('crypto').randomBytes(20).toString('hex');
+    await db.collection('handoff_sessions').doc(code).set({
+      uid,
+      email: u.email,
+      password: tempPass,
+      createdAt: FieldValue.serverTimestamp(),
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+    });
+
+    return { code };
+  }
+);
+
+// ── Canjear código de handoff (llamado desde tenant panel sin auth) ─────────
+exports.redeemHandoffCode = onCall(
+  { region: 'us-central1' },
+  async (request) => {
+    const { code } = request.data || {};
+    if (!code) {
+      throw new HttpsError('invalid-argument', 'Falta el código.');
     }
+
+    const ref = db.collection('handoff_sessions').doc(code);
+    const snap = await ref.get();
+    if (!snap.exists) {
+      throw new HttpsError('not-found', 'Código inválido o ya usado.');
+    }
+
+    const data = snap.data();
+    if (data.expiresAt.toDate() < new Date()) {
+      await ref.delete();
+      throw new HttpsError('deadline-exceeded', 'El código expiró.');
+    }
+
+    await ref.delete();
+    return { email: data.email, password: data.password };
   }
 );
 

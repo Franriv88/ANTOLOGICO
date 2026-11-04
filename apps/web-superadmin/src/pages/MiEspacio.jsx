@@ -30,9 +30,9 @@ export default function MiEspacio() {
     try {
       const callable = httpsCallable(functions, 'createTenantSessionToken');
       const { data } = await callable();
-      const token = data?.token;
-      if (!token) throw new Error('El servidor no devolvió un token.');
-      const url = `${TENANT_ORIGIN}/auth/handoff?token=${encodeURIComponent(token)}`;
+      const code = data?.code;
+      if (!code) throw new Error('El servidor no devolvió un código de acceso.');
+      const url = `${TENANT_ORIGIN}/auth/handoff?code=${encodeURIComponent(code)}`;
       if (win && !win.closed) {
         win.location.href = url;
       } else {

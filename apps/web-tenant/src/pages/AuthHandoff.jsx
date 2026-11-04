@@ -1,37 +1,52 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { signInWithCustomToken } from 'firebase/auth';
-import { auth } from '../lib/firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { httpsCallable } from 'firebase/functions';
+import { auth, functions } from '../lib/firebase';
 import { FullScreenLoader } from '../components/AntologicoLoader';
 
 export default function AuthHandoff() {
   const [params] = useSearchParams();
-  const token = params.get('token');
+  const code = params.get('code');
   const [status, setStatus] = useState('loading');
   const [errorMsg, setErrorMsg] = useState('');
 
   useEffect(() => {
-    if (!token) {
+    if (!code) {
       setStatus('error');
-      setErrorMsg('No vino ningún token en el link.');
+      setErrorMsg('No vino ningún código en el link.');
       return;
     }
     let cancelled = false;
     (async () => {
       try {
-        try { sessionStorage.setItem('__handoff', '1'); } catch {}
-        await signInWithCustomToken(auth, token);
+        const redeem = httpsCallable(functions, 'redeemHandoffCode');
+        const { data } = await redeem({ code });
         if (cancelled) return;
-        try { sessionStorage.setItem('__handoff', '1'); } catch {}
+
+        if (!data?.email || !data?.password) {
+          throw new Error('El servidor no devolvió credenciales válidas.');
+        }
+
+        await signInWithEmailAndPassword(auth, data.email, data.password);
+        if (cancelled) return;
+
         window.location.replace('/workshops');
       } catch (err) {
         if (cancelled) return;
+        const msg = err?.message || 'No se pudo iniciar sesión.';
         setStatus('error');
-        setErrorMsg(err?.message || 'No se pudo iniciar sesión con el token.');
+        setErrorMsg(
+          msg.includes('not-found') || msg.includes('inválido')
+            ? 'El código ya fue usado o es inválido.'
+            : msg.includes('expiró')
+              ? 'El código expiró. Volvé al panel de Super Admin e intentá de nuevo.'
+              : msg
+        );
       }
     })();
     return () => { cancelled = true; };
-  }, [token]);
+  }, [code]);
 
   if (status === 'error') {
     return (
