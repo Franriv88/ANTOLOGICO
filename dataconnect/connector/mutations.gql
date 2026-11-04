@@ -391,14 +391,7 @@ mutation DeleteWorkshop($id: UUID!, $espacioId: UUID!) @auth(level: USER) @trans
       }
     }
   }
-  workshop_delete(
-    first: {
-      where: {
-        id: { eq: $id }
-        espacioId: { eq: $espacioId }
-      }
-    }
-  )
+  workshop_delete(id: $id)
 }
 
 # ─── Suscripciones de Espacio ────────────────────────────────────────────────
