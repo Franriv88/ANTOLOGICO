@@ -175,11 +175,14 @@ export default function Reportes() {
     (async () => {
       setLoading(true);
       try {
-        const [ws, rv] = await Promise.all([
+        const [ws, wsCancelados, rv] = await Promise.all([
           api.workshops.list(activeEspacio.id),
+          api.workshops.list(activeEspacio.id, { estado: 'CANCELADO' }),
           api.reservas.listByEspacio(activeEspacio.id),
         ]);
-        setWorkshops(ws);
+        const seen = new Set(ws.map(w => w.id));
+        const merged = [...ws, ...wsCancelados.filter(w => !seen.has(w.id))];
+        setWorkshops(merged);
         setReservas(rv);
       } finally {
         setLoading(false);
@@ -354,9 +357,15 @@ export default function Reportes() {
                             <p className="font-medium text-ink truncate max-w-[180px]">{w.nombre}</p>
                             <TipoChip tipo={w.tipo} />
                           </div>
-                          <span className={`text-[10px] ${w.estado === 'PUBLICADO' ? 'text-[#10B981]' : 'text-ink-muted'}`}>
-                            {w.estado === 'PUBLICADO' ? 'Publicado' : w.estado === 'CANCELADO' ? 'Cancelado' : 'Finalizado'}
-                          </span>
+                          {w.estado === 'CANCELADO' ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] text-red-700 bg-red-50 border border-red-200 rounded px-1.5 py-0.5 font-medium">
+                              Cancelado
+                            </span>
+                          ) : (
+                            <span className={`text-[10px] ${w.estado === 'PUBLICADO' ? 'text-[#10B981]' : 'text-ink-muted'}`}>
+                              {w.estado === 'PUBLICADO' ? 'Publicado' : 'Finalizado'}
+                            </span>
+                          )}
                           {w.agotadoManual && (
                             <span className="ml-1.5 inline-flex items-center gap-1 text-[10px] text-amber-600 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">
                               Agotado manualmente

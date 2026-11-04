@@ -4246,7 +4246,6 @@ To execute the Mutation, call `UseMutationResult.mutate()`. This function execut
 To access the data returned by a Mutation, use the `UseMutationResult.data` field. The data for the `CancelarWorkshopConReservas` Mutation is of type `CancelarWorkshopConReservasData`, which is defined in [dataconnect-generated/index.d.ts](../index.d.ts). It has the following fields:
 ```javascript
 export interface CancelarWorkshopConReservasData {
-  workshop_update?: Workshop_Key | null;
   canceladas?: number | null;
 }
 ```
@@ -4308,7 +4307,6 @@ export default function CancelarWorkshopConReservasComponent() {
 
   // If the Mutation is successful, you can access the data returned using the `UseMutationResult.data` field.
   if (mutation.isSuccess) {
-    console.log(mutation.data.workshop_update);
     console.log(mutation.data.canceladas);
   }
   return <div>Mutation execution {mutation.isSuccess ? 'successful' : 'failed'}!</div>;

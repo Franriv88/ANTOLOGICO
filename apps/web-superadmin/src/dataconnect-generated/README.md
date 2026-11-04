@@ -5071,7 +5071,6 @@ Recall that executing the `CancelarWorkshopConReservas` mutation returns a `Muta
 The `data` property is an object of type `CancelarWorkshopConReservasData`, which is defined in [dataconnect-generated/index.d.ts](./index.d.ts). It has the following fields:
 ```typescript
 export interface CancelarWorkshopConReservasData {
-  workshop_update?: Workshop_Key | null;
   canceladas?: number | null;
 }
 ```
@@ -5097,13 +5096,11 @@ const { data } = await cancelarWorkshopConReservas({ id: ..., espacioId: ..., })
 const dataConnect = getDataConnect(connectorConfig);
 const { data } = await cancelarWorkshopConReservas(dataConnect, cancelarWorkshopConReservasVars);
 
-console.log(data.workshop_update);
 console.log(data.canceladas);
 
 // Or, you can use the `Promise` API.
 cancelarWorkshopConReservas(cancelarWorkshopConReservasVars).then((response) => {
   const data = response.data;
-  console.log(data.workshop_update);
   console.log(data.canceladas);
 });
 ```
@@ -5133,13 +5130,11 @@ const ref = cancelarWorkshopConReservasRef(dataConnect, cancelarWorkshopConReser
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await executeMutation(ref);
 
-console.log(data.workshop_update);
 console.log(data.canceladas);
 
 // Or, you can use the `Promise` API.
 executeMutation(ref).then((response) => {
   const data = response.data;
-  console.log(data.workshop_update);
   console.log(data.canceladas);
 });
 ```

@@ -224,7 +224,15 @@ export default function Workshops() {
     load(nw?.id);
   }, [estado, activeEspacio?.id, location.key]);
 
-  function handleDeleteRequest(id, nombre) {
+  async function handleDeleteRequest(id, nombre) {
+    try {
+      const reservas = await api.listReservas(id);
+      const activas = reservas.filter(r => r.estado !== 'CANCELADA');
+      if (activas.length > 0) {
+        setConfirm({ action: 'block-delete', id, nombre, reservas: activas });
+        return;
+      }
+    } catch (_) {}
     setConfirm({ action: 'delete', id, nombre });
   }
 
@@ -344,6 +352,39 @@ export default function Workshops() {
           onConfirm={handleConfirm}
           onCancel={() => setConfirm(null)}
         />
+      )}
+
+      {confirm && confirm.action === 'block-delete' && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setConfirm(null)} />
+          <div className="relative bg-surface-100 border border-border rounded-xl shadow-2xl p-6 max-w-sm w-full">
+            <h2 className="font-display text-lg text-ink mb-2">No se puede eliminar</h2>
+            <p className="text-sm text-ink-muted mb-3">
+              El taller &quot;{confirm.nombre}&quot; tiene {confirm.reservas.length} reserva{confirm.reservas.length > 1 ? 's' : ''} activa{confirm.reservas.length > 1 ? 's' : ''}.
+            </p>
+            <p className="text-sm text-ink-muted mb-6">
+              Primero deberás <strong>cancelar el taller</strong> y gestionar las devoluciones antes de poder eliminarlo.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setConfirm(null)}
+                className="px-4 py-2 text-sm font-medium text-ink hover:bg-surface-200 rounded-md transition-colors border border-border"
+              >
+                Entendido
+              </button>
+              <button
+                onClick={() => {
+                  const { id, nombre } = confirm;
+                  setConfirm(null);
+                  handleCancelRequest(id, nombre);
+                }}
+                className="px-4 py-2 text-sm font-semibold rounded-md transition-colors bg-ink text-white hover:bg-ink/80"
+              >
+                Cancelar taller
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {confirm && confirm.action === 'cancel' && (

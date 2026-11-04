@@ -279,7 +279,6 @@ export interface CancelarReservaVariables {
 }
 
 export interface CancelarWorkshopConReservasData {
-  workshop_update?: Workshop_Key | null;
   canceladas?: number | null;
 }
 

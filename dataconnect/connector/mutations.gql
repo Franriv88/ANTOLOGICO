@@ -469,25 +469,25 @@ mutation CancelarReserva($id: UUID!, $workshopId: UUID!) @auth(level: USER) @tra
 }
 
 # Cancela un workshop y todas sus reservas activas atómicamente.
-# Usado desde el panel tenant al cancelar un taller con asistentes.
-mutation CancelarWorkshopConReservas($id: UUID!, $espacioId: UUID!) @auth(level: USER) @transaction {
-  query @redact {
-    espacio(id: $espacioId) @check(expr: "this != null", message: "Espacio no encontrado") {
-      profesional {
-        uid @check(expr: "this == auth.uid", message: "Sin permiso")
-      }
-    }
-  }
-  workshop_update(
-    id: $id
-    data: { estado: CANCELADO, updatedAt_expr: "request.time" }
-  )
+# Verifica ownership via CTE, luego actualiza workshop + reservas en un solo statement.
+mutation CancelarWorkshopConReservas($id: UUID!, $espacioId: UUID!) @auth(level: USER) {
   canceladas: _execute(
     sql: """
+      WITH auth_check AS (
+        SELECT w.id
+        FROM workshops w
+        JOIN espacios e ON w.espacio_id = e.id
+        WHERE w.id = $1 AND e.id = $2 AND e.profesional_uid = $3
+      ),
+      cancel_workshop AS (
+        UPDATE workshops SET estado = 'CANCELADO', updated_at = NOW()
+        FROM auth_check
+        WHERE workshops.id = auth_check.id
+      )
       UPDATE reservas SET estado = 'CANCELADA', updated_at = NOW()
-      WHERE workshop_id = $1 AND estado != 'CANCELADA'
+      WHERE workshop_id = (SELECT id FROM auth_check) AND estado != 'CANCELADA'
     """
-    params: [$id]
+    params: [$id, $espacioId, {_expr: "auth.uid"}]
   )
 }
 
