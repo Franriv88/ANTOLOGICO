@@ -27,23 +27,19 @@ export function AuthProvider({ children }) {
           }
           if (stale()) return;
 
-          if (isAdmin) {
-            let fromHandoff = false;
-            try { fromHandoff = !!sessionStorage.getItem('__handoff'); } catch {}
-            if (!fromHandoff) {
-              try {
-                const { data } = await listMyEspacios();
-                if (stale()) return;
-                if ((data.espacios ?? []).length === 0) {
-                  setAdminBlocked(true);
-                  setUser(null);
-                  await signOut(auth);
-                  return;
-                }
-              } catch (e) {
-                if (stale()) return;
-                console.warn('[Auth] Admin espacio check failed, letting through:', e);
+          if (isAdmin && tokenResult.signInProvider !== 'custom') {
+            try {
+              const { data } = await listMyEspacios();
+              if (stale()) return;
+              if ((data.espacios ?? []).length === 0) {
+                setAdminBlocked(true);
+                setUser(null);
+                await signOut(auth);
+                return;
               }
+            } catch (e) {
+              if (stale()) return;
+              console.warn('[Auth] Admin espacio check failed, letting through:', e);
             }
           }
 
