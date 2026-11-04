@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { signInWithCustomToken } from 'firebase/auth';
 import { auth } from '../lib/firebase';
+import { upsertProfesional, listMyEspacios, createEspacio } from '../dataconnect-generated';
 import { FullScreenLoader } from '../components/AntologicoLoader';
 
 export default function AuthHandoff() {
@@ -21,6 +22,28 @@ export default function AuthHandoff() {
       try {
         await signInWithCustomToken(auth, token);
         if (cancelled) return;
+
+        const user = auth.currentUser;
+        try {
+          await upsertProfesional({
+            nombre: user.displayName || user.email,
+            email: user.email,
+          });
+        } catch {
+          // Already exists — fine
+        }
+
+        try {
+          const { data } = await listMyEspacios();
+          if ((data.espacios ?? []).length === 0) {
+            await createEspacio({ nombre: user.displayName || 'Mi Espacio' });
+          }
+        } catch (e) {
+          console.warn('[AuthHandoff] espacio check/create failed:', e);
+        }
+
+        if (cancelled) return;
+        try { sessionStorage.setItem('__handoff', '1'); } catch {}
         window.location.replace('/workshops');
       } catch (err) {
         if (cancelled) return;
