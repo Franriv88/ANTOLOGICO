@@ -4,6 +4,8 @@ import { signInWithCustomToken } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 import { upsertProfesional, listMyEspacios, createEspacio } from '../dataconnect-generated';
 
+function wait(ms) { return new Promise(r => setTimeout(r, ms)); }
+
 export default function AuthHandoff() {
   const [params] = useSearchParams();
   const token = params.get('token');
@@ -29,12 +31,8 @@ export default function AuthHandoff() {
 
     (async () => {
       // 1. sessionStorage
-      try {
-        sessionStorage.setItem('__handoff', '1');
-        log('sessionStorage.__handoff = 1 ✓');
-      } catch (e) {
-        log(`sessionStorage falló: ${e.message}`, 'error');
-      }
+      try { sessionStorage.setItem('__handoff', '1'); log('sessionStorage.__handoff = 1 ✓'); }
+      catch (e) { log(`sessionStorage falló: ${e.message}`, 'error'); }
 
       // 2. signInWithCustomToken
       try {
@@ -47,24 +45,30 @@ export default function AuthHandoff() {
         return;
       }
 
-      // 3. Check auth.currentUser
       const user = auth.currentUser;
-      if (!user) {
-        log('auth.currentUser es null después de signIn', 'error');
-        setDone(true);
-        return;
-      }
+      if (!user) { log('auth.currentUser es null', 'error'); setDone(true); return; }
       log(`currentUser: ${user.email}, emailVerified: ${user.emailVerified}`);
 
-      // 4. getIdTokenResult
+      // 3. getIdTokenResult
       try {
         const tr = await user.getIdTokenResult();
         log(`admin claim: ${tr.claims.admin}, signInProvider: ${tr.signInProvider}`);
+      } catch (e) { log(`getIdTokenResult falló: ${e.message}`, 'warn'); }
+
+      // 4. Forzar refresh del ID token para que Data Connect lo reconozca
+      try {
+        log('Forzando refresh del ID token…');
+        const freshToken = await user.getIdToken(true);
+        log(`Token refreshed OK (${freshToken.slice(0, 20)}…)`);
       } catch (e) {
-        log(`getIdTokenResult falló: ${e.message}`, 'warn');
+        log(`getIdToken(true) falló: ${e.message}`, 'warn');
       }
 
-      // 5. upsertProfesional
+      // 5. Esperar para que el SDK de Data Connect actualice su listener
+      log('Esperando 1s para que DC SDK actualice auth…');
+      await wait(1000);
+
+      // 6. upsertProfesional
       try {
         log('Llamando upsertProfesional…');
         await upsertProfesional({ nombre: user.displayName || user.email, email: user.email });
@@ -74,22 +78,29 @@ export default function AuthHandoff() {
         log(`upsertProfesional: ${msg}`, msg.includes('ALREADY_EXISTS') ? 'warn' : 'error');
       }
 
-      // 6. listMyEspacios
+      // 7. listMyEspacios con retry
       let espacioCount = -1;
-      try {
-        log('Llamando listMyEspacios…');
-        const { data } = await listMyEspacios();
-        espacioCount = (data.espacios ?? []).length;
-        log(`listMyEspacios: ${espacioCount} espacio(s) encontrado(s)`);
-        if (espacioCount > 0) {
-          const e = data.espacios[0];
-          log(`  → primer espacio: ${e.nombre} (${e.id})`);
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          log(`Llamando listMyEspacios (intento ${attempt}/3)…`);
+          const { data } = await listMyEspacios();
+          espacioCount = (data.espacios ?? []).length;
+          log(`listMyEspacios: ${espacioCount} espacio(s)`);
+          if (espacioCount > 0) {
+            log(`  → ${data.espacios[0].nombre} (${data.espacios[0].id})`);
+          }
+          break;
+        } catch (e) {
+          const msg = e?.message || JSON.stringify(e);
+          log(`listMyEspacios intento ${attempt} FALLÓ: ${msg}`, attempt < 3 ? 'warn' : 'error');
+          if (attempt < 3) {
+            log(`Esperando ${attempt}s antes de reintentar…`);
+            await wait(attempt * 1000);
+          }
         }
-      } catch (e) {
-        log(`listMyEspacios FALLÓ: ${e?.message || JSON.stringify(e)}`, 'error');
       }
 
-      // 7. createEspacio si hace falta
+      // 8. createEspacio si necesario
       if (espacioCount === 0) {
         try {
           log('No hay espacios — creando uno…');
@@ -100,9 +111,9 @@ export default function AuthHandoff() {
         }
       }
 
-      // 8. Re-set flag
+      // 9. Listo
       try { sessionStorage.setItem('__handoff', '1'); } catch {}
-      log('Diagnóstico completo. Listo para redirigir.');
+      log('Diagnóstico completo.');
       setOk(true);
       setDone(true);
     })();
@@ -121,9 +132,7 @@ export default function AuthHandoff() {
             {l.msg}
           </div>
         ))}
-        {!done && (
-          <div style={{ color: '#38bdf8', marginTop: 8 }}>⏳ Procesando…</div>
-        )}
+        {!done && <div style={{ color: '#38bdf8', marginTop: 8 }}>⏳ Procesando…</div>}
       </div>
       {done && (
         <div style={{ marginTop: 24, display: 'flex', gap: 12 }}>
