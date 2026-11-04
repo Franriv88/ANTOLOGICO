@@ -612,13 +612,20 @@ export default function WorkshopForm() {
   function validate() {
     const errs = {};
     if (!form.nombre.trim()) errs.nombre = 'El nombre es requerido';
+    if (!form.tipo) errs.tipo = 'Seleccioná un tipo de encuentro';
+    if (form.experienciaPrevia === null) errs.experienciaPrevia = 'Indicá si se requiere experiencia previa';
+    if (!form.fecha) errs.fecha = 'La fecha es requerida';
+    if (!form.hora) errs.hora = 'La hora es requerida';
     if (!form.cuposTotales || isNaN(form.cuposTotales) || Number(form.cuposTotales) < 1)
       errs.cuposTotales = 'Debe ser mayor a 0';
     else if (isEdit && Number(form.cuposTotales) < form._reservasExistentes)
       errs.cuposTotales = `No podés reducir los cupos por debajo de las reservas ya realizadas (${form._reservasExistentes})`;
-    if (!form.precio || isNaN(form.precio) || Number(form.precio) < 0)
-      errs.precio = 'Precio inválido';
-    if (!form.fecha) errs.fecha = 'La fecha es requerida';
+    if (form.precio === '' || form.precio === null || form.precio === undefined || isNaN(form.precio) || Number(form.precio) < 0)
+      errs.precio = 'El precio es requerido';
+    const cobros = activeEspacio?.cobros;
+    const hasCobros = cobros?.efectivo || cobros?.mercadoPago || cobros?.linksDePago;
+    if (!hasCobros) errs.metodosPago = 'Activá al menos un método de pago en Mis Cobros';
+    else if (!form.metodosPago.length) errs.metodosPago = 'Seleccioná al menos un método de pago';
     return errs;
   }
 
@@ -720,14 +727,14 @@ export default function WorkshopForm() {
                   value={form.nombre}
                   onChange={e => set('nombre', e.target.value)}
                   placeholder="Ej: Introducción a la acuarela"
-                  className={INPUT_CLS}
+                  className={INPUT_CLS + (errors.nombre ? ' border-danger ring-1 ring-danger/30' : '')}
                 />
                 {errors.nombre && <p className="mt-1 text-xs text-danger">{errors.nombre}</p>}
               </div>
 
               {/* Tipo */}
               <div>
-                <label className={LABEL_CLS}>Tipo de encuentro</label>
+                <label className={LABEL_CLS}>Tipo de encuentro *</label>
                 <div className="grid grid-cols-2 xl:grid-cols-4 gap-2">
                   {TIPOS.map(t => {
                     const cfg = TIPO_CONFIG[t];
@@ -736,9 +743,11 @@ export default function WorkshopForm() {
                       <button
                         key={t}
                         type="button"
-                        onClick={() => handleTipoChange(t)}
+                        onClick={() => { handleTipoChange(t); setErrors(prev => ({ ...prev, tipo: '' })); }}
                         className={`text-left px-3 py-2.5 rounded-md border-2 transition-colors ${
-                          active ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40 bg-surface-100'
+                          active ? 'border-primary bg-primary/5'
+                            : errors.tipo ? 'border-danger/50 hover:border-primary/40 bg-surface-100'
+                            : 'border-border hover:border-primary/40 bg-surface-100'
                         }`}
                       >
                         <span className="block text-xs font-semibold text-ink mb-0.5">{cfg.label}</span>
@@ -748,6 +757,7 @@ export default function WorkshopForm() {
                     );
                   })}
                 </div>
+                {errors.tipo && <p className="mt-1 text-xs text-danger">{errors.tipo}</p>}
               </div>
 
               {/* Schedule (solo Taller / Curso) */}
@@ -833,7 +843,7 @@ export default function WorkshopForm() {
 
               {/* Experiencia previa */}
               <div>
-                <label className={LABEL_CLS}>Requisito de experiencia</label>
+                <label className={LABEL_CLS}>Requisito de experiencia *</label>
                 <div className="flex flex-col sm:flex-row gap-2">
                   {[
                     { val: true,  label: 'Se requiere experiencia previa' },
@@ -842,10 +852,11 @@ export default function WorkshopForm() {
                     <button
                       key={String(val)}
                       type="button"
-                      onClick={() => set('experienciaPrevia', form.experienciaPrevia === val ? null : val)}
+                      onClick={() => { set('experienciaPrevia', form.experienciaPrevia === val ? null : val); setErrors(prev => ({ ...prev, experienciaPrevia: '' })); }}
                       className={`flex-1 px-3 py-2 rounded-md border text-xs font-medium transition-colors ${
                         form.experienciaPrevia === val
                           ? 'border-primary bg-primary/5 text-primary'
+                          : errors.experienciaPrevia ? 'border-danger/50 text-ink hover:border-primary/40 bg-surface-100'
                           : 'border-border text-ink hover:border-primary/40 bg-surface-100'
                       }`}
                     >
@@ -853,6 +864,7 @@ export default function WorkshopForm() {
                     </button>
                   ))}
                 </div>
+                {errors.experienciaPrevia && <p className="mt-1 text-xs text-danger">{errors.experienciaPrevia}</p>}
               </div>
 
               {/* ── Dirección ── */}
@@ -877,18 +889,29 @@ export default function WorkshopForm() {
               {/* ── Métodos de pago ── */}
               {(() => {
                 const cobros = activeEspacio?.cobros;
-                if (!cobros) return null;
                 const options = [];
-                if (cobros.efectivo)    options.push({ id: 'efectivo',    label: 'Efectivo' });
-                if (cobros.mercadoPago) options.push({ id: 'mercadopago', label: 'Mercado Pago' });
-                if (cobros.linksDePago) (cobros.links ?? []).forEach(l => options.push({ id: `link-${l.id}`, label: l.nombre }));
-                if (!options.length) return null;
+                if (cobros?.efectivo)    options.push({ id: 'efectivo',    label: 'Efectivo' });
+                if (cobros?.mercadoPago) options.push({ id: 'mercadopago', label: 'Mercado Pago' });
+                if (cobros?.linksDePago) (cobros.links ?? []).forEach(l => options.push({ id: `link-${l.id}`, label: l.nombre }));
+                if (!options.length) return (
+                  <div className={`border rounded-lg p-4 ${errors.metodosPago ? 'border-danger bg-danger/5' : 'border-amber-300 bg-amber-50'}`}>
+                    <label className={LABEL_CLS}>Métodos de pago *</label>
+                    <p className="text-sm text-ink-muted mb-3">Debés activar al menos un método de pago en <strong>Mis Cobros</strong> antes de poder crear un taller.</p>
+                    <Link
+                      to="/configuracion?mp=1"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-primary text-white hover:bg-primary/90 transition-colors"
+                    >
+                      Ir a Mis Cobros
+                    </Link>
+                    {errors.metodosPago && <p className="mt-2 text-xs text-danger">{errors.metodosPago}</p>}
+                  </div>
+                );
                 function toggleMetodo(id) {
                   set('metodosPago', form.metodosPago.includes(id) ? form.metodosPago.filter(x => x !== id) : [...form.metodosPago, id]);
                 }
                 return (
                   <div>
-                    <label className={LABEL_CLS}>Métodos de pago</label>
+                    <label className={LABEL_CLS}>Métodos de pago *</label>
                     <p className="text-[11px] text-ink-muted mb-2">Elegí qué métodos acepta este taller. Configurás más opciones en <strong>Configuración → Mis Cobros</strong>.</p>
                     <div className="flex flex-col gap-2">
                       {options.map(opt => (
@@ -903,6 +926,7 @@ export default function WorkshopForm() {
                         </label>
                       ))}
                     </div>
+                    {errors.metodosPago && <p className="mt-1 text-xs text-danger">{errors.metodosPago}</p>}
                   </div>
                 );
               })()}
@@ -920,13 +944,14 @@ export default function WorkshopForm() {
                     type="date"
                     value={form.fecha}
                     onChange={e => handleFechaChange(e.target.value)}
-                    className={INPUT_CLS + ' font-mono' + (fechaGlow ? ' fecha-glow' : '')}
+                    className={INPUT_CLS + ' font-mono' + (fechaGlow ? ' fecha-glow' : '') + (errors.fecha ? ' border-danger ring-1 ring-danger/30' : '')}
                   />
                   {errors.fecha && <p className="mt-1 text-xs text-danger">{errors.fecha}</p>}
                 </div>
                 <div>
                   <label className={LABEL_CLS}>Hora de inicio *</label>
-                  <TimeSelect value={form.hora} onChange={v => set('hora', v)} />
+                  <TimeSelect value={form.hora} onChange={v => { set('hora', v); setErrors(prev => ({ ...prev, hora: '' })); }} error={!!errors.hora} />
+                  {errors.hora && <p className="mt-1 text-xs text-danger">{errors.hora}</p>}
                 </div>
               </div>
 
@@ -939,7 +964,7 @@ export default function WorkshopForm() {
                     min="1"
                     value={form.cuposTotales}
                     onChange={e => set('cuposTotales', e.target.value)}
-                    className={INPUT_CLS + ' font-mono'}
+                    className={INPUT_CLS + ' font-mono' + (errors.cuposTotales ? ' border-danger ring-1 ring-danger/30' : '')}
                   />
                   {errors.cuposTotales && <p className="mt-1 text-xs text-danger">{errors.cuposTotales}</p>}
                 </div>
@@ -951,7 +976,7 @@ export default function WorkshopForm() {
                     step="0.01"
                     value={form.precio}
                     onChange={e => set('precio', e.target.value)}
-                    className={INPUT_CLS + ' font-mono'}
+                    className={INPUT_CLS + ' font-mono' + (errors.precio ? ' border-danger ring-1 ring-danger/30' : '')}
                   />
                   {errors.precio && <p className="mt-1 text-xs text-danger">{errors.precio}</p>}
                 </div>

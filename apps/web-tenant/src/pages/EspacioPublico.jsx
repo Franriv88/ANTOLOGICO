@@ -295,7 +295,7 @@ function AuthModal({ brand, onClose, onSuccess }) {
 
 // ── BookingModal ──────────────────────────────────────────────────────────────
 
-function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, tyc, onConfirm, onClose }) {
+function BookingModal({ workshop, brand, prefill, tenantId, cobros, cobrosLinks, tyc, onConfirm, onClose }) {
   const [cantidad,  setCantidad]  = useState(1);
   const [nombres,   setNombres]   = useState([prefill?.nombre ?? '']);
   const [email,    setEmail]    = useState(prefill?.email    ?? '');
@@ -518,14 +518,18 @@ function BookingModal({ workshop, brand, prefill, tenantId, cobrosLinks, tyc, on
               )}
               {(() => {
                 // Determine which methods to show based on workshop.metodosPago
-                // If null/empty, show all available (backward compat)
+                // AND the espacio's cobros config (only show methods the tenant has enabled)
                 const mp = Array.isArray(workshop.metodosPago) && workshop.metodosPago.length > 0
                   ? workshop.metodosPago
-                  : null; // null = show all
+                  : null; // null = show all enabled in cobros
 
-                const showEfectivo    = !mp || mp.includes('efectivo');
-                const showMercadoPago = !mp || mp.includes('mercadopago');
-                const linkIds         = mp ? mp.filter(id => id.startsWith('link-')) : [];
+                const cobrosEfectivo    = cobros?.efectivo    ?? false;
+                const cobrosMercadoPago = cobros?.mercadoPago ?? false;
+                const cobrosLinksDePago = cobros?.linksDePago ?? false;
+
+                const showEfectivo    = cobrosEfectivo    && (!mp || mp.includes('efectivo'));
+                const showMercadoPago = cobrosMercadoPago && (!mp || mp.includes('mercadopago'));
+                const linkIds         = cobrosLinksDePago && mp ? mp.filter(id => id.startsWith('link-')) : [];
 
                 // cobrosLinks comes from the espacio.cobros.links loaded by the page
                 const links = cobrosLinks ?? [];
@@ -1062,6 +1066,7 @@ export default function EspacioPublico({ overrideEspacioId }) {
           workshop={booking}
           brand={brand}
           tenantId={espacioId}
+          cobros={espacio?.cobros}
           cobrosLinks={espacio?.cobros?.links ?? []}
           tyc={espacio.tycEnabled && espacio.terminosCondiciones ? espacio.terminosCondiciones : null}
           prefill={currentUser ? { nombre: currentUser.profile?.nombre || currentUser.user?.displayName || '', email: currentUser.user?.email ?? '', telefono: currentUser.profile?.telefono ?? '' } : undefined}
