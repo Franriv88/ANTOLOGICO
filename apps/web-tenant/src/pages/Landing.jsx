@@ -338,7 +338,7 @@ export default function Landing() {
                 return (
                   <button key={op.id} type="button" onClick={() => setPeriodo(op.id)}
                     className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                      periodo === op.id ? 'bg-surface-100 text-ink shadow-sm' : 'text-ink-muted hover:text-ink'
+                      periodo === op.id ? 'bg-surface-0 text-ink shadow-sm' : 'text-ink-muted hover:text-ink'
                     }`}>
                     {op.label}
                     {op.id !== 'mensual' && dto > 0 && (
@@ -383,13 +383,14 @@ export default function Landing() {
                       ? 'border-primary bg-primary/5 shadow-md'
                       : 'border-border bg-surface-0 hover:border-primary/40 hover:shadow-sm'
                   }`}
-                  style={{ minHeight: 320 }}
                 >
-                  {highlight && (
-                    <span className="text-xs font-semibold text-primary mb-2 uppercase tracking-wide">
-                      Más popular
-                    </span>
-                  )}
+                  <div className="h-5 mb-1">
+                    {highlight && (
+                      <span className="text-xs font-semibold text-primary uppercase tracking-wide">
+                        Más popular
+                      </span>
+                    )}
+                  </div>
                   <h3 className="font-semibold text-ink mb-1">{nombre}</h3>
                   <div className="mb-1">
                     <span className="font-mono text-2xl text-ink font-semibold">{formatPrecio(precio)}</span>
@@ -398,16 +399,18 @@ export default function Landing() {
                       <span className="ml-2 text-xs text-ink-muted line-through">{formatPrecio(plan.precioMensual)}</span>
                     )}
                   </div>
-                  {dto > 0 && (
-                    <p className="text-xs text-success font-medium mb-1">
-                      Ahorrás {formatPrecio((precioBase - precio) * meses)} {periodo === 'trimestral' ? 'c/3m' : 'por año'}
-                    </p>
-                  )}
-                  {promoActiva && periodo === 'mensual' && (
-                    <p className="text-xs text-success font-medium mb-1">
-                      Ahorrás {formatPrecio(plan.precioMensual - precio)}/mes con la promo
-                    </p>
-                  )}
+                  <div className="h-5">
+                    {dto > 0 && (
+                      <p className="text-xs text-success font-medium">
+                        Ahorrás {formatPrecio((precioBase - precio) * meses)} {periodo === 'trimestral' ? 'c/3m' : 'por año'}
+                      </p>
+                    )}
+                    {promoActiva && periodo === 'mensual' && (
+                      <p className="text-xs text-success font-medium">
+                        Ahorrás {formatPrecio(plan.precioMensual - precio)}/mes con la promo
+                      </p>
+                    )}
+                  </div>
                   <ul className="flex flex-col gap-1.5 flex-1 mt-3">
                     {features.map((f) => (
                       <li key={f} className="text-xs text-ink-muted flex items-center gap-1.5">
