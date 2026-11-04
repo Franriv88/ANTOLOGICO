@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { trackWorkshopCreado } from '../lib/analytics';
 
@@ -492,6 +492,89 @@ export default function WorkshopForm() {
   const [loading, setLoading] = useState(false);
   const [showCobrosModal, setShowCobrosModal] = useState(false);
   const [loadingData, setLoadingData] = useState(isEdit);
+  const [draftId, setDraftId] = useState(null);
+  const [editIsDraft, setEditIsDraft] = useState(false);
+  const draftTimerRef = useRef(null);
+  const formRef = useRef(form);
+  const draftIdRef = useRef(draftId);
+  const savingDraftRef = useRef(false);
+  const hasBeenEdited = useRef(false);
+  formRef.current = form;
+  draftIdRef.current = draftId;
+
+  const buildDraftPayload = useCallback((f) => {
+    const cuposTotales = Number(f.cuposTotales) || 1;
+    const fecha = f.fecha
+      ? new Date(`${f.fecha}T${f.hora || '09:00'}:00`).toISOString()
+      : new Date().toISOString();
+    const effectiveHT = canUploadImage ? (f.headerType || 'COLOR') : 'COLOR';
+    const effectiveHV = effectiveHT === 'IMAGE' ? f.headerValue : (isValidColor(f.headerValue) ? f.headerValue : '#E85D4A');
+    return {
+      nombre:            f.nombre || 'Borrador sin título',
+      tipo:              f.tipo || null,
+      descripcion:       f.descripcion || null,
+      cuposTotales,
+      cuposDisponibles:  cuposTotales,
+      precio:            Number(f.precio) || 0,
+      fecha,
+      duracionHoras:     f.duracionHoras !== '' ? Number(f.duracionHoras) : null,
+      duracionMinutos:   f.duracionMinutos !== '0' ? Number(f.duracionMinutos) : null,
+      estado:            'BORRADOR',
+      esBorrador:        true,
+      experienciaPrevia: f.experienciaPrevia,
+      scheduleData:      buildScheduleData(f),
+      headerType:        effectiveHT,
+      headerValue:       effectiveHV,
+      metodosPago:       f.metodosPago.length ? f.metodosPago : null,
+    };
+  }, [canUploadImage]);
+
+  const saveDraft = useCallback(async () => {
+    if (savingDraftRef.current || !activeEspacio?.id) return;
+    const f = formRef.current;
+    if (!f.nombre.trim() && !f.tipo && !f.descripcion && !f.fecha) return;
+    savingDraftRef.current = true;
+    try {
+      const payload = buildDraftPayload(f);
+      const currentDraftId = draftIdRef.current;
+      if (currentDraftId) {
+        await api.update(currentDraftId, activeEspacio.id, payload);
+      } else {
+        const created = await api.create(activeEspacio.id, payload);
+        if (created?.id) setDraftId(created.id);
+      }
+    } catch (e) {
+      console.warn('[Draft] auto-save failed:', e);
+    } finally {
+      savingDraftRef.current = false;
+    }
+  }, [activeEspacio?.id, buildDraftPayload]);
+
+  const scheduleDraftSave = useCallback(() => {
+    if (isEdit && !editIsDraft) return;
+    if (!hasBeenEdited.current) return;
+    if (draftTimerRef.current) clearTimeout(draftTimerRef.current);
+    draftTimerRef.current = setTimeout(saveDraft, 3000);
+  }, [isEdit, editIsDraft, saveDraft]);
+
+  useEffect(() => {
+    function onBeforeUnload(e) {
+      if (!hasBeenEdited.current || (isEdit && !editIsDraft)) return;
+      if (draftTimerRef.current) {
+        clearTimeout(draftTimerRef.current);
+        saveDraft();
+      }
+      e.preventDefault();
+    }
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', onBeforeUnload);
+      if (draftTimerRef.current) {
+        clearTimeout(draftTimerRef.current);
+        if (hasBeenEdited.current && (!isEdit || editIsDraft)) saveDraft();
+      }
+    };
+  }, [saveDraft, isEdit, editIsDraft]);
 
   useEffect(() => {
     if (!isEdit) return;
@@ -505,15 +588,16 @@ export default function WorkshopForm() {
         const existingDates     = existingFecha && existingEndDate
           ? computeWeeklyDates(existingFecha, existingEndDate, existingIdx, existingStep)
           : [];
+        if (w.esBorrador) setEditIsDraft(true);
         setForm({
-          nombre:              w.nombre,
+          nombre:              w.nombre === 'Borrador sin título' ? '' : w.nombre,
           tipo:                w.tipo ?? null,
           descripcion:         w.descripcion ?? '',
-          cuposTotales:        String(w.cuposTotales),
+          cuposTotales:        w.esBorrador && w.cuposTotales === 1 ? '' : String(w.cuposTotales),
           _reservasExistentes: (w.cuposTotales ?? 0) - (w.cuposDisponibles ?? 0),
-          precio:              String(w.precio),
-          fecha:               existingFecha,
-          hora:                localTimeStr(w.fecha),
+          precio:              w.esBorrador && w.precio === 0 ? '' : String(w.precio),
+          fecha:               w.esBorrador ? '' : existingFecha,
+          hora:                w.esBorrador ? '09:00' : localTimeStr(w.fecha),
           duracionHoras:       w.duracionHoras    != null ? String(w.duracionHoras)    : '',
           duracionMinutos:     w.duracionMinutos  != null ? String(w.duracionMinutos)  : '0',
           _estadoAction:       deriveEstadoAction(w),
@@ -537,6 +621,8 @@ export default function WorkshopForm() {
   function set(field, value) {
     setForm(prev => ({ ...prev, [field]: value }));
     setErrors(prev => ({ ...prev, [field]: '' }));
+    hasBeenEdited.current = true;
+    scheduleDraftSave();
   }
 
   function handleFechaChange(newFecha) {
@@ -553,6 +639,8 @@ export default function WorkshopForm() {
       return { ...prev, ...updates };
     });
     setErrors(prev => ({ ...prev, fecha: '' }));
+    hasBeenEdited.current = true;
+    scheduleDraftSave();
   }
 
   function handleWeeklyEndDate(newEndDate) {
@@ -589,6 +677,8 @@ export default function WorkshopForm() {
         ? { scheduleMode: null, specificDates: [], weeklyEndDate: '', weeklyNumSessions: '' }
         : {},
     }));
+    hasBeenEdited.current = true;
+    scheduleDraftSave();
   }
 
   function handleScheduleMode(mode) {
@@ -651,6 +741,7 @@ export default function WorkshopForm() {
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); shakeErrors(errs); return; }
 
+    if (draftTimerRef.current) clearTimeout(draftTimerRef.current);
     setLoading(true);
     try {
       const cuposTotales     = Number(form.cuposTotales);
@@ -659,10 +750,6 @@ export default function WorkshopForm() {
         ? 0
         : cuposTotales - (isEdit ? form._reservasExistentes : 0);
 
-      // Defensa server-side (del lado del cliente): aunque el selector no se
-      // muestra cuando el plan no permite imagen, si por algún camino el estado
-      // tiene headerType=IMAGE (ej. workshop editado tras downgrade), forzamos
-      // COLOR al momento de guardar para respetar las capabilities del plan.
       const effectiveHeaderType = canUploadImage ? (form.headerType || 'COLOR') : 'COLOR';
       const effectiveHeaderValue = effectiveHeaderType === 'IMAGE' ? form.headerValue : (isValidColor(form.headerValue) ? form.headerValue : '#E85D4A');
 
@@ -677,6 +764,7 @@ export default function WorkshopForm() {
         duracionHoras:     form.duracionHoras   !== '' ? Number(form.duracionHoras)   : null,
         duracionMinutos:   form.duracionMinutos !== '0' ? Number(form.duracionMinutos) : null,
         estado:            estadoFinal,
+        esBorrador:        false,
         experienciaPrevia: form.experienciaPrevia,
         scheduleData:      buildScheduleData(form),
         headerType:          effectiveHeaderType,
@@ -684,8 +772,9 @@ export default function WorkshopForm() {
         metodosPago:         form.metodosPago.length  ? form.metodosPago : null,
       };
 
-      if (isEdit) {
-        const updated = await api.update(id, activeEspacio.id, payload);
+      const effectiveId = isEdit ? id : draftId;
+      if (effectiveId) {
+        const updated = await api.update(effectiveId, activeEspacio.id, payload);
         if (!updated) throw new Error('El taller no pudo actualizarse. Verificá que el emulador de Firebase esté activo.');
         navigate('/workshops', { state: { refresh: Date.now() } });
       } else {
@@ -694,6 +783,7 @@ export default function WorkshopForm() {
         trackWorkshopCreado({ workshopId: created.id, espacioId: activeEspacio.id });
         navigate('/workshops', { state: { refresh: Date.now(), newWorkshop: { id: created.id, ...payload } } });
       }
+      hasBeenEdited.current = false;
     } catch (err) {
       setErrors({ _server: err?.message || 'Error desconocido al guardar' });
     } finally {
@@ -740,7 +830,7 @@ export default function WorkshopForm() {
           ← Volver a talleres
         </Link>
         <h1 className="font-display text-3xl text-ink mb-6">
-          {isEdit ? 'Editar taller' : 'Nuevo taller'}
+          {isEdit && editIsDraft ? 'Continuar borrador' : isEdit ? 'Editar taller' : 'Nuevo taller'}
         </h1>
 
         {errors._server && (
@@ -1241,7 +1331,7 @@ export default function WorkshopForm() {
               disabled={loading}
               className="px-7 py-2 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary-strong transition-colors disabled:opacity-50"
             >
-              {loading ? 'Guardando…' : isEdit ? 'Guardar cambios' : 'Crear'}
+              {loading ? 'Guardando…' : (isEdit && !editIsDraft) ? 'Guardar cambios' : draftId || editIsDraft ? 'Publicar' : 'Crear'}
             </button>
           </div>
         </form>

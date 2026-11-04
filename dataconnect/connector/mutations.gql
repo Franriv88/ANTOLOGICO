@@ -280,6 +280,7 @@ mutation CreateWorkshop(
   $headerValue:       String
   $metodosPago:       Any
   $estado:            EstadoWorkshop
+  $esBorrador:        Boolean
 ) @auth(level: USER) @transaction {
   query @redact {
     espacio(id: $espacioId) @check(expr: "this != null", message: "Espacio no encontrado") {
@@ -305,6 +306,7 @@ mutation CreateWorkshop(
     headerValue:       $headerValue
     metodosPago:       $metodosPago
     estado:            $estado
+    esBorrador:        $esBorrador
     createdAt_expr:    "request.time"
     updatedAt_expr:    "request.time"
   })
@@ -329,6 +331,7 @@ mutation UpdateWorkshop(
   $headerValue:      String
   $metodosPago:      Any
   $estado:           EstadoWorkshop
+  $esBorrador:       Boolean
 ) @auth(level: USER) @transaction {
   query @redact {
     espacio(id: $espacioId) @check(expr: "this != null", message: "Espacio no encontrado") {
@@ -355,6 +358,7 @@ mutation UpdateWorkshop(
       headerValue:       $headerValue
       metodosPago:       $metodosPago
       estado:            $estado
+      esBorrador:        $esBorrador
       updatedAt_expr:    "request.time"
     }
   )

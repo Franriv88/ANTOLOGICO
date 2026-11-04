@@ -14,7 +14,7 @@ import { listMyWorkshopsRef, listMyWorkshopsByEstadoRef } from '../dataconnect-g
 const ESTADOS = ['', 'BORRADOR', 'PUBLICADO', 'CANCELADO', 'FINALIZADO'];
 const ESTADO_LABEL = {
   '': 'Todos',
-  BORRADOR: 'Ocultos',
+  BORRADOR: 'Ocultos / Borradores',
   PUBLICADO: 'Publicado',
   CANCELADO: 'Cancelado',
   FINALIZADO: 'Finalizado',
@@ -334,6 +334,9 @@ export default function Workshops() {
 
   const sourceItems = q && searchResults ? searchResults : items;
   const displayItems = [...sourceItems].sort((a, b) => {
+    const aDraft = a.esBorrador ? 0 : 1;
+    const bDraft = b.esBorrador ? 0 : 1;
+    if (aDraft !== bDraft) return aDraft - bDraft;
     const da = a.fecha ? new Date(a.fecha).getTime() : Infinity;
     const db = b.fecha ? new Date(b.fecha).getTime() : Infinity;
     return da - db;
@@ -566,19 +569,20 @@ export default function Workshops() {
         {/* Grilla de cards */}
         {!loading && <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {displayItems.map(w => {
-            const headerBg = w.headerType === 'COLOR' && w.headerValue
-              ? w.headerValue
+            const isDraft = w.esBorrador === true;
+            const headerBg = isDraft ? '#D1D0CE'
+              : w.headerType === 'COLOR' && w.headerValue ? w.headerValue
               : brand.primary;
-            const headerImg = w.headerType === 'IMAGE' && w.headerValue
+            const headerImg = !isDraft && w.headerType === 'IMAGE' && w.headerValue
               ? w.headerValue
               : null;
             const hasImage = !!headerImg;
-            const isOculto = w.estado === 'BORRADOR';
+            const isOculto = w.estado === 'BORRADOR' && !isDraft;
             const isAgotado = w.cuposDisponibles === 0 && w.estado === 'PUBLICADO';
 
-            const cardTextMain   = brand.textCard || '#2B241A';
-            const cardTextMuted  = '#6B5F4C';
-            const cardBorderColor = '#D2C4A8';
+            const cardTextMain   = isDraft ? '#9B9895' : (brand.textCard || '#2B241A');
+            const cardTextMuted  = isDraft ? '#B0ADAA' : '#6B5F4C';
+            const cardBorderColor = isDraft ? '#E0DEDA' : '#D2C4A8';
 
             return (
               <div
@@ -639,12 +643,18 @@ export default function Workshops() {
                 {!hasImage && (
                   <div className="px-4 pt-3 flex items-center justify-between gap-2">
                     <div className="flex items-center flex-wrap gap-2">
-                      <span
-                        className="px-2.5 py-1 rounded-lg font-mono font-bold text-xs text-white"
-                        style={{ backgroundColor: headerBg }}
-                      >
-                        {formatPrecio(w.precio)}
-                      </span>
+                      {isDraft ? (
+                        <span className="px-2.5 py-1 rounded-lg font-mono font-bold text-xs text-white" style={{ backgroundColor: '#9B9895' }}>
+                          Borrador
+                        </span>
+                      ) : (
+                        <span
+                          className="px-2.5 py-1 rounded-lg font-mono font-bold text-xs text-white"
+                          style={{ backgroundColor: headerBg }}
+                        >
+                          {formatPrecio(w.precio)}
+                        </span>
+                      )}
                       {isOculto && (
                         <span className="text-[11px] bg-ink/10 text-ink-muted px-2 py-0.5 rounded font-medium">
                           Oculto
@@ -659,14 +669,14 @@ export default function Workshops() {
                     <div className="flex gap-1.5 shrink-0">
                       <button
                         onClick={() => navigate(`/workshops/${w.id}/editar`)}
-                        title="Editar taller"
+                        title={isDraft ? 'Continuar configuración' : 'Editar taller'}
                         className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-ink-muted hover:bg-surface-100 hover:text-ink transition-colors"
                       >
                         <IconPencil />
                       </button>
                       <button
                         onClick={() => handleDeleteRequest(w.id, w.nombre)}
-                        title="Eliminar taller"
+                        title="Eliminar"
                         className="w-8 h-8 flex items-center justify-center rounded-lg border border-border text-ink-muted hover:bg-danger/8 hover:text-danger hover:border-danger/30 transition-colors"
                       >
                         <IconTrash />
@@ -683,9 +693,9 @@ export default function Workshops() {
                       className="font-bold text-sm leading-snug uppercase tracking-wide"
                       style={{
                         fontFamily: brand.displayFont ? `'${brand.displayFont}', serif` : undefined,
-                        color: '#1A1611',
+                        color: isDraft ? '#9B9895' : '#1A1611',
                       }}
-                    >{w.nombre}</h2>
+                    >{isDraft && w.nombre === 'Borrador sin título' ? 'Sin título' : w.nombre}</h2>
                     {w.tipo && TIPO_CONFIG[w.tipo] && (
                       <span className={`px-1.5 py-0.5 text-xs rounded font-medium shrink-0 ${TIPO_CONFIG[w.tipo].color}`}>
                         {TIPO_CONFIG[w.tipo].label}
@@ -715,6 +725,15 @@ export default function Workshops() {
 
                   {/* Footer: SlotBadge + acciones rápidas */}
                   <div className="mt-auto pt-3 border-t flex flex-col gap-2" style={{ borderColor: cardBorderColor }}>
+                    {isDraft ? (
+                      <button
+                        onClick={() => navigate(`/workshops/${w.id}/editar`)}
+                        className="w-full py-2 text-xs font-semibold rounded-md border-2 border-dashed transition-colors"
+                        style={{ borderColor: '#B0ADAA', color: '#6B5F4C', backgroundColor: '#F5F4F2' }}
+                      >
+                        Continuar configuración
+                      </button>
+                    ) : <>
                     <SlotBadge status={getSlotStatus(w.cuposDisponibles, w.cuposTotales)} />
 
                     <div className="flex gap-1.5 flex-wrap">
@@ -759,6 +778,7 @@ export default function Workshops() {
                         </button>
                       )}
                     </div>
+                  </>}
                   </div>
                 </div>
               </div>

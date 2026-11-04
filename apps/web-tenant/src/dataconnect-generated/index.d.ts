@@ -334,6 +334,7 @@ export interface CreateWorkshopVariables {
   headerValue?: string | null;
   metodosPago?: unknown | null;
   estado?: EstadoWorkshop | null;
+  esBorrador?: boolean | null;
 }
 
 export interface DecrementarCupoData {
@@ -454,6 +455,7 @@ export interface GetMyWorkshopData {
     headerValue?: string | null;
     metodosPago?: unknown | null;
     estado: EstadoWorkshop;
+    esBorrador: boolean;
     createdAt: TimestampString;
     updatedAt: TimestampString;
     espacio: {
@@ -619,6 +621,7 @@ export interface ListMyWorkshopsByEstadoData {
     headerValue?: string | null;
     metodosPago?: unknown | null;
     estado: EstadoWorkshop;
+    esBorrador: boolean;
     createdAt: TimestampString;
   } & Workshop_Key)[];
 }
@@ -646,6 +649,7 @@ export interface ListMyWorkshopsData {
     headerValue?: string | null;
     metodosPago?: unknown | null;
     estado: EstadoWorkshop;
+    esBorrador: boolean;
     createdAt: TimestampString;
   } & Workshop_Key)[];
 }
@@ -849,6 +853,7 @@ export interface SearchMyWorkshopsData {
     headerValue?: string | null;
     metodosPago?: unknown | null;
     estado: EstadoWorkshop;
+    esBorrador: boolean;
     createdAt: TimestampString;
   } & Workshop_Key)[];
 }
@@ -983,6 +988,7 @@ export interface UpdateWorkshopVariables {
   headerValue?: string | null;
   metodosPago?: unknown | null;
   estado?: EstadoWorkshop | null;
+  esBorrador?: boolean | null;
 }
 
 export interface UpsertProfesionalData {

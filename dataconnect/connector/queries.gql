@@ -113,7 +113,7 @@ query ListMyWorkshops($espacioId: UUID!)
     id nombre tipo descripcion
     cuposTotales cuposDisponibles precio fecha
     duracionHoras duracionMinutos experienciaPrevia scheduleData
-    headerType headerValue metodosPago estado createdAt
+    headerType headerValue metodosPago estado esBorrador createdAt
   }
 }
 
@@ -136,7 +136,7 @@ query ListMyWorkshopsByEstado($espacioId: UUID!, $estado: EstadoWorkshop!)
     id nombre tipo descripcion
     cuposTotales cuposDisponibles precio fecha
     duracionHoras duracionMinutos experienciaPrevia scheduleData
-    headerType headerValue metodosPago estado createdAt
+    headerType headerValue metodosPago estado esBorrador createdAt
   }
 }
 
@@ -157,7 +157,7 @@ query SearchMyWorkshops($espacioId: UUID!, $q: String!)
     id nombre tipo descripcion
     cuposTotales cuposDisponibles precio fecha
     duracionHoras duracionMinutos experienciaPrevia scheduleData
-    headerType headerValue metodosPago estado createdAt
+    headerType headerValue metodosPago estado esBorrador createdAt
   }
 }
 
@@ -172,7 +172,7 @@ query GetMyWorkshop($id: UUID!) @auth(level: USER) {
     id nombre tipo descripcion
     cuposTotales cuposDisponibles precio fecha
     duracionHoras duracionMinutos experienciaPrevia scheduleData
-    headerType headerValue metodosPago estado createdAt updatedAt
+    headerType headerValue metodosPago estado esBorrador createdAt updatedAt
     espacio { id nombre }
   }
 }

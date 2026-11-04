@@ -119,6 +119,7 @@ type Workshop @table(name: "workshops")
   headerValue:       String         @col(dataType: "text")
   metodosPago:       Any            # JSON: array de IDs, ej. ["efectivo","mercadopago","link-uuid"]
   estado:            EstadoWorkshop! @default(value: BORRADOR)
+  esBorrador:        Boolean! @default(value: false)
   createdAt:        Timestamp! @default(expr: "request.time")
   updatedAt:        Timestamp! @default(expr: "request.time")
 }

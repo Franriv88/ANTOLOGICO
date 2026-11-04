@@ -768,6 +768,7 @@ export interface ListMyWorkshopsData {
     headerValue?: string | null;
     metodosPago?: unknown | null;
     estado: EstadoWorkshop;
+    esBorrador: boolean;
     createdAt: TimestampString;
   } & Workshop_Key)[];
 }
@@ -869,6 +870,7 @@ export interface ListMyWorkshopsByEstadoData {
     headerValue?: string | null;
     metodosPago?: unknown | null;
     estado: EstadoWorkshop;
+    esBorrador: boolean;
     createdAt: TimestampString;
   } & Workshop_Key)[];
 }
@@ -971,6 +973,7 @@ export interface SearchMyWorkshopsData {
     headerValue?: string | null;
     metodosPago?: unknown | null;
     estado: EstadoWorkshop;
+    esBorrador: boolean;
     createdAt: TimestampString;
   } & Workshop_Key)[];
 }
@@ -1072,6 +1075,7 @@ export interface GetMyWorkshopData {
     headerValue?: string | null;
     metodosPago?: unknown | null;
     estado: EstadoWorkshop;
+    esBorrador: boolean;
     createdAt: TimestampString;
     updatedAt: TimestampString;
     espacio: {
@@ -3516,6 +3520,7 @@ export interface CreateWorkshopVariables {
   headerValue?: string | null;
   metodosPago?: unknown | null;
   estado?: EstadoWorkshop | null;
+  esBorrador?: boolean | null;
 }
 ```
 ### Return Type
@@ -3581,10 +3586,11 @@ export default function CreateWorkshopComponent() {
     headerValue: ..., // optional
     metodosPago: ..., // optional
     estado: ..., // optional
+    esBorrador: ..., // optional
   };
   mutation.mutate(createWorkshopVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ espacioId: ..., nombre: ..., tipo: ..., descripcion: ..., cuposTotales: ..., cuposDisponibles: ..., precio: ..., fecha: ..., duracionHoras: ..., duracionMinutos: ..., experienciaPrevia: ..., scheduleData: ..., headerType: ..., headerValue: ..., metodosPago: ..., estado: ..., });
+  mutation.mutate({ espacioId: ..., nombre: ..., tipo: ..., descripcion: ..., cuposTotales: ..., cuposDisponibles: ..., precio: ..., fecha: ..., duracionHoras: ..., duracionMinutos: ..., experienciaPrevia: ..., scheduleData: ..., headerType: ..., headerValue: ..., metodosPago: ..., estado: ..., esBorrador: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -3641,6 +3647,7 @@ export interface UpdateWorkshopVariables {
   headerValue?: string | null;
   metodosPago?: unknown | null;
   estado?: EstadoWorkshop | null;
+  esBorrador?: boolean | null;
 }
 ```
 ### Return Type
@@ -3707,10 +3714,11 @@ export default function UpdateWorkshopComponent() {
     headerValue: ..., // optional
     metodosPago: ..., // optional
     estado: ..., // optional
+    esBorrador: ..., // optional
   };
   mutation.mutate(updateWorkshopVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ id: ..., espacioId: ..., nombre: ..., tipo: ..., descripcion: ..., cuposTotales: ..., cuposDisponibles: ..., precio: ..., fecha: ..., duracionHoras: ..., duracionMinutos: ..., experienciaPrevia: ..., scheduleData: ..., headerType: ..., headerValue: ..., metodosPago: ..., estado: ..., });
+  mutation.mutate({ id: ..., espacioId: ..., nombre: ..., tipo: ..., descripcion: ..., cuposTotales: ..., cuposDisponibles: ..., precio: ..., fecha: ..., duracionHoras: ..., duracionMinutos: ..., experienciaPrevia: ..., scheduleData: ..., headerType: ..., headerValue: ..., metodosPago: ..., estado: ..., esBorrador: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
