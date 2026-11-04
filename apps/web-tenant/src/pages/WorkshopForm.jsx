@@ -490,6 +490,7 @@ export default function WorkshopForm() {
   const [form, setForm] = useState(EMPTY);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [showCobrosModal, setShowCobrosModal] = useState(false);
   const [loadingData, setLoadingData] = useState(isEdit);
 
   useEffect(() => {
@@ -624,13 +625,15 @@ export default function WorkshopForm() {
       errs.precio = 'El precio es requerido';
     const cobros = activeEspacio?.cobros;
     const hasCobros = cobros?.efectivo || cobros?.mercadoPago || cobros?.linksDePago;
-    if (!hasCobros) errs.metodosPago = 'Activá al menos un método de pago en Mis Cobros';
-    else if (!form.metodosPago.length) errs.metodosPago = 'Seleccioná al menos un método de pago';
+    if (hasCobros && !form.metodosPago.length) errs.metodosPago = 'Seleccioná al menos un método de pago';
     return errs;
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
+    const cobros = activeEspacio?.cobros;
+    const hasCobros = cobros?.efectivo || cobros?.mercadoPago || cobros?.linksDePago;
+    if (!hasCobros) { setShowCobrosModal(true); return; }
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
 
@@ -894,16 +897,9 @@ export default function WorkshopForm() {
                 if (cobros?.mercadoPago) options.push({ id: 'mercadopago', label: 'Mercado Pago' });
                 if (cobros?.linksDePago) (cobros.links ?? []).forEach(l => options.push({ id: `link-${l.id}`, label: l.nombre }));
                 if (!options.length) return (
-                  <div className={`border rounded-lg p-4 ${errors.metodosPago ? 'border-danger bg-danger/5' : 'border-amber-300 bg-amber-50'}`}>
+                  <div className="border border-border rounded-lg p-4 bg-surface-100">
                     <label className={LABEL_CLS}>Métodos de pago *</label>
-                    <p className="text-sm text-ink-muted mb-3">Debés activar al menos un método de pago en <strong>Mis Cobros</strong> antes de poder crear un taller.</p>
-                    <Link
-                      to="/configuracion?mp=1"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md bg-primary text-white hover:bg-primary/90 transition-colors"
-                    >
-                      Ir a Mis Cobros
-                    </Link>
-                    {errors.metodosPago && <p className="mt-2 text-xs text-danger">{errors.metodosPago}</p>}
+                    <p className="text-sm text-ink-muted">No tenés métodos de pago habilitados. Configuralos en <strong>Configuración → Mis Cobros</strong>.</p>
                   </div>
                 );
                 function toggleMetodo(id) {
@@ -1217,6 +1213,32 @@ export default function WorkshopForm() {
           </div>
         </form>
       </div>
+
+      {showCobrosModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-surface-0 rounded-xl shadow-xl border border-border max-w-sm w-full mx-4 p-6">
+            <h3 className="text-base font-semibold text-ink mb-2">Sin métodos de pago</h3>
+            <p className="text-sm text-ink-muted mb-5">
+              Necesitás activar al menos un método de pago en <strong>Mis Cobros</strong> antes de poder crear un taller.
+            </p>
+            <div className="flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowCobrosModal(false)}
+                className="px-4 py-2 text-sm font-medium text-ink hover:bg-surface-200 rounded-md transition-colors"
+              >
+                Cerrar
+              </button>
+              <Link
+                to="/config?mp=1"
+                className="px-4 py-2 text-sm font-semibold rounded-md bg-primary text-white hover:bg-primary-strong transition-colors"
+              >
+                Ir a Mis Cobros
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }
