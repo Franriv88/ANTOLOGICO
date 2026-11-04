@@ -5,9 +5,6 @@ import { upsertProfesional, reassignProfesionalUid, listMyEspacios } from '../da
 
 const AuthContext = createContext(null);
 
-let _skipAdminCheck = false;
-export function markHandoff() { _skipAdminCheck = true; }
-
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(undefined);
   const [adminBlocked, setAdminBlocked] = useState(false);
@@ -21,9 +18,6 @@ export function AuthProvider({ children }) {
 
       if (firebaseUser) {
         if (firebaseUser.emailVerified) {
-          const skip = _skipAdminCheck;
-          _skipAdminCheck = false;
-
           let isAdmin = false;
           try {
             const tokenResult = await firebaseUser.getIdTokenResult();
@@ -33,7 +27,7 @@ export function AuthProvider({ children }) {
           }
           if (stale()) return;
 
-          if (isAdmin && !skip) {
+          if (isAdmin) {
             try {
               const { data } = await listMyEspacios();
               if (stale()) return;
