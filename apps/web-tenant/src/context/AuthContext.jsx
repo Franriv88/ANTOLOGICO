@@ -29,7 +29,7 @@ export function AuthProvider({ children }) {
 
           if (isAdmin) {
             let fromHandoff = false;
-            try { fromHandoff = !!sessionStorage.getItem('__handoff'); sessionStorage.removeItem('__handoff'); } catch {}
+            try { fromHandoff = !!sessionStorage.getItem('__handoff'); } catch {}
             if (!fromHandoff) {
               try {
                 const { data } = await listMyEspacios();

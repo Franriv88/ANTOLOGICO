@@ -45,6 +45,7 @@ export function EspacioProvider({ children }) {
             list = await espacioApi.list(user.uid);
           } catch (he) { console.warn('[Espacio] auto-create from handoff failed:', he); }
         }
+        try { sessionStorage.removeItem('__handoff'); } catch {}
         setEspacios(list);
         setActive((prev) => {
           const match = prev ? list.find((e) => e.id === prev.id) : null;
