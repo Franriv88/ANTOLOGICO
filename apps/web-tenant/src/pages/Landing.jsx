@@ -428,20 +428,21 @@ export default function Landing() {
                   <div className="mb-1">
                     <span className="font-mono text-2xl text-ink font-semibold">{formatPrecio(precio)}</span>
                     <span className="text-sm font-normal text-ink-muted">/mes</span>
-                    {(promoActiva || dto > 0) && precio < plan.precioMensual && (
-                      <span className="ml-2 text-xs text-ink-muted line-through">{formatPrecio(plan.precioMensual)}</span>
-                    )}
+                    <span className={`ml-2 text-xs text-ink-muted line-through ${(promoActiva || dto > 0) && precio < plan.precioMensual ? '' : 'invisible'}`}>
+                      {formatPrecio(plan.precioMensual)}
+                    </span>
                   </div>
                   <div className="h-5">
-                    {dto > 0 && (
+                    {dto > 0 ? (
                       <p className="text-xs text-success font-medium">
                         Ahorrás {formatPrecio((precioBase - precio) * meses)} {periodo === 'trimestral' ? 'c/3m' : 'por año'}
                       </p>
-                    )}
-                    {promoActiva && periodo === 'mensual' && (
+                    ) : promoActiva ? (
                       <p className="text-xs text-success font-medium">
                         Ahorrás {formatPrecio(plan.precioMensual - precio)}/mes con la promo
                       </p>
+                    ) : (
+                      <p className="text-xs invisible">—</p>
                     )}
                   </div>
                   <ul className="flex flex-col gap-1.5 flex-1 mt-3">
