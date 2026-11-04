@@ -2,6 +2,8 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import jsQR from 'jsqr';
 import { reservas as reservasApi, espacios as espaciosApi } from '../services/api';
+import useRealtimeQuery from '../hooks/useRealtimeQuery';
+import { listMyReservasRef } from '../dataconnect-generated';
 import { loginGoogle, loginEmail, register, logout, subscribeAuth, authErrorMsg, sendPasswordReset, checkRedirectResult, getAuthCurrentUser, followEspacio, getEspaciosSeguidos, syncFollowedToFirestore } from '../services/userAuth';
 import MobileAppShell from '../components/MobileAppShell';
 import { AntologicoLoaderCream } from '../components/AntologicoLoaderCream';
@@ -483,14 +485,29 @@ export default function MisReservas() {
     return u ? { user: u, profile: {} } : undefined;
   });
   const [reservas,     setReservas]     = useState([]);
-  const [loadingR,     setLoadingR]     = useState(false);
   const [showScanner,  setShowScanner]  = useState(false);
+
+  const isLoggedIn = !!currentUser?.user;
+  const rtReservas = useRealtimeQuery(listMyReservasRef, undefined, isLoggedIn);
+  const loadingR = rtReservas.loading && isLoggedIn;
+
+  useEffect(() => {
+    if (!rtReservas.data?.reservas) return;
+    setReservas(rtReservas.data.reservas.map(r => ({
+      id:          r.id,
+      workshopId:  r.workshop.id,
+      estado:      r.estado,
+      fechaReserva: r.fechaReserva,
+      pagoExternoId: r.pagoExternoId,
+      workshop:    r.workshop,
+      espacio:     r.workshop.espacio ?? null,
+    })));
+  }, [rtReservas.data]);
 
   useEffect(() => {
     checkRedirectResult().then(result => {
       if (result) {
         setCurrentUser({ user: result.user, profile: result.profile ?? {} });
-        loadReservas(result.user.email ?? result.profile?.email ?? '');
       }
     }).catch(() => {});
   }, []);
@@ -499,20 +516,8 @@ export default function MisReservas() {
     return subscribeAuth((user, profile) => {
       if (!user) { setCurrentUser(null); setReservas([]); return; }
       setCurrentUser({ user, profile: profile ?? {} });
-      loadReservas(user.email ?? profile?.email ?? '');
     });
   }, []);
-
-  async function loadReservas(email) {
-    if (!email) return;
-    setLoadingR(true);
-    try {
-      const list = await reservasApi.listByEmail(email);
-      setReservas(list);
-    } finally {
-      setLoadingR(false);
-    }
-  }
 
   async function handleCancel(reservaId) {
     await reservasApi.cancel(reservaId);

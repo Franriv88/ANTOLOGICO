@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useEspacio } from '../context/EspacioContext';
 import * as api from '../services/api';
 import Layout from '../components/Layout';
+import useRealtimeQuery from '../hooks/useRealtimeQuery';
+import { listReservasByEspacioRef, listMyWorkshopsRef } from '../dataconnect-generated';
 
 function formatDate(iso) {
   if (!iso) return { date: '—', time: null };
@@ -283,24 +285,26 @@ export default function Reservas() {
   const [blockingEmail,  setBlockingEmail] = useState(null);
   const [bloqueados,     setBloqueados]    = useState([]);
 
+  const espacioId = activeEspacio?.id;
+  const wsQuery = useRealtimeQuery(listMyWorkshopsRef, { espacioId }, !!espacioId);
+  const rvQuery = useRealtimeQuery(listReservasByEspacioRef, { espacioId }, !!espacioId);
+
   useEffect(() => {
-    if (!activeEspacio?.id) return;
-    (async () => {
-      setLoading(true);
-      try {
-        const [ws, rv, bl] = await Promise.all([
-          api.workshops.list(activeEspacio.id),
-          api.reservas.listByEspacio(activeEspacio.id),
-          api.espacios.getUsuariosBloqueados(activeEspacio.id).catch(() => []),
-        ]);
-        setWorkshops(ws);
-        setReservas(rv);
-        setBloqueados(bl);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [activeEspacio?.id]);
+    if (wsQuery.data?.workshops) setWorkshops(wsQuery.data.workshops);
+  }, [wsQuery.data]);
+
+  useEffect(() => {
+    if (rvQuery.data?.reservas) setReservas(rvQuery.data.reservas);
+  }, [rvQuery.data]);
+
+  useEffect(() => {
+    if (!espacioId) return;
+    api.espacios.getUsuariosBloqueados(espacioId).then(setBloqueados).catch(() => {});
+  }, [espacioId]);
+
+  useEffect(() => {
+    setLoading(wsQuery.loading || rvQuery.loading);
+  }, [wsQuery.loading, rvQuery.loading]);
 
   const wsMap = useMemo(
     () => Object.fromEntries(workshops.map(w => [w.id, w])),

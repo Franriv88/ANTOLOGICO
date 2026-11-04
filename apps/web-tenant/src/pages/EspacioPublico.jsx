@@ -9,6 +9,8 @@ import { trackReserva } from '../lib/analytics';
 import { httpsCallable } from 'firebase/functions';
 import { functions } from '../lib/firebase';
 import { FullScreenLoader } from '../components/AntologicoLoader';
+import useRealtimeQuery from '../hooks/useRealtimeQuery';
+import { listPublicWorkshopsByEspacioRef } from '../dataconnect-generated';
 
 const MP_WORKER_URL = 'https://antologico-mp.franriv2388.workers.dev';
 // SlotBadge no se usa aquí — reemplazado por PublicSlotBadge con fondo sólido
@@ -859,23 +861,25 @@ export default function EspacioPublico({ overrideEspacioId }) {
   const [cancelConfirm,  setCancelConfirm]  = useState(null); // reservaId en espera de confirmación
   const espacioReservas = userReservas.filter(r => r.espacio?.id === espacioId || r.workshop?.espacioId === espacioId);
 
+  const wsRealtime = useRealtimeQuery(listPublicWorkshopsByEspacioRef, { espacioId }, !!espacioId);
+
   useEffect(() => {
-    async function load() {
+    if (wsRealtime.data?.workshops) setWorkshops(wsRealtime.data.workshops);
+  }, [wsRealtime.data]);
+
+  useEffect(() => {
+    async function loadEspacio() {
       try {
-        const [esp, ws] = await Promise.all([
-          espaciosApi.getPublic(espacioId),
-          workshopsApi.listPublic(espacioId),
-        ]);
+        const esp = await espaciosApi.getPublic(espacioId);
         if (!esp) { setNotFound(true); return; }
         setEspacio(esp);
-        setWorkshops(ws);
       } catch {
         setNotFound(true);
       } finally {
         setLoading(false);
       }
     }
-    load();
+    loadEspacio();
   }, [espacioId]);
 
   useEffect(() => {

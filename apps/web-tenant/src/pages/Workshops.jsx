@@ -8,6 +8,8 @@ import { getSlotStatus } from '../lib/slotStatus';
 import { useEspacio } from '../context/EspacioContext';
 import { TIPO_CONFIG, formatDuracion } from '../lib/tipoWorkshop';
 import { functions } from '../lib/firebase';
+import useRealtimeQuery from '../hooks/useRealtimeQuery';
+import { listMyWorkshopsRef, listMyWorkshopsByEstadoRef } from '../dataconnect-generated';
 
 const ESTADOS = ['', 'BORRADOR', 'PUBLICADO', 'CANCELADO', 'FINALIZADO'];
 const ESTADO_LABEL = {
@@ -165,8 +167,7 @@ function contrastText(hex) {
 export default function Workshops() {
   const { activeEspacio } = useEspacio();
   const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [searchResults, setSearchResults] = useState(null);
   const [estado, setEstado] = useState('');
   const [q, setQ] = useState('');
   const [confirm, setConfirm] = useState(null); // { action, id, nombre, reservas? }
@@ -175,6 +176,36 @@ export default function Workshops() {
   const navigate = useNavigate();
   const location = useLocation();
   const brand = parseBrand(activeEspacio);
+
+  const espacioId = activeEspacio?.id;
+  const useEstado = estado && !q;
+  const useDefault = !estado && !q;
+
+  const defaultQuery = useRealtimeQuery(
+    listMyWorkshopsRef,
+    { espacioId },
+    !!espacioId && useDefault,
+  );
+  const estadoQuery = useRealtimeQuery(
+    listMyWorkshopsByEstadoRef,
+    { espacioId, estado },
+    !!espacioId && useEstado,
+  );
+
+  const rtData = useDefault ? defaultQuery : useEstado ? estadoQuery : null;
+  const loading = rtData ? rtData.loading : false;
+  const error = rtData?.error?.message || '';
+
+  useEffect(() => {
+    if (rtData?.data?.workshops) setItems(rtData.data.workshops);
+  }, [rtData?.data]);
+
+  useEffect(() => {
+    if (!q || !espacioId) { setSearchResults(null); return; }
+    let cancelled = false;
+    api.list(espacioId, { q }).then(data => { if (!cancelled) setSearchResults(data); });
+    return () => { cancelled = true; };
+  }, [q, espacioId]);
 
   // Inject brand fonts if needed
   useEffect(() => {
@@ -189,40 +220,6 @@ export default function Workshops() {
     link.href = `https://fonts.googleapis.com/css2?${families}&display=swap`;
     document.head.appendChild(link);
   }, [brand.displayFont, brand.bodyFont]);
-
-  async function load(retryForId) {
-    if (!activeEspacio) return;
-    try {
-      setLoading(true);
-      setError('');
-      const data = await api.list(activeEspacio.id, {
-        ...(estado && { estado }),
-        ...(q && { q }),
-      });
-      if (retryForId && !data.some(w => w.id === retryForId)) {
-        await new Promise(r => setTimeout(r, 800));
-        const retry = await api.list(activeEspacio.id, {
-          ...(estado && { estado }),
-          ...(q && { q }),
-        });
-        setItems(retry);
-      } else {
-        setItems(data);
-      }
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    const nw = location.state?.newWorkshop;
-    if (nw) {
-      setItems(prev => prev.some(w => w.id === nw.id) ? prev : [nw, ...prev]);
-    }
-    load(nw?.id);
-  }, [estado, activeEspacio?.id, location.key]);
 
   async function handleDeleteRequest(id, nombre) {
     try {
@@ -335,7 +332,8 @@ export default function Workshops() {
     }
   }
 
-  const displayItems = [...items].sort((a, b) => {
+  const sourceItems = q && searchResults ? searchResults : items;
+  const displayItems = [...sourceItems].sort((a, b) => {
     const da = a.fecha ? new Date(a.fecha).getTime() : Infinity;
     const db = b.fecha ? new Date(b.fecha).getTime() : Infinity;
     return da - db;

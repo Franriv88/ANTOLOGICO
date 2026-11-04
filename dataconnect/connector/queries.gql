@@ -1,6 +1,13 @@
 # ─── Reservas ────────────────────────────────────────────────────────────────
 
-query ListReservasByEspacio($espacioId: UUID!) @auth(level: USER, insecureReason: "El espacioId proviene de ListMyEspacios que ya filtra por auth.uid.") {
+query ListReservasByEspacio($espacioId: UUID!)
+  @auth(level: USER, insecureReason: "El espacioId proviene de ListMyEspacios que ya filtra por auth.uid.")
+  @refresh(onMutationExecuted: { operation: "CreateReservaConUsuario" })
+  @refresh(onMutationExecuted: { operation: "CancelarReserva" })
+  @refresh(onMutationExecuted: { operation: "MarkReservaPaid" })
+  @refresh(onMutationExecuted: { operation: "MarkReservaUnpaid" })
+  @refresh(onMutationExecuted: { operation: "CancelarWorkshopConReservas", condition: "request.variables.espacioId == mutation.variables.espacioId" })
+{
   reservas(
     where: {
       workshop: { espacioId: { eq: $espacioId } }
@@ -87,7 +94,15 @@ query GetMyEspacio($id: UUID!) @auth(level: USER) {
 
 # ─── Workshops ────────────────────────────────────────────────────────────────
 
-query ListMyWorkshops($espacioId: UUID!) @auth(level: USER, insecureReason: "El espacioId proviene de ListMyEspacios que ya filtra por auth.uid, garantizando que el cliente solo puede pasar IDs propios.") {
+query ListMyWorkshops($espacioId: UUID!)
+  @auth(level: USER, insecureReason: "El espacioId proviene de ListMyEspacios que ya filtra por auth.uid, garantizando que el cliente solo puede pasar IDs propios.")
+  @refresh(onMutationExecuted: { operation: "CreateWorkshop", condition: "request.variables.espacioId == mutation.variables.espacioId" })
+  @refresh(onMutationExecuted: { operation: "UpdateWorkshop", condition: "request.variables.espacioId == mutation.variables.espacioId" })
+  @refresh(onMutationExecuted: { operation: "UpdateWorkshopEstado", condition: "request.variables.espacioId == mutation.variables.espacioId" })
+  @refresh(onMutationExecuted: { operation: "DeleteWorkshop", condition: "request.variables.espacioId == mutation.variables.espacioId" })
+  @refresh(onMutationExecuted: { operation: "CancelarWorkshopConReservas", condition: "request.variables.espacioId == mutation.variables.espacioId" })
+  @refresh(onMutationExecuted: { operation: "CreateReservaConUsuario" })
+{
   workshops(
     where: {
       espacioId: { eq: $espacioId }
@@ -102,7 +117,15 @@ query ListMyWorkshops($espacioId: UUID!) @auth(level: USER, insecureReason: "El 
   }
 }
 
-query ListMyWorkshopsByEstado($espacioId: UUID!, $estado: EstadoWorkshop!) @auth(level: USER, insecureReason: "El espacioId proviene de ListMyEspacios que ya filtra por auth.uid, garantizando que el cliente solo puede pasar IDs propios.") {
+query ListMyWorkshopsByEstado($espacioId: UUID!, $estado: EstadoWorkshop!)
+  @auth(level: USER, insecureReason: "El espacioId proviene de ListMyEspacios que ya filtra por auth.uid, garantizando que el cliente solo puede pasar IDs propios.")
+  @refresh(onMutationExecuted: { operation: "CreateWorkshop", condition: "request.variables.espacioId == mutation.variables.espacioId" })
+  @refresh(onMutationExecuted: { operation: "UpdateWorkshop", condition: "request.variables.espacioId == mutation.variables.espacioId" })
+  @refresh(onMutationExecuted: { operation: "UpdateWorkshopEstado", condition: "request.variables.espacioId == mutation.variables.espacioId" })
+  @refresh(onMutationExecuted: { operation: "DeleteWorkshop", condition: "request.variables.espacioId == mutation.variables.espacioId" })
+  @refresh(onMutationExecuted: { operation: "CancelarWorkshopConReservas", condition: "request.variables.espacioId == mutation.variables.espacioId" })
+  @refresh(onMutationExecuted: { operation: "CreateReservaConUsuario" })
+{
   workshops(
     where: {
       espacioId: { eq: $espacioId }
@@ -117,7 +140,12 @@ query ListMyWorkshopsByEstado($espacioId: UUID!, $estado: EstadoWorkshop!) @auth
   }
 }
 
-query SearchMyWorkshops($espacioId: UUID!, $q: String!) @auth(level: USER, insecureReason: "El espacioId proviene de ListMyEspacios que ya filtra por auth.uid, garantizando que el cliente solo puede pasar IDs propios.") {
+query SearchMyWorkshops($espacioId: UUID!, $q: String!)
+  @auth(level: USER, insecureReason: "El espacioId proviene de ListMyEspacios que ya filtra por auth.uid, garantizando que el cliente solo puede pasar IDs propios.")
+  @refresh(onMutationExecuted: { operation: "CreateWorkshop", condition: "request.variables.espacioId == mutation.variables.espacioId" })
+  @refresh(onMutationExecuted: { operation: "UpdateWorkshop", condition: "request.variables.espacioId == mutation.variables.espacioId" })
+  @refresh(onMutationExecuted: { operation: "DeleteWorkshop", condition: "request.variables.espacioId == mutation.variables.espacioId" })
+{
   workshops(
     where: {
       espacioId: { eq: $espacioId }
@@ -185,7 +213,15 @@ query GetPublicEspacios($ids: [UUID!]!) @auth(level: PUBLIC, insecureReason: "Ca
   }
 }
 
-query ListPublicWorkshopsByEspacio($espacioId: UUID!) @auth(level: PUBLIC, insecureReason: "Talleres publicados de un espacio son visibles sin login — página pública del tenant.") {
+query ListPublicWorkshopsByEspacio($espacioId: UUID!)
+  @auth(level: PUBLIC, insecureReason: "Talleres publicados de un espacio son visibles sin login — página pública del tenant.")
+  @refresh(onMutationExecuted: { operation: "CreateWorkshop", condition: "request.variables.espacioId == mutation.variables.espacioId" })
+  @refresh(onMutationExecuted: { operation: "UpdateWorkshop", condition: "request.variables.espacioId == mutation.variables.espacioId" })
+  @refresh(onMutationExecuted: { operation: "UpdateWorkshopEstado", condition: "request.variables.espacioId == mutation.variables.espacioId" })
+  @refresh(onMutationExecuted: { operation: "DeleteWorkshop", condition: "request.variables.espacioId == mutation.variables.espacioId" })
+  @refresh(onMutationExecuted: { operation: "CancelarWorkshopConReservas", condition: "request.variables.espacioId == mutation.variables.espacioId" })
+  @refresh(onMutationExecuted: { operation: "CreateReservaConUsuario" })
+{
   workshops(
     where: {
       espacioId: { eq: $espacioId }
@@ -200,7 +236,12 @@ query ListPublicWorkshopsByEspacio($espacioId: UUID!) @auth(level: PUBLIC, insec
   }
 }
 
-query ListMyReservas @auth(level: USER) {
+query ListMyReservas
+  @auth(level: USER)
+  @refresh(onMutationExecuted: { operation: "CreateReservaConUsuario" })
+  @refresh(onMutationExecuted: { operation: "CancelarReserva" })
+  @refresh(onMutationExecuted: { operation: "CancelarWorkshopConReservas" })
+{
   reservas(
     where: { usuario: { uid: { eq_expr: "auth.uid" } } }
     orderBy: [{ fechaReserva: DESC }]
@@ -217,7 +258,13 @@ query ListMyReservas @auth(level: USER) {
   }
 }
 
-query ListReservasByWorkshop($workshopId: UUID!) @auth(level: USER, insecureReason: "El tenant accede desde su panel; la query filtra por auth.uid a través del espacio.") {
+query ListReservasByWorkshop($workshopId: UUID!)
+  @auth(level: USER, insecureReason: "El tenant accede desde su panel; la query filtra por auth.uid a través del espacio.")
+  @refresh(onMutationExecuted: { operation: "CreateReservaConUsuario" })
+  @refresh(onMutationExecuted: { operation: "CancelarReserva" })
+  @refresh(onMutationExecuted: { operation: "MarkReservaPaid" })
+  @refresh(onMutationExecuted: { operation: "MarkReservaUnpaid" })
+{
   reservas(
     where: {
       workshopId: { eq: $workshopId }
@@ -261,7 +308,15 @@ query AdminListAllReservas @auth(expr: "auth.token.admin == true") {
   }
 }
 
-query ListPublicWorkshops @auth(level: PUBLIC, insecureReason: "Talleres publicados son el discovery público del marketplace — deben ser visibles sin login.") {
+query ListPublicWorkshops
+  @auth(level: PUBLIC, insecureReason: "Talleres publicados son el discovery público del marketplace — deben ser visibles sin login.")
+  @refresh(onMutationExecuted: { operation: "CreateWorkshop" })
+  @refresh(onMutationExecuted: { operation: "UpdateWorkshop" })
+  @refresh(onMutationExecuted: { operation: "UpdateWorkshopEstado" })
+  @refresh(onMutationExecuted: { operation: "DeleteWorkshop" })
+  @refresh(onMutationExecuted: { operation: "CancelarWorkshopConReservas" })
+  @refresh(onMutationExecuted: { operation: "CreateReservaConUsuario" })
+{
   workshops(
     where: { estado: { eq: PUBLICADO } }
     orderBy: [{ fecha: ASC }]

@@ -1,7 +1,9 @@
 import { useEffect, useLayoutEffect, useState, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import jsQR from 'jsqr';
-import { espacios as espaciosApi, workshops as workshopsApi } from '../services/api';
+import { espacios as espaciosApi } from '../services/api';
+import useRealtimeQuery from '../hooks/useRealtimeQuery';
+import { listPublicWorkshopsByEspacioRef } from '../dataconnect-generated';
 import {
   loginGoogle, loginEmail, register, logout,
   subscribeAuth, authErrorMsg, sendPasswordReset,
@@ -467,25 +469,23 @@ function WorkshopCard({ ws, espacio }) {
 
 function EspacioDetail({ espacio, userId, onBack, onUnfollow }) {
   const [wsList, setWsList] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [unfollowing, setUnfollowing] = useState(false);
   const { primary } = parseBrand(espacio);
 
+  const wsQuery = useRealtimeQuery(listPublicWorkshopsByEspacioRef, { espacioId: espacio.id }, !!espacio.id);
+  const loading = wsQuery.loading;
+
   useEffect(() => {
-    workshopsApi.listPublic(espacio.id)
-      .then(list => {
-        const now = Date.now();
-        setWsList(list.sort((a, b) => {
-          const da = a.fecha ? new Date(a.fecha).getTime() : Infinity;
-          const db = b.fecha ? new Date(b.fecha).getTime() : Infinity;
-          const pa = da < now ? 1 : 0, pb = db < now ? 1 : 0;
-          if (pa !== pb) return pa - pb;
-          return da - db;
-        }));
-      })
-      .catch(() => setWsList([]))
-      .finally(() => setLoading(false));
-  }, [espacio.id]);
+    if (!wsQuery.data?.workshops) return;
+    const now = Date.now();
+    setWsList([...wsQuery.data.workshops].sort((a, b) => {
+      const da = a.fecha ? new Date(a.fecha).getTime() : Infinity;
+      const db = b.fecha ? new Date(b.fecha).getTime() : Infinity;
+      const pa = da < now ? 1 : 0, pb = db < now ? 1 : 0;
+      if (pa !== pb) return pa - pb;
+      return da - db;
+    }));
+  }, [wsQuery.data]);
 
   async function handleUnfollow() {
     setUnfollowing(true);
