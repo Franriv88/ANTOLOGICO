@@ -11,6 +11,9 @@ export function EspacioProvider({ children }) {
   const [espacios, setEspacios]       = useState([]);
   const [activeEspacio, setActive]    = useState(null);
   const [loading, setLoading]         = useState(true);
+  const [loadedUid, setLoadedUid]     = useState(null);
+
+  const effectiveLoading = authLoading || loading || (!!user && loadedUid !== user.uid);
 
   useEffect(() => {
     // Wait until Firebase Auth has resolved — avoids a race where loading=false
@@ -19,6 +22,7 @@ export function EspacioProvider({ children }) {
     if (!user) {
       setEspacios([]);
       setActive(null);
+      setLoadedUid(null);
       setLoading(false);
       return;
     }
@@ -61,6 +65,7 @@ export function EspacioProvider({ children }) {
       } catch (e) {
         console.error(e);
       } finally {
+        setLoadedUid(user.uid);
         setLoading(false);
       }
     })();
@@ -97,7 +102,7 @@ export function EspacioProvider({ children }) {
   }
 
   return (
-    <EspacioContext.Provider value={{ espacios, activeEspacio, setActive, loading, refresh }}>
+    <EspacioContext.Provider value={{ espacios, activeEspacio, setActive, loading: effectiveLoading, refresh }}>
       {children}
     </EspacioContext.Provider>
   );
