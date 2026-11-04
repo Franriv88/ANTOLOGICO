@@ -381,20 +381,22 @@ export default function Landing() {
           {/* Toggle de período */}
           <div className="flex flex-col items-center gap-2 mb-8">
             <PeriodToggle periodo={periodo} setPeriodo={setPeriodo} planes={planes} />
-            {periodo !== 'mensual' && (planes ?? []).length > 0 && (() => {
-              const maxAhorro = Math.max(...(planes ?? []).map(p => {
-                const meses = periodo === 'trimestral' ? 3 : 12;
-                const precioBase   = promoActiva ? Math.round(p.precioMensual * (1 - (promo.descuento ?? 0) / 100)) : p.precioMensual;
-                const precioCon    = precioConPromoYPeriodo(p, periodo, promo);
-                return (precioBase - precioCon) * meses;
-              }));
-              const label = periodo === 'trimestral' ? 'cada 3 meses' : 'por año';
-              return (
-                <p className="text-xs text-success font-medium">
-                  ✓ Ahorrás hasta {formatPrecio(maxAhorro)} {label} comparado con el plan mensual
-                </p>
-              );
-            })()}
+            <div className="h-5">
+              {periodo !== 'mensual' && (planes ?? []).length > 0 && (() => {
+                const maxAhorro = Math.max(...(planes ?? []).map(p => {
+                  const meses = periodo === 'trimestral' ? 3 : 12;
+                  const precioBase   = promoActiva ? Math.round(p.precioMensual * (1 - (promo.descuento ?? 0) / 100)) : p.precioMensual;
+                  const precioCon    = precioConPromoYPeriodo(p, periodo, promo);
+                  return (precioBase - precioCon) * meses;
+                }));
+                const label = periodo === 'trimestral' ? 'cada 3 meses' : 'por año';
+                return (
+                  <p className="text-xs text-success font-medium">
+                    ✓ Ahorrás hasta {formatPrecio(maxAhorro)} {label} comparado con el plan mensual
+                  </p>
+                );
+              })()}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
