@@ -629,13 +629,27 @@ export default function WorkshopForm() {
     return errs;
   }
 
+  function shakeErrors(errs) {
+    const keys = Object.keys(errs);
+    keys.forEach(key => {
+      const el = document.querySelector(`[data-field="${key}"]`);
+      if (!el) return;
+      el.classList.remove('field-shake');
+      void el.offsetWidth;
+      el.classList.add('field-shake');
+      setTimeout(() => el.classList.remove('field-shake'), 700);
+    });
+    const first = document.querySelector(`[data-field="${keys[0]}"]`);
+    if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     const cobros = activeEspacio?.cobros;
     const hasCobros = cobros?.efectivo || cobros?.mercadoPago || cobros?.linksDePago;
     if (!hasCobros) { setShowCobrosModal(true); return; }
     const errs = validate();
-    if (Object.keys(errs).length) { setErrors(errs); return; }
+    if (Object.keys(errs).length) { setErrors(errs); shakeErrors(errs); return; }
 
     setLoading(true);
     try {
@@ -701,6 +715,25 @@ export default function WorkshopForm() {
           50%       { box-shadow: 0 0 0 4px rgba(232, 93, 74, 0.28); border-color: #E85D4A; }
         }
         .fecha-glow { animation: glow-pulse 1.4s ease-in-out infinite; }
+        @keyframes shake-glow {
+          0%   { box-shadow: 0 0 0 0 rgba(232, 93, 74, 0);    transform: translateX(0); }
+          10%  { transform: translateX(-3px); }
+          20%  { box-shadow: 0 0 0 4px rgba(232, 93, 74, 0.3); transform: translateX(3px); }
+          30%  { transform: translateX(-2px); }
+          40%  { box-shadow: 0 0 0 6px rgba(232, 93, 74, 0.18); transform: translateX(2px); }
+          50%  { transform: translateX(0); }
+          60%  { box-shadow: 0 0 0 4px rgba(232, 93, 74, 0.3); }
+          80%  { box-shadow: 0 0 0 6px rgba(232, 93, 74, 0.15); }
+          100% { box-shadow: 0 0 0 0 rgba(232, 93, 74, 0);    transform: translateX(0); }
+        }
+        .field-shake input,
+        .field-shake select,
+        .field-shake textarea,
+        .field-shake .shake-target {
+          animation: shake-glow 0.6s ease-out;
+          border-color: #E85D4A !important;
+          box-shadow: 0 0 0 3px rgba(232, 93, 74, 0.25);
+        }
       `}</style>
       <div className="w-full max-w-5xl">
         <Link to="/workshops" className="text-xs text-ink-muted hover:text-ink mb-4 inline-block">
@@ -723,7 +756,7 @@ export default function WorkshopForm() {
             <div className="flex flex-col gap-5">
 
               {/* Nombre */}
-              <div>
+              <div data-field="nombre">
                 <label className={LABEL_CLS}>Nombre *</label>
                 <input
                   type="text"
@@ -736,7 +769,7 @@ export default function WorkshopForm() {
               </div>
 
               {/* Tipo */}
-              <div>
+              <div data-field="tipo">
                 <label className={LABEL_CLS}>Tipo de encuentro *</label>
                 <div className="grid grid-cols-2 xl:grid-cols-4 gap-2">
                   {TIPOS.map(t => {
@@ -747,7 +780,7 @@ export default function WorkshopForm() {
                         key={t}
                         type="button"
                         onClick={() => { handleTipoChange(t); setErrors(prev => ({ ...prev, tipo: '' })); }}
-                        className={`text-left px-3 py-2.5 rounded-md border-2 transition-colors ${
+                        className={`shake-target text-left px-3 py-2.5 rounded-md border-2 transition-colors ${
                           active ? 'border-primary bg-primary/5'
                             : errors.tipo ? 'border-danger/50 hover:border-primary/40 bg-surface-100'
                             : 'border-border hover:border-primary/40 bg-surface-100'
@@ -845,7 +878,7 @@ export default function WorkshopForm() {
               </div>
 
               {/* Experiencia previa */}
-              <div>
+              <div data-field="experienciaPrevia">
                 <label className={LABEL_CLS}>Requisito de experiencia *</label>
                 <div className="flex flex-col sm:flex-row gap-2">
                   {[
@@ -856,7 +889,7 @@ export default function WorkshopForm() {
                       key={String(val)}
                       type="button"
                       onClick={() => { set('experienciaPrevia', form.experienciaPrevia === val ? null : val); setErrors(prev => ({ ...prev, experienciaPrevia: '' })); }}
-                      className={`flex-1 px-3 py-2 rounded-md border text-xs font-medium transition-colors ${
+                      className={`shake-target flex-1 px-3 py-2 rounded-md border text-xs font-medium transition-colors ${
                         form.experienciaPrevia === val
                           ? 'border-primary bg-primary/5 text-primary'
                           : errors.experienciaPrevia ? 'border-danger/50 text-ink hover:border-primary/40 bg-surface-100'
@@ -897,7 +930,7 @@ export default function WorkshopForm() {
                 if (cobros?.mercadoPago) options.push({ id: 'mercadopago', label: 'Mercado Pago' });
                 if (cobros?.linksDePago) (cobros.links ?? []).forEach(l => options.push({ id: `link-${l.id}`, label: l.nombre }));
                 if (!options.length) return (
-                  <div className="border border-border rounded-lg p-4 bg-surface-100">
+                  <div data-field="metodosPago" className="border border-border rounded-lg p-4 bg-surface-100">
                     <label className={LABEL_CLS}>Métodos de pago *</label>
                     <p className="text-sm text-ink-muted">No tenés métodos de pago habilitados. Configuralos en <strong>Configuración → Mis Cobros</strong>.</p>
                   </div>
@@ -906,7 +939,7 @@ export default function WorkshopForm() {
                   set('metodosPago', form.metodosPago.includes(id) ? form.metodosPago.filter(x => x !== id) : [...form.metodosPago, id]);
                 }
                 return (
-                  <div>
+                  <div data-field="metodosPago">
                     <label className={LABEL_CLS}>Métodos de pago *</label>
                     <p className="text-[11px] text-ink-muted mb-2">Elegí qué métodos acepta este taller. Configurás más opciones en <strong>Configuración → Mis Cobros</strong>.</p>
                     <div className="flex flex-col gap-2">
@@ -934,7 +967,7 @@ export default function WorkshopForm() {
 
               {/* a) Fecha de inicio y hora */}
               <div className="grid grid-cols-2 gap-3">
-                <div>
+                <div data-field="fecha">
                   <label className={LABEL_CLS}>Fecha de inicio *</label>
                   <input
                     type="date"
@@ -944,7 +977,7 @@ export default function WorkshopForm() {
                   />
                   {errors.fecha && <p className="mt-1 text-xs text-danger">{errors.fecha}</p>}
                 </div>
-                <div>
+                <div data-field="hora">
                   <label className={LABEL_CLS}>Hora de inicio *</label>
                   <TimeSelect value={form.hora} onChange={v => { set('hora', v); setErrors(prev => ({ ...prev, hora: '' })); }} error={!!errors.hora} />
                   {errors.hora && <p className="mt-1 text-xs text-danger">{errors.hora}</p>}
@@ -953,7 +986,7 @@ export default function WorkshopForm() {
 
               {/* b) Cupos y precio */}
               <div className="grid grid-cols-2 gap-3">
-                <div>
+                <div data-field="cuposTotales">
                   <label className={LABEL_CLS}>Cupos totales *</label>
                   <input
                     type="number"
@@ -964,7 +997,7 @@ export default function WorkshopForm() {
                   />
                   {errors.cuposTotales && <p className="mt-1 text-xs text-danger">{errors.cuposTotales}</p>}
                 </div>
-                <div>
+                <div data-field="precio">
                   <label className={LABEL_CLS}>Precio (ARS) *</label>
                   <input
                     type="number"
