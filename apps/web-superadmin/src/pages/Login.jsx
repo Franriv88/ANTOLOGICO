@@ -132,6 +132,7 @@ export default function Login() {
       if (err.code !== 'auth/popup-closed-by-user') {
         setError('No se pudo iniciar sesión con Google.');
       }
+    } finally {
       setGLoading(false);
     }
   }
@@ -153,6 +154,7 @@ export default function Login() {
           ? 'Email inválido'
           : 'Error al ingresar. Intentá de nuevo.';
       setError(msg);
+    } finally {
       setLoading(false);
     }
   }

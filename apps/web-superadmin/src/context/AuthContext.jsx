@@ -14,7 +14,6 @@ export function AuthProvider({ children }) {
     return onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) {
         setAdmin(null);
-        setDenied(false);
         return;
       }
       const isAdmin = await admins.check(firebaseUser.uid, firebaseUser.email);
