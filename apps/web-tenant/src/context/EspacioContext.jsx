@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { useAuth } from './AuthContext';
 import { espacios as espacioApi } from '../services/api';
-import { reassignProfesionalUid } from '../dataconnect-generated';
+import { reassignProfesionalUid, createEspacio } from '../dataconnect-generated';
 
 const EspacioContext = createContext(null);
 
@@ -35,6 +35,15 @@ export function EspacioProvider({ children }) {
             await reassignProfesionalUid({ nombre: user.displayName });
             list = await espacioApi.list(user.uid);
           } catch { /* email no existe en profesionales — usuario genuinamente nuevo */ }
+        }
+        // Admin que llega vía handoff no tiene espacio en PostgreSQL — crearlo
+        let isHandoff = false;
+        try { isHandoff = !!sessionStorage.getItem('__handoff'); } catch {}
+        if (list.length === 0 && isHandoff) {
+          try {
+            await createEspacio({ nombre: user.displayName || 'Mi Espacio' });
+            list = await espacioApi.list(user.uid);
+          } catch (he) { console.warn('[Espacio] auto-create from handoff failed:', he); }
         }
         setEspacios(list);
         setActive((prev) => {
