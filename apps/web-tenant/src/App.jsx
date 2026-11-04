@@ -22,7 +22,7 @@ import * as api from './services/api';
 function RequireAuth({ children }) {
   const { user, loading } = useAuth();
   if (loading) return <FullScreenLoader />;
-  return user ? children : <Navigate to="/login" replace />;
+  return user ? children : <Navigate to="/" replace />;
 }
 
 function RequireDesktop({ children }) {
