@@ -11,3 +11,8 @@ generate:
       packageJsonDir: "../../apps/web-superadmin"
       react: false
       angular: false
+    - outputDir: "../../apps/mobile-usuario/src/dataconnect-generated"
+      package: "@antologico/dataconnect"
+      packageJsonDir: "../../apps/mobile-usuario"
+      react: false
+      angular: false
