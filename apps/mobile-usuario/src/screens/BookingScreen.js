@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, StyleSheet,
-  ScrollView, Alert, ActivityIndicator,
+  ScrollView, Alert, ActivityIndicator, Linking,
 } from 'react-native';
 import { colors, spacing, radius } from '../lib/theme';
 import { useAuth } from '../context/AuthContext';
@@ -11,15 +11,39 @@ export default function BookingScreen({ route, navigation }) {
   const { workshop, espacio } = route.params;
   const { user } = useAuth();
 
-  const [nombre, setNombre]     = useState(user?.displayName || '');
-  const [email, setEmail]       = useState(user?.email || '');
-  const [telefono, setTelefono] = useState('');
-  const [cantidad, setCantidad] = useState('1');
-  const [loading, setLoading]   = useState(false);
-  const [success, setSuccess]   = useState(false);
+  const [nombre, setNombre]         = useState(user?.displayName || '');
+  const [email, setEmail]           = useState(user?.email || '');
+  const [telefono, setTelefono]     = useState('');
+  const [cantidad, setCantidad]     = useState('1');
+  const [metodoPago, setMetodoPago] = useState(null);
+  const [loading, setLoading]       = useState(false);
+  const [success, setSuccess]       = useState(false);
 
-  const available = workshop.cuposDisponibles ?? 0;
-  const headerColor = workshop.headerColor || espacio?.brandColors?.Principal || colors.primary;
+  const bc = espacio?.brandColors;
+  const bcPalette = Array.isArray(bc) ? bc : (bc?.palette ?? []);
+  const bcRoles = (!bc || Array.isArray(bc)) ? {} : (bc.roles ?? {});
+  const brandPrimary = bcRoles.primary || bcPalette[0] || colors.primary;
+  const brandButton = bcRoles.button || brandPrimary;
+  const headerColor = workshop.headerColor || brandPrimary;
+
+  const cobros = espacio?.cobros || {};
+  const mp = Array.isArray(workshop.metodosPago) && workshop.metodosPago.length > 0
+    ? workshop.metodosPago
+    : null;
+
+  const availableMethods = [];
+  if (cobros.efectivo && (!mp || mp.includes('efectivo')))
+    availableMethods.push({ key: 'EFECTIVO', label: 'Efectivo' });
+  if (cobros.mercadoPago && (!mp || mp.includes('mercadopago')))
+    availableMethods.push({ key: 'MERCADO_PAGO', label: 'Mercado Pago' });
+
+  const cobrosLinks = cobros.links ?? [];
+  const linkIds = cobros.linksDePago
+    ? (mp ? mp.filter(id => id.startsWith('link-')) : cobrosLinks.map(l => `link-${l.id}`))
+    : [];
+  const visibleLinks = linkIds
+    .map(lid => cobrosLinks.find(l => l.id === lid.replace('link-', '')))
+    .filter(Boolean);
 
   async function handleReservar() {
     if (!nombre.trim() || !email.trim()) {
@@ -27,8 +51,12 @@ export default function BookingScreen({ route, navigation }) {
       return;
     }
     const qty = parseInt(cantidad) || 1;
-    if (qty < 1 || qty > available) {
-      Alert.alert('Cantidad inválida', `Podés reservar entre 1 y ${available} lugares.`);
+    if (qty < 1) {
+      Alert.alert('Cantidad inválida', 'Debe ser al menos 1.');
+      return;
+    }
+    if (availableMethods.length > 0 && !metodoPago) {
+      Alert.alert('Método de pago', 'Seleccioná un método de pago.');
       return;
     }
 
@@ -38,9 +66,10 @@ export default function BookingScreen({ route, navigation }) {
         workshopId: workshop.id,
         nombre: nombre.trim(),
         email: email.trim(),
+        estado: 'PENDIENTE',
+        metodoPago: metodoPago || null,
         telefono: telefono.trim() || null,
         cantidad: qty,
-        metodoPago: 'EFECTIVO',
       });
       setSuccess(true);
     } catch (err) {
@@ -68,8 +97,8 @@ export default function BookingScreen({ route, navigation }) {
             </Text>
           )}
           <TouchableOpacity
-            style={styles.successBtn}
-            onPress={() => navigation.navigate('MisReservas')}
+            style={[styles.successBtn, { backgroundColor: brandButton }]}
+            onPress={() => navigation.navigate('DrawerScreens', { screen: 'MisReservas' })}
           >
             <Text style={styles.successBtnText}>Ver mis reservas</Text>
           </TouchableOpacity>
@@ -98,7 +127,7 @@ export default function BookingScreen({ route, navigation }) {
             {workshop.horaInicio ? ` · ${workshop.horaInicio}` : ''}
           </Text>
         )}
-        <Text style={styles.wsPrice}>
+        <Text style={[styles.wsPrice, { color: brandPrimary }]}>
           ${Number(workshop.precio || 0).toLocaleString('es-AR')}
         </Text>
       </View>
@@ -142,10 +171,58 @@ export default function BookingScreen({ route, navigation }) {
         onChangeText={setCantidad}
         keyboardType="number-pad"
       />
-      <Text style={styles.availText}>{available} cupos disponibles</Text>
+
+      {availableMethods.length > 0 && (
+        <>
+          <Text style={[styles.label, { marginTop: spacing.lg }]}>Método de pago *</Text>
+          <View style={styles.paymentRow}>
+            {availableMethods.map(m => (
+              <TouchableOpacity
+                key={m.key}
+                style={[
+                  styles.paymentOption,
+                  metodoPago === m.key && [styles.paymentOptionActive, { borderColor: brandButton, backgroundColor: brandButton + '0D' }],
+                ]}
+                onPress={() => setMetodoPago(m.key)}
+                activeOpacity={0.7}
+              >
+                <View style={[
+                  styles.paymentRadio,
+                  metodoPago === m.key && { borderColor: brandButton },
+                ]}>
+                  {metodoPago === m.key && <View style={[styles.paymentRadioDot, { backgroundColor: brandButton }]} />}
+                </View>
+                <Text style={[
+                  styles.paymentLabel,
+                  metodoPago === m.key && { color: brandButton, fontWeight: '600' },
+                ]}>{m.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </>
+      )}
+
+      {visibleLinks.length > 0 && (
+        <>
+          <Text style={[styles.label, { marginTop: spacing.lg }]}>Links de pago</Text>
+          {visibleLinks.map(link => (
+            <TouchableOpacity
+              key={link.id}
+              style={styles.linkBtn}
+              onPress={() => {
+                const url = /^https?:\/\//i.test(link.url) ? link.url : `https://${link.url}`;
+                Linking.openURL(url).catch(() => Alert.alert('Error', 'No se pudo abrir el link.'));
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.linkBtnText}>🔗 {link.nombre}</Text>
+            </TouchableOpacity>
+          ))}
+        </>
+      )}
 
       <TouchableOpacity
-        style={[styles.bookBtn, loading && { opacity: 0.6 }]}
+        style={[styles.bookBtn, { backgroundColor: brandButton }, loading && { opacity: 0.6 }]}
         onPress={handleReservar}
         disabled={loading}
       >
@@ -175,7 +252,7 @@ const styles = StyleSheet.create({
   },
   wsName: { fontSize: 17, fontWeight: '600', color: colors.ink },
   wsDate: { fontSize: 13, color: colors.inkMuted, marginTop: 4 },
-  wsPrice: { fontSize: 18, fontWeight: '700', color: colors.primary, marginTop: 8 },
+  wsPrice: { fontSize: 18, fontWeight: '700', marginTop: 8 },
   label: {
     fontSize: 13, fontWeight: '500', color: colors.inkMuted,
     marginBottom: 4, marginTop: spacing.md,
@@ -192,6 +269,53 @@ const styles = StyleSheet.create({
   },
   availText: {
     fontSize: 12, color: colors.inkLight, marginTop: 4,
+  },
+  paymentRow: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  paymentOption: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 12,
+  },
+  paymentOptionActive: {
+    borderColor: colors.primary,
+    backgroundColor: 'rgba(232, 93, 74, 0.05)',
+  },
+  paymentRadio: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+    borderColor: colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  paymentRadioActive: {
+    borderColor: colors.primary,
+  },
+  paymentRadioDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.primary,
+  },
+  paymentLabel: {
+    fontSize: 14,
+    color: colors.ink,
+    fontWeight: '500',
+  },
+  paymentLabelActive: {
+    color: colors.primary,
+    fontWeight: '600',
   },
   bookBtn: {
     backgroundColor: colors.primary,
@@ -230,4 +354,17 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   successBtnOutlineText: { color: colors.inkMuted, fontWeight: '500', fontSize: 14 },
+  linkBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    paddingVertical: 12,
+    paddingHorizontal: spacing.md,
+    marginTop: spacing.sm,
+  },
+  linkBtnText: { fontSize: 14, fontWeight: '600', color: colors.ink },
 });
