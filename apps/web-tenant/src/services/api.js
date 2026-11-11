@@ -49,7 +49,7 @@ export const profesionales = {
 export const reservas = {
   list: async () => [],
   listByEspacio: async (espacioId) => {
-    const { data } = await listReservasByEspacio({ espacioId });
+    const { data } = await listReservasByEspacio({ espacioId }, { fetchPolicy: 'SERVER_ONLY' });
     return (data?.reservas ?? []).map(r => ({
       id:          r.id,
       workshopId:  r.workshop.id,
@@ -88,7 +88,7 @@ export const reservas = {
     };
   },
   listByEmail: async () => {
-    const { data } = await listMyReservas();
+    const { data } = await listMyReservas({ fetchPolicy: 'SERVER_ONLY' });
     return (data?.reservas ?? []).map(r => ({
       id:          r.id,
       workshopId:  r.workshop.id,
@@ -116,11 +116,11 @@ export const reservas = {
 
 export const espacios = {
   list: async () => {
-    const { data } = await listMyEspacios();
+    const { data } = await listMyEspacios({ fetchPolicy: 'SERVER_ONLY' });
     return data.espacios;
   },
   get: async (id) => {
-    const { data } = await getMyEspacio({ id });
+    const { data } = await getMyEspacio({ id }, { fetchPolicy: 'SERVER_ONLY' });
     return data.espacios[0] ?? null;
   },
   create: async (payload) => {
@@ -193,16 +193,16 @@ export const espacios = {
   blockUser: async () => {},
   unblockUser: async () => {},
   getBySlug: async (slug) => {
-    const { data } = await getEspacioBySlug({ slug: slug.toLowerCase() });
+    const { data } = await getEspacioBySlug({ slug: slug.toLowerCase() }, { fetchPolicy: 'SERVER_ONLY' });
     return data.espacios[0] ?? null;
   },
   getPublic: async (id) => {
-    const { data } = await getPublicEspacio({ id });
+    const { data } = await getPublicEspacio({ id }, { fetchPolicy: 'SERVER_ONLY' });
     return data.espacios[0] ?? null;
   },
   getPublicBatch: async (ids) => {
     if (!ids.length) return [];
-    const { data } = await getPublicEspacios({ ids });
+    const { data } = await getPublicEspacios({ ids }, { fetchPolicy: 'SERVER_ONLY' });
     return data.espacios ?? [];
   },
 };
@@ -217,18 +217,18 @@ export const rubros = {
 export const workshops = {
   list: async (espacioId, params = {}) => {
     if (params.q) {
-      const { data } = await searchMyWorkshops({ espacioId, q: params.q });
+      const { data } = await searchMyWorkshops({ espacioId, q: params.q }, { fetchPolicy: 'SERVER_ONLY' });
       return data.workshops ?? [];
     }
     if (params.estado) {
-      const { data } = await listMyWorkshopsByEstado({ espacioId, estado: params.estado });
+      const { data } = await listMyWorkshopsByEstado({ espacioId, estado: params.estado }, { fetchPolicy: 'SERVER_ONLY' });
       return data.workshops ?? [];
     }
-    const { data } = await listMyWorkshops({ espacioId });
+    const { data } = await listMyWorkshops({ espacioId }, { fetchPolicy: 'SERVER_ONLY' });
     return data.workshops ?? [];
   },
   get: async (id) => {
-    const { data } = await getMyWorkshop({ id });
+    const { data } = await getMyWorkshop({ id }, { fetchPolicy: 'SERVER_ONLY' });
     return data.workshops[0] ?? null;
   },
   create: async (espacioId, payload) => {
@@ -259,7 +259,7 @@ export const workshops = {
     return result.data;
   },
   listReservas: async (workshopId) => {
-    const { data } = await listReservasByWorkshop({ workshopId });
+    const { data } = await listReservasByWorkshop({ workshopId }, { fetchPolicy: 'SERVER_ONLY' });
     return data.reservas ?? [];
   },
 };
