@@ -531,7 +531,9 @@ function BookingModal({ workshop, brand, prefill, tenantId, cobros, cobrosLinks,
 
                 const showEfectivo    = cobrosEfectivo    && (!mp || mp.includes('efectivo'));
                 const showMercadoPago = cobrosMercadoPago && (!mp || mp.includes('mercadopago'));
-                const linkIds         = cobrosLinksDePago && mp ? mp.filter(id => id.startsWith('link-')) : [];
+                const linkIds         = cobrosLinksDePago
+                  ? (mp ? mp.filter(id => id.startsWith('link-')) : (cobros?.links ?? []).map(l => `link-${l.id}`))
+                  : [];
 
                 // cobrosLinks comes from the espacio.cobros.links loaded by the page
                 const links = cobrosLinks ?? [];
