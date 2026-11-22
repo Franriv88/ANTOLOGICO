@@ -283,29 +283,29 @@ function EspaciosQRs({ espacios }) {
       <h4 className="text-xs font-semibold text-ink uppercase tracking-wide mb-3">
         {items.length === 1 ? 'QR del espacio' : `QRs de los espacios (${items.length})`}
       </h4>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {items.map(e => {
           const url = espacioPublicUrl(e);
           return (
-            <div key={e.id} className="bg-surface-0 border border-border rounded-xl p-3 flex items-center gap-3">
-              <div className="bg-white p-1.5 rounded-md shrink-0 border border-border/60">
+            <div key={e.id} className="bg-surface-0 border border-border rounded-xl p-4 flex flex-col items-center gap-3">
+              <div className="bg-white p-3 rounded-lg border border-border/60 w-full">
                 {url ? (
-                  <QRCodeSVG value={url} size={76} bgColor="#FFFFFF" fgColor="#1A1611" level="M" marginSize={0} />
+                  <QRCodeSVG value={url} size={400} bgColor="#FFFFFF" fgColor="#1A1611" level="M" marginSize={0} style={{width:'100%',height:'auto'}} />
                 ) : (
-                  <div className="w-[76px] h-[76px] flex items-center justify-center text-[10px] text-ink-muted text-center">
+                  <div className="aspect-square w-full flex items-center justify-center text-xs text-ink-muted text-center">
                     Sin URL
                   </div>
                 )}
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-ink leading-tight truncate">{e.nombre || 'Espacio sin nombre'}</p>
+              <div className="w-full text-center">
+                <p className="text-sm font-semibold text-ink leading-tight">{e.nombre || 'Espacio sin nombre'}</p>
                 {url && (
                   <>
                     <a
                       href={url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[11px] font-mono text-primary hover:underline break-all mt-1 inline-block"
+                      className="text-xs font-mono text-primary hover:underline break-all mt-1.5 inline-block"
                       title={url}
                     >
                       {url.replace(/^https?:\/\//, '')}
@@ -315,7 +315,7 @@ function EspaciosQRs({ espacios }) {
                       onClick={() => {
                         try { navigator.clipboard.writeText(url); } catch { /* ignore */ }
                       }}
-                      className="block mt-1.5 text-[10px] text-ink-muted hover:text-primary"
+                      className="block mx-auto mt-2 text-[11px] text-ink-muted hover:text-primary"
                     >
                       Copiar enlace
                     </button>
