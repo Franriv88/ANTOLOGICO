@@ -1,5 +1,12 @@
 const { queryRef, executeQuery, validateArgsWithOptions, mutationRef, executeMutation, validateArgs } = require('firebase/data-connect');
 
+const EstadoDominio = {
+  PENDIENTE: "PENDIENTE",
+  ACTIVO: "ACTIVO",
+  ERROR: "ERROR",
+}
+exports.EstadoDominio = EstadoDominio;
+
 const EstadoEspacio = {
   ACTIVO: "ACTIVO",
   SUSPENDIDO: "SUSPENDIDO",

@@ -52,6 +52,7 @@ function CustomSelect({ value, onChange, options, placeholder = 'Seleccioná una
   );
 }
 import Layout from '../components/Layout';
+import FloatingSave from '../components/FloatingSave';
 import TimeSelect from '../components/TimeSelect';
 import { workshops as api } from '../services/api';
 import { useEspacio } from '../context/EspacioContext';
@@ -457,6 +458,11 @@ export default function WorkshopForm() {
   } else {
     canUploadImage = nombrePermiteImagen;
   }
+  const [DescEditor, setDescEditor] = useState(null);
+  useEffect(() => {
+    import('../components/RichTextEditor').then(m => setDescEditor(() => m.default));
+  }, []);
+
   const imgInputRef  = useRef(null);
   const dragStateRef = useRef(null); // { startX, startY, startPosX, startPosY }
 
@@ -507,7 +513,7 @@ export default function WorkshopForm() {
     const fecha = f.fecha
       ? new Date(`${f.fecha}T${f.hora || '09:00'}:00`).toISOString()
       : new Date().toISOString();
-    const effectiveHT = canUploadImage ? (f.headerType || 'COLOR') : 'COLOR';
+    const effectiveHT = f.headerType || 'COLOR';
     const effectiveHV = effectiveHT === 'IMAGE' ? f.headerValue : (isValidColor(f.headerValue) ? f.headerValue : '#E85D4A');
     return {
       nombre:            f.nombre || 'Borrador sin título',
@@ -526,8 +532,10 @@ export default function WorkshopForm() {
       headerType:        effectiveHT,
       headerValue:       effectiveHV,
       metodosPago:       f.metodosPago.length ? f.metodosPago : null,
+      direccionId:       f.direccionId || null,
+      headerImagePosition: effectiveHT === 'IMAGE' ? f.headerImagePosition : null,
     };
-  }, [canUploadImage]);
+  }, []);
 
   const saveDraft = useCallback(async () => {
     if (savingDraftRef.current || !activeEspacio?.id) return;
@@ -541,7 +549,10 @@ export default function WorkshopForm() {
         await api.update(currentDraftId, activeEspacio.id, payload);
       } else {
         const created = await api.create(activeEspacio.id, payload);
-        if (created?.id) setDraftId(created.id);
+        if (created?.id) {
+          draftIdRef.current = created.id;
+          setDraftId(created.id);
+        }
       }
     } catch (e) {
       console.warn('[Draft] auto-save failed:', e);
@@ -596,8 +607,8 @@ export default function WorkshopForm() {
           cuposTotales:        w.esBorrador && w.cuposTotales === 1 ? '' : String(w.cuposTotales),
           _reservasExistentes: (w.cuposTotales ?? 0) - (w.cuposDisponibles ?? 0),
           precio:              w.esBorrador && w.precio === 0 ? '' : String(w.precio),
-          fecha:               w.esBorrador ? '' : existingFecha,
-          hora:                w.esBorrador ? '09:00' : localTimeStr(w.fecha),
+          fecha:               existingFecha || '',
+          hora:                existingFecha ? localTimeStr(w.fecha) : '09:00',
           duracionHoras:       w.duracionHoras    != null ? String(w.duracionHoras)    : '',
           duracionMinutos:     w.duracionMinutos  != null ? String(w.duracionMinutos)  : '0',
           _estadoAction:       deriveEstadoAction(w),
@@ -770,6 +781,8 @@ export default function WorkshopForm() {
         headerType:          effectiveHeaderType,
         headerValue:         effectiveHeaderValue,
         metodosPago:         form.metodosPago.length  ? form.metodosPago : null,
+        direccionId:         form.direccionId || null,
+        headerImagePosition: effectiveHeaderType === 'IMAGE' ? form.headerImagePosition : null,
       };
 
       const effectiveId = isEdit ? id : draftId;
@@ -839,7 +852,7 @@ export default function WorkshopForm() {
           </p>
         )}
 
-        <form onSubmit={handleSubmit}>
+        <form id="form-workshop" onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_300px] gap-6 lg:gap-10 items-start">
 
             {/* ── Columna principal ── */}
@@ -951,20 +964,22 @@ export default function WorkshopForm() {
 
               {/* Descripción */}
               <div>
-                <div className="flex items-baseline justify-between mb-1">
-                  <label className={LABEL_CLS} style={{ marginBottom: 0 }}>Descripción</label>
-                  <span className={`text-xs font-mono ${form.descripcion.length > 75 ? 'text-danger' : 'text-ink-muted'}`}>
-                    {form.descripcion.length}/90
-                  </span>
-                </div>
-                <textarea
-                  value={form.descripcion}
-                  onChange={e => set('descripcion', e.target.value)}
-                  rows={3}
-                  maxLength={90}
-                  placeholder="Describí el taller brevemente…"
-                  className={INPUT_CLS + ' resize-none'}
-                />
+                <label className={LABEL_CLS}>Descripción</label>
+                {DescEditor ? (
+                  <DescEditor
+                    content={form.descripcion}
+                    onChange={html => set('descripcion', html)}
+                    placeholder="Describí el taller: qué van a aprender, materiales, etc."
+                  />
+                ) : (
+                  <textarea
+                    value={form.descripcion}
+                    onChange={e => set('descripcion', e.target.value)}
+                    rows={4}
+                    placeholder="Describí el taller: qué van a aprender, materiales, etc."
+                    className={INPUT_CLS + ' resize-none'}
+                  />
+                )}
               </div>
 
               {/* Experiencia previa */}
@@ -1318,23 +1333,23 @@ export default function WorkshopForm() {
             </div>
           </div>
 
-          {/* ── Botones centrados al fondo ── */}
-          <div className="flex items-center justify-center gap-4 mt-8 pt-6 border-t border-border">
+          {/* ── Cancelar centrado al fondo ── */}
+          <div className="flex items-center justify-center mt-8 pt-6 border-t border-border">
             <Link
               to="/workshops"
               className="px-5 py-2 text-sm font-medium text-ink hover:bg-surface-200 rounded-md transition-colors"
             >
               Cancelar
             </Link>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-7 py-2 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary-strong transition-colors disabled:opacity-50"
-            >
-              {loading ? 'Guardando…' : (isEdit && !editIsDraft) ? 'Guardar cambios' : draftId || editIsDraft ? 'Publicar' : 'Crear'}
-            </button>
           </div>
         </form>
+        <FloatingSave
+          saving={loading}
+          saved={false}
+          type="submit"
+          form="form-workshop"
+          label={(isEdit && !editIsDraft) ? 'Guardar cambios' : draftId || editIsDraft ? 'Publicar' : 'Crear'}
+        />
       </div>
 
       {showCobrosModal && (

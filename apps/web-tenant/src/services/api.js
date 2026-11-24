@@ -144,8 +144,8 @@ export const espacios = {
     const { data } = await updateEspacioTyC({ id, terminosCondiciones: terminosCondiciones || null, tycEnabled: !!tycEnabled });
     return data.espacio_update;
   },
-  updateIdentidad: async (id, { logoUrl, logoShape, logoScale, brandColors, brandFont }) => {
-    const { data } = await updateEspacioIdentidad({ id, logoUrl, logoShape, logoScale, brandColors, brandFont });
+  updateIdentidad: async (id, { logoUrl, logoShape, logoScale, logoPosition, brandColors, brandFont }) => {
+    const { data } = await updateEspacioIdentidad({ id, logoUrl, logoShape, logoScale, logoPosition, brandColors, brandFont });
     return data.espacio_update;
   },
   updateRedes: async (id, redesSociales) => {

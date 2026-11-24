@@ -1,5 +1,11 @@
 import { queryRef, executeQuery, validateArgsWithOptions, mutationRef, executeMutation, validateArgs } from 'firebase/data-connect';
 
+export const EstadoDominio = {
+  PENDIENTE: "PENDIENTE",
+  ACTIVO: "ACTIVO",
+  ERROR: "ERROR",
+}
+
 export const EstadoEspacio = {
   ACTIVO: "ACTIVO",
   SUSPENDIDO: "SUSPENDIDO",

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { subscribeAuth, loginGoogle, loginEmail, logout, authErrorMsg, checkRedirectResult, getAuthCurrentUser, updateUserProfile } from '../services/userAuth';
 import MobileAppShell from '../components/MobileAppShell';
+import FloatingSave from '../components/FloatingSave';
 import { FullScreenLoader } from '../components/AntologicoLoader';
 
 const INPUT = 'w-full px-3 py-2 bg-white border border-[#D2C4A8] rounded-lg text-sm text-[#2B241A] focus:outline-none focus:ring-2 focus:ring-[#E85D4A] focus:ring-offset-1';
@@ -131,7 +132,7 @@ export default function MisDatos() {
             <h1 className="font-display text-xl text-[#1A1611] mb-1">Mis datos</h1>
             <p className="text-sm text-[#6B5F4C] mb-6">{currentUser.user.email}</p>
 
-            <form onSubmit={handleSave} className="flex flex-col gap-4">
+            <form id="form-misdatos" onSubmit={handleSave} className="flex flex-col gap-4">
               <div>
                 <label className={LABEL}>Nombre</label>
                 <input
@@ -155,18 +156,8 @@ export default function MisDatos() {
               </div>
 
               {error && <p className="text-xs text-red-600">{error}</p>}
-
-              <div className="flex items-center gap-3 pt-1">
-                <button
-                  type="submit"
-                  disabled={saving}
-                  className="px-5 py-2 bg-[#E85D4A] text-white rounded-lg text-sm font-semibold hover:bg-[#C4412F] transition-colors disabled:opacity-50"
-                >
-                  {saving ? 'Guardando…' : 'Guardar cambios'}
-                </button>
-                {saved && <span className="text-xs text-green-600 font-medium">¡Guardado!</span>}
-              </div>
             </form>
+            <FloatingSave saving={saving} saved={saved} type="submit" form="form-misdatos" label="Guardar cambios" />
           </div>
         </div>
       </div>

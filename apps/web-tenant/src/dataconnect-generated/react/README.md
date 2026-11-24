@@ -522,6 +522,7 @@ export interface ListMyEspaciosData {
     logoUrl?: string | null;
     logoShape?: string | null;
     logoScale?: number | null;
+    logoPosition?: unknown | null;
     brandColors?: unknown | null;
     brandFont?: string | null;
     redesSociales?: unknown | null;
@@ -640,6 +641,7 @@ export interface GetMyEspacioData {
     logoUrl?: string | null;
     logoShape?: string | null;
     logoScale?: number | null;
+    logoPosition?: unknown | null;
     brandColors?: unknown | null;
     brandFont?: string | null;
     redesSociales?: unknown | null;
@@ -766,7 +768,9 @@ export interface ListMyWorkshopsData {
     scheduleData?: unknown | null;
     headerType: HeaderType;
     headerValue?: string | null;
+    headerImagePosition?: unknown | null;
     metodosPago?: unknown | null;
+    direccionId?: string | null;
     estado: EstadoWorkshop;
     esBorrador: boolean;
     createdAt: TimestampString;
@@ -868,7 +872,9 @@ export interface ListMyWorkshopsByEstadoData {
     scheduleData?: unknown | null;
     headerType: HeaderType;
     headerValue?: string | null;
+    headerImagePosition?: unknown | null;
     metodosPago?: unknown | null;
+    direccionId?: string | null;
     estado: EstadoWorkshop;
     esBorrador: boolean;
     createdAt: TimestampString;
@@ -971,7 +977,9 @@ export interface SearchMyWorkshopsData {
     scheduleData?: unknown | null;
     headerType: HeaderType;
     headerValue?: string | null;
+    headerImagePosition?: unknown | null;
     metodosPago?: unknown | null;
+    direccionId?: string | null;
     estado: EstadoWorkshop;
     esBorrador: boolean;
     createdAt: TimestampString;
@@ -1073,7 +1081,9 @@ export interface GetMyWorkshopData {
     scheduleData?: unknown | null;
     headerType: HeaderType;
     headerValue?: string | null;
+    headerImagePosition?: unknown | null;
     metodosPago?: unknown | null;
+    direccionId?: string | null;
     estado: EstadoWorkshop;
     esBorrador: boolean;
     createdAt: TimestampString;
@@ -1257,9 +1267,12 @@ export interface GetPublicEspacioData {
     logoUrl?: string | null;
     logoShape?: string | null;
     logoScale?: number | null;
+    logoPosition?: unknown | null;
     brandColors?: unknown | null;
     brandFont?: string | null;
     redesSociales?: unknown | null;
+    cobros?: unknown | null;
+    direcciones?: unknown | null;
     rubro?: {
       id: UUIDString;
       nombre: string;
@@ -1358,9 +1371,12 @@ export interface GetPublicEspaciosData {
     logoUrl?: string | null;
     logoShape?: string | null;
     logoScale?: number | null;
+    logoPosition?: unknown | null;
     brandColors?: unknown | null;
     brandFont?: string | null;
     redesSociales?: unknown | null;
+    cobros?: unknown | null;
+    direcciones?: unknown | null;
     rubro?: {
       id: UUIDString;
       nombre: string;
@@ -1467,7 +1483,9 @@ export interface ListPublicWorkshopsByEspacioData {
     scheduleData?: unknown | null;
     headerType: HeaderType;
     headerValue?: string | null;
+    headerImagePosition?: unknown | null;
     metodosPago?: unknown | null;
+    direccionId?: string | null;
     estado: EstadoWorkshop;
     createdAt: TimestampString;
   } & Workshop_Key)[];
@@ -1562,12 +1580,15 @@ export interface ListMyReservasData {
       espacioId: UUIDString;
       headerType: HeaderType;
       headerValue?: string | null;
+      headerImagePosition?: unknown | null;
+      direccionId?: string | null;
       espacio: {
         id: UUIDString;
         nombre: string;
         logoUrl?: string | null;
         logoShape?: string | null;
         logoScale?: number | null;
+        logoPosition?: unknown | null;
         brandColors?: unknown | null;
         brandFont?: string | null;
         rubro?: {
@@ -1758,6 +1779,7 @@ export interface AdminListAllEspaciosData {
     logoUrl?: string | null;
     logoShape?: string | null;
     logoScale?: number | null;
+    logoPosition?: unknown | null;
     brandColors?: unknown | null;
     brandFont?: string | null;
     redesSociales?: unknown | null;
@@ -2046,6 +2068,8 @@ export interface ListPublicWorkshopsData {
     scheduleData?: unknown | null;
     headerType: HeaderType;
     headerValue?: string | null;
+    headerImagePosition?: unknown | null;
+    direccionId?: string | null;
     espacio: {
       id: UUIDString;
       nombre: string;
@@ -2822,6 +2846,7 @@ export interface UpdateEspacioIdentidadVariables {
   logoUrl?: string | null;
   logoShape?: string | null;
   logoScale?: number | null;
+  logoPosition?: unknown | null;
   brandColors?: unknown | null;
   brandFont?: string | null;
 }
@@ -2877,12 +2902,13 @@ export default function UpdateEspacioIdentidadComponent() {
     logoUrl: ..., // optional
     logoShape: ..., // optional
     logoScale: ..., // optional
+    logoPosition: ..., // optional
     brandColors: ..., // optional
     brandFont: ..., // optional
   };
   mutation.mutate(updateEspacioIdentidadVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ id: ..., logoUrl: ..., logoShape: ..., logoScale: ..., brandColors: ..., brandFont: ..., });
+  mutation.mutate({ id: ..., logoUrl: ..., logoShape: ..., logoScale: ..., logoPosition: ..., brandColors: ..., brandFont: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -3519,6 +3545,8 @@ export interface CreateWorkshopVariables {
   headerType?: HeaderType | null;
   headerValue?: string | null;
   metodosPago?: unknown | null;
+  direccionId?: string | null;
+  headerImagePosition?: unknown | null;
   estado?: EstadoWorkshop | null;
   esBorrador?: boolean | null;
 }
@@ -3585,12 +3613,14 @@ export default function CreateWorkshopComponent() {
     headerType: ..., // optional
     headerValue: ..., // optional
     metodosPago: ..., // optional
+    direccionId: ..., // optional
+    headerImagePosition: ..., // optional
     estado: ..., // optional
     esBorrador: ..., // optional
   };
   mutation.mutate(createWorkshopVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ espacioId: ..., nombre: ..., tipo: ..., descripcion: ..., cuposTotales: ..., cuposDisponibles: ..., precio: ..., fecha: ..., duracionHoras: ..., duracionMinutos: ..., experienciaPrevia: ..., scheduleData: ..., headerType: ..., headerValue: ..., metodosPago: ..., estado: ..., esBorrador: ..., });
+  mutation.mutate({ espacioId: ..., nombre: ..., tipo: ..., descripcion: ..., cuposTotales: ..., cuposDisponibles: ..., precio: ..., fecha: ..., duracionHoras: ..., duracionMinutos: ..., experienciaPrevia: ..., scheduleData: ..., headerType: ..., headerValue: ..., metodosPago: ..., direccionId: ..., headerImagePosition: ..., estado: ..., esBorrador: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -3646,6 +3676,8 @@ export interface UpdateWorkshopVariables {
   headerType?: HeaderType | null;
   headerValue?: string | null;
   metodosPago?: unknown | null;
+  direccionId?: string | null;
+  headerImagePosition?: unknown | null;
   estado?: EstadoWorkshop | null;
   esBorrador?: boolean | null;
 }
@@ -3713,12 +3745,14 @@ export default function UpdateWorkshopComponent() {
     headerType: ..., // optional
     headerValue: ..., // optional
     metodosPago: ..., // optional
+    direccionId: ..., // optional
+    headerImagePosition: ..., // optional
     estado: ..., // optional
     esBorrador: ..., // optional
   };
   mutation.mutate(updateWorkshopVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ id: ..., espacioId: ..., nombre: ..., tipo: ..., descripcion: ..., cuposTotales: ..., cuposDisponibles: ..., precio: ..., fecha: ..., duracionHoras: ..., duracionMinutos: ..., experienciaPrevia: ..., scheduleData: ..., headerType: ..., headerValue: ..., metodosPago: ..., estado: ..., esBorrador: ..., });
+  mutation.mutate({ id: ..., espacioId: ..., nombre: ..., tipo: ..., descripcion: ..., cuposTotales: ..., cuposDisponibles: ..., precio: ..., fecha: ..., duracionHoras: ..., duracionMinutos: ..., experienciaPrevia: ..., scheduleData: ..., headerType: ..., headerValue: ..., metodosPago: ..., direccionId: ..., headerImagePosition: ..., estado: ..., esBorrador: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {
@@ -5163,6 +5197,8 @@ export interface CreateReservaConUsuarioVariables {
   metodoPago?: MetodoPago | null;
   estadoPago?: EstadoPago | null;
   pagoExternoId?: string | null;
+  telefono?: string | null;
+  cantidad?: number | null;
 }
 ```
 ### Return Type
@@ -5221,10 +5257,12 @@ export default function CreateReservaConUsuarioComponent() {
     metodoPago: ..., // optional
     estadoPago: ..., // optional
     pagoExternoId: ..., // optional
+    telefono: ..., // optional
+    cantidad: ..., // optional
   };
   mutation.mutate(createReservaConUsuarioVars);
   // Variables can be defined inline as well.
-  mutation.mutate({ nombre: ..., email: ..., workshopId: ..., estado: ..., metodoPago: ..., estadoPago: ..., pagoExternoId: ..., });
+  mutation.mutate({ nombre: ..., email: ..., workshopId: ..., estado: ..., metodoPago: ..., estadoPago: ..., pagoExternoId: ..., telefono: ..., cantidad: ..., });
 
   // You can also pass in a `useDataConnectMutationOptions` object to `UseMutationResult.mutate()`.
   const options = {

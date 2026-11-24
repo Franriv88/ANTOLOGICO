@@ -9,8 +9,9 @@ import { RUBROS, fetchRubros } from '../lib/rubros';
 import { httpsCallable } from 'firebase/functions';
 import { doc, getDoc, updateDoc, increment } from 'firebase/firestore';
 import { functions, firestore } from '../lib/firebase';
-import { SOCIAL_NETWORKS, SocialIcon } from '../components/SocialIcons';
+import { SOCIAL_NETWORKS, SocialIcon, stripPrefix, addPrefix } from '../components/SocialIcons';
 import { IconAntologico } from '../components/LogoAntologico';
+import FloatingSave from '../components/FloatingSave';
 import { usePlanes, precioConPeriodo, proximaRenovacion, formatFechaLarga } from '../hooks/usePlanes';
 import { listPlanes as listSqlPlanes } from '../dataconnect-generated';
 
@@ -714,40 +715,35 @@ function RedesSocialesSection({ espacio, livePalette, links, setLinks, style, se
       {/* Inputs por red social */}
       <div className="flex flex-col gap-3 mb-5">
         {SOCIAL_NETWORKS.map(net => {
-          const isWa = net.key === 'whatsapp';
-          const val  = links[net.key] ?? '';
+          const fullVal = links[net.key] ?? '';
+          const username = stripPrefix(net.key, fullVal);
           return (
-            <div key={net.key} className="flex flex-col gap-1">
-              <div className="flex items-center gap-3">
+            <div key={net.key} className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                checked={visible[net.key] !== false}
+                onChange={e => setVisible(p => ({ ...p, [net.key]: e.target.checked }))}
+                className="w-4 h-4 accent-primary cursor-pointer shrink-0"
+                title="Mostrar en footer"
+              />
+              <div className="w-7 flex justify-center shrink-0">
+                <SocialIcon id={net.key} color={iconColor(net)} size={20} />
+              </div>
+              <div className="flex-1 flex items-stretch border border-border rounded-md overflow-hidden focus-within:border-primary focus-within:ring-1 focus-within:ring-primary bg-surface-100">
+                <span className="flex items-center px-2.5 text-xs text-ink-muted bg-surface-200 border-r border-border select-none whitespace-nowrap font-mono">
+                  {net.prefix}
+                </span>
                 <input
-                  type="checkbox"
-                  checked={visible[net.key] !== false}
-                  onChange={e => setVisible(p => ({ ...p, [net.key]: e.target.checked }))}
-                  className="w-4 h-4 accent-primary cursor-pointer shrink-0"
-                  title="Mostrar en footer"
-                />
-                <div className="w-7 flex justify-center shrink-0">
-                  <SocialIcon id={net.key} color={iconColor(net)} size={20} />
-                </div>
-                <span className="w-20 text-xs font-medium text-ink shrink-0">{net.label}</span>
-                <input
-                  type={isWa ? 'text' : 'url'}
-                  value={val}
-                  onChange={e => setLinks(p => ({ ...p, [net.key]: e.target.value }))}
-                  onBlur={isWa ? () => {
-                    if (val && looksLikePhone(val)) {
-                      setLinks(p => ({ ...p, whatsapp: phoneToWaLink(val) }));
-                    }
-                  } : undefined}
-                  placeholder={isWa ? '+54 9 11 1234-5678 o wa.me/549...' : net.placeholder}
-                  className={INPUT_CLS + ' text-xs'}
+                  type="text"
+                  value={username}
+                  onChange={e => {
+                    const v = e.target.value;
+                    setLinks(p => ({ ...p, [net.key]: v ? addPrefix(net.key, v) : '' }));
+                  }}
+                  placeholder={net.placeholder}
+                  className="flex-1 px-2.5 py-1.5 bg-transparent text-xs text-ink focus:outline-none min-w-0"
                 />
               </div>
-              {isWa && val && looksLikePhone(val) && (
-                <p className="text-[10px] text-ink-muted pl-[calc(1rem+1.75rem+5rem+0.75rem)]">
-                  Se convertirá en <span className="font-mono text-primary">wa.me/{val.replace(/[^\d]/g, '')}</span> al guardar
-                </p>
-              )}
             </div>
           );
         })}
@@ -893,7 +889,7 @@ function TabEspacio({ espacio, refresh }) {
       {/* ── Fila superior: QR + Datos ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
         {/* Columna izquierda: Datos del espacio */}
-        <form onSubmit={handleSave} className="flex flex-col gap-5">
+        <form id="form-espacio" onSubmit={handleSave} className="flex flex-col gap-5">
           <div>
             <h3 className="text-sm font-semibold text-ink mb-3">Datos del espacio</h3>
             <label className={LABEL_CLS}>Nombre del espacio *</label>
@@ -907,18 +903,12 @@ function TabEspacio({ espacio, refresh }) {
             </select>
           </div>
           {error && <p className="text-xs text-danger">{error}</p>}
-          <div className="flex items-center gap-3">
-            <button type="submit" disabled={saving}
-              className="px-5 py-2 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary-strong transition-colors disabled:opacity-50">
-              {saving ? 'Guardando…' : 'Guardar cambios'}
-            </button>
-            {saved && <span className="text-xs text-green-600 font-medium">¡Guardado!</span>}
-          </div>
         </form>
 
         {/* Columna derecha: Compartir */}
         <CompartirEspacio espacio={espacio} refresh={refresh} />
       </div>
+      <FloatingSave saving={saving} saved={saved} type="submit" form="form-espacio" label="Guardar cambios" />
 
       {/* ── Direcciones ── */}
       <div>
@@ -1117,14 +1107,32 @@ function TabIdentidad({ espacio, refresh }) {
   const parsed = parseBrandColors();
 
   // Logo
-  const [logoData,   setLogoData]  = useState(espacio.logoUrl   ?? '');
-  const [logoShape,  setLogoShape] = useState(espacio.logoShape  ?? 'rounded');
-  const [logoScale,  setLogoScale] = useState(espacio.logoScale  ?? 1);
-  const [removingBg, setRemovingBg] = useState(false);
-  const [bgError,    setBgError]   = useState('');
-  const logoInputRef    = useRef(null);
-  const logoImgRef      = useRef(null);
+  const [logoData,     setLogoData]     = useState(espacio.logoUrl   ?? '');
+  const [logoShape,    setLogoShape]    = useState(espacio.logoShape  ?? 'rounded');
+  const [logoScale,    setLogoScale]    = useState(espacio.logoScale  ?? 1);
+  const [logoPosition, setLogoPosition] = useState(espacio.logoPosition ?? { x: 50, y: 50 });
+  const [removingBg,   setRemovingBg]   = useState(false);
+  const [bgError,      setBgError]     = useState('');
+  const logoInputRef     = useRef(null);
+  const logoImgRef       = useRef(null);
+  const logoDragRef      = useRef(null);
   const addColorInputRef = useRef(null);
+
+  function onLogoPointerDown(e) {
+    if (logoScale <= 1) return;
+    e.preventDefault();
+    e.currentTarget.setPointerCapture(e.pointerId);
+    logoDragRef.current = { startX: e.clientX, startY: e.clientY, startPosX: logoPosition.x, startPosY: logoPosition.y };
+  }
+  function onLogoPointerMove(e) {
+    if (!logoDragRef.current) return;
+    const { startX, startY, startPosX, startPosY } = logoDragRef.current;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = Math.max(0, Math.min(100, startPosX - (e.clientX - startX) / rect.width * 100));
+    const y = Math.max(0, Math.min(100, startPosY - (e.clientY - startY) / rect.height * 100));
+    setLogoPosition({ x, y });
+  }
+  function onLogoPointerUp() { logoDragRef.current = null; }
 
   // Palette
   const [colors,    setColors]    = useState(parsed.palette);
@@ -1170,6 +1178,7 @@ function TabIdentidad({ espacio, refresh }) {
     if (!file?.type.startsWith('image/')) return;
     extractOnLoad.current = true;
     setLogoData(await compressImage(file, 480));
+    setLogoPosition({ x: 50, y: 50 });
     setBgError('');
   }
 
@@ -1216,9 +1225,10 @@ function TabIdentidad({ espacio, refresh }) {
     const validColors = colors.filter(c => isValidColor(c));
     try {
       await espacioApi.updateIdentidad(espacio.id, {
-        logoUrl:     logoData || null,
+        logoUrl:      logoData || null,
         logoShape,
         logoScale,
+        logoPosition: logoData ? logoPosition : null,
         brandColors: { palette: validColors, roles },
         brandFont:   fontPair?.key ?? null,
       });
@@ -1261,18 +1271,27 @@ function TabIdentidad({ espacio, refresh }) {
               <p className="text-xs text-ink-muted">Se comprime automáticamente al subir.</p>
             </div>
             <div className="flex items-start gap-5">
-              <button type="button" onClick={() => logoInputRef.current?.click()}
-                className={`w-24 h-24 flex items-center justify-center overflow-hidden shrink-0 transition-colors cursor-pointer ${shapeCls} ${
+              <div
+                className={`w-24 h-24 flex items-center justify-center overflow-hidden shrink-0 transition-colors ${shapeCls} ${
                   logoShape === 'square' && logoData
                     ? 'bg-transparent'
                     : 'bg-surface-200 border-2 border-dashed border-border hover:border-primary/50'
-                }`}>
+                } ${logoData && logoScale > 1 ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}`}
+                onClick={!logoData ? () => logoInputRef.current?.click() : undefined}
+                onPointerDown={logoData ? onLogoPointerDown : undefined}
+                onPointerMove={logoData ? onLogoPointerMove : undefined}
+                onPointerUp={logoData ? onLogoPointerUp : undefined}
+              >
                 {logoData
-                  ? <img ref={logoImgRef} src={logoData} alt="Logo" className="w-full h-full object-contain" crossOrigin="anonymous"
-                      style={{ transform: `scale(${logoScale})`, transformOrigin: 'center', transition: 'transform 0.1s' }}
+                  ? <img ref={logoImgRef} src={logoData} alt="Logo" crossOrigin="anonymous"
+                      className={`w-full h-full select-none ${logoScale > 1 ? 'object-cover pointer-events-none' : 'object-contain'}`}
+                      style={logoScale > 1
+                        ? { objectPosition: `${logoPosition.x}% ${logoPosition.y}%`, transform: `scale(${logoScale})`, transformOrigin: `${logoPosition.x}% ${logoPosition.y}%`, transition: 'transform 0.1s' }
+                        : { transform: `scale(${logoScale})`, transformOrigin: 'center', transition: 'transform 0.1s' }
+                      }
                       onLoad={() => { if (extractOnLoad.current) { extractOnLoad.current = false; triggerExtract(); } }} />
                   : <span className="font-display text-3xl text-ink-muted/40 select-none">A</span>}
-              </button>
+              </div>
               <div className="flex flex-col gap-2 flex-1">
                 <div>
                   <p className="text-xs text-ink-muted mb-1.5">Marco</p>
@@ -1515,17 +1534,7 @@ function TabIdentidad({ espacio, refresh }) {
 
     {error && <p className="text-xs text-danger mt-4">{error}</p>}
 
-    <div className="flex items-center gap-3 py-6">
-      <button
-        type="submit"
-        form="form-identidad"
-        disabled={saving || removingBg}
-        className="px-5 py-2 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary-strong transition-colors disabled:opacity-50"
-      >
-        {saving ? 'Guardando…' : 'Guardar identidad'}
-      </button>
-      {saved && <span className="text-xs text-green-600 font-medium">¡Guardado!</span>}
-    </div>
+    <FloatingSave saving={saving} saved={saved} disabled={removingBg} type="submit" form="form-identidad" label="Guardar identidad" />
     </>
   );
 }
@@ -1605,17 +1614,7 @@ function TabTerminos({ espacio, refresh }) {
       </div>
 
       {/* Guardar */}
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={saving}
-          className="px-5 py-2 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary-strong transition-colors disabled:opacity-50"
-        >
-          {saving ? 'Guardando...' : 'Guardar'}
-        </button>
-        {saved && <span className="text-xs text-green-600 font-medium">Guardado</span>}
-      </div>
+      <FloatingSave saving={saving} saved={saved} onClick={handleSave} label="Guardar" savedLabel="Guardado" />
     </div>
   );
 }
@@ -1879,6 +1878,7 @@ function TabCobros({ espacio, refresh }) {
               <p className="text-sm font-semibold text-ink">Links de pago</p>
             </div>
             <p className="text-xs text-ink-muted">Agregá links de pago de Mercado Pago, Cafecito, Uala u otros. Tus clientes son redirigidos al link al reservar.</p>
+            <p className="text-xs text-ink-muted/70 mt-1">Este nombre aparecerá como botón de compra, por lo que se sugiere ingresar un nombre descriptivo y breve. Ej: "2 Cuotas sin interés", "Transferencia", "Cafecito".</p>
           </div>
           <Toggle checked={linksDePago} onChange={setLinksDePago} />
         </div>
@@ -1986,17 +1986,7 @@ function TabCobros({ espacio, refresh }) {
       </div>
 
       {saveError && <p className="text-xs text-danger">{saveError}</p>}
-      <div className="flex items-center gap-3 pt-2">
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={saving}
-          className="px-5 py-2 bg-primary text-white rounded-md text-sm font-semibold hover:bg-primary-strong transition-colors disabled:opacity-50"
-        >
-          {saving ? 'Guardando…' : 'Guardar cambios'}
-        </button>
-        {saved && <span className="text-xs text-green-600 font-medium">¡Guardado!</span>}
-      </div>
+      <FloatingSave saving={saving} saved={saved} onClick={handleSave} label="Guardar cambios" />
     </div>
   );
 }

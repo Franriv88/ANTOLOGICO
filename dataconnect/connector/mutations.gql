@@ -121,12 +121,13 @@ mutation CreateEspacio(
 }
 
 mutation UpdateEspacioIdentidad(
-  $id:          UUID!
-  $logoUrl:     String
-  $logoShape:   String
-  $logoScale:   Float
-  $brandColors: Any
-  $brandFont:   String
+  $id:           UUID!
+  $logoUrl:      String
+  $logoShape:    String
+  $logoScale:    Float
+  $logoPosition: Any
+  $brandColors:  Any
+  $brandFont:    String
 ) @auth(level: USER) {
   espacio_update(
     first: {
@@ -139,6 +140,7 @@ mutation UpdateEspacioIdentidad(
       logoUrl:        $logoUrl
       logoShape:      $logoShape
       logoScale:      $logoScale
+      logoPosition:   $logoPosition
       brandColors:    $brandColors
       brandFont:      $brandFont
       updatedAt_expr: "request.time"
@@ -279,6 +281,8 @@ mutation CreateWorkshop(
   $headerType:        HeaderType
   $headerValue:       String
   $metodosPago:       Any
+  $direccionId:       String
+  $headerImagePosition: Any
   $estado:            EstadoWorkshop
   $esBorrador:        Boolean
 ) @auth(level: USER) @transaction {
@@ -305,6 +309,8 @@ mutation CreateWorkshop(
     headerType:        $headerType
     headerValue:       $headerValue
     metodosPago:       $metodosPago
+    direccionId:       $direccionId
+    headerImagePosition: $headerImagePosition
     estado:            $estado
     esBorrador:        $esBorrador
     createdAt_expr:    "request.time"
@@ -330,6 +336,8 @@ mutation UpdateWorkshop(
   $headerType:       HeaderType
   $headerValue:      String
   $metodosPago:      Any
+  $direccionId:      String
+  $headerImagePosition: Any
   $estado:           EstadoWorkshop
   $esBorrador:       Boolean
 ) @auth(level: USER) @transaction {
@@ -357,6 +365,8 @@ mutation UpdateWorkshop(
       headerType:        $headerType
       headerValue:       $headerValue
       metodosPago:       $metodosPago
+      direccionId:       $direccionId
+      headerImagePosition: $headerImagePosition
       estado:            $estado
       esBorrador:        $esBorrador
       updatedAt_expr:    "request.time"
@@ -663,6 +673,8 @@ mutation CreateReservaConUsuario(
   $metodoPago:    MetodoPago
   $estadoPago:    EstadoPago
   $pagoExternoId: String
+  $telefono:      String
+  $cantidad:      Int
 ) @auth(level: USER) @transaction {
   query @redact {
     workshop(id: $workshopId) @check(expr: "this != null", message: "Taller no encontrado") {
@@ -682,6 +694,8 @@ mutation CreateReservaConUsuario(
     metodoPago:      $metodoPago
     estadoPago:      $estadoPago
     pagoExternoId:   $pagoExternoId
+    telefono:        $telefono
+    cantidad:        $cantidad
     createdAt_expr:  "request.time"
     updatedAt_expr:  "request.time"
   })
@@ -691,7 +705,18 @@ mutation CreateReservaConUsuario(
   )
 }
 
-mutation MarkReservaPaid($id: UUID!) @auth(level: USER, insecureReason: "Solo accesible desde el panel tenant donde el tenant ya está autenticado.") {
+mutation MarkReservaPaid($id: UUID!) @auth(level: USER) @transaction {
+  query @redact {
+    reserva(id: $id) @check(expr: "this != null", message: "Reserva no encontrada") {
+      workshop {
+        espacio {
+          profesional {
+            uid @check(expr: "this == auth.uid", message: "Sin permiso")
+          }
+        }
+      }
+    }
+  }
   reserva_update(id: $id, data: {
     estado:         CONFIRMADA
     estadoPago:     PAGADO
@@ -699,7 +724,18 @@ mutation MarkReservaPaid($id: UUID!) @auth(level: USER, insecureReason: "Solo ac
   })
 }
 
-mutation MarkReservaUnpaid($id: UUID!) @auth(level: USER, insecureReason: "Solo accesible desde el panel tenant donde el tenant ya está autenticado.") {
+mutation MarkReservaUnpaid($id: UUID!) @auth(level: USER) @transaction {
+  query @redact {
+    reserva(id: $id) @check(expr: "this != null", message: "Reserva no encontrada") {
+      workshop {
+        espacio {
+          profesional {
+            uid @check(expr: "this == auth.uid", message: "Sin permiso")
+          }
+        }
+      }
+    }
+  }
   reserva_update(id: $id, data: {
     estado:         PENDIENTE
     estadoPago:     PENDIENTE

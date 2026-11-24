@@ -10,13 +10,32 @@ const PATHS = {
 };
 
 export const SOCIAL_NETWORKS = [
-  { key: 'instagram', label: 'Instagram', color: '#E1306C', placeholder: 'instagram.com/tuespacio' },
-  { key: 'facebook',  label: 'Facebook',  color: '#1877F2', placeholder: 'facebook.com/tuespacio'  },
-  { key: 'tiktok',    label: 'TikTok',    color: '#010101', placeholder: 'tiktok.com/@tuespacio'   },
-  { key: 'youtube',   label: 'YouTube',   color: '#FF0000', placeholder: 'youtube.com/@tuespacio'  },
-  { key: 'x',         label: 'X',         color: '#000000', placeholder: 'x.com/tuespacio'  },
-  { key: 'whatsapp',  label: 'WhatsApp',  color: '#25D366', placeholder: 'wa.me/549...'   },
+  { key: 'instagram', label: 'Instagram', color: '#E1306C', prefix: 'instagram.com/', placeholder: 'tuespacio' },
+  { key: 'facebook',  label: 'Facebook',  color: '#1877F2', prefix: 'facebook.com/',  placeholder: 'tuespacio'  },
+  { key: 'tiktok',    label: 'TikTok',    color: '#010101', prefix: 'tiktok.com/@',   placeholder: 'tuespacio'   },
+  { key: 'youtube',   label: 'YouTube',   color: '#FF0000', prefix: 'youtube.com/@',  placeholder: 'tuespacio'  },
+  { key: 'x',         label: 'X',         color: '#000000', prefix: 'x.com/',         placeholder: 'tuespacio'  },
+  { key: 'whatsapp',  label: 'WhatsApp',  color: '#25D366', prefix: 'wa.me/',         placeholder: '5491112345678'   },
 ];
+
+export function stripPrefix(key, fullUrl) {
+  if (!fullUrl) return '';
+  const net = SOCIAL_NETWORKS.find(n => n.key === key);
+  if (!net?.prefix) return fullUrl;
+  const p = net.prefix;
+  const cleaned = fullUrl.replace(/^https?:\/\/(www\.)?/i, '');
+  if (cleaned.toLowerCase().startsWith(p.toLowerCase())) return cleaned.slice(p.length);
+  return fullUrl;
+}
+
+export function addPrefix(key, username) {
+  if (!username) return '';
+  const net = SOCIAL_NETWORKS.find(n => n.key === key);
+  if (!net?.prefix) return username;
+  const cleaned = username.replace(/^https?:\/\/(www\.)?/i, '');
+  if (cleaned.toLowerCase().startsWith(net.prefix.toLowerCase())) return cleaned;
+  return net.prefix + username;
+}
 
 // Ícono individual de una red social
 export function SocialIcon({ id, color = 'currentColor', size = 20 }) {

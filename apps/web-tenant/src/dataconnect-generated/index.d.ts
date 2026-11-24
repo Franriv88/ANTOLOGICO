@@ -8,6 +8,12 @@ export type Int64String = string;
 export type DateString = string;
 
 
+export enum EstadoDominio {
+  PENDIENTE = "PENDIENTE",
+  ACTIVO = "ACTIVO",
+  ERROR = "ERROR",
+};
+
 export enum EstadoEspacio {
   ACTIVO = "ACTIVO",
   SUSPENDIDO = "SUSPENDIDO",
@@ -152,6 +158,7 @@ export interface AdminListAllEspaciosData {
     logoUrl?: string | null;
     logoShape?: string | null;
     logoScale?: number | null;
+    logoPosition?: unknown | null;
     brandColors?: unknown | null;
     brandFont?: string | null;
     redesSociales?: unknown | null;
@@ -311,6 +318,8 @@ export interface CreateReservaConUsuarioVariables {
   metodoPago?: MetodoPago | null;
   estadoPago?: EstadoPago | null;
   pagoExternoId?: string | null;
+  telefono?: string | null;
+  cantidad?: number | null;
 }
 
 export interface CreateWorkshopData {
@@ -333,6 +342,8 @@ export interface CreateWorkshopVariables {
   headerType?: HeaderType | null;
   headerValue?: string | null;
   metodosPago?: unknown | null;
+  direccionId?: string | null;
+  headerImagePosition?: unknown | null;
   estado?: EstadoWorkshop | null;
   esBorrador?: boolean | null;
 }
@@ -391,6 +402,7 @@ export interface GetMyEspacioData {
     logoUrl?: string | null;
     logoShape?: string | null;
     logoScale?: number | null;
+    logoPosition?: unknown | null;
     brandColors?: unknown | null;
     brandFont?: string | null;
     redesSociales?: unknown | null;
@@ -453,7 +465,9 @@ export interface GetMyWorkshopData {
     scheduleData?: unknown | null;
     headerType: HeaderType;
     headerValue?: string | null;
+    headerImagePosition?: unknown | null;
     metodosPago?: unknown | null;
+    direccionId?: string | null;
     estado: EstadoWorkshop;
     esBorrador: boolean;
     createdAt: TimestampString;
@@ -477,9 +491,12 @@ export interface GetPublicEspacioData {
     logoUrl?: string | null;
     logoShape?: string | null;
     logoScale?: number | null;
+    logoPosition?: unknown | null;
     brandColors?: unknown | null;
     brandFont?: string | null;
     redesSociales?: unknown | null;
+    cobros?: unknown | null;
+    direcciones?: unknown | null;
     rubro?: {
       id: UUIDString;
       nombre: string;
@@ -504,9 +521,12 @@ export interface GetPublicEspaciosData {
     logoUrl?: string | null;
     logoShape?: string | null;
     logoScale?: number | null;
+    logoPosition?: unknown | null;
     brandColors?: unknown | null;
     brandFont?: string | null;
     redesSociales?: unknown | null;
+    cobros?: unknown | null;
+    direcciones?: unknown | null;
     rubro?: {
       id: UUIDString;
       nombre: string;
@@ -537,6 +557,7 @@ export interface ListMyEspaciosData {
     logoUrl?: string | null;
     logoShape?: string | null;
     logoScale?: number | null;
+    logoPosition?: unknown | null;
     brandColors?: unknown | null;
     brandFont?: string | null;
     redesSociales?: unknown | null;
@@ -586,12 +607,15 @@ export interface ListMyReservasData {
       espacioId: UUIDString;
       headerType: HeaderType;
       headerValue?: string | null;
+      headerImagePosition?: unknown | null;
+      direccionId?: string | null;
       espacio: {
         id: UUIDString;
         nombre: string;
         logoUrl?: string | null;
         logoShape?: string | null;
         logoScale?: number | null;
+        logoPosition?: unknown | null;
         brandColors?: unknown | null;
         brandFont?: string | null;
         rubro?: {
@@ -619,7 +643,9 @@ export interface ListMyWorkshopsByEstadoData {
     scheduleData?: unknown | null;
     headerType: HeaderType;
     headerValue?: string | null;
+    headerImagePosition?: unknown | null;
     metodosPago?: unknown | null;
+    direccionId?: string | null;
     estado: EstadoWorkshop;
     esBorrador: boolean;
     createdAt: TimestampString;
@@ -647,7 +673,9 @@ export interface ListMyWorkshopsData {
     scheduleData?: unknown | null;
     headerType: HeaderType;
     headerValue?: string | null;
+    headerImagePosition?: unknown | null;
     metodosPago?: unknown | null;
+    direccionId?: string | null;
     estado: EstadoWorkshop;
     esBorrador: boolean;
     createdAt: TimestampString;
@@ -684,7 +712,9 @@ export interface ListPublicWorkshopsByEspacioData {
     scheduleData?: unknown | null;
     headerType: HeaderType;
     headerValue?: string | null;
+    headerImagePosition?: unknown | null;
     metodosPago?: unknown | null;
+    direccionId?: string | null;
     estado: EstadoWorkshop;
     createdAt: TimestampString;
   } & Workshop_Key)[];
@@ -710,6 +740,8 @@ export interface ListPublicWorkshopsData {
     scheduleData?: unknown | null;
     headerType: HeaderType;
     headerValue?: string | null;
+    headerImagePosition?: unknown | null;
+    direccionId?: string | null;
     espacio: {
       id: UUIDString;
       nombre: string;
@@ -851,7 +883,9 @@ export interface SearchMyWorkshopsData {
     scheduleData?: unknown | null;
     headerType: HeaderType;
     headerValue?: string | null;
+    headerImagePosition?: unknown | null;
     metodosPago?: unknown | null;
+    direccionId?: string | null;
     estado: EstadoWorkshop;
     esBorrador: boolean;
     createdAt: TimestampString;
@@ -916,6 +950,7 @@ export interface UpdateEspacioIdentidadVariables {
   logoUrl?: string | null;
   logoShape?: string | null;
   logoScale?: number | null;
+  logoPosition?: unknown | null;
   brandColors?: unknown | null;
   brandFont?: string | null;
 }
@@ -987,6 +1022,8 @@ export interface UpdateWorkshopVariables {
   headerType?: HeaderType | null;
   headerValue?: string | null;
   metodosPago?: unknown | null;
+  direccionId?: string | null;
+  headerImagePosition?: unknown | null;
   estado?: EstadoWorkshop | null;
   esBorrador?: boolean | null;
 }

@@ -577,6 +577,7 @@ export interface ListMyEspaciosData {
     logoUrl?: string | null;
     logoShape?: string | null;
     logoScale?: number | null;
+    logoPosition?: unknown | null;
     brandColors?: unknown | null;
     brandFont?: string | null;
     redesSociales?: unknown | null;
@@ -717,6 +718,7 @@ export interface GetMyEspacioData {
     logoUrl?: string | null;
     logoShape?: string | null;
     logoScale?: number | null;
+    logoPosition?: unknown | null;
     brandColors?: unknown | null;
     brandFont?: string | null;
     redesSociales?: unknown | null;
@@ -870,7 +872,9 @@ export interface ListMyWorkshopsData {
     scheduleData?: unknown | null;
     headerType: HeaderType;
     headerValue?: string | null;
+    headerImagePosition?: unknown | null;
     metodosPago?: unknown | null;
+    direccionId?: string | null;
     estado: EstadoWorkshop;
     esBorrador: boolean;
     createdAt: TimestampString;
@@ -999,7 +1003,9 @@ export interface ListMyWorkshopsByEstadoData {
     scheduleData?: unknown | null;
     headerType: HeaderType;
     headerValue?: string | null;
+    headerImagePosition?: unknown | null;
     metodosPago?: unknown | null;
+    direccionId?: string | null;
     estado: EstadoWorkshop;
     esBorrador: boolean;
     createdAt: TimestampString;
@@ -1130,7 +1136,9 @@ export interface SearchMyWorkshopsData {
     scheduleData?: unknown | null;
     headerType: HeaderType;
     headerValue?: string | null;
+    headerImagePosition?: unknown | null;
     metodosPago?: unknown | null;
+    direccionId?: string | null;
     estado: EstadoWorkshop;
     esBorrador: boolean;
     createdAt: TimestampString;
@@ -1260,7 +1268,9 @@ export interface GetMyWorkshopData {
     scheduleData?: unknown | null;
     headerType: HeaderType;
     headerValue?: string | null;
+    headerImagePosition?: unknown | null;
     metodosPago?: unknown | null;
+    direccionId?: string | null;
     estado: EstadoWorkshop;
     esBorrador: boolean;
     createdAt: TimestampString;
@@ -1498,9 +1508,12 @@ export interface GetPublicEspacioData {
     logoUrl?: string | null;
     logoShape?: string | null;
     logoScale?: number | null;
+    logoPosition?: unknown | null;
     brandColors?: unknown | null;
     brandFont?: string | null;
     redesSociales?: unknown | null;
+    cobros?: unknown | null;
+    direcciones?: unknown | null;
     rubro?: {
       id: UUIDString;
       nombre: string;
@@ -1626,9 +1639,12 @@ export interface GetPublicEspaciosData {
     logoUrl?: string | null;
     logoShape?: string | null;
     logoScale?: number | null;
+    logoPosition?: unknown | null;
     brandColors?: unknown | null;
     brandFont?: string | null;
     redesSociales?: unknown | null;
+    cobros?: unknown | null;
+    direcciones?: unknown | null;
     rubro?: {
       id: UUIDString;
       nombre: string;
@@ -1762,7 +1778,9 @@ export interface ListPublicWorkshopsByEspacioData {
     scheduleData?: unknown | null;
     headerType: HeaderType;
     headerValue?: string | null;
+    headerImagePosition?: unknown | null;
     metodosPago?: unknown | null;
+    direccionId?: string | null;
     estado: EstadoWorkshop;
     createdAt: TimestampString;
   } & Workshop_Key)[];
@@ -1884,12 +1902,15 @@ export interface ListMyReservasData {
       espacioId: UUIDString;
       headerType: HeaderType;
       headerValue?: string | null;
+      headerImagePosition?: unknown | null;
+      direccionId?: string | null;
       espacio: {
         id: UUIDString;
         nombre: string;
         logoUrl?: string | null;
         logoShape?: string | null;
         logoScale?: number | null;
+        logoPosition?: unknown | null;
         brandColors?: unknown | null;
         brandFont?: string | null;
         rubro?: {
@@ -2129,6 +2150,7 @@ export interface AdminListAllEspaciosData {
     logoUrl?: string | null;
     logoShape?: string | null;
     logoScale?: number | null;
+    logoPosition?: unknown | null;
     brandColors?: unknown | null;
     brandFont?: string | null;
     redesSociales?: unknown | null;
@@ -2483,6 +2505,8 @@ export interface ListPublicWorkshopsData {
     scheduleData?: unknown | null;
     headerType: HeaderType;
     headerValue?: string | null;
+    headerImagePosition?: unknown | null;
+    direccionId?: string | null;
     espacio: {
       id: UUIDString;
       nombre: string;
@@ -3388,6 +3412,7 @@ export interface UpdateEspacioIdentidadVariables {
   logoUrl?: string | null;
   logoShape?: string | null;
   logoScale?: number | null;
+  logoPosition?: unknown | null;
   brandColors?: unknown | null;
   brandFont?: string | null;
 }
@@ -3413,6 +3438,7 @@ const updateEspacioIdentidadVars: UpdateEspacioIdentidadVariables = {
   logoUrl: ..., // optional
   logoShape: ..., // optional
   logoScale: ..., // optional
+  logoPosition: ..., // optional
   brandColors: ..., // optional
   brandFont: ..., // optional
 };
@@ -3421,7 +3447,7 @@ const updateEspacioIdentidadVars: UpdateEspacioIdentidadVariables = {
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await updateEspacioIdentidad(updateEspacioIdentidadVars);
 // Variables can be defined inline as well.
-const { data } = await updateEspacioIdentidad({ id: ..., logoUrl: ..., logoShape: ..., logoScale: ..., brandColors: ..., brandFont: ..., });
+const { data } = await updateEspacioIdentidad({ id: ..., logoUrl: ..., logoShape: ..., logoScale: ..., logoPosition: ..., brandColors: ..., brandFont: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -3448,6 +3474,7 @@ const updateEspacioIdentidadVars: UpdateEspacioIdentidadVariables = {
   logoUrl: ..., // optional
   logoShape: ..., // optional
   logoScale: ..., // optional
+  logoPosition: ..., // optional
   brandColors: ..., // optional
   brandFont: ..., // optional
 };
@@ -3455,7 +3482,7 @@ const updateEspacioIdentidadVars: UpdateEspacioIdentidadVariables = {
 // Call the `updateEspacioIdentidadRef()` function to get a reference to the mutation.
 const ref = updateEspacioIdentidadRef(updateEspacioIdentidadVars);
 // Variables can be defined inline as well.
-const ref = updateEspacioIdentidadRef({ id: ..., logoUrl: ..., logoShape: ..., logoScale: ..., brandColors: ..., brandFont: ..., });
+const ref = updateEspacioIdentidadRef({ id: ..., logoUrl: ..., logoShape: ..., logoScale: ..., logoPosition: ..., brandColors: ..., brandFont: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -4204,6 +4231,8 @@ export interface CreateWorkshopVariables {
   headerType?: HeaderType | null;
   headerValue?: string | null;
   metodosPago?: unknown | null;
+  direccionId?: string | null;
+  headerImagePosition?: unknown | null;
   estado?: EstadoWorkshop | null;
   esBorrador?: boolean | null;
 }
@@ -4240,6 +4269,8 @@ const createWorkshopVars: CreateWorkshopVariables = {
   headerType: ..., // optional
   headerValue: ..., // optional
   metodosPago: ..., // optional
+  direccionId: ..., // optional
+  headerImagePosition: ..., // optional
   estado: ..., // optional
   esBorrador: ..., // optional
 };
@@ -4248,7 +4279,7 @@ const createWorkshopVars: CreateWorkshopVariables = {
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await createWorkshop(createWorkshopVars);
 // Variables can be defined inline as well.
-const { data } = await createWorkshop({ espacioId: ..., nombre: ..., tipo: ..., descripcion: ..., cuposTotales: ..., cuposDisponibles: ..., precio: ..., fecha: ..., duracionHoras: ..., duracionMinutos: ..., experienciaPrevia: ..., scheduleData: ..., headerType: ..., headerValue: ..., metodosPago: ..., estado: ..., esBorrador: ..., });
+const { data } = await createWorkshop({ espacioId: ..., nombre: ..., tipo: ..., descripcion: ..., cuposTotales: ..., cuposDisponibles: ..., precio: ..., fecha: ..., duracionHoras: ..., duracionMinutos: ..., experienciaPrevia: ..., scheduleData: ..., headerType: ..., headerValue: ..., metodosPago: ..., direccionId: ..., headerImagePosition: ..., estado: ..., esBorrador: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -4286,6 +4317,8 @@ const createWorkshopVars: CreateWorkshopVariables = {
   headerType: ..., // optional
   headerValue: ..., // optional
   metodosPago: ..., // optional
+  direccionId: ..., // optional
+  headerImagePosition: ..., // optional
   estado: ..., // optional
   esBorrador: ..., // optional
 };
@@ -4293,7 +4326,7 @@ const createWorkshopVars: CreateWorkshopVariables = {
 // Call the `createWorkshopRef()` function to get a reference to the mutation.
 const ref = createWorkshopRef(createWorkshopVars);
 // Variables can be defined inline as well.
-const ref = createWorkshopRef({ espacioId: ..., nombre: ..., tipo: ..., descripcion: ..., cuposTotales: ..., cuposDisponibles: ..., precio: ..., fecha: ..., duracionHoras: ..., duracionMinutos: ..., experienciaPrevia: ..., scheduleData: ..., headerType: ..., headerValue: ..., metodosPago: ..., estado: ..., esBorrador: ..., });
+const ref = createWorkshopRef({ espacioId: ..., nombre: ..., tipo: ..., descripcion: ..., cuposTotales: ..., cuposDisponibles: ..., precio: ..., fecha: ..., duracionHoras: ..., duracionMinutos: ..., experienciaPrevia: ..., scheduleData: ..., headerType: ..., headerValue: ..., metodosPago: ..., direccionId: ..., headerImagePosition: ..., estado: ..., esBorrador: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -4362,6 +4395,8 @@ export interface UpdateWorkshopVariables {
   headerType?: HeaderType | null;
   headerValue?: string | null;
   metodosPago?: unknown | null;
+  direccionId?: string | null;
+  headerImagePosition?: unknown | null;
   estado?: EstadoWorkshop | null;
   esBorrador?: boolean | null;
 }
@@ -4399,6 +4434,8 @@ const updateWorkshopVars: UpdateWorkshopVariables = {
   headerType: ..., // optional
   headerValue: ..., // optional
   metodosPago: ..., // optional
+  direccionId: ..., // optional
+  headerImagePosition: ..., // optional
   estado: ..., // optional
   esBorrador: ..., // optional
 };
@@ -4407,7 +4444,7 @@ const updateWorkshopVars: UpdateWorkshopVariables = {
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await updateWorkshop(updateWorkshopVars);
 // Variables can be defined inline as well.
-const { data } = await updateWorkshop({ id: ..., espacioId: ..., nombre: ..., tipo: ..., descripcion: ..., cuposTotales: ..., cuposDisponibles: ..., precio: ..., fecha: ..., duracionHoras: ..., duracionMinutos: ..., experienciaPrevia: ..., scheduleData: ..., headerType: ..., headerValue: ..., metodosPago: ..., estado: ..., esBorrador: ..., });
+const { data } = await updateWorkshop({ id: ..., espacioId: ..., nombre: ..., tipo: ..., descripcion: ..., cuposTotales: ..., cuposDisponibles: ..., precio: ..., fecha: ..., duracionHoras: ..., duracionMinutos: ..., experienciaPrevia: ..., scheduleData: ..., headerType: ..., headerValue: ..., metodosPago: ..., direccionId: ..., headerImagePosition: ..., estado: ..., esBorrador: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -4446,6 +4483,8 @@ const updateWorkshopVars: UpdateWorkshopVariables = {
   headerType: ..., // optional
   headerValue: ..., // optional
   metodosPago: ..., // optional
+  direccionId: ..., // optional
+  headerImagePosition: ..., // optional
   estado: ..., // optional
   esBorrador: ..., // optional
 };
@@ -4453,7 +4492,7 @@ const updateWorkshopVars: UpdateWorkshopVariables = {
 // Call the `updateWorkshopRef()` function to get a reference to the mutation.
 const ref = updateWorkshopRef(updateWorkshopVars);
 // Variables can be defined inline as well.
-const ref = updateWorkshopRef({ id: ..., espacioId: ..., nombre: ..., tipo: ..., descripcion: ..., cuposTotales: ..., cuposDisponibles: ..., precio: ..., fecha: ..., duracionHoras: ..., duracionMinutos: ..., experienciaPrevia: ..., scheduleData: ..., headerType: ..., headerValue: ..., metodosPago: ..., estado: ..., esBorrador: ..., });
+const ref = updateWorkshopRef({ id: ..., espacioId: ..., nombre: ..., tipo: ..., descripcion: ..., cuposTotales: ..., cuposDisponibles: ..., precio: ..., fecha: ..., duracionHoras: ..., duracionMinutos: ..., experienciaPrevia: ..., scheduleData: ..., headerType: ..., headerValue: ..., metodosPago: ..., direccionId: ..., headerImagePosition: ..., estado: ..., esBorrador: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -6164,6 +6203,8 @@ export interface CreateReservaConUsuarioVariables {
   metodoPago?: MetodoPago | null;
   estadoPago?: EstadoPago | null;
   pagoExternoId?: string | null;
+  telefono?: string | null;
+  cantidad?: number | null;
 }
 ```
 ### Return Type
@@ -6192,13 +6233,15 @@ const createReservaConUsuarioVars: CreateReservaConUsuarioVariables = {
   metodoPago: ..., // optional
   estadoPago: ..., // optional
   pagoExternoId: ..., // optional
+  telefono: ..., // optional
+  cantidad: ..., // optional
 };
 
 // Call the `createReservaConUsuario()` function to execute the mutation.
 // You can use the `await` keyword to wait for the promise to resolve.
 const { data } = await createReservaConUsuario(createReservaConUsuarioVars);
 // Variables can be defined inline as well.
-const { data } = await createReservaConUsuario({ nombre: ..., email: ..., workshopId: ..., estado: ..., metodoPago: ..., estadoPago: ..., pagoExternoId: ..., });
+const { data } = await createReservaConUsuario({ nombre: ..., email: ..., workshopId: ..., estado: ..., metodoPago: ..., estadoPago: ..., pagoExternoId: ..., telefono: ..., cantidad: ..., });
 
 // You can also pass in a `DataConnect` instance to the action shortcut function.
 const dataConnect = getDataConnect(connectorConfig);
@@ -6232,12 +6275,14 @@ const createReservaConUsuarioVars: CreateReservaConUsuarioVariables = {
   metodoPago: ..., // optional
   estadoPago: ..., // optional
   pagoExternoId: ..., // optional
+  telefono: ..., // optional
+  cantidad: ..., // optional
 };
 
 // Call the `createReservaConUsuarioRef()` function to get a reference to the mutation.
 const ref = createReservaConUsuarioRef(createReservaConUsuarioVars);
 // Variables can be defined inline as well.
-const ref = createReservaConUsuarioRef({ nombre: ..., email: ..., workshopId: ..., estado: ..., metodoPago: ..., estadoPago: ..., pagoExternoId: ..., });
+const ref = createReservaConUsuarioRef({ nombre: ..., email: ..., workshopId: ..., estado: ..., metodoPago: ..., estadoPago: ..., pagoExternoId: ..., telefono: ..., cantidad: ..., });
 
 // You can also pass in a `DataConnect` instance to the `MutationRef` function.
 const dataConnect = getDataConnect(connectorConfig);

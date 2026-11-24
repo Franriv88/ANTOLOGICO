@@ -1,7 +1,7 @@
 # ─── Reservas ────────────────────────────────────────────────────────────────
 
 query ListReservasByEspacio($espacioId: UUID!)
-  @auth(level: USER, insecureReason: "El espacioId proviene de ListMyEspacios que ya filtra por auth.uid.")
+  @auth(level: USER)
   @refresh(onMutationExecuted: { operation: "CreateReservaConUsuario" })
   @refresh(onMutationExecuted: { operation: "CancelarReserva" })
   @refresh(onMutationExecuted: { operation: "MarkReservaPaid" })
@@ -10,7 +10,10 @@ query ListReservasByEspacio($espacioId: UUID!)
 {
   reservas(
     where: {
-      workshop: { espacioId: { eq: $espacioId } }
+      workshop: {
+        espacioId: { eq: $espacioId }
+        espacio: { profesionalUid: { eq_expr: "auth.uid" } }
+      }
     }
     orderBy: [{ fechaReserva: DESC }]
   ) {
@@ -62,7 +65,7 @@ query ListMyEspacios @auth(level: USER) {
   ) {
     id nombre estado cancelacionPendiente createdAt
     trialStartedAt isSuperAdmin slug bloqueado
-    logoUrl logoShape logoScale brandColors brandFont redesSociales cobros direcciones
+    logoUrl logoShape logoScale logoPosition brandColors brandFont redesSociales cobros direcciones
     terminosCondiciones tycEnabled
     periodoFacturacion precioActual proximaRenovacion downgradePendiente cuponAplicado
     rubro { id nombre }
@@ -82,7 +85,7 @@ query GetMyEspacio($id: UUID!) @auth(level: USER) {
   ) {
     id nombre estado cancelacionPendiente createdAt updatedAt
     trialStartedAt isSuperAdmin slug bloqueado
-    logoUrl logoShape logoScale brandColors brandFont redesSociales cobros direcciones
+    logoUrl logoShape logoScale logoPosition brandColors brandFont redesSociales cobros direcciones
     terminosCondiciones tycEnabled
     periodoFacturacion precioActual proximaRenovacion downgradePendiente cuponAplicado
     rubro { id nombre }
@@ -95,7 +98,7 @@ query GetMyEspacio($id: UUID!) @auth(level: USER) {
 # ─── Workshops ────────────────────────────────────────────────────────────────
 
 query ListMyWorkshops($espacioId: UUID!)
-  @auth(level: USER, insecureReason: "El espacioId proviene de ListMyEspacios que ya filtra por auth.uid, garantizando que el cliente solo puede pasar IDs propios.")
+  @auth(level: USER)
   @refresh(onMutationExecuted: { operation: "CreateWorkshop", condition: "request.variables.espacioId == mutation.variables.espacioId" })
   @refresh(onMutationExecuted: { operation: "UpdateWorkshop", condition: "request.variables.espacioId == mutation.variables.espacioId" })
   @refresh(onMutationExecuted: { operation: "UpdateWorkshopEstado", condition: "request.variables.espacioId == mutation.variables.espacioId" })
@@ -106,6 +109,7 @@ query ListMyWorkshops($espacioId: UUID!)
   workshops(
     where: {
       espacioId: { eq: $espacioId }
+      espacio: { profesionalUid: { eq_expr: "auth.uid" } }
       estado: { ne: CANCELADO }
     }
     orderBy: [{ fecha: ASC }]
@@ -113,12 +117,12 @@ query ListMyWorkshops($espacioId: UUID!)
     id nombre tipo descripcion
     cuposTotales cuposDisponibles precio fecha
     duracionHoras duracionMinutos experienciaPrevia scheduleData
-    headerType headerValue metodosPago estado esBorrador createdAt
+    headerType headerValue headerImagePosition metodosPago direccionId estado esBorrador createdAt
   }
 }
 
 query ListMyWorkshopsByEstado($espacioId: UUID!, $estado: EstadoWorkshop!)
-  @auth(level: USER, insecureReason: "El espacioId proviene de ListMyEspacios que ya filtra por auth.uid, garantizando que el cliente solo puede pasar IDs propios.")
+  @auth(level: USER)
   @refresh(onMutationExecuted: { operation: "CreateWorkshop", condition: "request.variables.espacioId == mutation.variables.espacioId" })
   @refresh(onMutationExecuted: { operation: "UpdateWorkshop", condition: "request.variables.espacioId == mutation.variables.espacioId" })
   @refresh(onMutationExecuted: { operation: "UpdateWorkshopEstado", condition: "request.variables.espacioId == mutation.variables.espacioId" })
@@ -129,6 +133,7 @@ query ListMyWorkshopsByEstado($espacioId: UUID!, $estado: EstadoWorkshop!)
   workshops(
     where: {
       espacioId: { eq: $espacioId }
+      espacio: { profesionalUid: { eq_expr: "auth.uid" } }
       estado: { eq: $estado }
     }
     orderBy: [{ fecha: ASC }]
@@ -136,12 +141,12 @@ query ListMyWorkshopsByEstado($espacioId: UUID!, $estado: EstadoWorkshop!)
     id nombre tipo descripcion
     cuposTotales cuposDisponibles precio fecha
     duracionHoras duracionMinutos experienciaPrevia scheduleData
-    headerType headerValue metodosPago estado esBorrador createdAt
+    headerType headerValue headerImagePosition metodosPago direccionId estado esBorrador createdAt
   }
 }
 
 query SearchMyWorkshops($espacioId: UUID!, $q: String!)
-  @auth(level: USER, insecureReason: "El espacioId proviene de ListMyEspacios que ya filtra por auth.uid, garantizando que el cliente solo puede pasar IDs propios.")
+  @auth(level: USER)
   @refresh(onMutationExecuted: { operation: "CreateWorkshop", condition: "request.variables.espacioId == mutation.variables.espacioId" })
   @refresh(onMutationExecuted: { operation: "UpdateWorkshop", condition: "request.variables.espacioId == mutation.variables.espacioId" })
   @refresh(onMutationExecuted: { operation: "DeleteWorkshop", condition: "request.variables.espacioId == mutation.variables.espacioId" })
@@ -149,6 +154,7 @@ query SearchMyWorkshops($espacioId: UUID!, $q: String!)
   workshops(
     where: {
       espacioId: { eq: $espacioId }
+      espacio: { profesionalUid: { eq_expr: "auth.uid" } }
       nombre: { contains: $q }
       estado: { ne: CANCELADO }
     }
@@ -157,7 +163,7 @@ query SearchMyWorkshops($espacioId: UUID!, $q: String!)
     id nombre tipo descripcion
     cuposTotales cuposDisponibles precio fecha
     duracionHoras duracionMinutos experienciaPrevia scheduleData
-    headerType headerValue metodosPago estado esBorrador createdAt
+    headerType headerValue headerImagePosition metodosPago direccionId estado esBorrador createdAt
   }
 }
 
@@ -172,7 +178,7 @@ query GetMyWorkshop($id: UUID!) @auth(level: USER) {
     id nombre tipo descripcion
     cuposTotales cuposDisponibles precio fecha
     duracionHoras duracionMinutos experienciaPrevia scheduleData
-    headerType headerValue metodosPago estado esBorrador createdAt updatedAt
+    headerType headerValue headerImagePosition metodosPago direccionId estado esBorrador createdAt updatedAt
     espacio { id nombre }
   }
 }
@@ -194,7 +200,7 @@ query GetPublicEspacio($id: UUID!) @auth(level: PUBLIC, insecureReason: "Cualqui
     limit: 1
   ) {
     id nombre estado
-    logoUrl logoShape logoScale brandColors brandFont redesSociales
+    logoUrl logoShape logoScale logoPosition brandColors brandFont redesSociales cobros direcciones
     rubro { id nombre }
     rubroPersonalizado
     profesional { uid nombre }
@@ -206,7 +212,7 @@ query GetPublicEspacios($ids: [UUID!]!) @auth(level: PUBLIC, insecureReason: "Ca
     where: { id: { in: $ids }, estado: { eq: ACTIVO } }
   ) {
     id nombre estado
-    logoUrl logoShape logoScale brandColors brandFont redesSociales
+    logoUrl logoShape logoScale logoPosition brandColors brandFont redesSociales cobros direcciones
     rubro { id nombre }
     rubroPersonalizado
     profesional { uid nombre }
@@ -232,7 +238,7 @@ query ListPublicWorkshopsByEspacio($espacioId: UUID!)
     id nombre tipo descripcion
     cuposTotales cuposDisponibles precio fecha
     duracionHoras duracionMinutos experienciaPrevia scheduleData
-    headerType headerValue metodosPago estado createdAt
+    headerType headerValue headerImagePosition metodosPago direccionId estado createdAt
   }
 }
 
@@ -249,9 +255,9 @@ query ListMyReservas
     id estado fechaReserva comprobanteUrl pagoExternoId createdAt
     workshop {
       id nombre fecha cuposTotales cuposDisponibles espacioId
-      headerType headerValue
+      headerType headerValue headerImagePosition direccionId
       espacio {
-        id nombre logoUrl logoShape logoScale brandColors brandFont
+        id nombre logoUrl logoShape logoScale logoPosition brandColors brandFont
         rubro { id nombre }
       }
     }
@@ -284,7 +290,7 @@ query AdminListAllEspacios @auth(expr: "auth.token.admin == true") {
   espacios(orderBy: [{ createdAt: DESC }]) {
     id nombre estado cancelacionPendiente createdAt updatedAt
     slug bloqueado trialStartedAt isSuperAdmin
-    logoUrl logoShape logoScale brandColors brandFont redesSociales cobros direcciones
+    logoUrl logoShape logoScale logoPosition brandColors brandFont redesSociales cobros direcciones
     periodoFacturacion precioActual proximaRenovacion downgradePendiente cuponAplicado
     profesional { uid nombre email }
     rubro { id nombre }
@@ -324,7 +330,7 @@ query ListPublicWorkshops
     id nombre tipo descripcion
     cuposTotales cuposDisponibles precio fecha
     duracionHoras duracionMinutos experienciaPrevia scheduleData
-    headerType headerValue
+    headerType headerValue headerImagePosition direccionId
     espacio { id nombre profesional { uid nombre } }
   }
 }

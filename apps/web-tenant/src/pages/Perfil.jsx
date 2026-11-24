@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { fetchProfile, updateUserProfile, changePassword, changeEmail, authErrorMsg } from '../services/userAuth';
 import Layout from '../components/Layout';
+import FloatingSave from '../components/FloatingSave';
 import BirthDatePicker from '../components/BirthDatePicker';
 
 const INPUT_CLS =
@@ -218,7 +219,7 @@ export default function Perfil() {
         <section className="bg-surface-100 border border-border rounded-xl p-6 mb-6">
           <h2 className="font-display text-lg text-ink mb-4">Datos personales</h2>
 
-          <form onSubmit={handleSaveProfile} className="flex flex-col gap-4">
+          <form id="form-perfil" onSubmit={handleSaveProfile} className="flex flex-col gap-4">
             <div>
               <label className={LABEL_CLS}>Nombre completo</label>
               <input type="text" value={nombre} onChange={e => setNombre(e.target.value)} required className={INPUT_CLS} placeholder="Tu nombre" />
@@ -257,12 +258,8 @@ export default function Perfil() {
 
             {profileError && <p className="text-xs text-danger">{profileError}</p>}
             {profileSaved && <SuccessBanner text="¡Datos guardados!" />}
-
-            <button type="submit" disabled={savingProfile}
-              className="w-fit px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-strong transition-colors disabled:opacity-50">
-              {savingProfile ? 'Guardando…' : 'Guardar cambios'}
-            </button>
           </form>
+          <FloatingSave saving={savingProfile} saved={profileSaved} type="submit" form="form-perfil" label="Guardar cambios" />
         </section>
 
         {/* ── Cambiar contraseña (solo email auth) ── */}

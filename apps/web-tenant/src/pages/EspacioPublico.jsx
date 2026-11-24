@@ -627,7 +627,7 @@ function googleCalendarUrl(workshop) {
     action:  'TEMPLATE',
     text:    workshop.nombre,
     dates:   `${fmt(start)}/${fmt(end)}`,
-    details: workshop.descripcion ?? '',
+    details: workshop.descripcion ? stripHtml(workshop.descripcion) : '',
   });
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
@@ -698,6 +698,53 @@ function ConfirmationView({ reservas, workshop, brand, onBack }) {
           </a>
         )}
       </div>
+    </div>
+  );
+}
+
+// ── Descripción con preview + "ver más" ──────────────────────────────────────
+
+function stripHtml(html) {
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  return div.textContent || div.innerText || '';
+}
+
+function DescripcionPreview({ html, inkMuted, brand }) {
+  const [expanded, setExpanded] = useState(false);
+  const plainText = stripHtml(html);
+  const isLong = plainText.length > 120;
+  const isRich = /<[a-z][\s\S]*>/i.test(html);
+
+  if (!isLong && !isRich) {
+    return <p className="text-xs leading-relaxed mt-0.5" style={{ color: inkMuted }}>{plainText}</p>;
+  }
+
+  return (
+    <div className="mt-0.5">
+      {!expanded ? (
+        <>
+          <p className="text-xs leading-relaxed" style={{ color: inkMuted }}>
+            {plainText.slice(0, 120).trimEnd()}…
+          </p>
+          <button type="button" onClick={e => { e.stopPropagation(); setExpanded(true); }}
+            className="text-xs font-semibold mt-1" style={{ color: brand.primary }}>
+            Ver más
+          </button>
+        </>
+      ) : (
+        <>
+          <div
+            className="prose-compact text-xs leading-relaxed"
+            style={{ color: inkMuted }}
+            dangerouslySetInnerHTML={{ __html: html }}
+          />
+          <button type="button" onClick={e => { e.stopPropagation(); setExpanded(false); }}
+            className="text-xs font-semibold mt-1" style={{ color: brand.primary }}>
+            Ver menos
+          </button>
+        </>
+      )}
     </div>
   );
 }
@@ -788,11 +835,7 @@ function WorkshopCard({ w, brand, onReservar, bookedCount, direcciones }) {
         <p className="text-xs font-mono capitalize" style={{ color: inkMuted }}>
           {formatFecha(w.fecha)} · {formatHora(w.fecha)}
         </p>
-        {w.descripcion && (
-          <p className="text-xs leading-relaxed mt-0.5" style={{ color: inkMuted }}>
-            {w.descripcion.length > 90 ? w.descripcion.slice(0, 90).trimEnd() + '…' : w.descripcion}
-          </p>
-        )}
+        {w.descripcion && <DescripcionPreview html={w.descripcion} inkMuted={inkMuted} brand={brand} />}
         {w.experienciaPrevia === true && (
           <span className="inline-flex items-center gap-1 text-xs font-semibold bg-amber-100 text-amber-800 border border-amber-300 rounded-full px-2.5 py-0.5 self-start">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -1089,9 +1132,9 @@ export default function EspacioPublico({ overrideEspacioId }) {
         />
       )}
 
-      {/* Hamburger menu overlay */}
+      {/* Hamburger menu overlay (mobile only) */}
       {menuOpen && (
-        <div className="fixed inset-0 z-50 flex">
+        <div className="fixed inset-0 z-50 flex md:hidden">
           <div className="absolute inset-0 bg-black/40" onClick={() => setMenuOpen(false)} />
           <div className="relative w-64 max-w-[80vw] bg-white h-full shadow-xl flex flex-col">
             <div className="flex items-center justify-between px-5 py-4 border-b border-[#EDE8DE]">
@@ -1153,10 +1196,11 @@ export default function EspacioPublico({ overrideEspacioId }) {
       {/* Hero */}
       <div className="w-full pt-4 pb-10 px-4" style={{ backgroundColor: brand.primary }}>
         {/* Nav usuario */}
-        <div className="max-w-2xl mx-auto flex items-center justify-between mb-6">
+        <div className="max-w-4xl mx-auto flex items-center justify-between mb-6">
+          {/* Hamburger: mobile only */}
           <button
             onClick={() => setMenuOpen(true)}
-            className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+            className="p-2 rounded-lg hover:bg-white/10 transition-colors md:hidden"
             style={{ color: headerText }}
             aria-label="Abrir menú"
           >
@@ -1164,6 +1208,37 @@ export default function EspacioPublico({ overrideEspacioId }) {
               <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
             </svg>
           </button>
+          {/* Desktop navbar */}
+          <nav className="hidden md:flex items-center gap-1">
+            <button
+              onClick={() => setView('talleres')}
+              className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+              style={{ color: headerText, backgroundColor: view === 'talleres' ? 'rgba(255,255,255,0.15)' : 'transparent' }}
+            >
+              Eventos
+            </button>
+            <button
+              onClick={() => setView('mis-reservas')}
+              className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+              style={{ color: headerText, backgroundColor: view === 'mis-reservas' ? 'rgba(255,255,255,0.15)' : 'transparent' }}
+            >
+              Mis reservas
+            </button>
+            <button
+              onClick={() => setShowMisDatos(true)}
+              className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors hover:bg-white/10"
+              style={{ color: headerText }}
+            >
+              Mis datos
+            </button>
+            <a
+              href="https://www.antologico.app/inicio"
+              className="px-3 py-1.5 rounded-lg text-sm font-medium transition-colors hover:bg-white/10"
+              style={{ color: headerText, opacity: 0.8 }}
+            >
+              Mis espacios
+            </a>
+          </nav>
           {currentUser === undefined ? <div /> : currentUser ? (
             <div className="flex items-center gap-3">
               <span className="text-sm font-medium drop-shadow" style={{ color: headerText, opacity: 0.9 }}>
@@ -1183,7 +1258,7 @@ export default function EspacioPublico({ overrideEspacioId }) {
             </button>
           )}
         </div>
-        <div className="max-w-2xl mx-auto text-center">
+        <div className="max-w-4xl mx-auto text-center">
           {espacio.logoUrl ? (
             <div className={`w-20 h-20 mx-auto mb-5 overflow-hidden shadow-lg shrink-0 ${
               espacio.logoShape === 'round'   ? 'rounded-full border-2 border-white/30' :
@@ -1218,7 +1293,7 @@ export default function EspacioPublico({ overrideEspacioId }) {
 
       {/* Vista: Talleres */}
       {view === 'talleres' && (
-        <div className="max-w-2xl mx-auto px-4 py-10">
+        <div className="max-w-4xl mx-auto px-4 py-10">
           {upcoming.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-[#6B5F4C]">No hay talleres disponibles en este momento.</p>
@@ -1226,7 +1301,7 @@ export default function EspacioPublico({ overrideEspacioId }) {
           ) : (
             <>
               <h2 className="font-display text-xl mb-5" style={{ color: contrastText(brand.bg) }}>Talleres disponibles</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {upcoming.map(w => (
                   <WorkshopCard key={w.id} w={w} brand={brand} onReservar={handleReservar} bookedCount={bookedCounts[w.id] ?? 0} direcciones={espacio.direcciones ?? []} />
                 ))}
@@ -1238,7 +1313,7 @@ export default function EspacioPublico({ overrideEspacioId }) {
 
       {/* Vista: Mis reservas (solo de este espacio) */}
       {view === 'mis-reservas' && (
-        <div className="max-w-2xl mx-auto px-4 py-10">
+        <div className="max-w-4xl mx-auto px-4 py-10">
           <h2 className="font-display text-xl mb-4" style={{ color: contrastText(brand.bg) }}>Mis Reservas en {espacio?.nombre ?? 'este espacio'}</h2>
           {!currentUser ? (
             <div className="text-center py-12">

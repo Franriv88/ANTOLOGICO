@@ -1,8 +1,42 @@
+import { useEffect, useRef, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 
 const BTN = 'p-1.5 rounded text-ink-muted hover:bg-surface-100 hover:text-ink transition-colors disabled:opacity-30';
+
+const EMOJI_LIST = [
+  '😊','😍','🎉','🔥','✨','💪','👏','🙌','❤️','💡',
+  '🎨','🎵','📚','✅','⭐','🌟','💯','🏆','🎯','🚀',
+  '👋','🤩','😎','🥳','💐','🌈','☀️','🧘','🎸','🎹',
+  '📸','🖌️','✏️','📝','💻','🎤','🧁','☕','🍷','🌿',
+];
+
+function EmojiPicker({ editor }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!open) return;
+    function outside(e) { if (ref.current && !ref.current.contains(e.target)) setOpen(false); }
+    document.addEventListener('mousedown', outside);
+    return () => document.removeEventListener('mousedown', outside);
+  }, [open]);
+  return (
+    <div ref={ref} className="relative">
+      <button type="button" title="Emoji" onClick={() => setOpen(!open)} className={open ? BTN.replace('text-ink-muted', 'text-primary bg-primary/10') : BTN}>
+        <span className="text-sm leading-none" style={{ fontSize: 15 }}>😊</span>
+      </button>
+      {open && (
+        <div className="absolute top-full left-0 mt-1 z-20 bg-white border border-border rounded-lg shadow-lg p-2 w-56 grid grid-cols-8 gap-0.5">
+          {EMOJI_LIST.map(e => (
+            <button key={e} type="button" onClick={() => { editor.chain().focus().insertContent(e).run(); setOpen(false); }}
+              className="w-7 h-7 flex items-center justify-center rounded hover:bg-surface-100 text-base cursor-pointer">{e}</button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 const BTN_ACTIVE = 'p-1.5 rounded bg-primary/10 text-primary transition-colors';
 
 function ToolbarButton({ editor, action, isActive, icon, title }) {
@@ -114,6 +148,9 @@ export default function RichTextEditor({ content, onChange, placeholder }) {
           title="Línea separadora"
           icon='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/></svg>'
         />
+
+        <div className="w-px h-5 bg-border mx-1" />
+        <EmojiPicker editor={editor} />
       </div>
 
       {/* Editor */}

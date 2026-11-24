@@ -63,6 +63,7 @@ type Espacio @table(name: "espacios", singular: "espacio", plural: "espacios")
   logoUrl:                String     # TEXT — permite base64 de logo comprimido
   logoShape:              String     @col(dataType: "varchar(20)")   # 'round' | 'rounded' | 'square'
   logoScale:              Float                                       # zoom del logo 0.4–2.0
+  logoPosition:           Any                                        # JSON: { x: number, y: number } para encuadre
   brandColors:            Any        # JSON: array de hex strings, ej. ["#E85D4A","#3B82F6"]
   brandFont:              String     @col(dataType: "varchar(100)")  # Google Font name
   redesSociales:          Any        # JSON: { style, minimalColor, links: { instagram, … } }
@@ -118,6 +119,8 @@ type Workshop @table(name: "workshops")
   headerType:        HeaderType!    @default(value: COLOR)
   headerValue:       String         @col(dataType: "text")
   metodosPago:       Any            # JSON: array de IDs, ej. ["efectivo","mercadopago","link-uuid"]
+  direccionId:       String         @col(dataType: "varchar(100)")  # UUID de la dirección del espacio
+  headerImagePosition: Any          # JSON: { x: number, y: number }
   estado:            EstadoWorkshop! @default(value: BORRADOR)
   esBorrador:        Boolean! @default(value: false)
   createdAt:        Timestamp! @default(expr: "request.time")
@@ -146,6 +149,8 @@ type Reserva @table(name: "reservas", singular: "reserva", plural: "reservas") {
   estado:         EstadoReserva! @default(value: PENDIENTE)
   metodoPago:     MetodoPago
   estadoPago:     EstadoPago     @default(value: PENDIENTE)
+  telefono:       String     @col(dataType: "varchar(50)")
+  cantidad:       Int        @default(value: 1)
   comprobanteUrl: String     @col(dataType: "varchar(500)")
   pagoExternoId:  String     @col(dataType: "varchar(255)")
   createdAt:      Timestamp! @default(expr: "request.time")

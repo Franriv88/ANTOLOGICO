@@ -119,6 +119,7 @@ const FEATURE_ICONS = {
 function AuthSheet({ mode, onClose, onSuccess }) {
   const [email,      setEmail]      = useState('');
   const [password,   setPassword]   = useState('');
+  const [confirmPwd, setConfirmPwd] = useState('');
   const [nombre,     setNombre]     = useState('');
   const [telefono,   setTelefono]   = useState('');
   const [loading,    setLoading]    = useState(false);
@@ -152,6 +153,7 @@ function AuthSheet({ mode, onClose, onSuccess }) {
         onSuccess(await loginEmail(email, password));
       } else {
         if (!nombre.trim()) { setError('El nombre es requerido'); setLoading(false); return; }
+        if (password !== confirmPwd) { setError('Las contraseñas no coinciden'); setLoading(false); return; }
         onSuccess(await register(email, password, nombre.trim(), telefono.trim()));
       }
       animateClose();
@@ -248,8 +250,26 @@ function AuthSheet({ mode, onClose, onSuccess }) {
                     </button>
                   )}
                 </div>
+                {mode === 'register' && (
+                  <div>
+                    <label className={LABEL}>Confirmar contraseña *</label>
+                    <input type="password" value={confirmPwd} onChange={e => setConfirmPwd(e.target.value)} placeholder="Repetí tu contraseña" className={INPUT + (confirmPwd && password !== confirmPwd ? ' !border-red-400/70 !ring-red-400/40' : '')} />
+                    {confirmPwd && password !== confirmPwd && (
+                      <p className="text-xs text-red-200 mt-1.5 flex items-center gap-1.5">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                        Las contraseñas no coinciden
+                      </p>
+                    )}
+                    {confirmPwd && password === confirmPwd && password.length >= 6 && (
+                      <p className="text-xs text-green-200 mt-1.5 flex items-center gap-1.5">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        Las contraseñas coinciden
+                      </p>
+                    )}
+                  </div>
+                )}
                 {error && <p className="text-xs text-red-200 bg-red-900/30 rounded-lg px-3 py-2 clear-both">{error}</p>}
-                <button type="submit" disabled={!!loading}
+                <button type="submit" disabled={!!loading || (mode === 'register' && password !== confirmPwd)}
                   className="w-full py-2.5 rounded-xl text-sm font-bold bg-white text-[#C4412F] disabled:opacity-50 hover:bg-white/90 transition-colors mt-1 clear-both shadow-lg">
                   {loading === 'form'
                     ? (mode === 'login' ? 'Ingresando…' : 'Creando cuenta…')
