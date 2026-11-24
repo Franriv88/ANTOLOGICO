@@ -254,9 +254,9 @@ export default function EspacioScreen({ route, navigation }) {
         } catch (_) {}
       }
 
-      const follows = await getFollows();
+      const follows = await getFollows(user?.uid);
       if (autoFollow && !follows.includes(realId)) {
-        await saveFollows([...follows, realId]);
+        await saveFollows([...follows, realId], user?.uid);
         setFollowing(true);
       } else {
         setFollowing(follows.includes(realId));
@@ -274,14 +274,14 @@ export default function EspacioScreen({ route, navigation }) {
   async function toggleFollow() {
     const id = espacio?.id;
     if (!id) return;
-    const follows = await getFollows();
+    const follows = await getFollows(user?.uid);
     let next;
     if (following) {
       next = follows.filter(fid => fid !== id);
     } else {
       next = [...follows, id];
     }
-    await saveFollows(next);
+    await saveFollows(next, user?.uid);
     setFollowing(!following);
   }
 
