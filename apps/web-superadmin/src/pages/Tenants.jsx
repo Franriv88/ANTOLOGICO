@@ -414,6 +414,7 @@ export default function Tenants() {
   const [blockTarget,  setBlockTarget]  = useState(null);
   const [resetTarget,  setResetTarget]  = useState(null);
   const [trialTarget,  setTrialTarget]  = useState(null);
+  const [trialDaysInput, setTrialDaysInput] = useState(14);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [detailTarget, setDetailTarget] = useState(null);
 
@@ -437,13 +438,16 @@ export default function Tenants() {
   async function confirmResetTrial() {
     if (!trialTarget) return;
     const { key, espacios } = trialTarget;
+    const dias = Math.max(1, Math.min(365, trialDaysInput || 14));
     setSaving(key);
-    const now = await tenantsApi.resetTrial(espacios.map(e => e.id));
+    const fakeStart = new Date(Date.now() - (14 - dias) * 86_400_000).toISOString();
+    await tenantsApi.resetTrial(espacios.map(e => e.id), fakeStart);
     setList(prev => prev.map(t =>
-      espacios.some(e => e.id === t.id) ? { ...t, trialStartedAt: now } : t
+      espacios.some(e => e.id === t.id) ? { ...t, trialStartedAt: fakeStart } : t
     ));
     setSaving(null);
     setTrialTarget(null);
+    setTrialDaysInput(14);
   }
 
   async function confirmBloqueado() {
@@ -514,12 +518,23 @@ export default function Tenants() {
 
       {trialTarget && (
         <ConfirmModal
-          title="¿Resetear período de prueba?"
-          text={`Se reiniciará la prueba gratuita de "${trialTarget.primary.nombre}" (${trialTarget.espacios.length} espacio${trialTarget.espacios.length > 1 ? 's' : ''}). El contador empezará desde hoy.`}
-          confirmText="Sí, resetear"
+          title={`¿Extender demo de "${trialTarget.primary.nombre}"?`}
+          text={`Se le otorgarán días de demo gratuita a este espacio (${trialTarget.espacios.length} espacio${trialTarget.espacios.length > 1 ? 's' : ''}).`}
+          confirmText={`Otorgar ${trialDaysInput} día${trialDaysInput !== 1 ? 's' : ''}`}
           onConfirm={confirmResetTrial}
-          onClose={() => setTrialTarget(null)}
-        />
+          onClose={() => { setTrialTarget(null); setTrialDaysInput(14); }}
+        >
+          <label className="block text-xs font-medium text-ink-muted mb-1">Días de demo</label>
+          <input
+            type="number"
+            min={1}
+            max={365}
+            value={trialDaysInput}
+            onChange={e => setTrialDaysInput(Number(e.target.value) || '')}
+            className="w-full px-3 py-2 rounded-lg border border-border bg-surface-0 text-ink text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+          />
+          <p className="text-xs text-ink-muted mt-1.5">El contador empezará desde hoy.</p>
+        </ConfirmModal>
       )}
 
       {deleteTarget && (
@@ -708,9 +723,9 @@ export default function Tenants() {
                       <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-2">
                           <button
-                            onClick={() => setTrialTarget(group)}
-                            disabled={isSaving || !!primary.planId}
-                            title={primary.planId ? 'Tiene plan activo' : 'Resetear período de prueba'}
+                            onClick={() => { setTrialDaysInput(14); setTrialTarget(group); }}
+                            disabled={isSaving}
+                            title="Extender demo"
                             className="w-16 text-center text-xs py-1 border border-border rounded text-ink-muted hover:text-ink hover:bg-surface-200 transition-colors disabled:opacity-30"
                           >
                             ↺ Trial

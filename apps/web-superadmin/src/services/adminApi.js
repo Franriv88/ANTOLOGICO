@@ -362,7 +362,7 @@ export const usuarios = {
 // ─── Métricas (Data Connect) ────────────────────────────────────────────────
 export const metricas = {
   workshops: async () => {
-    const { data } = await adminListAllWorkshops();
+    const { data } = await adminListAllWorkshops({ fetchPolicy: 'SERVER_ONLY' });
     return (data.workshops ?? []).map(w => ({
       id: w.id,
       nombre: w.nombre,
@@ -378,7 +378,7 @@ export const metricas = {
     }));
   },
   reservas: async () => {
-    const { data } = await adminListAllReservas();
+    const { data } = await adminListAllReservas({ fetchPolicy: 'SERVER_ONLY' });
     return (data.reservas ?? []).map(r => ({
       id: r.id,
       estado: r.estado,
@@ -457,12 +457,12 @@ export const tenants = {
     });
   },
 
-  resetTrial: async (espacioIds) => {
-    const now = new Date().toISOString();
+  resetTrial: async (espacioIds, trialStartedAt) => {
+    const ts = trialStartedAt ?? new Date().toISOString();
     await Promise.all(
-      espacioIds.map(id => adminUpdateEspacio({ id, trialStartedAt: now }))
+      espacioIds.map(id => adminUpdateEspacio({ id, trialStartedAt: ts }))
     );
-    return now;
+    return ts;
   },
 
   remove: async (espacioIds, userId) => {
@@ -497,7 +497,7 @@ export const tenants = {
 export const adminEspacio = {
   get: async (adminUid) => {
     try {
-      const { data } = await adminListAllEspacios();
+      const { data } = await adminListAllEspacios({ fetchPolicy: 'SERVER_ONLY' });
       const list = data.espacios ?? [];
       return list.find(e => e.profesional?.uid === adminUid && e.isSuperAdmin) || null;
     } catch {
@@ -732,7 +732,7 @@ export const migration = {
   },
 
   deleteEspacio8: async () => {
-    const { data } = await adminListAllEspacios();
+    const { data } = await adminListAllEspacios({ fetchPolicy: 'SERVER_ONLY' });
     const espacio8 = (data.espacios ?? []).find(e => e.nombre === '8');
     if (!espacio8) throw new Error('Espacio "8" no encontrado en Data Connect');
     await adminDeleteEspacio({ id: espacio8.id });
