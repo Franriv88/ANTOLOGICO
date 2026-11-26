@@ -64,7 +64,7 @@ export const reservas = {
       workshop:    r.workshop,
     }));
   },
-  create: async (workshopId, { nombre, email, metodoPago, mpPaymentId }) => {
+  create: async (workshopId, { nombre, email, metodoPago, mpPaymentId, telefono, grupoId }) => {
     const estado = (metodoPago === 'MERCADO_PAGO') ? 'CONFIRMADA' : 'PENDIENTE';
     const estadoPago = (metodoPago === 'MERCADO_PAGO') ? 'PAGADO' : 'PENDIENTE';
     const result = await createReservaConUsuario({
@@ -75,6 +75,7 @@ export const reservas = {
       metodoPago:   metodoPago || null,
       estadoPago,
       pagoExternoId: mpPaymentId || null,
+      telefono:     telefono || null,
     });
     if (result.errors?.length) throw new Error(result.errors.map(e => e.message).join(' | '));
     return {

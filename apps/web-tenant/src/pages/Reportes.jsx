@@ -36,7 +36,7 @@ function weekData(reservas, wsMap) {
     const end   = new Date(start); end.setDate(start.getDate() + 1);
     const value = reservas
       .filter(r => r.estadoPago === 'PAGADO' && r.estado === 'CONFIRMADA')
-      .filter(r => { const d = new Date(r.fecha_reserva); return d >= start && d < end; })
+      .filter(r => { const d = new Date(r.fechaReserva); return d >= start && d < end; })
       .reduce((s, r) => s + (wsMap[r.workshopId]?.precio ?? 0), 0);
     return { label, value };
   });
@@ -49,7 +49,7 @@ function monthData(reservas, wsMap) {
     label,
     value: reservas
       .filter(r => r.estadoPago === 'PAGADO' && r.estado === 'CONFIRMADA')
-      .filter(r => { const d = new Date(r.fecha_reserva); return d.getFullYear() === year && d.getMonth() === m; })
+      .filter(r => { const d = new Date(r.fechaReserva); return d.getFullYear() === year && d.getMonth() === m; })
       .reduce((s, r) => s + (wsMap[r.workshopId]?.precio ?? 0), 0),
   }));
 }
@@ -62,7 +62,7 @@ function yearData(reservas, wsMap, startYear) {
     label: String(y),
     value: reservas
       .filter(r => r.estadoPago === 'PAGADO' && r.estado === 'CONFIRMADA')
-      .filter(r => new Date(r.fecha_reserva).getFullYear() === y)
+      .filter(r => new Date(r.fechaReserva).getFullYear() === y)
       .reduce((s, r) => s + (wsMap[r.workshopId]?.precio ?? 0), 0),
   }));
 }
@@ -74,11 +74,11 @@ function filterByPeriod(reservas, period) {
   if (period === 'week') {
     const mon = mondayOfWeek();
     const sun = new Date(mon); sun.setDate(mon.getDate() + 7);
-    return reservas.filter(r => { const d = new Date(r.fecha_reserva); return d >= mon && d < sun; });
+    return reservas.filter(r => { const d = new Date(r.fechaReserva); return d >= mon && d < sun; });
   }
   if (period === 'month') {
     const year = now.getFullYear();
-    return reservas.filter(r => new Date(r.fecha_reserva).getFullYear() === year);
+    return reservas.filter(r => new Date(r.fechaReserva).getFullYear() === year);
   }
   return reservas; // 'year' = all time
 }

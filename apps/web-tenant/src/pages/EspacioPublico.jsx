@@ -51,12 +51,13 @@ function parseBrand(espacio) {
   const bc = espacio?.brandColors;
   const palette = Array.isArray(bc) ? bc : (bc?.palette ?? []);
   const roles   = (!bc || Array.isArray(bc)) ? {} : (bc.roles ?? {});
-  const primary  = roles.primary  || palette[0] || '#E85D4A';
-  const button   = roles.button   || primary;
-  const bg       = roles.bg       || '#FAF8F4';
-  const card     = roles.card     || '#ffffff';
-  const textCard = roles.textCard || (contrastText(card) === '#ffffff' ? '#f0f0f0' : '#2B241A');
-  return { primary, button, bg, card, textCard };
+  const primary   = roles.primary   || palette[0] || '#E85D4A';
+  const secondary = roles.secondary || palette[1] || '#B98527';
+  const button    = roles.button    || primary;
+  const bg        = roles.bg        || '#FAF8F4';
+  const card      = roles.card      || '#ffffff';
+  const textCard  = roles.textCard  || (contrastText(card) === '#ffffff' ? '#f0f0f0' : '#2B241A');
+  return { primary, secondary, button, bg, card, textCard };
 }
 
 function contrastText(hex) {
@@ -713,37 +714,39 @@ function stripHtml(html) {
 function DescripcionPreview({ html, inkMuted, brand }) {
   const [expanded, setExpanded] = useState(false);
   const plainText = stripHtml(html);
-  const isLong = plainText.length > 120;
-  const isRich = /<[a-z][\s\S]*>/i.test(html);
-
-  if (!isLong && !isRich) {
-    return <p className="text-xs leading-relaxed mt-0.5" style={{ color: inkMuted }}>{plainText}</p>;
-  }
+  if (!plainText) return null;
 
   return (
-    <div className="mt-0.5">
+    <div className="mt-1">
+      <style>{`
+        @keyframes desc-pulse-shadow {
+          0%, 100% { box-shadow: 0 2px 8px ${brand.secondary}14; }
+          50% { box-shadow: 0 2px 12px ${brand.secondary}59; }
+        }
+        .desc-pulse-btn { animation: desc-pulse-shadow 3s ease-in-out infinite; }
+      `}</style>
       {!expanded ? (
-        <>
-          <p className="text-xs leading-relaxed" style={{ color: inkMuted }}>
-            {plainText.slice(0, 120).trimEnd()}…
-          </p>
-          <button type="button" onClick={e => { e.stopPropagation(); setExpanded(true); }}
-            className="text-xs font-semibold mt-1" style={{ color: brand.primary }}>
-            Ver más
-          </button>
-        </>
+        <button
+          type="button"
+          onClick={e => { e.stopPropagation(); setExpanded(true); }}
+          className="desc-pulse-btn inline-flex items-center gap-1.5 border rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors hover:bg-black/[0.03]"
+          style={{ borderColor: brand.secondary + '40', color: brand.secondary }}
+        >
+          ¿Qué aprenderás? <span className="text-[10px]">▾</span>
+        </button>
       ) : (
-        <>
+        <div className="border rounded-lg p-3" style={{ borderColor: brand.secondary + '20' }}>
+          <p className="text-xs font-semibold mb-1.5" style={{ color: brand.secondary }}>¿Qué aprenderás?</p>
           <div
             className="prose-compact text-xs leading-relaxed"
             style={{ color: inkMuted }}
             dangerouslySetInnerHTML={{ __html: html }}
           />
           <button type="button" onClick={e => { e.stopPropagation(); setExpanded(false); }}
-            className="text-xs font-semibold mt-1" style={{ color: brand.primary }}>
+            className="text-xs font-semibold mt-2" style={{ color: brand.secondary }}>
             Ver menos
           </button>
-        </>
+        </div>
       )}
     </div>
   );
@@ -779,7 +782,7 @@ function WorkshopCard({ w, brand, onReservar, bookedCount, direcciones }) {
       {/* Header: imagen grande con elementos flotantes O franja fina + info en body */}
       {hasImage ? (
         <div
-          className="relative h-36 shrink-0"
+          className="relative h-40 shrink-0"
           style={{
             backgroundColor: headerBg,
             backgroundImage: `url(${headerImg})`,
@@ -904,6 +907,7 @@ export default function EspacioPublico({ overrideEspacioId }) {
   const [showMisDatos,   setShowMisDatos]   = useState(false);
   const [view,           setView]           = useState('talleres'); // 'talleres' | 'mis-reservas'
   const [cancelConfirm,  setCancelConfirm]  = useState(null); // reservaId en espera de confirmación
+  const [mpError,        setMpError]        = useState('');
   const espacioReservas = userReservas.filter(r => r.espacio?.id === espacioId || r.workshop?.espacioId === espacioId);
 
   const wsRealtime = useRealtimeQuery(listPublicWorkshopsByEspacioRef, { espacioId }, !!espacioId);
@@ -933,66 +937,81 @@ export default function EspacioPublico({ overrideEspacioId }) {
     }).catch(() => {});
   }, []);
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const mpStatus = params.get('mp_status');
-    if (!mpStatus) return;
+  // Capture MP return params once on mount (before any re-render cleans the URL)
+  const [mpReturn] = useState(() => {
+    const p = new URLSearchParams(window.location.search);
+    const st = p.get('mp_status');
+    if (!st) return null;
+    const pid = p.get('payment_id') || p.get('collection_id') || '';
     const url = new URL(window.location);
-    url.searchParams.delete('mp_status');
-    url.searchParams.delete('collection_id');
-    url.searchParams.delete('collection_status');
-    url.searchParams.delete('payment_id');
-    url.searchParams.delete('status');
-    url.searchParams.delete('external_reference');
-    url.searchParams.delete('payment_type');
-    url.searchParams.delete('merchant_order_id');
-    url.searchParams.delete('preference_id');
-    url.searchParams.delete('site_id');
-    url.searchParams.delete('processing_mode');
-    url.searchParams.delete('merchant_account_id');
+    ['mp_status','collection_id','collection_status','payment_id','status',
+     'external_reference','payment_type','merchant_order_id','preference_id',
+     'site_id','processing_mode','merchant_account_id',
+    ].forEach(k => url.searchParams.delete(k));
     window.history.replaceState({}, '', url);
+    return { status: st, paymentId: pid };
+  });
 
+  async function completeMpBooking(authUser) {
     const raw = localStorage.getItem('mp_pending_booking');
+    console.log('[MP-debug] completeMpBooking called, pending:', !!raw, 'authUser:', authUser?.uid);
     if (!raw) return;
     const pending = JSON.parse(raw);
-    localStorage.removeItem('mp_pending_booking');
-    const paymentId = params.get('payment_id') || params.get('collection_id') || '';
-
-    if (mpStatus === 'approved') {
-      (async () => {
-        try {
-          const ws = workshops.find(w => w.id === pending.workshopId) ?? await workshopsApi.get(pending.workshopId);
-          const grupoId = pending.grupoId || (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
-          const reservas = await Promise.all(
-            pending.nombres.map(n => reservasApi.create(pending.workshopId, {
-              nombre:      n,
-              email:       pending.email,
-              telefono:    pending.telefono,
-              metodoPago:  'MERCADO_PAGO',
-              mpPaymentId: paymentId,
-              grupoId,
-            }))
-          );
-          if (ws) {
-            setWorkshops(prev => prev.map(w => w.id === ws.id ? { ...w, cuposDisponibles: Math.max(0, w.cuposDisponibles - reservas.length) } : w));
-            setConfirmed({ reservas, workshop: ws });
-
-            httpsCallable(functions, 'notifyTenantNewBooking')({
-              espacioId,
-              tenantUid: espacio?.profesional?.uid,
-              workshopName: ws.nombre,
-              clientName: pending.nombres[0],
-              clientEmail: pending.email,
-              clientPhone: pending.telefono || '',
-              metodoPago: 'MERCADO_PAGO',
-              cantidad: reservas.length,
-            }).catch(() => {});
-          }
-          if (currentUser) loadUserReservas(currentUser.user?.email ?? currentUser.profile?.email ?? '');
-        } catch { /* best effort */ }
-      })();
+    try {
+      const ws = workshops.find(w => w.id === pending.workshopId) ?? await workshopsApi.get(pending.workshopId);
+      const grupoId = pending.grupoId || (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+      const reservas = await Promise.all(
+        pending.nombres.map(n => reservasApi.create(pending.workshopId, {
+          nombre:      n,
+          email:       pending.email,
+          telefono:    pending.telefono,
+          metodoPago:  'MERCADO_PAGO',
+          mpPaymentId: mpReturn?.paymentId || '',
+          grupoId,
+        }))
+      );
+      console.log('[MP-debug] Reservas creadas OK:', reservas.length);
+      localStorage.removeItem('mp_pending_booking');
+      if (ws) {
+        setWorkshops(prev => prev.map(w => w.id === ws.id ? { ...w, cuposDisponibles: Math.max(0, w.cuposDisponibles - reservas.length) } : w));
+        setConfirmed({ reservas, workshop: ws });
+        httpsCallable(functions, 'notifyTenantNewBooking')({
+          espacioId,
+          tenantUid: espacio?.profesional?.uid,
+          workshopName: ws.nombre,
+          clientName: pending.nombres[0],
+          clientEmail: pending.email,
+          clientPhone: pending.telefono || '',
+          metodoPago: 'MERCADO_PAGO',
+          cantidad: reservas.length,
+        }).catch(() => {});
+      }
+      if (authUser) loadUserReservas(authUser.email ?? '');
+    } catch (err) {
+      console.error('[MP-debug] Error creando reserva post-MP:', err?.message, err?.code, err);
+      setMpError('El pago fue aprobado pero hubo un error al registrar la reserva. Contactá al organizador.');
     }
-  }, [workshops.length]);
+  }
+
+  useEffect(() => {
+    if (!mpReturn) return;
+    console.log('[MP-debug] mpReturn:', mpReturn, 'currentUser:', currentUser === undefined ? 'loading' : currentUser === null ? 'guest' : 'logged-in', 'workshops:', workshops.length, 'pending:', !!localStorage.getItem('mp_pending_booking'));
+    if (currentUser === undefined) return; // auth still loading
+    if (!workshops.length) return;
+
+    if (mpReturn.status !== 'approved') {
+      localStorage.removeItem('mp_pending_booking');
+      return;
+    }
+
+    if (currentUser === null) {
+      // Session lost after MP redirect — need re-login
+      setShowAuth(true);
+      return;
+    }
+
+    completeMpBooking(currentUser.user);
+  }, [workshops.length, currentUser, mpReturn]);
 
   useEffect(() => {
     return subscribeAuth((user, profile) => {
@@ -1033,7 +1052,12 @@ export default function EspacioPublico({ overrideEspacioId }) {
   }
 
   function handleReservar(w) {
-    if (currentUser === undefined) return; // still loading auth state
+    if (currentUser === undefined) return;
+    if (!currentUser) {
+      setPendingWorkshop(w);
+      setShowAuth(true);
+      return;
+    }
     setBooking(w);
   }
 
@@ -1108,6 +1132,13 @@ export default function EspacioPublico({ overrideEspacioId }) {
 
   return (
     <div className="min-h-screen pb-28" style={{ backgroundColor: brand.bg }}>
+      {/* MP error banner */}
+      {mpError && (
+        <div className="fixed top-0 inset-x-0 z-50 bg-red-600 text-white text-sm text-center px-4 py-3">
+          {mpError}
+          <button onClick={() => setMpError('')} className="ml-3 underline font-medium">Cerrar</button>
+        </div>
+      )}
       {/* Modals */}
       {showAuth && <AuthModal brand={brand} onClose={() => setShowAuth(false)} onSuccess={handleAuthSuccess} />}
       {booking && (

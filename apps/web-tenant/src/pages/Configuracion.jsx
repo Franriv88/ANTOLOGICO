@@ -9,7 +9,7 @@ import { RUBROS, fetchRubros } from '../lib/rubros';
 import { httpsCallable } from 'firebase/functions';
 import { doc, getDoc, updateDoc, increment } from 'firebase/firestore';
 import { functions, firestore } from '../lib/firebase';
-import { SOCIAL_NETWORKS, SocialIcon, stripPrefix, addPrefix } from '../components/SocialIcons';
+import { SOCIAL_NETWORKS, SocialIcon, SocialIconsRow, stripPrefix, addPrefix } from '../components/SocialIcons';
 import { IconAntologico } from '../components/LogoAntologico';
 import FloatingSave from '../components/FloatingSave';
 import { usePlanes, precioConPeriodo, proximaRenovacion, formatFechaLarga } from '../hooks/usePlanes';
@@ -206,7 +206,7 @@ const MP_WORKER_URL = 'https://antologico-mp.franriv2388.workers.dev';
 
 // ── Brand Preview ─────────────────────────────────────────────────────────────
 
-function BrandPreview({ palette, roles, fontPair, logoData, logoShape, logoScale, espacioName }) {
+function BrandPreview({ palette, roles, fontPair, logoData, logoShape, logoScale, espacioName, redesSociales }) {
   const primary      = isValidColor(roles.primary)      ? roles.primary      : (palette[0] || '#E85D4A');
   const secondary    = isValidColor(roles.secondary)    ? roles.secondary    : (palette[1] || '#B98527');
   const button       = isValidColor(roles.button)       ? roles.button       : primary;
@@ -251,9 +251,17 @@ function BrandPreview({ palette, roles, fontPair, logoData, logoShape, logoScale
             <p style={{ fontFamily: displayFont, color: textCard }} className="font-bold text-sm leading-tight mb-0.5">
               Taller de acuarela
             </p>
-            <p style={{ color: textCard, opacity: 0.65, fontSize: '10px' }} className="mb-2">
+            <p style={{ color: textCard, opacity: 0.65, fontSize: '10px' }} className="mb-1.5">
               Aprende técnicas de acuarela para principiantes.
             </p>
+            <style>{`
+              @keyframes preview-pulse { 0%,100%{box-shadow:0 1px 6px ${secondary}22} 50%{box-shadow:0 1px 8px ${secondary}66} }
+              .preview-pulse-btn{animation:preview-pulse 3s ease-in-out infinite}
+            `}</style>
+            <button type="button" className="preview-pulse-btn inline-flex items-center gap-1 border rounded-md px-2 py-1 text-[10px] font-semibold mb-2"
+              style={{ borderColor: secondary + '40', color: secondary }}>
+              ¿Qué aprenderás? <span className="text-[8px]">▾</span>
+            </button>
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold" style={{ color: textCard }}>$3.500</p>
               <button className="px-2.5 py-1 text-[11px] font-semibold rounded-md"
@@ -264,6 +272,13 @@ function BrandPreview({ palette, roles, fontPair, logoData, logoShape, logoScale
           </div>
         </div>
       </div>
+
+      {/* Footer RRSS */}
+      {redesSociales && Object.values(redesSociales.links || {}).some(v => v?.trim()) && (
+        <div className="flex items-center justify-center gap-3 py-3 px-4" style={{ backgroundColor: primary }}>
+          <SocialIconsRow redesSociales={redesSociales} size={16} />
+        </div>
+      )}
     </div>
   );
 }
@@ -1514,6 +1529,12 @@ function TabIdentidad({ espacio, refresh }) {
             logoShape={logoShape}
             logoScale={logoScale}
             espacioName={espacio.nombre}
+            redesSociales={{
+              links: redesLinks,
+              style: redesStyle,
+              minimalColor: redesMinimalColor,
+              visible: redesVisible,
+            }}
           />
 
         </div>

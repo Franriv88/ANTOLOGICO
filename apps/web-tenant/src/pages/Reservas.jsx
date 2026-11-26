@@ -294,7 +294,14 @@ export default function Reservas() {
   }, [wsQuery.data]);
 
   useEffect(() => {
-    if (rvQuery.data?.reservas) setReservas(rvQuery.data.reservas);
+    if (rvQuery.data?.reservas) {
+      setReservas(rvQuery.data.reservas.map(r => ({
+        ...r,
+        nombre: r.usuario?.nombre ?? r.nombre,
+        email: r.usuario?.email ?? r.email,
+        workshopId: r.workshop?.id ?? r.workshopId,
+      })));
+    }
   }, [rvQuery.data]);
 
   useEffect(() => {
@@ -468,9 +475,9 @@ export default function Reservas() {
       {filtered.length === 0 ? (
         <EmptyState hasReservas={reservas.length > 0} />
       ) : (
-        <div className="bg-surface-100 rounded-2xl border border-border overflow-x-auto shadow-sm">
+        <div className="bg-surface-100 rounded-2xl border border-border overflow-auto shadow-sm" style={{ maxHeight: 'calc(100vh - 340px)', minHeight: '320px' }}>
           <table className="w-full text-sm min-w-[760px]">
-            <thead>
+            <thead className="sticky top-0 z-10 bg-surface-100">
               <tr className="border-b border-border">
                 <th className="text-left pl-5 pr-3 py-3.5 text-[11px] font-semibold text-ink-muted uppercase tracking-wider">
                   #Reserva

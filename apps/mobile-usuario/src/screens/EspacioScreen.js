@@ -544,15 +544,15 @@ const styles = StyleSheet.create({
   descBtnShadow: {
     marginTop: spacing.sm,
     borderRadius: radius.lg,
+    alignSelf: 'flex-start',
   },
   descBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
     gap: 6,
     borderWidth: 1.5,
     borderRadius: radius.lg,
-    paddingVertical: 10,
+    paddingVertical: 8,
     paddingHorizontal: spacing.md,
   },
   descBtnText: { fontSize: 14, fontWeight: '600' },

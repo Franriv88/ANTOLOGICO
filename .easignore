@@ -1,0 +1,22 @@
+# Claude Code
+.claude
+.agents
+
+# Git
+.git
+
+# Docs
+docs
+
+# Cached native build artifacts (contain local Windows paths)
+apps/mobile-usuario/android/build
+apps/mobile-usuario/android/app/build
+apps/mobile-usuario/android/app/.cxx
+apps/mobile-usuario/android/.gradle
+apps/mobile-usuario/android/local.properties
+apps/mobile-usuario/ios/build
+apps/mobile-usuario/ios/Pods
+
+# Web apps (not needed for mobile build)
+apps/web-tenant
+apps/web-superadmin

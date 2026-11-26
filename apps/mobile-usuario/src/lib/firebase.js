@@ -1,10 +1,5 @@
-import { initializeApp } from 'firebase/app';
-import { initializeAuth, getReactNativePersistence } from 'firebase/auth';
-import { getDataConnect } from 'firebase/data-connect';
-import { getFirestore } from 'firebase/firestore';
-import { getFunctions } from 'firebase/functions';
+import { initializeApp, getApps } from 'firebase/app';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { connectorConfig } from '../dataconnect-generated';
 
 const firebaseConfig = {
   apiKey:            process.env.EXPO_PUBLIC_FIREBASE_API_KEY            || 'demo-api-key',
@@ -15,10 +10,25 @@ const firebaseConfig = {
   appId:             process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
 };
 
-export const app       = initializeApp(firebaseConfig);
-export const auth      = initializeAuth(app, {
-  persistence: getReactNativePersistence(AsyncStorage),
-});
-export const dc        = getDataConnect(app, connectorConfig);
-export const firestore = getFirestore(app);
-export const functions = getFunctions(app, 'us-central1');
+export const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+
+let _auth = null;
+export function getAuth() {
+  if (!_auth) {
+    const { initializeAuth, getReactNativePersistence } = require('firebase/auth');
+    _auth = initializeAuth(app, {
+      persistence: getReactNativePersistence(AsyncStorage),
+    });
+  }
+  return _auth;
+}
+
+let _dc = null;
+export function getDC() {
+  if (!_dc) {
+    const { getDataConnect } = require('firebase/data-connect');
+    const { connectorConfig } = require('../dataconnect-generated');
+    _dc = getDataConnect(app, connectorConfig);
+  }
+  return _dc;
+}

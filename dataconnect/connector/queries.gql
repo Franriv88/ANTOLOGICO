@@ -60,7 +60,7 @@ query ListRubros @auth(level: PUBLIC, insecureReason: "Catálogo público de rub
 
 query ListMyEspacios @auth(level: USER) {
   espacios(
-    where: { profesionalUid: { eq_expr: "auth.uid" } }
+    where: { profesionalUid: { eq_expr: "auth.uid" }, estado: { eq: ACTIVO } }
     orderBy: [{ createdAt: ASC }]
   ) {
     id nombre estado cancelacionPendiente createdAt

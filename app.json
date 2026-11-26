@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "25a29d9b-6993-4cee-8cf8-a6d7571be466"
+      }
+    },
+    "android": {
+      "package": "com.franriv.antologico"
+    }
+  }
+}

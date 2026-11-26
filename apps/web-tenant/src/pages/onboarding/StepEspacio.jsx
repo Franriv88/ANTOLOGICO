@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { espacios as espacioApi } from '../../services/api';
-import { upsertProfesional, reassignProfesionalUid } from '../../dataconnect-generated';
+import { upsertProfesional } from '../../dataconnect-generated';
 import { auth } from '../../lib/firebase';
 import { RUBROS, fetchRubros } from '../../lib/rubros';
 
@@ -35,13 +35,9 @@ export default function StepEspacio({ onNext, onBack, accumulated }) {
           const s = (() => { try { return JSON.stringify(upsertErr); } catch { return String(upsertErr); } })();
           const isAlreadyExists = s.includes('ALREADY_EXISTS') || s.includes('profesionales_email_uidx');
           if (isAlreadyExists) {
-            try {
-              await reassignProfesionalUid({ nombre: u.displayName || u.email });
-            } catch (reassignErr) {
-              setError('Error al actualizar perfil. Contactá soporte.');
-              setLoading(false);
-              return;
-            }
+            setError('Este email ya está registrado con otra cuenta. Iniciá sesión con tu cuenta original.');
+            setLoading(false);
+            return;
           } else {
             setError('Error al registrar perfil: ' + (upsertErr?.message || s));
             setLoading(false);

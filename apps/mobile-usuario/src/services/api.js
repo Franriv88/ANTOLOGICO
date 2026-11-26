@@ -1,3 +1,4 @@
+import { getDC } from '../lib/firebase';
 import {
   getPublicEspacio,
   getPublicEspacios,
@@ -11,56 +12,68 @@ import {
   getEspacioBySlug,
 } from '../dataconnect-generated';
 
+const SERVER_ONLY = { fetchPolicy: 'SERVER_ONLY' };
+
 export const espacios = {
   getPublic: async (id) => {
-    const { data } = await getPublicEspacio({ id });
-    return data?.espacio ?? null;
+    const dc = getDC();
+    const { data } = await getPublicEspacios(dc, { ids: [id] }, SERVER_ONLY);
+    return data?.espacios?.[0] ?? null;
   },
   getPublicBatch: async (ids) => {
     if (!ids?.length) return [];
-    const { data } = await getPublicEspacios({ ids });
+    const dc = getDC();
+    const { data } = await getPublicEspacios(dc, { ids }, SERVER_ONLY);
     return data?.espacios ?? [];
   },
   getBySlug: async (slug) => {
-    const { data } = await getEspacioBySlug({ slug });
+    const dc = getDC();
+    const { data } = await getEspacioBySlug(dc, { slug }, SERVER_ONLY);
     return data?.espacios?.[0] ?? null;
   },
 };
 
 export const workshops = {
   listByEspacio: async (espacioId) => {
-    const { data } = await listPublicWorkshopsByEspacio({ espacioId });
+    const dc = getDC();
+    const { data } = await listPublicWorkshopsByEspacio(dc, { espacioId }, SERVER_ONLY);
     return data?.workshops ?? [];
   },
   listAll: async () => {
-    const { data } = await listPublicWorkshops();
+    const dc = getDC();
+    const { data } = await listPublicWorkshops(dc, SERVER_ONLY);
     return data?.workshops ?? [];
   },
 };
 
 export const reservas = {
   create: async (payload) => {
-    const { data } = await createReservaConUsuario(payload);
+    const dc = getDC();
+    const { data } = await createReservaConUsuario(dc, payload);
     return data;
   },
   listMine: async () => {
-    const { data } = await listMyReservas();
+    const dc = getDC();
+    const { data } = await listMyReservas(dc, SERVER_ONLY);
     return data?.reservas ?? [];
   },
   cancel: async (id) => {
-    await cancelarReserva({ id });
+    const dc = getDC();
+    await cancelarReserva(dc, { id });
   },
 };
 
 export const planes = {
   list: async () => {
-    const { data } = await listPlanes();
+    const dc = getDC();
+    const { data } = await listPlanes(dc, SERVER_ONLY);
     return data?.planes ?? [];
   },
 };
 
 export const profesionales = {
   upsert: async ({ nombre, email }) => {
-    await upsertProfesional({ nombre, email });
+    const dc = getDC();
+    await upsertProfesional(dc, { nombre, email });
   },
 };

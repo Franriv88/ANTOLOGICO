@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { useAuth } from './AuthContext';
 import { espacios as espacioApi } from '../services/api';
-import { reassignProfesionalUid, createEspacio } from '../dataconnect-generated';
+import { createEspacio } from '../dataconnect-generated';
 
 const EspacioContext = createContext(null);
 
@@ -16,8 +16,6 @@ export function EspacioProvider({ children }) {
   const effectiveLoading = authLoading || loading || (!!user && loadedUid !== user.uid);
 
   useEffect(() => {
-    // Wait until Firebase Auth has resolved — avoids a race where loading=false
-    // before user rehydrates from IndexedDB (e.g. after an OAuth redirect).
     if (authLoading) return;
     if (!user) {
       setEspacios([]);
@@ -26,20 +24,18 @@ export function EspacioProvider({ children }) {
       setLoading(false);
       return;
     }
+    if (loadedUid && loadedUid !== user.uid) {
+      setEspacios([]);
+      setActive(null);
+    }
     setLoading(true);
     (async () => {
       try {
-        let list = await espacioApi.list(user.uid);
-        // Si no hay espacios, puede que el tenant se registró con email y ahora
-        // usa Google (u otro provider) con el mismo email → UID cambió.
-        // ReassignProfesionalUid actualiza el UID en SQL para que el espacio
-        // vuelva a ser visible.
-        if (list.length === 0 && user.displayName) {
-          try {
-            await reassignProfesionalUid({ nombre: user.displayName });
-            list = await espacioApi.list(user.uid);
-          } catch { /* email no existe en profesionales — usuario genuinamente nuevo */ }
-        }
+        await user.getIdToken(true);
+        console.log('[Espacio] Loading for uid=%s email=%s', user.uid, user.email);
+        let list = await espacioApi.list();
+        list = list.filter(e => e.estado !== 'INACTIVO' && e.estado !== 'SUSPENDIDO');
+        console.log('[Espacio] Got %d space(s): %s', list.length, list.map(e => `${e.nombre}(${e.id})`).join(', '));
         // Admin sin espacio en PostgreSQL — crearlo automáticamente
         if (list.length === 0) {
           let isAdmin = false;
@@ -75,22 +71,19 @@ export function EspacioProvider({ children }) {
     if (!user) return [];
     setLoading(true);
     try {
-      let list = await espacioApi.list(user.uid);
-      if (list.length === 0 && user.displayName) {
-        try {
-          await reassignProfesionalUid({ nombre: user.displayName });
-          list = await espacioApi.list(user.uid);
-        } catch { /* usuario genuinamente nuevo */ }
-      }
+      let list = await espacioApi.list();
+      list = list.filter(e => e.estado !== 'INACTIVO' && e.estado !== 'SUSPENDIDO');
       if (list.length === 0 && fallback) {
         list = [fallback];
       }
       flushSync(() => {
-        setEspacios(list);
-        setActive((prev) => {
-          const match = list.find((e) => e.id === prev?.id);
-          return match ?? list[0] ?? null;
-        });
+        if (list.length > 0) {
+          setEspacios(list);
+          setActive((prev) => {
+            const match = list.find((e) => e.id === prev?.id);
+            return match ?? list[0] ?? null;
+          });
+        }
         setLoading(false);
       });
       return list;

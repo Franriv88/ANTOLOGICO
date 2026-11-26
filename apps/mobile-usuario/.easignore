@@ -1,0 +1,27 @@
+# Claude Code
+.claude
+.agents
+
+# Git
+.git
+
+# Other apps (not needed for mobile build)
+../web-tenant
+../web-superadmin
+
+# Cached native build artifacts (contain local Windows paths)
+android/build
+android/app/build
+android/app/.cxx
+android/.gradle
+android/local.properties
+ios/build
+ios/Pods
+
+# Node modules (EAS installs its own)
+node_modules
+
+# Docs
+docs
+*.md
+!README.md

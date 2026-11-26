@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useLayoutEffect, useCallback } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { tenants as tenantsApi, planes as planesApi, userManagement } from '../services/adminApi';
+import { tenants as tenantsApi, planes as planesApi, userManagement, revokeSession } from '../services/adminApi';
 import ConfirmModal from '../components/ConfirmModal';
 import { AntologicoLoaderCream } from '../components/AntologicoLoaderCream';
 
@@ -452,9 +452,12 @@ export default function Tenants() {
 
   async function confirmBloqueado() {
     if (!blockTarget) return;
-    const { key, espacios, bloqueado } = blockTarget;
+    const { key, espacios, bloqueado, userId } = blockTarget;
     setSaving(key);
     await Promise.all(espacios.map(e => tenantsApi.update(e.id, { bloqueado: !bloqueado })));
+    if (!bloqueado && userId) {
+      await revokeSession(userId).catch(err => console.error('revokeSession failed:', err));
+    }
     setList(prev => prev.map(t =>
       (t.userId ?? `__anon__${t.id}`) === key ? { ...t, bloqueado: !bloqueado } : t
     ));

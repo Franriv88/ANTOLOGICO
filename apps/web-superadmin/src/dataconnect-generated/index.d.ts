@@ -849,14 +849,6 @@ export interface ReactivarSuscripcionEspacioVariables {
   id: UUIDString;
 }
 
-export interface ReassignProfesionalUidData {
-  reassigned?: number | null;
-}
-
-export interface ReassignProfesionalUidVariables {
-  nombre: string;
-}
-
 export interface Reserva_Key {
   id: UUIDString;
   __typename?: 'Reserva_Key';
@@ -1058,18 +1050,6 @@ export const upsertProfesionalRef: UpsertProfesionalRef;
 
 export function upsertProfesional(vars: UpsertProfesionalVariables): MutationPromise<UpsertProfesionalData, UpsertProfesionalVariables>;
 export function upsertProfesional(dc: DataConnect, vars: UpsertProfesionalVariables): MutationPromise<UpsertProfesionalData, UpsertProfesionalVariables>;
-
-interface ReassignProfesionalUidRef {
-  /* Allow users to create refs without passing in DataConnect */
-  (vars: ReassignProfesionalUidVariables): MutationRef<ReassignProfesionalUidData, ReassignProfesionalUidVariables>;
-  /* Allow users to pass in custom DataConnect instances */
-  (dc: DataConnect, vars: ReassignProfesionalUidVariables): MutationRef<ReassignProfesionalUidData, ReassignProfesionalUidVariables>;
-  operationName: string;
-}
-export const reassignProfesionalUidRef: ReassignProfesionalUidRef;
-
-export function reassignProfesionalUid(vars: ReassignProfesionalUidVariables): MutationPromise<ReassignProfesionalUidData, ReassignProfesionalUidVariables>;
-export function reassignProfesionalUid(dc: DataConnect, vars: ReassignProfesionalUidVariables): MutationPromise<ReassignProfesionalUidData, ReassignProfesionalUidVariables>;
 
 interface ActivarPlanRef {
   /* Allow users to create refs without passing in DataConnect */

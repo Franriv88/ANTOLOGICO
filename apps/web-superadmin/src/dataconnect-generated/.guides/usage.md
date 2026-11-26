@@ -14,14 +14,11 @@ If a user is not using a supported framework, they can use the generated SDK dir
 Here's an example of how to use it with the first 5 operations:
 
 ```js
-import { upsertProfesional, reassignProfesionalUid, activarPlan, agendarDowngrade, cancelarDowngrade, updateCuponAplicado, createEspacio, updateEspacioIdentidad, updateEspacioCobros, updateEspacioRedes } from '@antologico/dataconnect';
+import { upsertProfesional, activarPlan, agendarDowngrade, cancelarDowngrade, updateCuponAplicado, createEspacio, updateEspacioIdentidad, updateEspacioCobros, updateEspacioRedes, updateEspacio } from '@antologico/dataconnect';
 
 
 // Operation UpsertProfesional:  For variables, look at type UpsertProfesionalVars in ../index.d.ts
 const { data } = await UpsertProfesional(dataConnect, upsertProfesionalVars);
-
-// Operation ReassignProfesionalUid:  For variables, look at type ReassignProfesionalUidVars in ../index.d.ts
-const { data } = await ReassignProfesionalUid(dataConnect, reassignProfesionalUidVars);
 
 // Operation ActivarPlan:  For variables, look at type ActivarPlanVars in ../index.d.ts
 const { data } = await ActivarPlan(dataConnect, activarPlanVars);
@@ -46,6 +43,9 @@ const { data } = await UpdateEspacioCobros(dataConnect, updateEspacioCobrosVars)
 
 // Operation UpdateEspacioRedes:  For variables, look at type UpdateEspacioRedesVars in ../index.d.ts
 const { data } = await UpdateEspacioRedes(dataConnect, updateEspacioRedesVars);
+
+// Operation UpdateEspacio:  For variables, look at type UpdateEspacioVars in ../index.d.ts
+const { data } = await UpdateEspacio(dataConnect, updateEspacioVars);
 
 
 ```

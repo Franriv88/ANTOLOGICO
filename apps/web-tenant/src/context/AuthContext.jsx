@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { auth } from '../lib/firebase';
-import { upsertProfesional, reassignProfesionalUid } from '../dataconnect-generated';
+import { doc, onSnapshot, deleteDoc } from 'firebase/firestore';
+import { auth, firestore } from '../lib/firebase';
+import { upsertProfesional } from '../dataconnect-generated';
 
 const AuthContext = createContext(null);
 
@@ -22,21 +23,7 @@ export function AuthProvider({ children }) {
             nombre: firebaseUser.displayName || firebaseUser.email,
             email:  firebaseUser.email,
           }).catch((e) => {
-            const errStr = (() => { try { return JSON.stringify(e); } catch { return String(e); } })();
-            const isAlreadyExists =
-              errStr.includes('ALREADY_EXISTS') ||
-              errStr.includes('profesionales_email_uidx') ||
-              e?.graphQLErrors?.some?.(err =>
-                err?.extensions?.code === 'ALREADY_EXISTS' ||
-                err?.message?.includes('profesionales_email_uidx')
-              );
-            if (isAlreadyExists) {
-              reassignProfesionalUid({ nombre: firebaseUser.displayName || firebaseUser.email })
-                .then(() => console.log('[Auth] reassignProfesionalUid OK — UID actualizado'))
-                .catch((reassignErr) => console.error('[Auth] reassignProfesionalUid failed:', reassignErr));
-            } else {
-              console.error('upsertProfesional:', e);
-            }
+            console.warn('[Auth] upsertProfesional failed (non-fatal):', e);
           });
         }
         if (stale()) return;
@@ -47,6 +34,21 @@ export function AuthProvider({ children }) {
       }
     });
   }, []);
+
+  useEffect(() => {
+    if (!user?.uid) return;
+    const ref = doc(firestore, 'revoked_sessions', user.uid);
+    return onSnapshot(
+      ref,
+      (snap) => {
+        if (snap.exists()) {
+          deleteDoc(ref).catch(() => {});
+          signOut(auth);
+        }
+      },
+      () => {},
+    );
+  }, [user?.uid]);
 
   async function logout() {
     await signOut(auth);

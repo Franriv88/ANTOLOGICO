@@ -16,5 +16,13 @@
   },
   "devDependencies": {
     "prettier": "^3.3.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "use-sync-external-store>react": "19.3.0",
+      "@react-navigation/elements>react": "19.3.0",
+      "@firebase/component": "0.7.5",
+      "@firebase/app": "0.16.2"
+    }
   }
 }

@@ -6,6 +6,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { colors, spacing, radius } from '../lib/theme';
 import { useAuth } from '../context/AuthContext';
+import { LogoAntologico } from '../components/LogoAntologico';
 import * as api from '../services/api';
 
 function StatusBadge({ estado }) {
@@ -78,7 +79,7 @@ export default function MisReservasScreen({ navigation }) {
   if (!user) {
     return (
       <View style={styles.authPrompt}>
-        <Text style={styles.authIcon}>📋</Text>
+        <LogoAntologico theme="light" width={100} />
         <Text style={styles.authTitle}>Mis Reservas</Text>
         <Text style={styles.authText}>Iniciá sesión para ver tus reservas.</Text>
         <TouchableOpacity
@@ -151,7 +152,7 @@ export default function MisReservasScreen({ navigation }) {
           <Text style={styles.emptyText}>Cargando…</Text>
         ) : (
           <View style={styles.empty}>
-            <Text style={styles.emptyIcon}>🎟️</Text>
+            <LogoAntologico theme="light" width={120} />
             <Text style={styles.emptyTitle}>No tenés reservas todavía</Text>
             <Text style={styles.emptySubtitle}>
               Explorá espacios y reservá tu lugar en un taller.

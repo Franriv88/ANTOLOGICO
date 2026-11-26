@@ -12,12 +12,10 @@ For each operation, there is a wrapper hook that can be used to call the operati
 
 Here are all of the hooks that get generated:
 ```ts
-import { useUpsertProfesional, useReassignProfesionalUid, useActivarPlan, useAgendarDowngrade, useCancelarDowngrade, useUpdateCuponAplicado, useCreateEspacio, useUpdateEspacioIdentidad, useUpdateEspacioCobros, useUpdateEspacioRedes } from '@antologico/dataconnect/react';
+import { useUpsertProfesional, useActivarPlan, useAgendarDowngrade, useCancelarDowngrade, useUpdateCuponAplicado, useCreateEspacio, useUpdateEspacioIdentidad, useUpdateEspacioCobros, useUpdateEspacioRedes, useUpdateEspacio } from '@antologico/dataconnect/react';
 // The types of these hooks are available in react/index.d.ts
 
 const { data, isPending, isSuccess, isError, error } = useUpsertProfesional(upsertProfesionalVars);
-
-const { data, isPending, isSuccess, isError, error } = useReassignProfesionalUid(reassignProfesionalUidVars);
 
 const { data, isPending, isSuccess, isError, error } = useActivarPlan(activarPlanVars);
 
@@ -34,6 +32,8 @@ const { data, isPending, isSuccess, isError, error } = useUpdateEspacioIdentidad
 const { data, isPending, isSuccess, isError, error } = useUpdateEspacioCobros(updateEspacioCobrosVars);
 
 const { data, isPending, isSuccess, isError, error } = useUpdateEspacioRedes(updateEspacioRedesVars);
+
+const { data, isPending, isSuccess, isError, error } = useUpdateEspacio(updateEspacioVars);
 
 ```
 
@@ -72,14 +72,11 @@ If a user is not using a supported framework, they can use the generated SDK dir
 Here's an example of how to use it with the first 5 operations:
 
 ```js
-import { upsertProfesional, reassignProfesionalUid, activarPlan, agendarDowngrade, cancelarDowngrade, updateCuponAplicado, createEspacio, updateEspacioIdentidad, updateEspacioCobros, updateEspacioRedes } from '@antologico/dataconnect';
+import { upsertProfesional, activarPlan, agendarDowngrade, cancelarDowngrade, updateCuponAplicado, createEspacio, updateEspacioIdentidad, updateEspacioCobros, updateEspacioRedes, updateEspacio } from '@antologico/dataconnect';
 
 
 // Operation UpsertProfesional:  For variables, look at type UpsertProfesionalVars in ../index.d.ts
 const { data } = await UpsertProfesional(dataConnect, upsertProfesionalVars);
-
-// Operation ReassignProfesionalUid:  For variables, look at type ReassignProfesionalUidVars in ../index.d.ts
-const { data } = await ReassignProfesionalUid(dataConnect, reassignProfesionalUidVars);
 
 // Operation ActivarPlan:  For variables, look at type ActivarPlanVars in ../index.d.ts
 const { data } = await ActivarPlan(dataConnect, activarPlanVars);
@@ -104,6 +101,9 @@ const { data } = await UpdateEspacioCobros(dataConnect, updateEspacioCobrosVars)
 
 // Operation UpdateEspacioRedes:  For variables, look at type UpdateEspacioRedesVars in ../index.d.ts
 const { data } = await UpdateEspacioRedes(dataConnect, updateEspacioRedesVars);
+
+// Operation UpdateEspacio:  For variables, look at type UpdateEspacioVars in ../index.d.ts
+const { data } = await UpdateEspacio(dataConnect, updateEspacioVars);
 
 
 ```

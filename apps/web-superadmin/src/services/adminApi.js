@@ -1,6 +1,6 @@
 import {
   collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc,
-  query, orderBy, where, writeBatch,
+  query, orderBy, where, writeBatch, serverTimestamp,
 } from 'firebase/firestore';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { httpsCallable } from 'firebase/functions';
@@ -300,7 +300,7 @@ export const usuarios = {
     // Perfiles de Firestore + cross-ref espacios de Data Connect
     const [usuariosSnap, dcResult] = await Promise.all([
       getDocs(collection(firestore, C_USUARIOS)),
-      adminListAllEspacios(),
+      adminListAllEspacios({ fetchPolicy: 'SERVER_ONLY' }),
     ]);
 
     const dcEspacios = dcResult.data?.espacios ?? [];
@@ -399,7 +399,7 @@ export const metricas = {
 export const tenants = {
   list: async () => {
     const [dcResult, usuariosSnap] = await Promise.all([
-      adminListAllEspacios(),
+      adminListAllEspacios({ fetchPolicy: 'SERVER_ONLY' }),
       getDocs(collection(firestore, C_USUARIOS)),
     ]);
 
@@ -494,6 +494,13 @@ export const tenants = {
 };
 
 // ─── Espacio propio del Super Admin (para testeo) ────────────────────────────
+export async function revokeSession(uid) {
+  if (!uid) return;
+  await setDoc(doc(firestore, 'revoked_sessions', uid), {
+    revokedAt: serverTimestamp(),
+  });
+}
+
 export const adminEspacio = {
   get: async (adminUid) => {
     try {

@@ -1,69 +1,69 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, Alert, TextInput,
+  Dimensions, Platform,
 } from 'react-native';
-import { CameraView, useCameraPermissions } from 'expo-camera';
+import { AntologicoSpinner, AntologicoButtonSpinner } from '../components/Icons';
+import { CameraView, Camera, useCameraPermissions } from 'expo-camera';
 import { colors, spacing, radius } from '../lib/theme';
-import { saveFollows, getFollows } from './InicioScreen';
+import { LogoAntologico } from '../components/LogoAntologico';
+import { QRIcon } from '../components/Icons';
+
+const { width: SCREEN_W, height: SCREEN_H } = Dimensions.get('window');
+const SCAN_SIZE = Math.min(SCREEN_W * 0.6, 240);
+
+function extractEspacioId(data) {
+  const match = data.match(/\/p\/([a-zA-Z0-9_-]+)/);
+  if (match) return match[1];
+  const subMatch = data.match(/([a-zA-Z0-9-]+)\.antologico\.app/);
+  if (subMatch && subMatch[1] !== 'www' && subMatch[1] !== 'admin') {
+    return subMatch[1];
+  }
+  return null;
+}
 
 export default function QRScannerScreen({ navigation }) {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
-  const [manualSlug, setManualSlug] = useState('');
-
-  function extractEspacioId(data) {
-    // QR codes contain URLs like antologico.app/p/{espacioId} or slug-based
-    const match = data.match(/\/p\/([a-zA-Z0-9-]+)/);
-    if (match) return { type: 'id', value: match[1] };
-    // subdomain pattern: xxx.antologico.app
-    const subMatch = data.match(/([a-zA-Z0-9-]+)\.antologico\.app/);
-    if (subMatch && subMatch[1] !== 'www' && subMatch[1] !== 'admin') {
-      return { type: 'slug', value: subMatch[1] };
-    }
-    return null;
-  }
+  const [manualInput, setManualInput] = useState('');
 
   async function handleBarCodeScanned({ data }) {
     if (scanned) return;
     setScanned(true);
 
-    const parsed = extractEspacioId(data);
-    if (!parsed) {
+    const espacioId = extractEspacioId(data);
+    if (!espacioId) {
       Alert.alert('QR no reconocido', 'Este QR no es de un espacio Antológico.', [
         { text: 'Escanear de nuevo', onPress: () => setScanned(false) },
       ]);
       return;
     }
 
-    let espacioId = parsed.value;
-    // If slug, we'd need to resolve it. For now, navigate with slug
-    // and let the screen handle it. But since EspacioScreen expects an id,
-    // we navigate and follow automatically.
-    try {
-      const follows = await getFollows();
-      if (!follows.includes(espacioId)) {
-        await saveFollows([...follows, espacioId]);
-      }
-      navigation.replace('Espacio', { espacioId, nombre: 'Cargando…' });
-    } catch (err) {
-      Alert.alert('Error', 'No se pudo procesar el QR.', [
-        { text: 'Reintentar', onPress: () => setScanned(false) },
-      ]);
-    }
+    navigation.replace('Espacio', { espacioId, nombre: '', autoFollow: true });
   }
 
-  async function handleManualSearch() {
-    if (!manualSlug.trim()) return;
-    navigation.navigate('Espacio', { espacioId: manualSlug.trim(), nombre: 'Cargando…' });
+  function handleManualSearch() {
+    const input = manualInput.trim();
+    if (!input) return;
+    let espacioId = input;
+    const extracted = extractEspacioId(input);
+    if (extracted) espacioId = extracted;
+    navigation.replace('Espacio', { espacioId, nombre: '', autoFollow: true });
   }
 
-  if (!permission) return <View style={styles.container} />;
+  if (!permission) {
+    return (
+      <View style={styles.container}>
+        <AntologicoSpinner width={220} theme="light" />
+      </View>
+    );
+  }
 
   if (!permission.granted) {
     return (
       <View style={styles.permissionBox}>
-        <Text style={styles.permissionIcon}>📷</Text>
-        <Text style={styles.permissionTitle}>Acceso a la cámara</Text>
+        <LogoAntologico theme="light" width={100} />
+        <Text style={styles.permissionTitle}>Escanear QR</Text>
         <Text style={styles.permissionText}>
           Necesitamos acceso a tu cámara para escanear códigos QR de espacios.
         </Text>
@@ -71,94 +71,181 @@ export default function QRScannerScreen({ navigation }) {
           <Text style={styles.permissionBtnText}>Permitir cámara</Text>
         </TouchableOpacity>
 
-        <Text style={styles.orText}>— o ingresá el código manualmente —</Text>
-        <View style={styles.manualRow}>
-          <TextInput
-            style={styles.manualInput}
-            placeholder="ID del espacio"
-            placeholderTextColor={colors.inkLight}
-            value={manualSlug}
-            onChangeText={setManualSlug}
-            autoCapitalize="none"
-          />
-          <TouchableOpacity style={styles.manualBtn} onPress={handleManualSearch}>
-            <Text style={styles.manualBtnText}>Ir</Text>
-          </TouchableOpacity>
+        <View style={styles.manualSection}>
+          <Text style={styles.orText}>— o pegá la URL del espacio —</Text>
+          <View style={styles.manualRow}>
+            <TextInput
+              style={styles.manualInput}
+              placeholder="Ej: antologico.app/p/mi-espacio"
+              placeholderTextColor={colors.inkLight}
+              value={manualInput}
+              onChangeText={setManualInput}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="url"
+            />
+          </View>
+          {manualInput.trim().length > 0 && (
+            <TouchableOpacity style={styles.manualGoBtn} onPress={handleManualSearch}>
+              <Text style={styles.manualGoBtnText}>Ir al espacio</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={styles.cameraContainer}>
       <CameraView
-        style={StyleSheet.absoluteFillObject}
-        barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+        style={styles.camera}
+        facing="back"
         onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
+        barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
       />
-      {/* Overlay */}
-      <View style={styles.overlay}>
-        <View style={styles.overlayTop} />
+
+      {/* Overlay with transparent center */}
+      <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+        {/* Top dark band */}
+        <View style={styles.overlayBand} />
+
+        {/* Middle row: dark | clear | dark */}
         <View style={styles.overlayMiddle}>
-          <View style={styles.overlaySide} />
-          <View style={styles.scanArea}>
-            <View style={[styles.corner, styles.cornerTL]} />
-            <View style={[styles.corner, styles.cornerTR]} />
-            <View style={[styles.corner, styles.cornerBL]} />
-            <View style={[styles.corner, styles.cornerBR]} />
+          <View style={styles.overlayBand} />
+          <View style={{ width: SCAN_SIZE, height: SCAN_SIZE }}>
+            <View style={[styles.corner, { top: 0, left: 0, borderRightWidth: 0, borderBottomWidth: 0 }]} />
+            <View style={[styles.corner, { top: 0, right: 0, borderLeftWidth: 0, borderBottomWidth: 0 }]} />
+            <View style={[styles.corner, { bottom: 0, left: 0, borderRightWidth: 0, borderTopWidth: 0 }]} />
+            <View style={[styles.corner, { bottom: 0, right: 0, borderLeftWidth: 0, borderTopWidth: 0 }]} />
           </View>
-          <View style={styles.overlaySide} />
+          <View style={styles.overlayBand} />
         </View>
-        <View style={styles.overlayBottom}>
+
+        {/* Bottom dark band */}
+        <View style={[styles.overlayBand, { alignItems: 'center', paddingTop: spacing.xl }]}>
           <Text style={styles.scanHint}>Apuntá al QR del espacio</Text>
           {scanned && (
             <TouchableOpacity style={styles.rescanBtn} onPress={() => setScanned(false)}>
               <Text style={styles.rescanBtnText}>Escanear de nuevo</Text>
             </TouchableOpacity>
           )}
+
+          <View style={styles.manualSectionCamera}>
+            <Text style={styles.orTextCamera}>— o pegá la URL —</Text>
+            <View style={styles.manualRowCamera}>
+              <TextInput
+                style={styles.manualInputCamera}
+                placeholder="antologico.app/p/..."
+                placeholderTextColor="rgba(255,255,255,0.35)"
+                value={manualInput}
+                onChangeText={setManualInput}
+                autoCapitalize="none"
+                autoCorrect={false}
+                keyboardType="url"
+              />
+            </View>
+            {manualInput.trim().length > 0 && (
+              <TouchableOpacity style={styles.manualGoBtnCamera} onPress={handleManualSearch}>
+                <Text style={styles.manualGoBtnText}>Ir al espacio</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       </View>
     </View>
   );
 }
 
-const SCAN_SIZE = 240;
-
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000' },
-  overlay: { ...StyleSheet.absoluteFillObject },
-  overlayTop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)' },
-  overlayMiddle: { flexDirection: 'row', height: SCAN_SIZE },
-  overlaySide: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)' },
-  scanArea: { width: SCAN_SIZE, height: SCAN_SIZE },
-  overlayBottom: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', paddingTop: spacing.xl },
-  corner: { position: 'absolute', width: 24, height: 24, borderColor: colors.primary, borderWidth: 3 },
-  cornerTL: { top: 0, left: 0, borderRightWidth: 0, borderBottomWidth: 0 },
-  cornerTR: { top: 0, right: 0, borderLeftWidth: 0, borderBottomWidth: 0 },
-  cornerBL: { bottom: 0, left: 0, borderRightWidth: 0, borderTopWidth: 0 },
-  cornerBR: { bottom: 0, right: 0, borderLeftWidth: 0, borderTopWidth: 0 },
+  container: {
+    flex: 1, backgroundColor: colors.surface0,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  cameraContainer: {
+    flex: 1, backgroundColor: '#000',
+  },
+  camera: {
+    flex: 1,
+  },
+
+  overlayBand: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+  },
+  overlayMiddle: {
+    flexDirection: 'row',
+    height: SCAN_SIZE,
+  },
+  corner: {
+    position: 'absolute', width: 28, height: 28,
+    borderColor: colors.primary, borderWidth: 3,
+  },
   scanHint: { color: '#fff', fontSize: 15, fontWeight: '500' },
   rescanBtn: {
     backgroundColor: colors.primary, borderRadius: radius.md,
     paddingHorizontal: spacing.xl, paddingVertical: 10, marginTop: spacing.md,
   },
   rescanBtnText: { color: '#fff', fontWeight: '600', fontSize: 14 },
+
   permissionBox: {
     flex: 1, alignItems: 'center', justifyContent: 'center',
     padding: spacing.xl, backgroundColor: colors.surface0,
   },
-  permissionIcon: { fontSize: 48, marginBottom: spacing.md },
-  permissionTitle: { fontSize: 18, fontWeight: '600', color: colors.ink, marginBottom: spacing.sm },
-  permissionText: { fontSize: 14, color: colors.inkMuted, textAlign: 'center', lineHeight: 20, marginBottom: spacing.xl },
-  permissionBtn: { backgroundColor: colors.primary, borderRadius: radius.md, paddingHorizontal: spacing.xl, paddingVertical: 12 },
-  permissionBtnText: { color: colors.white, fontWeight: '600' },
-  orText: { color: colors.inkLight, fontSize: 13, marginTop: spacing['2xl'], marginBottom: spacing.md },
-  manualRow: { flexDirection: 'row', gap: spacing.sm },
+  permissionTitle: {
+    fontSize: 20, fontWeight: '700', color: colors.ink,
+    marginTop: spacing.lg, marginBottom: spacing.sm,
+  },
+  permissionText: {
+    fontSize: 14, color: colors.inkMuted, textAlign: 'center',
+    lineHeight: 20, marginBottom: spacing.xl, maxWidth: 300,
+  },
+  permissionBtn: {
+    backgroundColor: colors.primary, borderRadius: radius.md,
+    paddingHorizontal: spacing.xl, paddingVertical: 12,
+  },
+  permissionBtnText: { color: colors.white, fontWeight: '600', fontSize: 15 },
+
+  manualSection: {
+    width: '100%', marginTop: spacing['2xl'],
+    alignItems: 'center',
+  },
+  orText: {
+    color: colors.inkLight, fontSize: 13, marginBottom: spacing.md,
+  },
+  manualRow: {
+    width: '100%', paddingHorizontal: spacing.base,
+  },
   manualInput: {
     backgroundColor: colors.white, borderWidth: 1, borderColor: colors.border,
-    borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: 8,
-    fontSize: 14, color: colors.ink, width: 200,
+    borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: 12,
+    fontSize: 14, color: colors.ink,
   },
-  manualBtn: { backgroundColor: colors.primary, borderRadius: radius.md, paddingHorizontal: spacing.lg, justifyContent: 'center' },
-  manualBtnText: { color: colors.white, fontWeight: '600' },
+  manualGoBtn: {
+    backgroundColor: colors.primary, borderRadius: radius.md,
+    paddingHorizontal: spacing['2xl'], paddingVertical: 12,
+    marginTop: spacing.md,
+  },
+  manualGoBtnText: { color: colors.white, fontWeight: '600', fontSize: 14 },
+
+  manualSectionCamera: {
+    width: '100%', alignItems: 'center',
+    marginTop: spacing.lg,
+  },
+  orTextCamera: {
+    color: 'rgba(255,255,255,0.45)', fontSize: 13, marginBottom: spacing.md,
+  },
+  manualRowCamera: {
+    width: '100%', paddingHorizontal: spacing.xl,
+  },
+  manualInputCamera: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)',
+    borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: 12,
+    fontSize: 14, color: '#fff',
+  },
+  manualGoBtnCamera: {
+    backgroundColor: colors.primary, borderRadius: radius.md,
+    paddingHorizontal: spacing['2xl'], paddingVertical: 10,
+    marginTop: spacing.md,
+  },
 });

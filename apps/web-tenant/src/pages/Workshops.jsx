@@ -598,7 +598,7 @@ export default function Workshops() {
                       backgroundColor: headerBg,
                       backgroundImage: `url(${headerImg})`,
                       backgroundSize: 'cover',
-                      backgroundPosition: 'center',
+                      backgroundPosition: `${w.headerImagePosition?.x ?? 50}% ${w.headerImagePosition?.y ?? 50}%`,
                     }}
                   >
                     <div

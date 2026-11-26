@@ -7,29 +7,32 @@ const { defineSecret } = require('firebase-functions/params');
 const { initializeApp } = require('firebase-admin/app');
 const { getFirestore, FieldValue } = require('firebase-admin/firestore');
 const { getAuth } = require('firebase-admin/auth');
-const nodemailer = require('nodemailer');
-
 initializeApp();
 const db = getFirestore();
 const auth = getAuth();
 
-const smtpPass    = defineSecret('SMTP_PASS');
+const resendKey   = defineSecret('RESEND_API_KEY');
 const vercelToken = defineSecret('VERCEL_TOKEN');
-const SMTP_USER = 'frivasv2388@gmail.com';
+const EMAIL_FROM = 'Antológico <noreply@antologico.app>';
 const VERCEL_PROJECT_ID = 'prj_AvXKwQeIypelwMX7lSYtZ95zP1F9';
-const SMTP_HOST = 'smtp.gmail.com';
-const SMTP_PORT = 587;
 const LOGO_URL  = 'https://www.antologico.app/logo-antologico.png';
 const CODE_EXPIRY_MS = 10 * 60 * 1000; // 10 minutos
 const COLLECTION = 'verification_codes';
 
-function createTransporter() {
-  return nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: SMTP_PORT,
-    secure: false,
-    auth: { user: SMTP_USER, pass: smtpPass.value() },
+async function sendEmail({ to, subject, html }) {
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${resendKey.value()}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ from: EMAIL_FROM, to, subject, html }),
   });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Resend error ${res.status}: ${body}`);
+  }
+  return res.json();
 }
 
 function generateCode() {
@@ -153,7 +156,7 @@ function buildEmailHtml(code, name) {
 
 // ── Enviar código de verificación ────────────────────────────────────────────
 exports.sendVerificationCode = onCall(
-  { secrets: [smtpPass], region: 'us-central1' },
+  { secrets: [resendKey], region: 'us-central1' },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError('unauthenticated', 'Debés estar autenticado.');
@@ -187,8 +190,7 @@ exports.sendVerificationCode = onCall(
       attempts: 0,
     });
 
-    await createTransporter().sendMail({
-      from: `"Antológico" <${SMTP_USER}>`,
+    await sendEmail({
       to: user.email,
       subject: 'Tu código de verificación — Antológico',
       html: buildEmailHtml(code, user.displayName),
@@ -245,7 +247,7 @@ exports.verifyCode = onCall(
 
 // ── Reenviar código ─────────────────────────────────────────────────────────
 exports.resendVerificationCode = onCall(
-  { secrets: [smtpPass], region: 'us-central1' },
+  { secrets: [resendKey], region: 'us-central1' },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError('unauthenticated', 'Debés estar autenticado.');
@@ -269,8 +271,7 @@ exports.resendVerificationCode = onCall(
       attempts: 0,
     });
 
-    await createTransporter().sendMail({
-      from: `"Antológico" <${SMTP_USER}>`,
+    await sendEmail({
       to: user.email,
       subject: 'Tu código de verificación — Antológico',
       html: buildEmailHtml(code, user.displayName),
@@ -392,11 +393,14 @@ exports.deleteTenantAuth = onCall(
     }
 
     try {
+      await auth.revokeRefreshTokens(uid);
+      await db.collection('revoked_sessions').doc(uid).set({
+        revokedAt: FieldValue.serverTimestamp(),
+      });
       await auth.deleteUser(uid);
       return { success: true };
     } catch (err) {
       if (err && err.code === 'auth/user-not-found') {
-        // Ya no estaba en Auth: lo tomamos como éxito.
         return { success: true, alreadyGone: true };
       }
       console.error('deleteTenantAuth error', uid, err);
@@ -444,7 +448,7 @@ exports.purgeUnverifiedUsers = onSchedule(
 
 // ── Notificar al tenant cuando recibe una reserva ───────────────────────────
 exports.notifyTenantNewBooking = onCall(
-  { secrets: [smtpPass], region: 'us-central1' },
+  { secrets: [resendKey], region: 'us-central1' },
   async (request) => {
     const { espacioId, tenantUid: tenantUidParam, workshopName, clientName, clientEmail, clientPhone, metodoPago, cantidad } = request.data || {};
     if (!espacioId || !workshopName || !clientName || !clientEmail) {
@@ -481,8 +485,7 @@ exports.notifyTenantNewBooking = onCall(
     });
 
     try {
-      await createTransporter().sendMail({
-        from: `"Antológico" <${SMTP_USER}>`,
+      await sendEmail({
         to: tenantEmail,
         subject: `Nueva reserva: ${clientName} — ${workshopName}`,
         html: buildBookingEmailHtml({
@@ -578,7 +581,7 @@ function buildCancellationEmailHtml({ userName, workshopName, espacioName, works
 }
 
 exports.notifyWorkshopCancelled = onCall(
-  { secrets: [smtpPass], region: 'us-central1' },
+  { secrets: [resendKey], region: 'us-central1' },
   async (request) => {
     if (!request.auth) {
       throw new HttpsError('unauthenticated', 'Debés estar autenticado.');
@@ -589,15 +592,13 @@ exports.notifyWorkshopCancelled = onCall(
       return { success: true, sent: 0 };
     }
 
-    const transporter = createTransporter();
     let sent = 0;
     const errors = [];
 
     for (const r of reservas) {
       if (!r.email) continue;
       try {
-        await transporter.sendMail({
-          from: `"Antológico" <${SMTP_USER}>`,
+        await sendEmail({
           to: r.email,
           subject: `Taller cancelado: ${workshopName}`,
           html: buildCancellationEmailHtml({

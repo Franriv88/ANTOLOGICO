@@ -1,8 +1,15 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, Text, StyleSheet } from 'react-native';
+import { createDrawerNavigator, DrawerContentScrollView } from '@react-navigation/drawer';
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { signOut } from 'firebase/auth';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { getAuth } from '../lib/firebase';
 import { useAuth } from '../context/AuthContext';
-import { colors } from '../lib/theme';
+import { colors, spacing, radius } from '../lib/theme';
+import { LogoAntologico, IconAntologico } from '../components/LogoAntologico';
+import { HomeIcon, CalendarIcon, UserIcon, LogoutIcon, QRIcon, AntologicoSpinner } from '../components/Icons';
 
 import InicioScreen from '../screens/InicioScreen';
 import EspacioScreen from '../screens/EspacioScreen';
@@ -13,85 +20,143 @@ import QRScannerScreen from '../screens/QRScannerScreen';
 import LoginScreen from '../screens/LoginScreen';
 
 const Stack = createNativeStackNavigator();
-const Tab   = createBottomTabNavigator();
+const Drawer = createDrawerNavigator();
 
-function TabIcon({ name, focused }) {
-  const color = focused ? colors.primary : colors.inkLight;
-  const icons = {
-    Inicio:    '⬡',
-    Reservas:  '🎟',
-    QR:        '⬜',
-    Perfil:    '●',
-  };
+function CoralHeader({ navigation }) {
+  const insets = useSafeAreaInsets();
   return (
-    <View style={styles.tabIconBox}>
-      <Text style={[styles.tabIcon, { color }]}>{icons[name] || '•'}</Text>
-    </View>
-  );
-}
-
-function QRTabButton({ children, ...props }) {
-  return (
-    <View style={styles.qrBtnOuter}>
-      <View style={styles.qrBtn}>
-        <Text style={styles.qrBtnIcon}>⬜</Text>
+    <LinearGradient
+      colors={['#E85D4A', '#C4412F']}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={[styles.header, { paddingTop: insets.top + 12 }]}
+    >
+      <View style={styles.headerRow}>
+        <View style={styles.headerLeft}>
+          <TouchableOpacity
+            onPress={() => navigation.openDrawer()}
+            activeOpacity={0.7}
+            style={styles.hamburgerBtn}
+          >
+            <View style={styles.hamburgerLine} />
+            <View style={styles.hamburgerLine} />
+            <View style={styles.hamburgerLine} />
+          </TouchableOpacity>
+          <IconAntologico size={34} />
+          <Text style={styles.headerTitle}>Antológico</Text>
+        </View>
+        <TouchableOpacity
+          style={styles.headerQrBtn}
+          onPress={() => navigation.navigate('QRScanner')}
+          activeOpacity={0.7}
+        >
+          <QRIcon size={18} color="#FFFFFF" />
+          <Text style={styles.headerQrText}>QR</Text>
+        </TouchableOpacity>
       </View>
-    </View>
+    </LinearGradient>
   );
 }
 
-function HomeTabs() {
-  return (
-    <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.inkLight,
-        tabBarStyle: {
-          backgroundColor: colors.white,
-          borderTopColor: colors.border,
-          borderTopWidth: 1,
-          height: 60,
-          paddingBottom: 8,
-          paddingTop: 4,
+function CustomDrawerContent(props) {
+  const { navigation } = props;
+  const activeRoute = props.state.routes[props.state.index]?.name;
+
+  function handleLogout() {
+    navigation.closeDrawer();
+    Alert.alert(
+      'Cerrar sesión',
+      '¿Seguro que querés cerrar sesión?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Cerrar sesión',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await GoogleSignin.signOut().catch(() => {});
+              await signOut(getAuth());
+            } catch {}
+          },
         },
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '500',
+      ],
+    );
+  }
+
+  const menuItems = [
+    { key: 'Inicio', label: 'Inicio', Icon: HomeIcon },
+    { key: 'MisReservas', label: 'Mis reservas', Icon: CalendarIcon },
+    { key: 'Perfil', label: 'Mi perfil', Icon: UserIcon },
+  ];
+
+  return (
+    <DrawerContentScrollView {...props} contentContainerStyle={styles.drawerScroll}>
+      <View style={styles.drawerHeader}>
+        <View style={styles.drawerLogoRow}>
+          <IconAntologico size={28} />
+          <Text style={styles.drawerBrand}>Antológico</Text>
+        </View>
+        <TouchableOpacity onPress={() => navigation.closeDrawer()} activeOpacity={0.7}>
+          <Text style={styles.drawerClose}>✕</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.drawerMenu}>
+        {menuItems.map(item => {
+          const active = activeRoute === item.key;
+          const iconColor = active ? colors.primary : colors.inkLight;
+          return (
+            <TouchableOpacity
+              key={item.key}
+              style={[styles.drawerItem, active && styles.drawerItemActive]}
+              onPress={() => navigation.navigate(item.key)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.drawerIconBox}>
+                <item.Icon size={20} color={iconColor} />
+              </View>
+              <Text style={[styles.drawerItemLabel, active && styles.drawerItemTextActive]}>
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      <View style={styles.drawerFooter}>
+        <TouchableOpacity
+          style={styles.drawerItem}
+          onPress={handleLogout}
+          activeOpacity={0.7}
+        >
+          <View style={styles.drawerIconBox}>
+            <LogoutIcon size={20} color={colors.inkLight} />
+          </View>
+          <Text style={styles.drawerItemLabel}>Cerrar sesión</Text>
+        </TouchableOpacity>
+      </View>
+    </DrawerContentScrollView>
+  );
+}
+
+function DrawerScreens() {
+  return (
+    <Drawer.Navigator
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
+      screenOptions={{
+        header: ({ navigation }) => <CoralHeader navigation={navigation} />,
+        drawerType: 'slide',
+        overlayColor: 'rgba(0,0,0,0.45)',
+        drawerStyle: {
+          backgroundColor: colors.white,
+          width: 260,
         },
       }}
     >
-      <Tab.Screen
-        name="Inicio"
-        component={InicioScreen}
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon name="Inicio" focused={focused} />,
-        }}
-      />
-      <Tab.Screen
-        name="MisReservas"
-        component={MisReservasScreen}
-        options={{
-          title: 'Reservas',
-          tabBarIcon: ({ focused }) => <TabIcon name="Reservas" focused={focused} />,
-        }}
-      />
-      <Tab.Screen
-        name="QRTab"
-        component={QRScannerScreen}
-        options={{
-          title: 'QR',
-          tabBarIcon: ({ focused }) => <TabIcon name="QR" focused={focused} />,
-        }}
-      />
-      <Tab.Screen
-        name="Perfil"
-        component={PerfilScreen}
-        options={{
-          tabBarIcon: ({ focused }) => <TabIcon name="Perfil" focused={focused} />,
-        }}
-      />
-    </Tab.Navigator>
+      <Drawer.Screen name="Inicio" component={InicioScreen} />
+      <Drawer.Screen name="MisReservas" component={MisReservasScreen} options={{ title: 'Mis reservas' }} />
+      <Drawer.Screen name="Perfil" component={PerfilScreen} options={{ title: 'Mi perfil' }} />
+    </Drawer.Navigator>
   );
 }
 
@@ -100,9 +165,15 @@ export default function AppNavigator() {
 
   if (loading) {
     return (
-      <View style={styles.loading}>
-        <Text style={styles.loadingLogo}>Antológico</Text>
-      </View>
+      <LinearGradient
+        colors={['#E85D4A', '#C4412F', '#8C2E1F']}
+        locations={[0, 0.48, 1]}
+        start={{ x: 0.2, y: 0 }}
+        end={{ x: 0.8, y: 1 }}
+        style={styles.loading}
+      >
+        <AntologicoSpinner width={280} theme="coral" />
+      </LinearGradient>
     );
   }
 
@@ -125,8 +196,8 @@ export default function AppNavigator() {
       ) : (
         <>
           <Stack.Screen
-            name="HomeTabs"
-            component={HomeTabs}
+            name="DrawerScreens"
+            component={DrawerScreens}
             options={{ headerShown: false }}
           />
           <Stack.Screen
@@ -144,7 +215,12 @@ export default function AppNavigator() {
           <Stack.Screen
             name="QRScanner"
             component={QRScannerScreen}
-            options={{ title: 'Escanear QR', headerTransparent: true, headerTintColor: '#fff' }}
+            options={{
+              title: 'Escanear QR',
+              headerStyle: { backgroundColor: '#000' },
+              headerTintColor: '#fff',
+              headerShadowVisible: false,
+            }}
           />
         </>
       )}
@@ -157,37 +233,113 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.surface0,
   },
-  loadingLogo: {
-    fontSize: 28,
+  header: {
+    paddingHorizontal: spacing.base,
+    paddingBottom: 14,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  hamburgerBtn: {
+    width: 28,
+    height: 22,
+    justifyContent: 'space-between',
+    marginRight: 4,
+  },
+  hamburgerLine: {
+    height: 2.5,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 2,
+  },
+  headerTitle: {
+    fontSize: 22,
     fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: -0.3,
+  },
+  headerQrBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: radius.md,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  headerQrText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  drawerScroll: {
+    flex: 1,
+  },
+  drawerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.base,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  drawerLogoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  drawerBrand: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.ink,
+  },
+  drawerClose: {
+    fontSize: 20,
+    color: colors.inkMuted,
+    paddingHorizontal: 4,
+  },
+  drawerMenu: {
+    flex: 1,
+    paddingTop: spacing.md,
+  },
+  drawerItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: spacing.base,
+    paddingVertical: 14,
+    borderRadius: radius.md,
+    marginHorizontal: spacing.sm,
+  },
+  drawerItemActive: {
+    backgroundColor: 'rgba(232, 93, 74, 0.08)',
+  },
+  drawerIconBox: {
+    width: 24,
+    alignItems: 'center',
+  },
+  drawerItemLabel: {
+    fontSize: 15,
+    color: colors.ink,
+    fontWeight: '500',
+  },
+  drawerItemTextActive: {
     color: colors.primary,
   },
-  tabIconBox: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 24,
-    height: 24,
-  },
-  tabIcon: {
-    fontSize: 18,
-  },
-  qrBtnOuter: {
-    top: -8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  qrBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  qrBtnIcon: {
-    fontSize: 22,
-    color: colors.white,
+  drawerFooter: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.md,
   },
 });

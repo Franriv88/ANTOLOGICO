@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
-  RefreshControl, Image, TextInput, ScrollView,
+  RefreshControl, Image, TextInput, ScrollView, Animated, Linking,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -25,6 +25,74 @@ async function getFollows(uid) {
 }
 async function saveFollows(ids, uid) {
   try { await AsyncStorage.setItem(userFollowsKey(uid), JSON.stringify(ids)); } catch {}
+}
+
+const CTA_URL = 'https://www.antologico.app/registro';
+const CTA_COLLAPSE_DELAY = 5000;
+
+function RetractableCTA() {
+  const [expanded, setExpanded] = useState(true);
+  const anim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      Animated.timing(anim, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: false,
+      }).start(() => setExpanded(false));
+    }, CTA_COLLAPSE_DELAY);
+    return () => clearTimeout(timer);
+  }, []);
+
+  function toggle() {
+    const next = !expanded;
+    setExpanded(next);
+    Animated.timing(anim, {
+      toValue: next ? 1 : 0,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  }
+
+  const contentHeight = anim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 140],
+  });
+  const contentOpacity = anim.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [0, 0, 1],
+  });
+
+  return (
+    <View style={styles.ctaWrapper}>
+      {/* Collapsed mini-bar (always visible) */}
+      <TouchableOpacity
+        style={styles.ctaCollapsedBar}
+        onPress={toggle}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.ctaCollapsedText}>
+          {expanded ? '▾  ¿Querés tu propio espacio?' : '▴  ¿Querés tu propio espacio Antológico?'}
+        </Text>
+      </TouchableOpacity>
+
+      {/* Expandable content */}
+      <Animated.View style={{ height: contentHeight, opacity: contentOpacity, overflow: 'hidden' }}>
+        <View style={styles.ctaExpandedContent}>
+          <Text style={styles.ctaTitle}>¿Querés tu propio espacio Antológico?</Text>
+          <Text style={styles.ctaText}>Publicá tus talleres, gestioná reservas y cobrá online.</Text>
+          <TouchableOpacity
+            style={styles.ctaBtn}
+            activeOpacity={0.8}
+            onPress={() => Linking.openURL(CTA_URL)}
+          >
+            <Text style={styles.ctaBtnText}>Creá tu cuenta profesional  →</Text>
+          </TouchableOpacity>
+        </View>
+      </Animated.View>
+    </View>
+  );
 }
 
 export default function InicioScreen({ navigation }) {
@@ -146,14 +214,8 @@ export default function InicioScreen({ navigation }) {
         </>
       )}
 
-      {/* Bottom CTA */}
-      <View style={styles.ctaBox}>
-        <Text style={styles.ctaTitle}>¿Querés tu propio espacio Antológico?</Text>
-        <Text style={styles.ctaText}>Publicá tus talleres, gestioná reservas y cobrá online.</Text>
-        <TouchableOpacity style={styles.ctaBtn} activeOpacity={0.8}>
-          <Text style={styles.ctaBtnText}>Creá tu cuenta profesional  →</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Retractable Bottom CTA */}
+      <RetractableCTA />
     </ScrollView>
   );
 }
@@ -318,12 +380,26 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
   },
-  ctaBox: {
-    backgroundColor: colors.surface100,
+  ctaWrapper: {
     marginHorizontal: spacing.base,
     marginTop: spacing['3xl'],
+    backgroundColor: colors.surface100,
     borderRadius: radius.lg,
-    padding: spacing.xl,
+    overflow: 'hidden',
+  },
+  ctaCollapsedBar: {
+    paddingVertical: 12,
+    paddingHorizontal: spacing.base,
+    alignItems: 'center',
+  },
+  ctaCollapsedText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  ctaExpandedContent: {
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.xl,
     alignItems: 'center',
   },
   ctaTitle: {
