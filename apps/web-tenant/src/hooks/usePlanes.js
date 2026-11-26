@@ -86,7 +86,11 @@ export function precioConPeriodo(plan, periodo) {
 
 // Fecha de próxima renovación según período elegido
 export function proximaRenovacion(periodo) {
-  const d = new Date();
+  return proximaRenovacionDesde(periodo, new Date());
+}
+
+export function proximaRenovacionDesde(periodo, desde) {
+  const d = desde instanceof Date ? desde : new Date(desde);
   if (periodo === 'trimestral') return new Date(d.getFullYear(), d.getMonth() + 3,  d.getDate());
   if (periodo === 'anual')      return new Date(d.getFullYear() + 1, d.getMonth(),  d.getDate());
   return new Date(d.getFullYear(), d.getMonth() + 1, d.getDate());

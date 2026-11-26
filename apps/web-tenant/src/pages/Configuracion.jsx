@@ -12,7 +12,7 @@ import { functions, firestore } from '../lib/firebase';
 import { SOCIAL_NETWORKS, SocialIcon, SocialIconsRow, stripPrefix, addPrefix } from '../components/SocialIcons';
 import { IconAntologico } from '../components/LogoAntologico';
 import FloatingSave from '../components/FloatingSave';
-import { usePlanes, precioConPeriodo, proximaRenovacion, formatFechaLarga } from '../hooks/usePlanes';
+import { usePlanes, precioConPeriodo, proximaRenovacion, proximaRenovacionDesde, formatFechaLarga } from '../hooks/usePlanes';
 import { listPlanes as listSqlPlanes } from '../dataconnect-generated';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -285,14 +285,18 @@ function BrandPreview({ palette, roles, fontPair, logoData, logoShape, logoScale
 
 // ── Modal cancelación ─────────────────────────────────────────────────────────
 
-function CancelSubscriptionModal({ nombre, loading, error, onConfirm, onClose }) {
+function CancelSubscriptionModal({ nombre, fechaActivo, loading, error, onConfirm, onClose }) {
+  const activoHasta = fechaActivo ? formatFechaLarga(new Date(fechaActivo)) : lastDayOfCurrentMonth();
+  const sinCobros   = fechaActivo
+    ? formatFechaLarga(new Date(new Date(fechaActivo).getTime() + 86_400_000))
+    : firstDayOfNextMonth();
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={() => !loading && onClose()}>
       <div className="absolute inset-0 bg-ink/20 backdrop-blur-[2px]" />
       <div className="relative bg-surface-0 border border-border rounded-xl shadow-2xl p-6 max-w-md w-full" onClick={e => e.stopPropagation()}>
         <h3 className="font-display text-lg text-ink mb-2">¿Cancelar suscripción de <em>{nombre}</em>?</h3>
-        <p className="text-sm text-ink-muted mb-1.5">Tu espacio seguirá activo hasta el <strong className="text-ink">{lastDayOfCurrentMonth()}</strong>.</p>
-        <p className="text-sm text-ink-muted mb-5">A partir del <strong className="text-ink">{firstDayOfNextMonth()}</strong> no se realizarán más cobros.</p>
+        <p className="text-sm text-ink-muted mb-1.5">Tu espacio seguirá activo hasta el <strong className="text-ink">{activoHasta}</strong>.</p>
+        <p className="text-sm text-ink-muted mb-5">A partir del <strong className="text-ink">{sinCobros}</strong> no se realizarán más cobros.</p>
         {error && <p className="mb-4 text-xs text-danger">{error}</p>}
         <div className="flex justify-end gap-3">
           <button onClick={onClose} disabled={loading} className="px-4 py-2 text-sm font-medium text-ink hover:bg-surface-200 rounded-md border border-border disabled:opacity-50">Volver</button>
@@ -2287,11 +2291,19 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
   async function handleActivarPlan(plan) {
     setLoading(true); setError('');
     try {
+      let renovacion;
+      if (trialActivo) {
+        const trialEnd = new Date(trialRef);
+        trialEnd.setDate(trialEnd.getDate() + 14);
+        renovacion = proximaRenovacionDesde(periodo, trialEnd);
+      } else {
+        renovacion = proximaRenovacion(periodo);
+      }
       await espacioApi.activarPlan(espacio.id, {
         planId: resolvePlanId(plan),
         periodoFacturacion: periodo,
         precioActual: precioConPeriodo(plan, periodo),
-        proximaRenovacion: proximaRenovacion(periodo),
+        proximaRenovacion: renovacion,
       });
       if (cuponValido) {
         const vence = new Date();
@@ -2524,6 +2536,31 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
         </div>
       )}
 
+      {/* ── Banner: trial activo con plan elegido ── */}
+      {!isSuperAdmin && planActivo && trialActivo && (() => {
+        const trialEnd = new Date(trialRef);
+        trialEnd.setDate(trialEnd.getDate() + 14);
+        const diasRestantes = Math.max(0, Math.ceil((trialEnd - Date.now()) / 86_400_000));
+        return (
+          <div className="flex items-start gap-4 bg-success/5 border border-success/25 rounded-xl p-5">
+            <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center shrink-0">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-ink mb-0.5">
+                Prueba gratuita — {diasRestantes} {diasRestantes === 1 ? 'día restante' : 'días restantes'}
+              </p>
+              <p className="text-xs text-ink-muted leading-relaxed">
+                Tu período de prueba termina el <strong className="text-ink">{formatFechaLarga(trialEnd)}</strong>.
+                El primer cobro del plan <strong className="text-ink">{planActivo.nombre}</strong> será recién en la próxima renovación ({formatFechaLarga(fechaRenovacion)}).
+              </p>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* ── Resumen de facturación (cuando hay plan activo) ── */}
       {!isSuperAdmin && planActivo && (
       <div className="bg-surface-100 border border-border rounded-xl p-5">
@@ -2673,7 +2710,7 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
               <div>
                 <p className="text-sm font-medium text-danger">Cancelación solicitada</p>
                 <p className="text-xs text-ink-muted mt-0.5">
-                  Activo hasta el <strong>{lastDayOfCurrentMonth()}</strong>. Sin cobros desde el <strong>{firstDayOfNextMonth()}</strong>.
+                  Activo hasta el <strong>{espacio.proximaRenovacion ? formatFechaLarga(new Date(espacio.proximaRenovacion)) : lastDayOfCurrentMonth()}</strong>. Sin cobros a partir de esa fecha.
                 </p>
               </div>
             </div>
@@ -2697,6 +2734,7 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
       {cancelOpen && (
         <CancelSubscriptionModal
           nombre={espacio.nombre}
+          fechaActivo={espacio.proximaRenovacion}
           loading={loading}
           error={error}
           onConfirm={handleCancelar}
