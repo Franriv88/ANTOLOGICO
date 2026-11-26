@@ -2687,18 +2687,6 @@ function TabSuscripcion({ espacio, espacios, refresh }) {
         </div>
       )}
 
-      {/* ── DEV: reset plan (quitar antes de producción) ── */}
-      {!isSuperAdmin && planActivo && (
-        <button
-          onClick={async () => {
-            await espacioApi.update(espacio.id, { planId: null, plan: null, periodoFacturacion: null, precioActual: null, proximaRenovacion: null });
-            await refresh();
-          }}
-          className="self-start text-xs text-ink-muted underline opacity-40 hover:opacity-100"
-        >
-          [DEV] Resetear plan
-        </button>
-      )}
 
       {/* ── Estado de la suscripción (solo con plan activo, no admin) ── */}
       {!isSuperAdmin && planActivo && <div className="bg-surface-100 border border-border rounded-xl p-5">
